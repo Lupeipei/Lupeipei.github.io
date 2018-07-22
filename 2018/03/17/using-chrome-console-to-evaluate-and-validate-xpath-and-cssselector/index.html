@@ -1,0 +1,869 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Selenium," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="写在前面之前写过一篇有关Selenium webdriver 的学习笔记，这里再补充个小技巧。 Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。 这里以能造轮子会拍照的Kenneth Reitz的">
+<meta name="keywords" content="Selenium">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用Chrome console快速获取及检验你的xpath, cssSelector">
+<meta property="og:url" content="http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="写在前面之前写过一篇有关Selenium webdriver 的学习笔记，这里再补充个小技巧。 Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。 这里以能造轮子会拍照的Kenneth Reitz的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif">
+<meta property="og:image" content="https://ws2.sinaimg.cn/large/006tNc79gy1fpdaob6bnfj311m0axaeb.jpg">
+<meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79gy1fpdbb108vig30yw0k24qp.gif">
+<meta property="og:image" content="https://ws1.sinaimg.cn/large/006tNc79gy1fpfi6bihaxg30yw0k2gz5.gif">
+<meta property="og:updated_time" content="2018-07-10T12:50:19.549Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用Chrome console快速获取及检验你的xpath, cssSelector">
+<meta name="twitter:description" content="写在前面之前写过一篇有关Selenium webdriver 的学习笔记，这里再补充个小技巧。 Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。 这里以能造轮子会拍照的Kenneth Reitz的">
+<meta name="twitter:image" content="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/"/>
+
+
+
+
+
+  <title> 使用Chrome console快速获取及检验你的xpath, cssSelector | Lucia </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                使用Chrome console快速获取及检验你的xpath, cssSelector
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T08:31:53+08:00">
+                2018-03-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Selenium/" itemprop="url" rel="index">
+                    <span itemprop="name">Selenium</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>836 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写过一篇有关<a href="http://luciaca.cn/2018/01/24/learning-selenium-webdriver-ruby-version/" target="_blank" rel="noopener">Selenium webdriver</a> 的学习笔记，这里再补充个小技巧。</p>
+<p>Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。</p>
+<p>这里以能造轮子会拍照的Kenneth Reitz的<a href="https://github.com/kennethreitz" target="_blank" rel="noopener">github</a>主页为例，来看看如何快速获取及检验你的xpath，cssSelector。</p>
+<p>BTW，定位元素的方法有很多，我在学习笔记也有记录，能用id尽量用id，这里仅仅说一下如何借助console来完成xpath, cssSelector的定位，并不代表元素定位就这两种方式。</p>
+<h4 id="如何获取？"><a href="#如何获取？" class="headerlink" title="如何获取？"></a>如何获取？</h4><p>假定我们希望对页面中unfollow这个按钮进行click的操作， 那么首先得要找到它。</p>
+<p>chrome浏览器下，选中该元素，查看<strong>inspect</strong>，打开developer tool，然后右键，选择<strong>copy</strong>，就可以看到copy  selector, copy xpath两个选项了。</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif" alt=""></p>
+<p>针对你需要的copy即可。不过提醒下，这里一般copy下来的cssSelector都特别长，你可以自行做一下删减。</p>
+<p>比如上面这个，得到的selector：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#js-pjax-container &gt; div &gt; div.h-card.col-3.float-left.pr-3 &gt; div.user-profile-following-container.js-user-profile-following-toggle.mb-3 &gt; span &gt; span.unfollow &gt; form &gt; button</span><br></pre></td></tr></table></figure>
+<p>得到的xpath是这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//*[@id=&quot;js-pjax-container&quot;]/div/div[1]/div[5]/span/span[2]/form/button</span><br></pre></td></tr></table></figure>
+<p>Xpath不算太长，还能接受，不过xpath会将页面的所有元素进行扫描以完成定位，比较耗时，所以能用cssSelector的话，还是选择cssSelector。</p>
+<p>那么上面那个太长了，怎么简化？把它的class复制下来：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdaob6bnfj311m0axaeb.jpg" alt=""></p>
+<p>改成这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target</span><br></pre></td></tr></table></figure>
+<p>那要如何确定自己写的这个selector是否正确呢？看下面👇：</p>
+<h4 id="如何检测？"><a href="#如何检测？" class="headerlink" title="如何检测？"></a>如何检测？</h4><p>在developer tool的console中，<strong>使用$$(“xxx”)来检查cssSelector， 使用$x(“xxxx”)来检查xpath</strong>。</p>
+<p>这里有两处console可供使用，一般直接用element下面的，方便直接查看定位到的元素。</p>
+<p>来检查一下刚刚的selector是否正确。</p>
+<p>输入后<code>$$(&quot;button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target&quot;)</code>，发现找到了两个元素，第一个是follow的按钮，第二个才是我们要的unfollow。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpdbb108vig30yw0k24qp.gif" alt=""></p>
+<p>发现定位到了两个元素，这样怎么破？</p>
+<p>仔细看，会发现这是一个Ajax的交互，点击unfollow后，向服务器发出unfollow的请求，执行user controller中对应的unfollow action，页面渲染，随后出现follow按钮。</p>
+<p>鉴于这两个按钮的cssSelector一模一样，这种情况下，建议换成xpath。</p>
+<p>用刚刚获取的xpath来检测一下：</p>
+<p>如果你输入有语法错误，它会报错，这里注意双引号的使用。在双引号中嵌套了其他双引号，换成单引号。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpfi6bihaxg30yw0k2gz5.gif" alt=""></p>
+<p>发现用xpath来定位时，只有一个。OK，完成定位。</p>
+<p>PS.这里cssSelector的这个例子举的不是很好，但用法基本就是这么玩的。</p>
+<h4 id="推荐"><a href="#推荐" class="headerlink" title="推荐"></a>推荐</h4><p>在Google selenium相关测试中，找到了这篇文章<a href="http://yizeng.me/2014/03/23/evaluate-and-validate-xpath-css-selectors-in-chrome-developer-tools/" target="_blank" rel="noopener">Evaluate and validate XPath/CSS selectors in Chrome Developer Tools</a>，作者写的很详细，看完让我有种感觉：“人家都写的这么好了，我还写个啥？”……</p>
+<p>当然，最终我还是决定要写写，加深印象:  P</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Selenium/" rel="tag"># Selenium</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/15/selenium-unknown-error-call-function-result-missing-value/" rel="next" title="selenium unknown error - call function result missing 'value'">
+                <i class="fa fa-chevron-left"></i> selenium unknown error - call function result missing 'value'
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/18/drawing-on-and-adding-text-to-images-using-rmagick/" rel="prev" title="使用RMagick来给图片添加线条或文字">
+                使用RMagick来给图片添加线条或文字 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Lucia" />
+          <p class="site-author-name" itemprop="name">Lucia</p>
+           
+              <p class="site-description motion-element" itemprop="description">曲肱而枕</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">137</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">43</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.facebook.com/Luciapeipei" target="_blank" title="Facebook">
+                  
+                    <i class="fa fa-fw fa-facebook"></i>
+                  
+                  Facebook
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#写在前面"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何获取？"><span class="nav-number">2.</span> <span class="nav-text">如何获取？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何检测？"><span class="nav-number">3.</span> <span class="nav-text">如何检测？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#推荐"><span class="nav-number">4.</span> <span class="nav-text">推荐</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    130.5k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://https-lupeipei-github-io.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/';
+          this.page.identifier = '2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/';
+          this.page.title = '使用Chrome console快速获取及检验你的xpath, cssSelector';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://https-lupeipei-github-io.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
