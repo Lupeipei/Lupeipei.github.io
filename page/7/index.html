@@ -273,6 +273,198 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/" itemprop="url">
+                  使用Chrome console快速获取及检验你的xpath, cssSelector
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T08:31:53+08:00">
+                2018-03-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Selenium/" itemprop="url" rel="index">
+                    <span itemprop="name">Selenium</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>836 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写过一篇有关<a href="http://luciaca.cn/2018/01/24/learning-selenium-webdriver-ruby-version/" target="_blank" rel="noopener">Selenium webdriver</a> 的学习笔记，这里再补充个小技巧。</p>
+<p>Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。</p>
+<p>这里以能造轮子会拍照的Kenneth Reitz的<a href="https://github.com/kennethreitz" target="_blank" rel="noopener">github</a>主页为例，来看看如何快速获取及检验你的xpath，cssSelector。</p>
+<p>BTW，定位元素的方法有很多，我在学习笔记也有记录，能用id尽量用id，这里仅仅说一下如何借助console来完成xpath, cssSelector的定位，并不代表元素定位就这两种方式。</p>
+<h4 id="如何获取？"><a href="#如何获取？" class="headerlink" title="如何获取？"></a>如何获取？</h4><p>假定我们希望对页面中unfollow这个按钮进行click的操作， 那么首先得要找到它。</p>
+<p>chrome浏览器下，选中该元素，查看<strong>inspect</strong>，打开developer tool，然后右键，选择<strong>copy</strong>，就可以看到copy  selector, copy xpath两个选项了。</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif" alt=""></p>
+<p>针对你需要的copy即可。不过提醒下，这里一般copy下来的cssSelector都特别长，你可以自行做一下删减。</p>
+<p>比如上面这个，得到的selector：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#js-pjax-container &gt; div &gt; div.h-card.col-3.float-left.pr-3 &gt; div.user-profile-following-container.js-user-profile-following-toggle.mb-3 &gt; span &gt; span.unfollow &gt; form &gt; button</span><br></pre></td></tr></table></figure>
+<p>得到的xpath是这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">//*[@id=&quot;js-pjax-container&quot;]/div/div[1]/div[5]/span/span[2]/form/button</span><br></pre></td></tr></table></figure>
+<p>Xpath不算太长，还能接受，不过xpath会将页面的所有元素进行扫描以完成定位，比较耗时，所以能用cssSelector的话，还是选择cssSelector。</p>
+<p>那么上面那个太长了，怎么简化？把它的class复制下来：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdaob6bnfj311m0axaeb.jpg" alt=""></p>
+<p>改成这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target</span><br></pre></td></tr></table></figure>
+<p>那要如何确定自己写的这个selector是否正确呢？看下面👇：</p>
+<h4 id="如何检测？"><a href="#如何检测？" class="headerlink" title="如何检测？"></a>如何检测？</h4><p>在developer tool的console中，<strong>使用$$(“xxx”)来检查cssSelector， 使用$x(“xxxx”)来检查xpath</strong>。</p>
+<p>这里有两处console可供使用，一般直接用element下面的，方便直接查看定位到的元素。</p>
+<p>来检查一下刚刚的selector是否正确。</p>
+<p>输入后<code>$$(&quot;button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target&quot;)</code>，发现找到了两个元素，第一个是follow的按钮，第二个才是我们要的unfollow。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpdbb108vig30yw0k24qp.gif" alt=""></p>
+<p>发现定位到了两个元素，这样怎么破？</p>
+<p>仔细看，会发现这是一个Ajax的交互，点击unfollow后，向服务器发出unfollow的请求，执行user controller中对应的unfollow action，页面渲染，随后出现follow按钮。</p>
+<p>鉴于这两个按钮的cssSelector一模一样，这种情况下，建议换成xpath。</p>
+<p>用刚刚获取的xpath来检测一下：</p>
+<p>如果你输入有语法错误，它会报错，这里注意双引号的使用。在双引号中嵌套了其他双引号，换成单引号。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpfi6bihaxg30yw0k2gz5.gif" alt=""></p>
+<p>发现用xpath来定位时，只有一个。OK，完成定位。</p>
+<p>PS.这里cssSelector的这个例子举的不是很好，但用法基本就是这么玩的。</p>
+<h4 id="推荐"><a href="#推荐" class="headerlink" title="推荐"></a>推荐</h4><p>在Google selenium相关测试中，找到了这篇文章<a href="http://yizeng.me/2014/03/23/evaluate-and-validate-xpath-css-selectors-in-chrome-developer-tools/" target="_blank" rel="noopener">Evaluate and validate XPath/CSS selectors in Chrome Developer Tools</a>，作者写的很详细，看完让我有种感觉：“人家都写的这么好了，我还写个啥？”……</p>
+<p>当然，最终我还是决定要写写，加深印象:  P</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/15/selenium-unknown-error-call-function-result-missing-value/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1949,195 +2141,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/24/using-layer-on-Rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/24/using-layer-on-Rails/" itemprop="url">
-                  Rails中使用layer弹窗组件
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-24T21:15:25+08:00">
-                2018-02-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/24/using-layer-on-Rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/24/using-layer-on-Rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>502 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="layer是什么？"><a href="#layer是什么？" class="headerlink" title="layer是什么？"></a>layer是什么？</h4><p>layer, 一款 web弹窗组件，你可以将它看作bootstrap中的modal， 详情可见：<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网</a>,  <a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>。</p>
-<p>layer是layui的一个内置模块，而layui则是一个前端UI框架，具体可见其<a href="http://www.layui.com/" target="_blank" rel="noopener">官网</a>。</p>
-<h4 id="怎么用？"><a href="#怎么用？" class="headerlink" title="怎么用？"></a>怎么用？</h4><p>由于layer是layui的弹窗组件，所以使用时既可以单独使用，也可以通过layui模块化使用，这里单独使用layer。</p>
-<p>layer的单独使用在其<a href="http://layer.layui.com/hello.html" target="_blank" rel="noopener">快速上手</a>里面有相关说明，这里记录下如何在Rails中使用layer。</p>
-<ul>
-<li><p>下载layer文件包</p>
-<p>layer<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>，点击<strong>绿色下载layer</strong>，或者去<a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>上下载，下载后解压。</p>
-<p>目前的版本是3.1.1：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1forbutw4b2j30uf03574z.jpg" alt=""></p>
-</li>
-<li><p>将文件放入项目的public目录下</p>
-<p>将解压后的layer文件包，放入项目的public目录下</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1forbxearurj308g03nmx4.jpg" alt=""></p>
-<p>​</p>
-</li>
-<li><p>使用</p>
-<p>引入layer前，需要引入jQuery， 鉴于rails默认引入了jQuery，这里直接引入layer即可。</p>
-<p>在需要使用弹窗的页面对应的layout中，比如<code>application.html.erb</code>，添加：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">......</span><br><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">javascript_include_tag</span> '<span class="attr">application</span>' %&gt;</span></span><br><span class="line">+ <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"/layer/layer.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p><strong>请务必将<code>&lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;</code>置于<code>&lt;%= javascript_include_tag &#39;application&#39; %&gt;</code>之后。</strong></p>
-<p>测试一下是否可以正常使用。在任何一个页面最后，比如landing page着陆页，添加：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;div id=<span class="string">"for_test"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"btn btn-lg btn-danger"</span>&gt;test&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;script&gt;</span></span><br><span class="line"><span class="regexp">  $('#for_test').on('click', function()&#123;</span></span><br><span class="line"><span class="regexp">      layer.msg('hello world');</span></span><br><span class="line"><span class="regexp">  &#125;);</span></span><br><span class="line"><span class="regexp">&lt;/</span>script&gt;</span><br></pre></td></tr></table></figure>
-<p>此时点击该页面的test按钮，会弹出一个含有“hello world”的弹窗，说明可以正常使用了。</p>
-<p>它的弹窗使用有多种，可以在<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>玩一下，还是蛮酷的，此外，文档写的也蛮有趣的，可以读读。</p>
-<p>另：如果你使用layer.photos(options) - 相册层时，使用了JSON传入的方式【layer的photos有两种实现方式：JSON传入和直接读取页面图片】，不想肉眼检查自己的JSON文件格式是否正确，推荐使用这个在线json解析和格式验证的网站： <a href="https://www.json.cn/" target="_blank" rel="noopener">JSON.cn</a>。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://layer.layui.com/" target="_blank" rel="noopener">layer官网</a></p>
-<p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹出层 layer</a></p>
-<p><a href="http://fly.layui.com/" target="_blank" rel="noopener">FLY 社区</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2187,7 +2190,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">138</span>
+                <span class="site-state-item-count">139</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2320,7 +2323,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    130.6k
+    130.8k
   </span>
 
 </div>

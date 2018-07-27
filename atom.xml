@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2018-07-23T10:44:21.356Z</updated>
+  <updated>2018-07-27T11:03:53.433Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>踩坑之compact！</title>
+    <link href="http://lupeipei.github.io/2018/07/27/bug-in-compact/"/>
+    <id>http://lupeipei.github.io/2018/07/27/bug-in-compact/</id>
+    <published>2018-07-27T11:01:55.000Z</published>
+    <updated>2018-07-27T11:03:53.433Z</updated>
+    
+    <content type="html"><![CDATA[<p>测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。</p><p>出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。</p><p>比如：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a = [ <span class="string">"a"</span>, <span class="literal">nil</span>, <span class="string">"b"</span>, <span class="literal">nil</span>, <span class="string">"c"</span> ]</span><br><span class="line"></span><br><span class="line">a.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", nil, "b", nil, "c"]</span></span><br><span class="line"></span><br><span class="line">a.compact!</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure><p>But!!</p><p>如果这个数组本身没有nil，两者的结果完全不同。调用compact或者compact！，数组都不变，但是compact！返回的却是nil。</p><p>看例子：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">b = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]</span><br><span class="line"></span><br><span class="line">b.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line"></span><br><span class="line">b.compact!</span><br><span class="line"><span class="comment">#=&gt; nil</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure><p>也就是说<strong>在数组中没有nil的情况下，使用compact！返回的值是nil，同时数组本身不会改变</strong>。</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.0/Array.html#method-i-compact-21" target="_blank" rel="noopener">compact!</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。&lt;/p&gt;
+&lt;p&gt;出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compa
+      
+    
+    </summary>
+    
+      <category term="Ruby" scheme="http://lupeipei.github.io/categories/Ruby/"/>
+    
+    
+      <category term="Ruby" scheme="http://lupeipei.github.io/tags/Ruby/"/>
+    
+  </entry>
   
   <entry>
     <title>使用global gitignore来ignore所有项目下的.idea</title>
@@ -511,27 +537,6 @@
       <category term="ROR" scheme="http://lupeipei.github.io/tags/ROR/"/>
     
       <category term="报错记录" scheme="http://lupeipei.github.io/tags/%E6%8A%A5%E9%94%99%E8%AE%B0%E5%BD%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Rails中merge与deep_merge的差异</title>
-    <link href="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/"/>
-    <id>http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/</id>
-    <published>2018-05-20T15:20:56.000Z</published>
-    <updated>2018-07-10T12:50:19.532Z</updated>
-    
-    <content type="html"><![CDATA[<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>前几天被老大问到merge与deep_merge的区别，一时语塞，试了几个例子，大致get到了两者的区别，但是当时没有记录下来，这里做一下笔记，加深印象。</p><h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul><li><p>merge用法</p><p>在<a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">docs</a>中搜索merge，可以看到有10个名为merge的method，这里我们要对比deep_merge，所以选择继承自Hash的ActiveSupport::HashWithIndifferentAccess下的method merge。</p><blockquote><p>选自ActiveSupport::HashWithdifferentAccess</p><p><strong>merge</strong>(hash, &amp;block)</p><p>This method has the same semantics of <code>update</code>, except it does not modify the receiver but rather returns a new hash with indifferent access with the result of the merge.</p></blockquote><p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p><p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p><p>看个例子：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;254, "c"=&gt;300&#125;</span></span><br></pre></td></tr></table></figure><p>你可以通过block来指定merge的规则：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;454, "c"=&gt;300&#125;</span></span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; "a" =&gt; 100, "b" =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure></li><li><p>deep_merge用法</p><p>官方给到的解释和例子是这样的：</p><blockquote><p>deep_merge(other_hash, &amp;block)</p><p>Returns a new hash with <code>self</code> and <code>other_hash</code> merged recursively.</p></blockquote><p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p><p>还是以上面的例子为例：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;254, "c"=&gt;300&#125;</span></span><br></pre></td></tr></table></figure><p>同样，你也可以通过block来指定deep_merge的规则：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;454, "c"=&gt;300&#125;</span></span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; "a" =&gt; 100, "b" =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure></li><li><p>二者差异</p><p>从上面的例子看，似乎两者没有什么区别。</p><p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p><p>但是针对nested hash，两者就不一样了。</p><p>看个例子：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="symbol">x:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>] &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> [<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] &#125; &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:x=&gt;[3, 4, 5]&#125;&#125;</span></span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]&#125;&#125;</span></span><br></pre></td></tr></table></figure><p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p><p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p><p>再看个例子：</p><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>], <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">1</span> &#125; &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">2</span>, <span class="symbol">z:</span> <span class="number">1</span>&#125; &#125; &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;&#123;:y=&gt;2, :z=&gt;1&#125;&#125;&#125;</span></span><br></pre></td></tr></table></figure><p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p><h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li><li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p></li><li>针对嵌套的hash： 针对相同的key，merge不会检查，直接处理，根据merge规则返回value，deep_merge则会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">Ruby on Rails API</a></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h4 id=&quot;写在前面&quot;&gt;&lt;a href=&quot;#写在前面&quot; class=&quot;headerlink&quot; title=&quot;写在前面&quot;&gt;&lt;/a&gt;写在前面&lt;/h4&gt;&lt;p&gt;前几天被老大问到merge与deep_merge的区别，一时语塞，试了几个例子，大致get到了两者的区别，但是当时没有记录下
-      
-    
-    </summary>
-    
     
   </entry>
   
