@@ -273,6 +273,187 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/passenger-deploy-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/23/passenger-deploy-rails/" itemprop="url">
+                  Rails部署报错记录Passenger + Nginx
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-23T19:16:24+08:00">
+                2017-10-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/23/passenger-deploy-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/23/passenger-deploy-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>483 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在部署网站后遇到的一个大坑，长这样：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fks5pqyvghj30no09u0ti.jpg" alt=""></p>
+<p>看到这一行熟悉的we’re sorry, but something went wrong，默默跟这位老朋友打个招呼【捂脸】。</p>
+<p>Google后，发现其他用passenger来部署Rails的，也遇到过这种页面无法显示的问题，但是没看到有人提供解决方法或者思路的，决定记录下我的整个解决步骤，给同样入坑的伙伴们作个参考。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Google，看了stack overflow上的一些相关内容后，猜测是passenger的问题，于是终端输入<code>sudo passenger-status</code>, 发现passenger根本就没有开这个Rails的进程。</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fks5pqt1ywj30l108xt9z.jpg" alt=""></p>
+<p>没开那就手动来开，在app的current目录下，运行<code>bundle exec passenger start</code>, 报错：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks5pqia5ej30tc0ka46y.jpg" alt=""></p>
+<p>怎么办？按照指示去tmp下找文件，看error log。</p>
+<p>以root身份登录，去tmp目录下，查看出错的log,这里是passenger-error-pxhJuZ.html。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">nano passenger-error-pxhJuZ.html</span><br></pre></td></tr></table></figure>
+<p>打开显示如下：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fksdg0z54rj30wv0dftdo.jpg" alt=""></p>
+<p>OK，那就动动listen 这个gem, google 后，参考stackoverflow上的解答<a href="https://stackoverflow.com/questions/38663706/loaderror-could-not-load-the-listen-gem-rails-5" target="_blank" rel="noopener">LoadError: Could not load the ‘listen’ gem (Rails 5)</a>， 把listen从development中移除，放在了global中</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksdhtg52aj30et0azdhc.jpg" alt=""></p>
+<p>本地运行<code>bundle</code>，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面，发现还是老样子。怎么回事？突然想到stack overflow上提到可以登录rails console看看，好，试试。</p>
+<p>用deploy身份登录远端后，执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/Together/current #Together 是你的APP名称</span><br><span class="line">RAILS_ENV=production bundle exec rake db:seed</span><br></pre></td></tr></table></figure>
+<p>果然，报错，显示网站有bug，立马回去修bug……</p>
+<p>在本地修复好，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面， OK！！</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>这段爬坑的日子，遇到了不少Google了也不一定能解决的坑，甚至会让你在懵逼的情况下，被别人的解答带得越来越远。只想说解决问题的思路真的太重要了，同时多点耐心，相信坑坑皆有解。</p>
+<p>Be more patient.</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/TDD-with-RSpec-integration-test/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2334,339 +2515,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/06/introduction-to-jquery-module2-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/06/introduction-to-jquery-module2-1/" itemprop="url">
-                  Introduction to jQuery_2
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-06T08:32:55+08:00">
-                2017-10-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Web/" itemprop="url" rel="index">
-                    <span itemprop="name">Web</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/06/introduction-to-jquery-module2-1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/06/introduction-to-jquery-module2-1/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,232 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="Before-Start"><a href="#Before-Start" class="headerlink" title="Before Start"></a>Before Start</h4><p>The following contents are the notes I took when learning  jQuery on Edx.</p>
-<p>Mainly for  front-End Web developers, check <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">here</a> to get more details.</p>
-<h4 id="CONTENTS"><a href="#CONTENTS" class="headerlink" title="CONTENTS"></a>CONTENTS</h4><p>Three parts:</p>
-<ul>
-<li><a href="https://lupeipei.github.io/2017/10/05/introduction-to-jQuery-module1/">Adding jQuery to web pages</a></li>
-<li>Managing content, events and effects</li>
-<li><a href="https://lupeipei.github.io/2017/10/08/introduction-to-jquery-module3-1/">Asynchronous operations and Ajax calls</a></li>
-</ul>
-<h4 id="Module2-Managing-content-events-and-effects"><a href="#Module2-Managing-content-events-and-effects" class="headerlink" title="Module2 : Managing content, events and effects"></a>Module2 : Managing content, events and effects</h4><p>Module2 includes six parts:</p>
-<ul>
-<li>Event handlers</li>
-<li>Modifying elements</li>
-<li>Registering event handlers</li>
-<li>Adding new elements</li>
-<li>Animations</li>
-<li>Removing, replacing and cloning</li>
-</ul>
-<p>Let’s get to know something about the first three parts.</p>
-<ul>
-<li><p><strong>Event handlers</strong></p>
-<p>Event object:</p>
-<blockquote>
-<p>Beyond just the object that raised the event, jQuery (and JavaScript) also pass an <code>event</code> object to the event handler.</p>
-<p>This object can be used to determine additional information, such as where the mouse was when the user performed the operation.</p>
-</blockquote>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Write out the x/y coordinates of the mouse on click</span></span><br><span class="line">$(<span class="string">'button'</span>).click(<span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    $(<span class="string">'#output'</span>).text(e.pageX + <span class="string">'x'</span> + e.pageY);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<ul>
-<li><p><code>Click</code></p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).click(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; alert(<span class="string">'hello, world!'</span>); &#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>dbclick</code></p>
-<p> raised when the user double clicks on an element.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).dbclick(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123; alert(<span class="string">'hello, world!'</span>); &#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Forms : blur, change, focus</p>
-<ul>
-<li><p><code>blur</code></p>
-<p>raised when a form element loses what’s known as focus. often used for validation.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).blur(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// retrieve the value using val</span></span><br><span class="line">    <span class="keyword">var</span> value = $(<span class="string">'#target'</span>).val();</span><br><span class="line">    alert(value);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>change</code></p>
-<p>raised whenever an element is modified.<strong>limited</strong> to <code>input</code>, <code>textarea</code> and <code>select</code> elements only.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  $(<span class="string">'#parent'</span>).change(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> value = $(<span class="string">'#parent'</span>).val();</span><br><span class="line">    $(<span class="string">'#child'</span>).empty();</span><br><span class="line">    $(<span class="string">'#child'</span>).append(<span class="string">'&lt;option&gt;1 - '</span> + value + <span class="string">'&lt;/option&gt;'</span>);</span><br><span class="line">    $(<span class="string">'#child'</span>).append(<span class="string">'&lt;option&gt;2 - '</span> + value + <span class="string">'&lt;/option&gt;'</span>);</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>focus</code></p>
-<p>the opposite of <code>blur</code>. raised when the user clicks, taps, or tabs into a particular control, typically because they want to change its value.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"phone"</span>&gt;</span>Phone<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">id</span>=<span class="string">"phone"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"phone-help"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">// sample JavaScript</span><br><span class="line">$('#phone').focus(function() &#123;</span><br><span class="line">    // Control has focus. Display help</span><br><span class="line">    $('#phone-help').text('Please enter your phone number as all digits');</span><br><span class="line">&#125;).blur(function() &#123;</span><br><span class="line">    // Control lost focus. Clear help</span><br><span class="line">    $('#phone-help').text('');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>Mouse movement</p>
-<ul>
-<li><p><code>mouseenter</code>, <code>mouseleave</code></p>
-<p><code>mouseenter</code> is raised whenever the user moves their mouse over an element.</p>
-<p><code>mouseleave</code> is raised when the user moves their mouse away from an element.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span>Basic data<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"target-help"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">// sample JavaScript</span><br><span class="line">$('#target').mouseenter(function() &#123;</span><br><span class="line">	$('#target-help').text('More data');</span><br><span class="line">&#125;).mouseleave(function() &#123;</span><br><span class="line">	$('#target-help').text('');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>hover</code></p>
-<p>equivalent to both the <code>mouseenter</code> and <code>mouseleave</code> events. The first parameter <code>hover</code> accepts is for <code>mouseenter</code>, or when the hover begins, and the second parameter is for <code>mouseout</code>.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).hover(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// mouseenter</span></span><br><span class="line">	$(<span class="string">'#target-help'</span>).text(<span class="string">'More data'</span>);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// mouseleave</span></span><br><span class="line">	$(<span class="string">'#target-help'</span>).text(<span class="string">''</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>​</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Modifying elements</strong></p>
-<ul>
-<li><p>Replacing element HTML and text</p>
-<ul>
-<li><p><code>val</code></p>
-<p>for read the value, like to say retrieve the value of an input control, you can use <code>val()</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var value = $(&apos;#some-input-control&apos;).val();</span><br></pre></td></tr></table></figure>
-<p>also, you can set the value. use <code>val(new-value)</code></p>
-<p>Example: set a textbox to a blank value</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Empty a textbox</span></span><br><span class="line">$(<span class="string">'#some-textbox'</span>).val(<span class="string">''</span>);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>html</code></p>
-<p>you have saw it in Module1.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// write text out to the screen</span></span><br><span class="line"><span class="comment">// this will be displayed as</span></span><br><span class="line"><span class="comment">// &lt;strong&gt;value&lt;/strong&gt;</span></span><br><span class="line"><span class="comment">// the text value will not be bolded</span></span><br><span class="line"></span><br><span class="line">$(<span class="string">'#output'</span>).text(<span class="string">'value'</span>);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>text</code></p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// write text out to the screen</span></span><br><span class="line"><span class="comment">// this will be displayed as value</span></span><br><span class="line"><span class="comment">// with the word bolded</span></span><br><span class="line"></span><br><span class="line">$(<span class="string">'#output'</span>).html(<span class="string">'value'</span>);</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>Working with attribute and classes</p>
-<ul>
-<li><p><code>attr</code></p>
-<p>To retrieve the value of an attribute, simply call <code>attr(name)</code>.</p>
-<p>To change the value of an attribute, simply call <code>attr(name, newValue)</code>.</p>
-</li>
-<li><p><code>addClass</code> and <code>removeClass</code></p>
-<p>You have known it in Module1. Besides, one nice thing about <code>removeClass</code> is it will not throw an error if the class doesn’t exist.</p>
-</li>
-</ul>
-</li>
-<li><p>Working with styles</p>
-<ul>
-<li><p><code>css</code></p>
-<p>To retrieve the value of a CSS property,  call <code>css(property)</code>.</p>
-<p>To set a property, call <code>css(property, newValue)</code></p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Retrieve an item's color</span></span><br><span class="line"><span class="keyword">var</span> color = $(<span class="string">'#target'</span>).css(<span class="string">'color'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Change an item's color to red</span></span><br><span class="line">$(<span class="string">'#target'</span>).css(<span class="string">'color'</span>, <span class="string">'red'</span>);</span><br></pre></td></tr></table></figure>
-<p>To set multiple properties,  create a JavaScript object with the property/value pairs, and then pass the object into the <code>css</code> function.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> style = &#123;</span><br><span class="line">	color: <span class="string">'red'</span>,</span><br><span class="line">	backgroundColor: yellow</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">$(<span class="string">'#target'</span>).css(style);</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Registering event handlers</strong></p>
-<ul>
-<li><p>Dynamic event handlers</p>
-<ul>
-<li><p><code>on</code>, <code>off</code></p>
-<p>Both <code>on</code> and <code>off</code> share the same syntax:</p>
-<p><code>$(&#39;selector&#39;).on/off(&#39;events&#39;, &#39;selector (optional)&#39;, function)</code></p>
-<p>Here, <code>events</code>: A space separated list of the events you wish to register, such as <code>&#39;click&#39;</code> or <code>&#39;click mouseenter&#39;</code></p>
-<p> BTW, Obviously if you need to <strong>dynamically choose the event</strong>, or if you need <strong>multiple events for the same event handler</strong>, using <code>on</code> is your only choice.</p>
-<p>In additon, <code>on</code> offers one more feature, known as delegation.</p>
-</li>
-</ul>
-</li>
-<li><p>Delegation</p>
-<p>Registering an event handler using <code>delegate</code>,  is similar to <code>on</code>, with one major difference: New elements will automatically have the event handler applied.</p>
-<p>The <code>delegate</code> syntax:</p>
-<p><code>$(selector).delegate(selector, events, eventHandler)</code></p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span>&gt;</span>Click<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"placeholder"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">	// document.ready (on load)</span><br><span class="line"></span><br><span class="line">	// register a click event handler with all button elements, except new button</span><br><span class="line">	//$('button').click(function() &#123; alert('hello'); &#125;);</span><br><span class="line">	// new button will also be raised</span><br><span class="line">	$(document).delegate('button', 'click', function() &#123; alert('hello'); &#125;);</span><br><span class="line"></span><br><span class="line">	// create a new button</span><br><span class="line">	$('#placeholder').html('<span class="tag">&lt;<span class="name">button</span>&gt;</span>New button<span class="tag">&lt;/<span class="name">button</span>&gt;</span>');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>With jQuery 1.7, <code>delegate</code> is superseded by <code>on</code>.</p>
-<p><strong>One important thing to note</strong> is the order of parameters for <code>on</code> and <code>delegate</code>.</p>
-<p>With <code>on</code>, you list the events first and the selector second. With <code>delegate</code>, it’s selector followed by events.</p>
-<p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Delegation (note the order of parameters)</span></span><br><span class="line">$(<span class="built_in">document</span>).on(<span class="string">'click'</span>, <span class="string">'button'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;alert(<span class="string">'hello'</span>); &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Semantically the same as above</span></span><br><span class="line"><span class="comment">// (note the order of parameters)</span></span><br><span class="line">$(<span class="built_in">document</span>).delegate(<span class="string">'button'</span>, <span class="string">'click'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; alert(<span class="string">'hello'</span>); &#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Single execution</p>
-<ul>
-<li><p><code>one</code></p>
-<p><code>one</code> shares a similar syntax with <code>on</code>, only there is no delegation option.</p>
-<p>The event only execute once.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">id</span>=<span class="string">"single"</span>&gt;</span>This only works once<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"output"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('#single').one('click', function() &#123;</span><br><span class="line">        $('#output').text('You clicked on the button');</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>Triggering events</p>
-<p>Raise the event programatically, like to click on a button to refresh data.</p>
-<p><code>trigger</code> and <code>triggerHandler</code> allow you to provide the name of the event as a parameter.</p>
-<p><code>trigger</code> will execute for <strong>all elements</strong> in the collection,</p>
-<p>while <code>triggerHandler</code> only executes the handler for <strong>the first element</strong>.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"first"</span>&gt;</span>First button<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"Second"</span>&gt;</span>Second button<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"trigger"</span>&gt;</span>trigger<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"trigger-handler"</span>&gt;</span>triggerHandler<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('button').click(function() &#123;</span><br><span class="line">        // display the id of the button</span><br><span class="line">        alert(this.id);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    $('#trigger').click(function() &#123;</span><br><span class="line">        // Would alert every button's id</span><br><span class="line">        // including the last two</span><br><span class="line">        $('button').trigger('click');</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // Would alert "first"</span><br><span class="line">    $('#trigger-handler').click(function() &#123;</span><br><span class="line">        // Would alert "first"</span><br><span class="line">        $('button').triggerHandler('click');</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>This is the first three parts of Module2 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
-</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2711,7 +2564,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">140</span>
+                <span class="site-state-item-count">141</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2844,7 +2697,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    131.4k
+    133.2k
   </span>
 
 </div>

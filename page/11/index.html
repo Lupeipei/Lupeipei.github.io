@@ -273,6 +273,265 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/01/deal-with-special-character-when-using-restclient-url/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="url">
+                  RestClient：URL中特殊字符的处理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-01T19:49:13+08:00">
+                2017-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Web/" itemprop="url" rel="index">
+                    <span itemprop="name">Web</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/01/deal-with-special-character-when-using-restclient-url/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>559 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>URL中通常会遇到特殊字符的处理，比如某一个参数中含有中文 或者”#$ ^ &amp; * + =”等特殊符号。</p>
+<p>如何处理才能正确传递参数？</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><strong>处理之前，先来点小知识。</strong></p>
+<p>URL中一些特殊字符及对应的Url编码如下：</p>
+<table>
+<thead>
+<tr>
+<th>Character</th>
+<th>From UTF-8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>space</td>
+<td>%20</td>
+</tr>
+<tr>
+<td>!</td>
+<td>%21</td>
+</tr>
+<tr>
+<td>“</td>
+<td>%22</td>
+</tr>
+<tr>
+<td>#</td>
+<td>%23</td>
+</tr>
+<tr>
+<td>$</td>
+<td>%24</td>
+</tr>
+<tr>
+<td>%</td>
+<td>%25</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td>%26</td>
+</tr>
+<tr>
+<td>‘</td>
+<td>%27</td>
+</tr>
+<tr>
+<td>(</td>
+<td>%28</td>
+</tr>
+<tr>
+<td>)</td>
+<td>%29</td>
+</tr>
+<tr>
+<td>*</td>
+<td>%2A</td>
+</tr>
+<tr>
+<td>+</td>
+<td>%2B</td>
+</tr>
+<tr>
+<td>,</td>
+<td>%2C</td>
+</tr>
+<tr>
+<td>-</td>
+<td>%2D</td>
+</tr>
+<tr>
+<td>.</td>
+<td>%2E</td>
+</tr>
+<tr>
+<td>/</td>
+<td>%2F</td>
+</tr>
+</tbody>
+</table>
+<p><strong>小案例：从一个中文字符的处理开始</strong></p>
+<p>restclient中，如果URL含有中文等非英文的特殊字符， 只需要使用<strong>URI::encode</strong>即可。比如下面这个例子：</p>
+<p>网址是 <a href="http://example.com，" target="_blank" rel="noopener">http://example.com，</a> 用户输入关键字“伊丽莎白好乖滴 ”查询：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(url)</span><br></pre></td></tr></table></figure>
+<p>这里，使用restclient发出get请求，会出现URI::InvalidURIError 的错误.</p>
+<p>正确的打开方式可以像这样：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">require &apos;addressable/uri&apos;</span><br><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(URI::encode(url))</span><br></pre></td></tr></table></figure>
+<p>这样，url中的中文字符会转化为下面这样的ascii码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=%E4%BC%8A%E4%B8%BD%E8%8E%8E%E7%99%BD%E5%A5%BD%E4%B9%96%E6%BB%B4</span><br></pre></td></tr></table></figure>
+<p><strong>特别加餐：传递给参数的值中，含有&amp;等特殊字符</strong></p>
+<p>需要特别提一句的是，如果你的URL是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&apos;</span><br></pre></td></tr></table></figure>
+<p>而你希望将<code>&amp;s</code>传递给keyword， 使用URI::encode时，会是这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=&amp;s&amp;city=shanghai&amp;type=food</span><br></pre></td></tr></table></figure>
+<p>这里，因为URL中传递参数时，是用”&amp;”符号隔开的，所以rest client识别的时候，会认为keyword这个参数并没有赋值， 而<code>&amp;s</code>中，s表示另一个参数, 且没有赋值，这样，发出请求后会报错，这种情况如何解决？做这样的处理:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">URI::encode(url).sub(&quot;&amp;&quot;, &quot;%26&quot;)</span><br></pre></td></tr></table></figure>
+<p>encode后，将第一个&amp;, 也就是<code>&amp;s</code>转变为”%26s”, 再传递给RestClient。</p>
+<p>这里你可能想要问，为什么不直接传递”%26s”？</p>
+<p>问得好！如果直接将”%26s”传递给keyword，经过URI::encode之后，keyword接收到的就会是：“%2526s”， why？Cause it will encode “%” to “%25”。</p>
+<p>当然，不只是rest client，其他需要针对URL进行encoding的，也可以进行类似的处理。</p>
+<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://github.com/rest-client/rest-client/issues/476" target="_blank" rel="noopener">URL with square brackets: URI::InvalidURIError</a></p>
+<p><a href="https://www.w3schools.com/tags/ref_urlencode.asp" target="_blank" rel="noopener">HTML URL Encoding Reference</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/11/22/custom-exceptions-in-ruby/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1972,192 +2231,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/passenger-deploy-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/23/passenger-deploy-rails/" itemprop="url">
-                  Rails部署报错记录Passenger + Nginx
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-23T19:16:24+08:00">
-                2017-10-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Nginx/" itemprop="url" rel="index">
-                    <span itemprop="name">Nginx</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/23/passenger-deploy-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/23/passenger-deploy-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>483 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在部署网站后遇到的一个大坑，长这样：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fks5pqyvghj30no09u0ti.jpg" alt=""></p>
-<p>看到这一行熟悉的we’re sorry, but something went wrong，默默跟这位老朋友打个招呼【捂脸】。</p>
-<p>Google后，发现其他用passenger来部署Rails的，也遇到过这种页面无法显示的问题，但是没看到有人提供解决方法或者思路的，决定记录下我的整个解决步骤，给同样入坑的伙伴们作个参考。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Google，看了stack overflow上的一些相关内容后，猜测是passenger的问题，于是终端输入<code>sudo passenger-status</code>, 发现passenger根本就没有开这个Rails的进程。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fks5pqt1ywj30l108xt9z.jpg" alt=""></p>
-<p>没开那就手动来开，在app的current目录下，运行<code>bundle exec passenger start</code>, 报错：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks5pqia5ej30tc0ka46y.jpg" alt=""></p>
-<p>怎么办？按照指示去tmp下找文件，看error log。</p>
-<p>以root身份登录，去tmp目录下，查看出错的log,这里是passenger-error-pxhJuZ.html。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">nano passenger-error-pxhJuZ.html</span><br></pre></td></tr></table></figure>
-<p>打开显示如下：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fksdg0z54rj30wv0dftdo.jpg" alt=""></p>
-<p>OK，那就动动listen 这个gem, google 后，参考stackoverflow上的解答<a href="https://stackoverflow.com/questions/38663706/loaderror-could-not-load-the-listen-gem-rails-5" target="_blank" rel="noopener">LoadError: Could not load the ‘listen’ gem (Rails 5)</a>， 把listen从development中移除，放在了global中</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksdhtg52aj30et0azdhc.jpg" alt=""></p>
-<p>本地运行<code>bundle</code>，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面，发现还是老样子。怎么回事？突然想到stack overflow上提到可以登录rails console看看，好，试试。</p>
-<p>用deploy身份登录远端后，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/Together/current #Together 是你的APP名称</span><br><span class="line">RAILS_ENV=production bundle exec rake db:seed</span><br></pre></td></tr></table></figure>
-<p>果然，报错，显示网站有bug，立马回去修bug……</p>
-<p>在本地修复好，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面， OK！！</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>这段爬坑的日子，遇到了不少Google了也不一定能解决的坑，甚至会让你在懵逼的情况下，被别人的解答带得越来越远。只想说解决问题的思路真的太重要了，同时多点耐心，相信坑坑皆有解。</p>
-<p>Be more patient.</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/10/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><a class="extend next" rel="next" href="/page/12/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/10/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/12/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2202,7 +2280,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">140</span>
+                <span class="site-state-item-count">141</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2335,7 +2413,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    131.4k
+    133.2k
   </span>
 
 </div>
