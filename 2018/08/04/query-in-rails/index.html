@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="ROR," />
 
 
 
@@ -90,6 +90,7 @@
 
 
 <meta name="description" content="写一写Rails中一些常用的查询。 group等同与SQL中的group_by，使用：  1Student.group(:gender).count 即： 12SELECT COUNT (*) AS count_all, genderFROM &quot;students&quot; GROUP BY gender joinSchool 与Clazz是一对多的关系。 1Clazz.joins(:school) 对应的">
+<meta name="keywords" content="ROR">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Rails中一些常用的数据查询命令">
 <meta property="og:url" content="http://lupeipei.github.io/2018/08/04/query-in-rails/index.html">
@@ -97,7 +98,7 @@
 <meta property="og:description" content="写一写Rails中一些常用的查询。 group等同与SQL中的group_by，使用：  1Student.group(:gender).count 即： 12SELECT COUNT (*) AS count_all, genderFROM &quot;students&quot; GROUP BY gender joinSchool 与Clazz是一对多的关系。 1Clazz.joins(:school) 对应的">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg">
-<meta property="og:updated_time" content="2018-08-06T23:52:51.592Z">
+<meta property="og:updated_time" content="2018-08-07T10:13:23.805Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Rails中一些常用的数据查询命令">
 <meta name="twitter:description" content="写一写Rails中一些常用的查询。 group等同与SQL中的group_by，使用：  1Student.group(:gender).count 即： 12SELECT COUNT (*) AS count_all, genderFROM &quot;students&quot; GROUP BY gender joinSchool 与Clazz是一对多的关系。 1Clazz.joins(:school) 对应的">
@@ -321,6 +322,28 @@
           </span>
 
           
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
 
           
             
@@ -353,7 +376,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,807 words</span>
+              <span>1,938 words</span>
             </span>
           
 
@@ -384,18 +407,18 @@
 <p>对应的SQL：</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.*  <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span>  <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"school_id"</span>=<span class="string">"schools"</span>.<span class="string">"id"</span></span><br></pre></td></tr></table></figure>
 <p>这里joins的参数的单复数很重要，School 与Clazz是一对多的关系，Clazz.joins(:school)，school必须是单数，School.joins(:clazzes)时，clazzes则是复数，即<strong>参数对应的不是表名，而是association names</strong>。</p>
-<p>多对多的joins：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:teachers</span>)</span><br></pre></td></tr></table></figure>
+<p>多对多的joins, 比如找出hello老师所在的所有班级：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:teachers</span>).where(<span class="symbol">teachers:</span> &#123; <span class="symbol">name:</span> <span class="string">"hello"</span> &#125;)</span><br></pre></td></tr></table></figure>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span></span><br></pre></td></tr></table></figure>
-<p>多表连接查询：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> <span class="keyword">WHERE</span> <span class="string">"teachers"</span>.<span class="string">"name"</span>=<span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<p>多表连接查询，比如查找 1班 A组的老师：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;)</span><br></pre></td></tr></table></figure>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br></pre></td></tr></table></figure>
-<p>嵌套连接nested joins：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Student.joins(<span class="symbol">:clazz</span>, [<span class="symbol">:grade</span>, <span class="symbol">:school</span>])</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span> </span><br><span class="line"><span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span></span><br></pre></td></tr></table></figure>
+<p>嵌套连接nested joins， 比如找出第一中学1班 A组的老师：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins( <span class="symbol">:groups</span>, <span class="symbol">clazzes:</span> [<span class="symbol">:school</span>]).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;,<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一中学"</span> &#125;)</span><br></pre></td></tr></table></figure>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"students"</span>.* <span class="keyword">FROM</span> <span class="string">"students"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.id = <span class="string">"students"</span>.<span class="string">"clazz_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span> <span class="keyword">ON</span> <span class="string">"schools"</span>.id = <span class="string">"clazzes"</span>.<span class="string">"school_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"grades"</span> <span class="keyword">ON</span> <span class="string">"grades"</span>.id = <span class="string">"clazzes"</span>.<span class="string">"grade_id"</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.id = <span class="string">"groups"</span>.<span class="string">"teacher_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span> <span class="keyword">ON</span> <span class="string">"schools"</span>.<span class="string">"id"</span> = <span class="string">"clazzes"</span>.<span class="string">"school_id"</span> <span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span> <span class="keyword">AND</span> <span class="string">"schools"</span>.<span class="string">"name"</span> = <span class="string">"第一中学"</span></span><br></pre></td></tr></table></figure>
 <p>附上一份各种JOIN的差异对比，帮助我自己记忆：P</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg" alt=""></p>
 <p>图片来源: <a href="https://blog.jooq.org/2016/07/05/say-no-to-venn-diagrams-when-explaining-joins/" target="_blank" rel="noopener">say no to venn digrams when explaining joins</a></p>
@@ -421,10 +444,10 @@
 <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="string">"schools.name ='第一小学'"</span>).references(<span class="symbol">:schools</span>)</span><br><span class="line"><span class="comment">## 等同于</span></span><br><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一小学"</span>&#125;)</span><br></pre></td></tr></table></figure>
 <p>注意到includes接受的参数同joins，是association names，而references则是表名。</p>
 <h4 id="counter-cache"><a href="#counter-cache" class="headerlink" title="counter_cache"></a>counter_cache</h4><p>用来快速获取关联计数，假设school model中有teachers_count这个字段，那么：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Teacher</span> &lt; ApplicationRecord</span></span><br><span class="line">	belongs_to <span class="symbol">:school</span>, <span class="symbol">:counter_cache</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Teacher</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:school</span>, <span class="symbol">:counter_cache</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 <p>这样<em>ActiveRecord</em>就会自动更新schools中的teachers_count的值。</p>
 <p>这里counter_cache对应的列名可以自定义，比如说老师和学生之间是一对多的关系，给老师这张表添加一个字段total_students_count ,则可以在student的model中这么设置：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> &lt; ApplicationRecord</span></span><br><span class="line">	belongs_to <span class="symbol">:teacher</span>, <span class="symbol">counter_cache:</span> <span class="string">"total_students_count"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:teacher</span>, <span class="symbol">counter_cache:</span> <span class="string">"total_students_count"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 <h4 id="find-each"><a href="#find-each" class="headerlink" title="find_each"></a>find_each</h4><p>find_each 分批查询， 默认每次捞出1000条记录。</p>
 <p>有三个参数可以设置：</p>
 <ul>
@@ -496,6 +519,12 @@
 
     <footer class="post-footer">
       
+        <div class="post-tags">
+          
+            <a href="/tags/ROR/" rel="tag"># ROR</a>
+          
+        </div>
+      
 
       
         
@@ -514,6 +543,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" rel="prev" title="报错记录：Postgresql the database system is starting up">
+                报错记录：Postgresql the database system is starting up <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -593,7 +626,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">141</span>
+                <span class="site-state-item-count">142</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -742,7 +775,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    133.3k
+    133.7k
   </span>
 
 </div>
