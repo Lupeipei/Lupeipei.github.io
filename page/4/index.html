@@ -273,6 +273,218 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="url">
+                  Ruby盲点梳理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-08T21:29:49+08:00">
+                2018-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Ruby/" itemprop="url" rel="index">
+                    <span itemprop="name">Ruby</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,662 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
+<p>说三个：benchmark，new &amp; allocate， delegator。</p>
+<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h4><p>Benchmark是一个module，提供了诸多方法，用于获取ruby代码的执行时间。</p>
+<p>比较常用的三个方法：</p>
+<ul>
+<li>benchmark(caption = “”, label_width = nil, format = nil, *labels) { |report| … }</li>
+<li>bm(label_width = 0, *labels) { |report| … }</li>
+<li>bmbm(width = 0) { |job| … }</li>
+</ul>
+<p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
+<p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
+<p>看例子感受下三者：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'benchmark'</span></span><br><span class="line"><span class="keyword">include</span> Benchmark</span><br><span class="line"></span><br><span class="line">n = <span class="number">500000</span></span><br><span class="line"></span><br><span class="line">Benchmark.benchmark(CAPTION, <span class="number">6</span>, FORMAT) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Benchmark.bm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Benchmark.bmbm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>输出的结果：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fr438e3d72j30fv09ewg0.jpg" alt=""></p>
+<p>这么看，感觉times也没有特别比for快多少……</p>
+<h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
+<p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
+<p>new对应的sourcecode如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> VALUE</span><br><span class="line">rb_class_s_new(<span class="keyword">int</span> argc, <span class="keyword">const</span> VALUE *argv, VALUE klass)</span><br><span class="line">&#123;</span><br><span class="line">    VALUE obj;</span><br><span class="line"></span><br><span class="line">    obj = rb_class_alloc(klass);</span><br><span class="line">    rb_obj_call_init(obj, argc, argv);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
+<p>看个例子感受下两者的差异：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### 根据官方文档稍稍改编了下</span></span><br><span class="line">klass = Class.new <span class="keyword">do</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(*args)</span></span></span><br><span class="line">    @initialized = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialized?</span></span></span><br><span class="line">    @initialized <span class="params">||</span> <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">klass.allocate <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;</span></span><br><span class="line">klass.allocate.initialized? <span class="comment">#=&gt; false</span></span><br><span class="line">klass.new <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 <span class="doctag">@initialized</span>=true&gt;</span></span><br><span class="line">klass.new.initialized? <span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure>
+<h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
+<p>先来看看SimpleDelegator。</p>
+<p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
+<p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Stats</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span></span></span><br><span class="line">    @source = SimpleDelegator.new([])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stats</span><span class="params">(records)</span></span></span><br><span class="line">    p <span class="string">"before setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">    @source.__setobj_<span class="number">_</span>(records)</span><br><span class="line">    p <span class="string">"after setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">s = Stats.new</span><br><span class="line"></span><br><span class="line">s.stats(<span class="string">%w&#123;Hello ruby world&#125;</span>)</span><br><span class="line"><span class="comment">#=&gt; "before setobj: 0"</span></span><br><span class="line"><span class="comment">#=&gt; "after setobj: 3"</span></span><br></pre></td></tr></table></figure>
+<p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
+<p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
+<p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
+<p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
+<p>先看个Forwardable的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'forwardable'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecordCollection</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:records</span></span><br><span class="line">  extend Forwardable</span><br><span class="line">  def_delegator <span class="symbol">:</span>@records, <span class="symbol">:[]</span>, <span class="symbol">:record_number</span></span><br><span class="line">  def_delegators <span class="symbol">:</span>@records, <span class="symbol">:size</span>, <span class="symbol">:&lt;&lt;</span>, <span class="symbol">:map</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = RecordCollection.new</span><br><span class="line">obj.records = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>]</span><br><span class="line">obj.record_number(<span class="number">0</span>) <span class="comment">#=&gt; 1， 相当于执行[1,2,4](0)</span></span><br><span class="line">obj.size <span class="comment">#=&gt; 3 ， 相当于执行[1,2,4].size</span></span><br><span class="line">obj &lt;&lt; <span class="number">5</span> <span class="comment">#=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5</span></span><br><span class="line">obj.map &#123; <span class="params">|x|</span> x + <span class="number">1</span>&#125; <span class="comment">#=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;</span></span><br></pre></td></tr></table></figure>
+<p>这里 <code>def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:size</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:&lt;&lt;</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:map</span></span><br></pre></td></tr></table></figure>
+<p>再来看一个SingleForwardable的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
+<p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
+<p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
+<p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
+<p>以上面的例子为例：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"world"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; world</span></span><br></pre></td></tr></table></figure>
+<h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fr43phbujxj308e034t8q.jpg" alt=""></p>
+<p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a>年，是这么说的：</p>
+<blockquote>
+<p>However, this year saw the <strong>beginning of the Gregorian Calendar switch</strong>, when the Papal bull known as Inter gravissimas introduced the Gregorian calendar, adopted by Spain, Portugal, the Polish–Lithuanian Commonwealth and most of present-day Italy from the start. In these countries, <strong>the year continued as normal until Thursday, October 4. However, the next day became Friday, October 15</strong> (like a common year starting on Friday), in those countries (France followed two months later, letting Sunday, December 9 be followed by Monday, December 20).</p>
+</blockquote>
+<p>这种操作真6，老祖宗们会玩。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://devdocs.io/ruby~2.5/" target="_blank" rel="noopener">ruby 2.5</a></p>
+<p><a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a></p>
+<p>谢谢D推荐的<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>， 用来阅读文档真的是超赞！推荐使用<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>：P</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/04/upgrade-wget-on-ubuntu/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2047,196 +2259,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/" itemprop="url">
-                  给你的GitHub page blog自定义域名配上HTTPS
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-13T12:07:03+08:00">
-                2018-04-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>389 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>发现自己的个人blog被贴上了广告，上图感受下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqastm6cmnj30yv0kldii.jpg" alt=""></p>
-<p>无法忍受，立马Google，按<a href="https://jaeger.itscoder.com/web/2017/08/30/github-page-https" target="_blank" rel="noopener">GitHub Page 博客自定义域名添加 HTTPS 支持</a>这篇的指引，注册了<a href="https://www.netlify.com/" target="_blank" rel="noopener">Netlify</a> ，可惜卡在了Domain management - custom domain这，检查了步骤，没遗漏，不解，道不行，乘桴浮於海，此路不通咱换一个，改用了 <a href="https://www.cloudflare.com/" target="_blank" rel="noopener">Cloudflare</a>，简单有效！</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><ul>
-<li><p>注册 <a href="https://www.cloudflare.com/" target="_blank" rel="noopener">Cloudflare</a> ；</p>
-</li>
-<li><p>注册后，它会让你输入你的网站域名，比如我的是luciaca.cn， 随后它会进行检测，输出结果，按照指示走即可；</p>
-</li>
-<li><p>随后会给到你新的DNS，要求你修改原DNS，直接去你的域名提供商那里「比如我的域名是在阿里云买的，直接登录阿里云修改DNS即可」，将你的DNS修改成Cloudflare给到的DNS；</p>
-</li>
-<li><p>修改好后，你的网站状态显示是not active，稍等几分钟，会发现ative了。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqatcjex1xj30r90840t9.jpg" alt=""></p>
-</li>
-<li><p>可是我发现网站竟然不能访问了，心慌慌，检查发现DNS records部分弹出了提醒信息：我的A, MX records都没有写，让我添加。</p>
-<p>然后修改成这样：👇</p>
-<p>「MX的那个 mail server 我写的是mail.luciaca.cn，这个是瞎蒙的。」</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqaw2rhjexj30r20g40ux.jpg" alt=""></p>
-</li>
-<li><p>设置always use HTTPS</p>
-<p>在Crypto部分，找到Always use HTTPS，选择on，这样就可以了。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqavtj5jxvj30qh04emxh.jpg" alt=""></p>
-<p>​</p>
-</li>
-</ul>
-<p>访问http时，会自动跳转到https。</p>
-<p>最后的效果：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqavbab5uzj30ng08dmxh.jpg" alt=""></p>
-<p>哈哈，加上了小绿锁，效果很满意！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://windard.com/project/2016/09/23/Add-HTTPS-To-Jekyll" target="_blank" rel="noopener">给 Jekyll 配置 HTTPS</a></p>
-<p><a href="https://jaeger.itscoder.com/web/2017/08/30/github-page-https" target="_blank" rel="noopener">GitHub Page 博客自定义域名添加 HTTPS 支持</a></p>
-<p><a href="https://sheharyar.me/blog/free-ssl-for-github-pages-with-custom-domains/" target="_blank" rel="noopener">Set Up SSL on Github Pages With Custom Domains for Free</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2286,7 +2308,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">142</span>
+                <span class="site-state-item-count">143</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2297,7 +2319,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2419,7 +2441,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    133.7k
+    134.9k
   </span>
 
 </div>

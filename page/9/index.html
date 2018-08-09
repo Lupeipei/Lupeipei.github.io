@@ -273,6 +273,187 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/06/how-to-drop-a-table-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/02/06/how-to-drop-a-table-on-rails/" itemprop="url">
+                  Rails中如何删除数据表？
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-06T10:41:02+08:00">
+                2018-02-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/02/06/how-to-drop-a-table-on-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/02/06/how-to-drop-a-table-on-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>418 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>先看个场景：</p>
+<p>当你运行<code>rake db:migrate</code>时，终端报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SQLite3::SQLException: table &quot;XXXX&quot; already exists……</span><br></pre></td></tr></table></figure>
+<p>这种情况下，多半由于你重建了tableXXXX导致，针对这种情况，一般有两种方法可以解决：</p>
+<ul>
+<li>查看你需要migrate的代码，是否存在重建tableXXXX的情况，如果有，注释掉，然后再run <code>rake db:migrate</code>；</li>
+<li>删除掉数据库中已经存在的table XXXX，再run <code>rake db:migrate</code>， 重建新的table XXXX。 「特别是当你对先前建的table并不满意时」</li>
+</ul>
+<p>第一种很好办，没啥可说的，看第二种具体怎么做。</p>
+<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>以table projects为例，含字段title，description。</p>
+<p>两种方法：</p>
+<p>一个简单粗暴的方式是<code>rails c</code>，打开rails console，运行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ActiveRecord::Migration.drop_table(:projects) #将projects换成你要删除的表名</span><br></pre></td></tr></table></figure>
+<p>另一个方式先注释掉需要migration的代码，然后新建一个migration：<code>rails g migration Dropprojects</code></p>
+<p>在生成的<code>xxxxxx_Dropprojects.rb</code>中填入以下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dropprojects</span> &lt; ActiveRecord::Migration</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    drop_table <span class="symbol">:projects</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:title</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.text <span class="symbol">:description</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.timestamps <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>终端run <code>rake db:migrate</code>， 成功删除， 这应该算是比较 “officials” 的做法了。</p>
+<p>删除后，再取消你先前注释的需要migration的代码，运行<code>rake db:migrate</code>， 重建新的table。</p>
+<p>此外，当你在Rails中添加了一个table XXXX，发现后续并不需要这个table了，也可以通过上诉的方式删除它。</p>
+<p>当然，大部分情况下，不建议动数据库的，因为多个table之间可能存在关联，删除可能引发潜在的问题。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/classes/ActiveRecord/Migration.html" target="_blank" rel="noopener">Active Record Migrations</a></p>
+<p><a href="https://stackoverflow.com/questions/4020131/rails-db-migration-how-to-drop-a-table" target="_blank" rel="noopener">Rails DB Migration - How To Drop a Table?</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/01/footer-always-on-the-buttom-with-flex/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2076,199 +2257,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/01/08/capture-full-page-with-capybara/" itemprop="url">
-                  headless_chrome下，使用capybara截取整个网页
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-08T21:22:40+08:00">
-                2018-01-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Selenium/" itemprop="url" rel="index">
-                    <span itemprop="name">Selenium</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/01/08/capture-full-page-with-capybara/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/01/08/capture-full-page-with-capybara/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>636 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做cucumber测试时，使用capybara来截取整个网页，掉进了一个坑，记录下，也附上最终的解决方法。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>默认情况下，capybara截取的图片大小尺寸是由自己设置的window.size来决定的，如果你想截取全屏怎么办？</p>
-<p>这样的需求肯定不是你第一个提出来，所以Google下， how to get full page screenshot with capybara ，会得到一些相关的链接，比如这条：</p>
-<p><a href="https://stackoverflow.com/questions/16695075/is-it-possible-to-take-a-screenshot-of-the-whole-page-with-selenium-capybara" target="_blank" rel="noopener">Is it possible to take a screenshot of the whole page with Selenium/Capybara?</a></p>
-<p>看解答，很简单，窃喜，这么快就解决了：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">page.save_screenshot(&apos;screen.png&apos;, full: true)</span><br></pre></td></tr></table></figure>
-<p>连提问者本人都对这个解答很满意，亲测有效，立马试试。</p>
-<p>然后你会发现，根本没有任何效果，截取的仍然不是整个网页，只是一部分页面，这时候，可以去看源码<a href="http://www.rubydoc.info/github/jnicklas/capybara/Capybara%2FSession:save_screenshot" target="_blank" rel="noopener">Capybara::Session#save_screenshot</a>, 发现确实有option的选项：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fn9bsxoifmj30n00drgo3.jpg" alt=""></p>
-<p>这样看，应该没错啊，然后你会怀疑是不是自己代码敲错了，符号敲的不对，还是哪里没有设置好……</p>
-<p>这个地方真的是个坑。</p>
-<p>为什么坑？因为你没注意看这个解答中提到的driver是Selenium，而它通常的搭档browser是Firefox, 不是chrome，所以只能说是你的粗心给自个挖了个坑……</p>
-<p>这里，你会想问，为什么是headerless_chrome时就不行了呢？</p>
-<p>还是stack overflow：【强大的stack！】</p>
-<p>看这个<a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
-<p>这里，Thomas Walpole的解答非常清楚，忍不住想点赞。【可惜我的reputations还不到15……】</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9c9khgxbj30im09c41f.jpg" alt=""></p>
-<p>查看selenium的<a href="https://github.com/SeleniumHQ/selenium/blob/master/rb/lib/selenium/webdriver/common/driver_extensions/takes_screenshot.rb#L34" target="_blank" rel="noopener">takes_screenshot</a>， save_screenshot的定义中，参数只有一个path：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9fzei9h1j30mo058dge.jpg" alt=""></p>
-<p>所以，剩下的就简单了，去resize window即可。</p>
-<p>好，不废话了，直接上货：</p>
-<p>在<code>features/support</code>下新建文件<code>screenshot.rb</code>, 放入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">full_page_screenshot</span><span class="params">(file_name = <span class="literal">nil</span>)</span></span></span><br><span class="line">  width  = Capybara.page.execute_script(<span class="string">"return Math.max(document.body.scrollWidth, document.body.offsetWidth);"</span>)</span><br><span class="line">  height = Capybara.page.execute_script(<span class="string">"return Math.max(document.body.scrollHeight, document.body.offsetHeight);"</span>)</span><br><span class="line">  window = Capybara.current_session.driver.browser.manage.window</span><br><span class="line">  window.resize_to(width, height)</span><br><span class="line">  file = Capybara.page.save_screenshot(file_name)</span><br><span class="line">  <span class="keyword">return</span> file</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>上图看清楚点：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fnack5oeqyj30o303l74z.jpg" alt=""></p>
-<p>这里，width，height是调用脚本来运行得到的，也就是借助JS获取了当前打开页面的长宽值。</p>
-<p>参数方面，file_name我用了nil作为默认值，这样更灵活，既可以用capybara默认生成的文件名，也可以自定义。</p>
-<p>调用的时候，直接调用full_page_screenshot就好了。</p>
-<p>上个效果图：【截取了codepen主页】</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fn9gikub5fj31ig2xze7f.jpg" alt=""></p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
-<p><a href="https://testingrepository.com/full-page-screenshot-with-selenium/" target="_blank" rel="noopener">Full page screenshot with selenium</a></p>
-<p><a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
-<p><a href="http://yizeng.me/2014/02/23/how-to-get-window-size-resize-or-maximize-window-using-selenium-webdriver/" target="_blank" rel="noopener">How to get window size, resize or maximize window using Selenium WebDriver</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2318,7 +2306,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">142</span>
+                <span class="site-state-item-count">143</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2329,7 +2317,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">20</span>
+                <span class="site-state-item-count">21</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2451,7 +2439,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    133.7k
+    134.9k
   </span>
 
 </div>
