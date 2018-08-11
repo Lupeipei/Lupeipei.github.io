@@ -273,6 +273,228 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/26/ruby-metaprogramming-part2-the-methods/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/26/ruby-metaprogramming-part2-the-methods/" itemprop="url">
+                  读《Ruby元编程》之方法
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-26T21:22:13+08:00">
+                2018-03-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/读书笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">读书笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/26/ruby-metaprogramming-part2-the-methods/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/26/ruby-metaprogramming-part2-the-methods/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,795 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="化繁为简"><a href="#化繁为简" class="headerlink" title="化繁为简"></a>化繁为简</h4><p>《Ruby元编程》的第3章说到了方法，从一段代码的重构说起，主线是动态方法dynamic methods和幽灵方法ghost methods，随后说了下ghost methods 的两个常见陷阱。</p>
+<p>整章看下来，最大的感触就是重构后的代码真的是清爽啊。dynamic methods和ghost methods简直就是化繁为简的利器。</p>
+<p>先来看段代码。</p>
+<h4 id="一段需要重构的代码"><a href="#一段需要重构的代码" class="headerlink" title="一段需要重构的代码"></a>一段需要重构的代码</h4><p>引用书中的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    @id = computer_id</span><br><span class="line">    @data_source = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">mouse</span></span></span><br><span class="line">    info = @data_source.get_mouse_info(@id)</span><br><span class="line">    price = @data_source.get_mouse_price(@id)</span><br><span class="line">    result = <span class="string">"Mouse: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)"</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">#&#123;result&#125;</span>"</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cpu</span></span></span><br><span class="line">    info = @data_source.get_cpu_info(@id)</span><br><span class="line">    price = @data_source.get_cpu_price(@id)</span><br><span class="line">    result = <span class="string">"Cpu: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)"</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">#&#123;result&#125;</span>"</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">keyboard</span></span></span><br><span class="line">    info = @data_source.get_keyboard_info(@id)</span><br><span class="line">    price = @data_source.get_keyboard_price(@id)</span><br><span class="line">    result = <span class="string">"Keyboard: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)"</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">#&#123;result&#125;</span>"</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这段代码中，class Computer有三个method，且每个method的代码有很多共通的部分。如何解决这种代码繁复的问题？</p>
+<p>解决方法就在dynamic methods和ghost methods。</p>
+<h4 id="动态方法dynamic-methods"><a href="#动态方法dynamic-methods" class="headerlink" title="动态方法dynamic methods"></a>动态方法dynamic methods</h4><p>先来看看用动态方法如何重构上诉代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    @id = computer_id</span><br><span class="line">    @data_source = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">    @data_source.methods.grep(<span class="regexp">/^get_(.*)_info$/</span>)</span><br><span class="line">    &#123;Computer.define_component $1&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">define_component</span><span class="params">(name)</span></span></span><br><span class="line">    define_method(name) <span class="keyword">do</span></span><br><span class="line">      info = @data_source.send <span class="string">"get_<span class="subst">#&#123;name&#125;</span>_info"</span>, @id</span><br><span class="line">      price = @data_source.send <span class="string">"get_<span class="subst">#&#123;name&#125;</span>_price"</span>, @id</span><br><span class="line">      result = <span class="string">"<span class="subst">#&#123;name.capitalize&#125;</span>: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)"</span></span><br><span class="line">      <span class="keyword">return</span> <span class="string">"<span class="subst">#&#123;result&#125;</span>"</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">      result</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里使用了内省，即调用methods得到@data_source中所有匹配<code>/^get_(.*)_info$/</code>的methods，使用$1来保存，然后调用类方法define_component。而在类方法define_component中，则使用了动态方法，其中，define_method是定义动态方法，而send则是动态派发。</p>
+<p>方法无非就是定义加调用，动态方法跟普通方法并没有什么大的区别。</p>
+<ul>
+<li><p>定义动态方法</p>
+<p>用define_method来定义动态方法。看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  define_method <span class="symbol">:my_method</span> <span class="keyword">do</span> <span class="params">|x, y|</span></span><br><span class="line">    x + x * y</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = MyClass.new</span><br><span class="line">obj.send(<span class="symbol">:my_method</span>,<span class="number">1</span>,<span class="number">2</span>) <span class="comment"># =&gt; 3</span></span><br><span class="line">obj.my_method(<span class="number">1</span>,<span class="number">2</span>) <span class="comment"># =&gt; 3</span></span><br></pre></td></tr></table></figure>
+<p>方法的定义由常规的def关键字变成了define_method关键字, 其他并没有什么变化。方法名作为参数，外加一个代码块block。我的理解是，它的灵活性与send其实很一致，就在于方法名是参数，可以动态定义方法。</p>
+</li>
+<li><p>调用动态方法</p>
+<p>调用一个方法实际上是给对象发送一条信息。</p>
+<p>send是Object的一个实例方法，第一个参数是方法的名字，由于方法名最好是不可修改的，所以通常是以符号的形式传递，剩下的，则是需要传递给方法的参数，可含代码块。</p>
+<p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x,y)</span></span></span><br><span class="line">    x + <span class="keyword">yield</span>(x,y)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = MyClass.new</span><br><span class="line">obj.send(<span class="symbol">:my_method</span>,<span class="number">1</span>,<span class="number">2</span>)&#123;<span class="params">|x, y|</span> x * y&#125; <span class="comment"># =&gt; 3</span></span><br><span class="line">obj.my_method(<span class="number">1</span>,<span class="number">2</span>) &#123;<span class="params">|x, y|</span> x * y&#125; <span class="comment"># =&gt; 3</span></span><br></pre></td></tr></table></figure>
+<p>使用send调用my_method， 和使用.my_method的调用是一样的。</p>
+<p>那么使用send的意义在哪里？因为方法名成了参数，所以在代码运行中，可以决定调用哪个方法，上面重构后的代码便是如此，根据name的值，来决定需要调用哪个method。</p>
+</li>
+</ul>
+<h4 id="幽灵方法-ghost-methods"><a href="#幽灵方法-ghost-methods" class="headerlink" title="幽灵方法 ghost methods"></a>幽灵方法 ghost methods</h4><p>见到了大名鼎鼎的method_missing了。</p>
+<p>先看用幽灵方法重构Computer类的结果：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span> &lt; BasicObject</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    @id = computer_id</span><br><span class="line">    @data_source = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    <span class="keyword">super</span> <span class="keyword">if</span> !@data_source.respond_to?(<span class="string">"get_<span class="subst">#&#123;name&#125;</span>_info"</span>)</span><br><span class="line">    info = @data_source.send <span class="string">"get_<span class="subst">#&#123;name&#125;</span>_info"</span>, @id</span><br><span class="line">    price = @data_source.send <span class="string">"get_<span class="subst">#&#123;name&#125;</span>_price"</span>, @id</span><br><span class="line">    result = <span class="string">"<span class="subst">#&#123;name.capitalize&#125;</span>: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)"</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"<span class="subst">#&#123;result&#125;</span>"</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，注意到<strong>Computer继承自BasicObject</strong>，而不是默认的Object，这是为了避开method_missing的一个陷阱，而选择了BasicObject这个白板类（blank slates）【白板类：拥有极少方法的类】，这块留在陷阱部分说。</p>
+<p>可以看到method_missing中send的身影，故它也使用了动态派发。</p>
+<p>method_missing是BasicObject的一个私有实例方法。通过重定义method_missing来完成对方法调用的拦截，但是值得一提的是，它们不会出现在object#methods的列表中，故有幽灵方法之称。</p>
+<p>书中举了<a href="https://github.com/huboard/ghee" target="_blank" rel="noopener">Ghee</a>的例子，我去看了它的method_missing定义, 在lib/ghee的resource_proxy.rb中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## lib/ghee/resource_proxy.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(message, *args, &amp;block)</span></span></span><br><span class="line">  subject.send(message, *args, &amp;block)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里连续调用了两次method_missing，先是将message转发给Ghee::ResourceProxy#method_missing方法，然后再从这里转给subject，而这个subject是一个Hassher::Mash对象，它又转给了Hassher::Mash#method_missing方法进行处理。这种捕获幽灵方法，并将它们转发给另一个对象，又称之为幽灵代理，即像Ghee::ResourceProxy这样的对象，就是幽灵代理。</p>
+<h4 id="幽灵方法的两个陷阱"><a href="#幽灵方法的两个陷阱" class="headerlink" title="幽灵方法的两个陷阱"></a>幽灵方法的两个陷阱</h4><ul>
+<li><p>在method_missing中调用了未定义的method，导致method_missing被不断回调，直到调用堆栈溢出</p>
+<p>看段代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    <span class="number">10</span>.times <span class="keyword">do</span></span><br><span class="line">      number = rand(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    puts <span class="string">"<span class="subst">#&#123;number&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>【这是一段没啥用的代码，仅仅用来作为例子】</p>
+<p>这里其实涉及到作用域scope的问题，number定义在代码块中，等到代码块结束，执行puts “#{number}”时，ruby会把<strong>number当成是一个在self上省略了括号的方法调用</strong>，<strong>即self.number,</strong> 正常情况下，会出现nomethoderror，因为没有定义number这个method的，但是由于重写了method_missing，所以它会继续调用这个重写后的method_missing，导致出现死循环。</p>
+<p>如何解？改number的作用域即可。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    number = <span class="number">0</span></span><br><span class="line">    <span class="number">10</span>.times <span class="keyword">do</span></span><br><span class="line">      number = rand(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    puts <span class="string">"<span class="subst">#&#123;number&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>幽灵方法与真实方法重名，导致幽灵方法被忽略。</p>
+<p>书中举了一个display的例子，我觉得挺好理解的，附上：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">my_computer = Computer.new(<span class="number">12</span>, DS.new)</span><br><span class="line">my_computer.display <span class="comment"># =&gt; nil</span></span><br></pre></td></tr></table></figure>
+<p>这里，my_computer调用了display方法，其本意是要看显示器method，但是Object自带了一个display方法，Computer继承Object，所以也有一个display方法，导致调用的时候，忽略了幽灵方法，这里也可以看得出来，在调用方法时，必然是先搜遍了祖先链，然后再调用幽灵方法。</p>
+<p>怎么破？两种方式。</p>
+<ul>
+<li><p>使用白板类</p>
+<p>用幽灵方法重构代码那部分就提到了，Computer继承自BasicObject，用的就是白板类，从而没有了display这样的情况。</p>
+</li>
+<li><p>删除方法display</p>
+<p>用两种删除方法的途径：undef_method【删除所有包括继承来的方法】， remove_method【删除接受者自己的方法】</p>
+<p>看段代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line">  .....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hide</span><span class="params">(name)</span></span></span><br><span class="line">    <span class="keyword">if</span> instance_methods.<span class="keyword">include</span>?(name)</span><br><span class="line">      undef_method name</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  hide(<span class="string">'display'</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样就会删除掉继承自Object#display方法。个人觉得删除方法容易出问题，用白板会好一些</p>
+<h4 id="使用原则"><a href="#使用原则" class="headerlink" title="使用原则"></a>使用原则</h4></li>
+</ul>
+</li>
+</ul>
+<p>由于幽灵方法并不是真正的方法，用的时候还容易踩坑，所以在可以使用动态方法的时候，尽量使用动态方法，除非必须使用幽灵方法，否则尽量不要使用它。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/24/ruby-metaprogramming-part1-the-object-model/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2044,202 +2266,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/06/using-layer-photos-in-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/06/using-layer-photos-in-rails/" itemprop="url">
-                  Rails中使用layer.photos来预览图片
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-06T09:00:28+08:00">
-                2018-03-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/06/using-layer-photos-in-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/06/using-layer-photos-in-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>856 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写了篇学习笔记<a href="http://luciaca.cn/2018/02/24/using-layer-on-Rails/" target="_blank" rel="noopener">Rails中使用layer弹窗组件</a>， 这篇写写如何在Rails中使用layer的photos来实作图片预览。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>在其文档的<a href="http://www.layui.com/doc/modules/layer.html#layer.photos" target="_blank" rel="noopener">layer.photos</a>中，有用法的详细说明。两种方式：</p>
-<ul>
-<li>直接读取页面图片</li>
-<li>传入json</li>
-</ul>
-<p>来看一下每种方式的具体使用。</p>
-<h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"layer-photos-demo"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript"><span class="comment">//调用示例</span></span></span><br><span class="line"><span class="undefined">layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">  photos: <span class="string">'#layer-photos-demo'</span></span></span><br><span class="line"><span class="javascript">  ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span></span><br><span class="line"><span class="undefined">&#125;);</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
-<p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg" alt=""></p>
-<p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
-<p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">%</span> <span class="attr">product.images.each</span> <span class="attr">do</span> |<span class="attr">image</span> |%&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">img</span>  <span class="attr">onclick</span>= <span class="string">"getImage('&lt;%= product.id %&gt;');"</span> <span class="attr">layer-src</span>=<span class="string">"&lt;%= image.src %&gt;"</span> <span class="attr">src</span>=<span class="string">"&lt;%= image.thumb %&gt;"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span>   </span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImage</span>(<span class="params">productId</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">        layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">            photos: <span class="string">'#product-'</span> + productId,</span></span><br><span class="line"><span class="undefined">            anim:5</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$.getJSON(<span class="string">'/jquery/layer/test/photos.json'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span><br><span class="line">  layer.photos(&#123;</span><br><span class="line">    photos: json</span><br><span class="line">    ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>返回的JSON需严格按照如下格式：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  "title": "", //相册标题</span><br><span class="line">  "id": 123, //相册id</span><br><span class="line">  "start": 0, //初始显示的图片序号，默认0</span><br><span class="line">  "data": [   //相册包含的图片，数组格式</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"alt"</span>: <span class="string">"图片名"</span>,</span><br><span class="line">      "pid": 666, //图片id</span><br><span class="line">      "src": "", //原图地址</span><br><span class="line">      "thumb": "" //缩略图地址</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
-<p>还是以product为例， 三步走：</p>
-<ul>
-<li><p>给它添加一个preview的action， 在routes中声明</p>
-<p>在<code>routes.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:products</span> <span class="keyword">do</span></span><br><span class="line">  member <span class="keyword">do</span></span><br><span class="line">    get <span class="symbol">:preview</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preview</span></span></span><br><span class="line">  @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @images = @product.images.all</span><br><span class="line">  @photo = &#123;</span><br><span class="line">      <span class="symbol">title:</span> @product.title,</span><br><span class="line">      <span class="symbol">id:</span> @product.id,</span><br><span class="line">      <span class="symbol">start:</span> <span class="number">0</span>,</span><br><span class="line">      <span class="symbol">data:</span> @images.map <span class="keyword">do</span> <span class="params">|image|</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="symbol">alt:</span> image.title,</span><br><span class="line">            <span class="symbol">pid:</span> image.id,</span><br><span class="line">            <span class="symbol">src:</span> image.src,</span><br><span class="line">            <span class="symbol">thumb:</span> image.thumb</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">  &#125;</span><br><span class="line">  render <span class="symbol">json:</span> @photo</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
-</li>
-<li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:getImageJson('&lt;%= product.id %&gt;');"</span>&gt;</span></span><br><span class="line">      查看产品图片<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImageJson</span>(<span class="params">productId</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">        $.getJSON(<span class="string">'/products/'</span> + productId + <span class="string">'/preview'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">            layer.photos(&#123;</span></span><br><span class="line"><span class="undefined">                photos: json,</span></span><br><span class="line"><span class="undefined">                anim: 5</span></span><br><span class="line"><span class="undefined">            &#125;);</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>刷新页面确认是否正常。</p>
-<p>OK， 大功告成。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹层组件文档 - layui.layer</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2289,7 +2315,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">143</span>
+                <span class="site-state-item-count">144</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2422,7 +2448,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    134.9k
+    135.9k
   </span>
 
 </div>
