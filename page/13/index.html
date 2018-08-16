@@ -273,6 +273,205 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/15/deploy-with-qiniu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/15/deploy-with-qiniu/" itemprop="url">
+                  七牛云端部署，想说爱你不容易
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-15T20:03:17+08:00">
+                2017-10-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/15/deploy-with-qiniu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/15/deploy-with-qiniu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>820 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>  前段时间，租了阿里云，买了域名，最近折腾了下，终于把之前做的网站部署上去了。</p>
+<p>  整个部署过程中，感觉最虐的就是七牛云那块了，对于半路出家的新手来说，真是个不小的坑。记录下这段虐心的旅程。</p>
+<hr>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>  我用的是Capistrano来部署Rails项目，这里只记录一下我在远端服务器运行seed时，会出现的问题。<br>  好，我们开始吧！<br>  当你在终端<code>~/yourproject_name/current</code>执行<code>RAILS_ENV=production bundle exec rake db:seed</code>, 可能会出现如下报错：</p>
+<ul>
+<li><p><strong>NoMethodError： undefined method qiniu_up_host</strong></p>
+<p>这个报错出现的有些奇怪，我在本地运行<code>rake db:seed</code>时，也报错，而我之前部署到heroku时并没有出现过这种情况，不解。</p>
+<p>虽然不理解它为什么会出现，但是有问题咱就得想着解决，看看怎么破了它。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkj51hciw8j30qn069di8.jpg" alt=""></p>
+<p><strong>解决办法：</strong></p>
+<p>方法很粗暴。<br>在本地的<code>config/initializers/carrierwave.rb</code>文件中，将host那一行直接注释，然后运行<code>rake db:seed</code>， 发现OK啦。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkj56rr9y4j30cl06ndgc.jpg" alt=""></p>
+<p>为什么我会想到直接注释？Google了下，发现如果你的服务器在国内，qiniu_up_host是可以不用设置的。</p>
+<p>另外，还有一种情况是config.qiniu_up_host的值写错了，不同的存储区域是不一样的，具体可以参见<a href="https://developer.qiniu.com/kodo/manual/1671/region-endpoint" target="_blank" rel="noopener">七牛开发者中心-存储区域</a>。</p>
+</li>
+<li><p><strong>TypeError: no implicit conversion of nil to String</strong></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fkj032q8itj30l70bctbx.jpg" alt=""></p>
+<p>出现这个情况，是因为我使用了<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 管理密码，之前部署到heroku时，终端运行<code>figaro heroku:set -e production</code>就可以了，但是这里，我们怎么把七牛对应的AccessKey，SecretKey等信息放入remote server呢？</p>
+<p>其实，<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 的README文档中已经提到了，咱们这么来：</p>
+<p>Step1、在远端的<code>~/yourproject_name/shared/config</code>中，添加<code>application.yml</code>, 内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">production:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="symbol">development:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br></pre></td></tr></table></figure>
+<p>这里，虽然我们添加了这个文件，但是由于你的<code>config/deploy.rb</code>中没有设置，所以部署的时候并不会去连接这个文件。</p>
+<p>Step2、在本机上编辑<code>config/deploy.rb</code>，将<code>application.yml</code>添加进去：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-  append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/secrets.yml"</span></span><br><span class="line">+  append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/secrets.yml"</span>, <span class="string">"config/application.yml"</span></span><br></pre></td></tr></table></figure>
+<p>OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
+</li>
+<li><p><strong>TypeError: class or module required for rescue clause</strong></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1fkj0j8b12pj30oa0bujuv.jpg" alt=""></p>
+<p>看到报错，第一反应就是google，在<a href="https://github.com/huobazi/carrierwave-qiniu/issues/17" target="_blank" rel="noopener">carrierwave-qiniu configuration error #17</a> 中, 提到<code>qiniu-rs</code>这个gem已经没有人在维护了，要安装最新版的<code>carrierwave-qiniu</code>。好，那就重新安装，又不是第一次被版本坑了: P。</p>
+<p>在gemfile中做如下修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+ gem &apos;carrierwave-qiniu&apos;, &apos;~&gt; 1.1.5&apos;</span><br><span class="line"></span><br><span class="line">- gem &apos;qiniu-rs&apos;</span><br></pre></td></tr></table></figure>
+<p>终端运行<code>bundle install</code>, 报错显示：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79ly1fkj1s2ugzfj30me0bq76f.jpg" alt=""></p>
+<p>显示没有mime-types，按照提示，运行<code>bundle update</code>， OK！</p>
+<hr>
+</li>
+</ul>
+<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p><strong>Attention：</strong></p>
+<p>  请在每次修改后，进行git commit 和 git push ，然后在本地运行 <code>cap production deploy</code>部署，Capistranno会从GitHub上拉下最新的进度，最后在远端服务器的<code>~/yourproject_name/current</code>目录下，运行<code>RAILS_ENV=production bundle exec rake db:seed</code>。</p>
+<p>  哦，附上我的成品<a href="https://www.togetherisbetter.cn/" target="_blank" rel="noopener">Together is better</a> : P.</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/10/login-server-without-password/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2696,208 +2895,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/01/web-together-build-5/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/01/web-together-build-5/" itemprop="url">
-                  Together网站搭建之踩坑系列5
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-01T06:26:19+08:00">
-                2017-10-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/01/web-together-build-5/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/01/web-together-build-5/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>512 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是功能实现的第四篇，扯一扯<strong>如何添加时间筛选功能</strong>。</p>
-<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
-<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
-<li><a href="https://lupeipei.github.io/2017/09/28/web-together-build-2/">给活动添加收藏功能，并使用Ajax进行优化</a></li>
-<li><a href="https://lupeipei.github.io/2017/09/29/web-together-build-3/">给活动Events添加分类筛选</a></li>
-<li><a href="https://lupeipei.github.io/2017/09/30/web-together-build-4/">添加省市自治区地址, 并实现热门城市筛选</a></li>
-<li>添加时间筛选</li>
-<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/03/web-together-build-7/">实作活动申请</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
-</ul>
-<h4 id="正文："><a href="#正文：" class="headerlink" title="正文："></a>正文：</h4><p>老规矩，上效果图先：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fjzd6h5bqtg30zh0i2e85.gif" alt=""></p>
-<p><strong>具体步骤：</strong></p>
-<p>这里，我用了 bootstrap-datepicker-rails来作为日期筛选，没有用date_field_tag, 既为了美观，也为了避免出现浏览器支援的问题。</p>
-<p>好，开始吧。</p>
-<ul>
-<li><p>安装，在gemfile中加入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;bootstrap-datepicker-rails&apos;</span><br></pre></td></tr></table></figure>
-<p>终端运行<code>bundle install</code></p>
-</li>
-<li><p>编辑<code>app/assets/stylesheets/application.scss</code>，加入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@import &quot;bootstrap-datepicker3&quot;;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/assets/javascripts/application.js</code>，加入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//= require bootstrap-datepicker/core</span><br><span class="line">//= require bootstrap-datepicker/locales/bootstrap-datepicker.zh-CN</span><br></pre></td></tr></table></figure>
-<p>这里，引入了中文版</p>
-</li>
-<li><p>在<code>app/views/events/index.html.erb</code>中，加入日期输入框：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;div class="submenu"&gt;</span><br><span class="line">    &lt;span&gt;&lt;i class="fa fa-calendar fa-lg"&gt;&lt;/i&gt; 时间: &lt;/span&gt;</span><br><span class="line">    &lt;div class="form-group" style="margin-left: 80px; margin-top: -20px;"&gt;</span><br><span class="line">    &lt;%= form_tag events_path, <span class="symbol">:method</span> =&gt; <span class="symbol">:get</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">      &lt;%= text_field_tag <span class="symbol">:start_on</span>, params[<span class="symbol">:start_on</span>]%&gt; ~  &lt;%= text_field_tag <span class="symbol">:end_on</span>, params[<span class="symbol">:end_on</span>]%&gt;</span><br><span class="line">      &lt;%= submit_tag <span class="string">"确认"</span>, <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default"</span>%&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">    &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;/div</span>&gt;</span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>app/views/events/index.html.erb</code>中，将script放在最下面。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">  $(<span class="string">"#start_on"</span>).datepicker(&#123;<span class="attr">format</span>: <span class="string">"yyyy-mm-dd"</span>&#125;);</span><br><span class="line">  $(<span class="string">"#end_on"</span>).datepicker(&#123;<span class="attr">format</span>: <span class="string">"yyyy-mm-dd"</span>&#125;);</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
-<p>这里，<code>start_on</code>, <code>end_on</code> 可以通过查看chrome的inspect，得到id。</p>
-<p>另，如果需要指定多语言，可以修改script成这样：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;</span><br><span class="line">  $(<span class="string">"#start_on"</span>).datepicker(&#123;<span class="attr">format</span>: <span class="string">"yyyy-mm-dd"</span>, <span class="attr">language</span>: <span class="string">"&lt;%= I18n.locale %&gt;"</span>&#125;);</span><br><span class="line">  $(<span class="string">"#end_on"</span>).datepicker(&#123;<span class="attr">format</span>: <span class="string">"yyyy-mm-dd"</span>, <span class="attr">language</span>: <span class="string">"&lt;%= I18n.locale %&gt;"</span>&#125;);</span><br><span class="line">&lt;<span class="regexp">/script&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/controllers/events_controller.rb</code>, 在index部分，加入如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  @events = Event.order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  ......</span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:start_on</span>].present?</span><br><span class="line">    @events = @events.where(<span class="string">"start_time &gt;= ?"</span>, Date.parse(params[<span class="symbol">:start_on</span>]).beginning_of_day)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:end_on</span>].present?</span><br><span class="line">    @events = @events.where(<span class="string">"end_time &lt;= ?"</span>, Date.parse(params[<span class="symbol">:end_on</span>]).end_of_day)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>重启<code>rails s</code>, 试一下，可以根据时间筛选啦！</p>
-<p>对啦，如果要部署到heroku， 记得运行<code>bundle exec rake assets: precompile</code>后再deploy。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2947,7 +2944,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">145</span>
+                <span class="site-state-item-count">146</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2958,7 +2955,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">21</span>
+                <span class="site-state-item-count">22</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2969,7 +2966,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">43</span>
+                <span class="site-state-item-count">44</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -3080,7 +3077,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    136.8k
+    137.0k
   </span>
 
 </div>
