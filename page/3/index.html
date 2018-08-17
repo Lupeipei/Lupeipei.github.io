@@ -273,6 +273,208 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/" itemprop="url">
+                  Rails中的assign_attributes和accepts_nested_attributes_for
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-23T11:12:19+08:00">
+                2018-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/23/assign-attributes-with-accepts-nested-attributes-for/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,500 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>工作中遇到的一个问题：</p>
+<p>场景类似下面这样：</p>
+<p>现有model project， model member， model user，可以将member看作是user与project之间多对多关系的中间表，现在需要在project新建后，将创建该project的当前用户current_user设为该项目的负责人，也就是在member中新增一条记录。同时在project 的<code>new.html.erb</code>表单中，只有一个name，即项目名称字段。</p>
+<p>如何实现？</p>
+<p>我开始用了极为粗暴简单的方式，在<code>projects_controller.rb</code>的create action中添加了这么一句：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  @project.save</span><br><span class="line">  Member.create!(<span class="symbol">role:</span> <span class="string">"owner"</span>, <span class="symbol">project:</span> @project, <span class="symbol">user:</span> current_user)</span><br><span class="line">  respond_with @project, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样功能是实现了，但是这明显不是正确的写法，找不到一点rails的影子，完全新手小白的方式。老大提到了用assign_attributes和accepts_nested_attributes_for来实现。改写了，实现了，踩了点坑。</p>
+<p>记录下assign_attributes的用法，主要是与accepts_nested_attributes_for结合使用，在不依靠表单的情况下，更新数据库。</p>
+<h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><p><a href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes" target="_blank" rel="noopener">assign_attributes</a>，既可以更新model所有的attributes，也可以用来更新model的部分attributes。光看没什么感觉，拿个例子练练手。</p>
+<p>有一个model movie，字段name, description, name要求不能为空,同时与user之间存在一对多的关联。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Movie</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:name</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>进入console试试：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">m = Movie.new</span><br><span class="line"></span><br><span class="line"><span class="comment">### 只更新一部分</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"before you"</span>)</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;nil, <span class="string">"name"</span>=&gt;<span class="string">"before you"</span>, <span class="string">"description"</span>=&gt;nil, <span class="string">"created_at"</span>=&gt;nil, <span class="string">"updated_at"</span>=&gt;nil, <span class="string">"user_id"</span>=&gt;nil&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">### 更新全部并保存</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"before you"</span>, <span class="symbol">description:</span> <span class="string">"it is a love story"</span>, <span class="symbol">user:</span> User.first)</span><br><span class="line">m.save</span><br><span class="line">=&gt; true</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;<span class="number">7</span>, <span class="string">"name"</span>=&gt;<span class="string">"before you"</span>, <span class="string">"description"</span>=&gt;<span class="string">"it is a love story"</span>, <span class="string">"created_at"</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"updated_at"</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"user_id"</span>=&gt;<span class="number">1</span>&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的例子是create，如果要update呢？</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">m = Movie.first</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: "once", description: "Apart but still together", created_at: "2018-06-04 07:55:59", updated_at: "2018-06-04 07:55:59", user_id: 1&gt;</span><br><span class="line"></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"one day"</span>)</span><br><span class="line">m.attributes</span><br><span class="line"></span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;<span class="number">4</span>, <span class="string">"name"</span>=&gt;<span class="string">"one day"</span>, <span class="string">"description"</span>=&gt;<span class="string">"Apart but still together"</span>, <span class="string">"created_at"</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"updated_at"</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"user_id"</span>=&gt;<span class="number">1</span>&#125;</span><br><span class="line"></span><br><span class="line">m.save</span><br><span class="line">m</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: "one day", description: "Apart but still together", created_at: "2018-06-04 07:55:59", updated_at: "2018-06-23 01:30:41", user_id: 1&gt;</span><br></pre></td></tr></table></figure>
+<p>可以看到成功完成了更新！</p>
+<p>这么看，好像没什么，更新和新建而已，但是结合accepts_nested_attributes_for就很cool了。</p>
+<p>下面的例子均以create为导向，不涉及update。</p>
+<h4 id="单个关联下"><a href="#单个关联下" class="headerlink" title="单个关联下"></a>单个关联下</h4><p>assign_attributes中，针对一对一的关联关系，有一个单独的private method，<a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association" target="_blank" rel="noopener">assign_nested_attributes_for_one_to_one_association</a>， private method不能直接调用，用assign_attributes 和accepts_nested_attributes_for也可以实现一样的效果。</p>
+<p>比如有一个model 别名alias , 与user之间是一对一的关系，每次创建alias时，需要关联到user。对应model中的代码如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Class Alias &lt; ActiveRecord::Base</span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样使用assign_attributes，如果alias的user已经存在，则会更新，如果不存在，则新建一个对应的user。这里要注意，不要在user里面添加<code>belongs_to :alias</code>， 这样你在传递user_attribute时，会报错，显示alias必须存在，而此时alias还没有创建成功。</p>
+<p>进入console试试, 在alias未创建前，创建一个user：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">a = Alias.new</span><br><span class="line"></span><br><span class="line">a.assign_attributes(&#123;<span class="symbol">name:</span> <span class="string">"ruby"</span>, <span class="symbol">user_attributes:</span> &#123; <span class="symbol">email:</span> <span class="string">"world@gmail.com"</span>, <span class="symbol">password:</span> <span class="string">"123456"</span>, <span class="symbol">password_confirmation:</span> <span class="string">"123456"</span>&#125;&#125;)</span><br><span class="line"></span><br><span class="line">a.save</span><br><span class="line">=&gt; true</span><br><span class="line">a</span><br><span class="line">=&gt; #&lt;Alias id: 1, name: "ruby", user_id: 3, created_at: "2018-06-23 02:33:23", updated_at: "2018-06-23 02:33:23"&gt;</span><br><span class="line">a.user</span><br><span class="line">=&gt; #&lt;User id: 3, email: "world@gmail.com", created_at: "2018-06-23 02:33:23", updated_at: "2018-06-23 02:33:23"&gt;</span><br></pre></td></tr></table></figure>
+<p>可以看到user已经创建完成！</p>
+<p>不过我觉得这种情况，多半是你需要新建一个默认的user，因为参数的值是你传递过去的，已经定义好了，而不是像页面的表单那样。这个方法的好处在于，你不需要在页面表单中添加user部分，让用户选择，直接在创建alias时就与user建立起了关联。</p>
+<h4 id="多关联下"><a href="#多关联下" class="headerlink" title="多关联下"></a>多关联下</h4><p>如同一对一关联中，一对多关系下，也有一个private method：<a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association" target="_blank" rel="noopener">assign_nested_attributes_for_collection_association</a>。 官方给到的例子是这样的：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, &#123;</span><br><span class="line">  <span class="string">'1'</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">'1'</span>, <span class="symbol">name:</span> <span class="string">'Peter'</span> &#125;,</span><br><span class="line">  <span class="string">'2'</span> =&gt; &#123; <span class="symbol">name:</span> <span class="string">'John'</span> &#125;,</span><br><span class="line">  <span class="string">'3'</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">'2'</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>People 是复数，这里传递的参数是一个hash，可以看出传了三条记录。如果用assign_attributes怎么实现呢？我这里直接用背景中那个问题来举例。【啧啧，在背景里卖关子没给到解答，悄悄把解答放在了这里。】</p>
+<p>在<code>project.rb</code>中，添加<code>accepts_nested_attributes_for :members</code>:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:members</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:members</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样，我们可以修改controller中的action create了, 在save之前进行assign_attributes:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  @project.assign_attributes(<span class="symbol">members_attributes:</span> [ &#123; <span class="symbol">role:</span> <span class="string">"owner"</span>, <span class="symbol">project:</span> @project, <span class="symbol">user:</span> current_user &#125; ])</span><br><span class="line">  @project.save</span><br><span class="line">  respond_with @project, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>踩坑的地方就在于members_attributes后面传递的是一个Array数组<code>[ { role: &quot;owner&quot;, project: @project, user: current_user } ]</code>，数组里面的元素才是Hash。启发来自于文档中的这个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, [</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">'1'</span>, <span class="symbol">name:</span> <span class="string">'Peter'</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">name:</span> <span class="string">'John'</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">'2'</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+<p>OK！</p>
+<p>BTW，还有一个类似assign_attributes的method，update_attributes，官方没有给到例子，可以参考这篇文章<a href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed" target="_blank" rel="noopener">accepts_nested_attributes_for is Creating New Records; Gotcha!</a>，感觉跟assign_attributes还是很像的。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes" target="_blank" rel="noopener">assign_attributes</a></p>
+<p><a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association" target="_blank" rel="noopener">assign_nested_attributes_for_one_to_one_association</a></p>
+<p><a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association" target="_blank" rel="noopener">assign_nested_attributes_for_collection_association</a></p>
+<p><a href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed" target="_blank" rel="noopener">accepts_nested_attributes_for is Creating New Records; Gotcha!</a></p>
+<h4 id="一点思考"><a href="#一点思考" class="headerlink" title="一点思考"></a>一点思考</h4><p>当我写出正确解答的时候，再看，发现其实挺简单的，可是我为什么花了差不多两个小时呢？因为我的搜索习惯。</p>
+<p>曾经我的习惯是，出问题了就Google，看stack overflow，对于文档，觉得冗长枯燥，效率低，不愿意去读，其实这样反而是走了弯路。不懂的时候，看文档，看文档，看文档！不要偷懒去看别人写的那些解答和文章，极有可能完全不是你想要的，甚至可能让你离正确的解决方法越来越远。看文档虽然略显枯燥，却最有效，如果文档中没有相关的实例，可以去搜一下别人用例。<br><strong>change your mind, change your habit.</strong></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/18/learn-git-rebase/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2142,190 +2344,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/14/hexo-error-recording/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/14/hexo-error-recording/" itemprop="url">
-                  hexo报错记录
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-14T17:40:33+08:00">
-                2018-05-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Hexo/" itemprop="url" rel="index">
-                    <span itemprop="name">Hexo</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/14/hexo-error-recording/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/14/hexo-error-recording/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>608 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new XXXX</span><br></pre></td></tr></table></figure>
-<p>出现报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">NODE_MODULE_VERSION 48. This version of Node.js requires</span><br><span class="line">Error: The module &apos;/usr/local/lib/node_modules/hexo-cli/node_modules/dtrace-provider/build/Release/DTraceProviderBindings.node&apos;</span><br><span class="line">was compiled against a different Node.js version using</span><br><span class="line">NODE_MODULE_VERSION 48. This version of Node.js requires</span><br><span class="line">NODE_MODULE_VERSION 64. Please try re-compiling or re-installing</span><br><span class="line">the module (for instance, using `npm rebuild` or `npm install`).</span><br></pre></td></tr></table></figure>
-<p>其中：Node 10.1.0, npm 5.6.0 , hexo 3.7.1</p>
-<p>虽然这样的提示并不影响使用，但是每次都出现这么一长串，真的是有点受不了，于是决定解决它，没成想竟然是个坑。记录下解决过程。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>按照提示，使用<code>npm rebuild</code> ，rebuild过程中出现了各种报错，最后还输出了这么一句<code>This is probably not a problem with npm</code>, 不是npm，难道是hexo?</p>
-<p>随后Google，在hexo issues里找到了这篇<a href="https://github.com/hexojs/hexo/issues/2534" target="_blank" rel="noopener">#2534</a>。尝试着用里面提到的方法：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rm -rvf node_modules</span><br><span class="line">npm install</span><br></pre></td></tr></table></figure>
-<p><code>npm install</code>时出错，后面我又<code>npm install</code>了一次，OK，没有报错，但是奇怪的是执行<code>hexo g -d</code> 依然会出现上面的报错，说明问题还是没有解决。</p>
-<p>于是执行了这样的命令：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm update hexo</span><br><span class="line">npm update -g hexo-cli</span><br></pre></td></tr></table></figure>
-<p>没有报错，应该是OK了，稍稍踏实了，再次执行<code>hexo g -d</code>，结果 还是报错，比上次更为严重：</p>
-<p>hexo已经挂了。</p>
-<p>显示<code>Cannot find module &#39;highlight.js/lib/languages/shell&#39;</code> .</p>
-<p>既然找不到highlight， 那就安装一个吧！终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install highlight.js --save</span><br></pre></td></tr></table></figure>
-<p>出现报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">node-pre-gyp ERR! Tried to download(404): https://fsevents-binaries.s3-us-west-2.amazonaws.com/v1.1.1/fse-v1.1.1-node-v64-darwin-x64.tar.gz</span><br><span class="line">node-pre-gyp ERR! Pre-built binaries not found for fsevents@1.1.1 and node@10.1.0 (node-v64 ABI) (falling back to source compile with node-gyp)</span><br><span class="line">node-pre-gyp http 404 status code downloading tarball https://fsevents-binaries.s3-us-west-2.amazonaws.com/v1.1.1/fse-v1.1.1-node-v64-darwin-x64.tar.gz</span><br></pre></td></tr></table></figure>
-<p>发现fsevents在之前的报错中也有出现过，难道是fsevents与node版本不兼容？Google后找到了这篇：</p>
-<p><a href="https://github.com/strongloop/fsevents/issues/181" target="_blank" rel="noopener">Install on OS X fails as prebuilt binary seems to be missing from S3 </a></p>
-<p>上面提到了1.1.1版本存在bug，升级到1.2+，好，死马当活马医，<code>npm i fsevents</code> ，装了最新的fsevents, 1.2.3.</p>
-<p>终端再次执行<code>hexo g -d</code>， OK，没有出现上诉报错了，一切正常!</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/hexojs/hexo/issues/2534" target="_blank" rel="noopener">NODE_MODULE_VERSION 46. This version of Node.js requires NODE_MODULE_VERSION 51. Please try re-compiling or re-installing</a></p>
-<p><a href="https://github.com/strongloop/fsevents/issues/181" target="_blank" rel="noopener">Install on OS X fails as prebuilt binary seems to be missing from S3 </a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2375,7 +2393,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">146</span>
+                <span class="site-state-item-count">147</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2386,7 +2404,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2397,7 +2415,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">44</span>
+                <span class="site-state-item-count">45</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2508,7 +2526,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    137.0k
+    138.3k
   </span>
 
 </div>

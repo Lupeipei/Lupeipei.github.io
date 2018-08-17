@@ -273,6 +273,236 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/20/polymorphic-associations-in-rails5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/20/polymorphic-associations-in-rails5/" itemprop="url">
+                  Rails中的多态关联polymorphic associations
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-20T21:21:32+08:00">
+                2018-04-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/20/polymorphic-associations-in-rails5/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/20/polymorphic-associations-in-rails5/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>931 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>多态关联（polymorphic associations）算是个挖了很久的坑，一直没填，这次填了这个坑。</p>
+<h4 id="是什么？"><a href="#是什么？" class="headerlink" title="是什么？"></a>是什么？</h4><p>Polymorphic Associations help when <strong>one table must belongs_to multiple other tables</strong>。</p>
+<p>大白话可以这样理解：当存在多个model 同时 has_many 一个model时，可以使用多态关联，来实现model层面的DRY。【我是这样理解的……】</p>
+<p>官方给到的图解案例是这样滴：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqiz6399vrj30ht0k9ta8.jpg" alt=""></p>
+<p>Employee和Product同时拥有多个pictures，Picture里面必须包含两个字段：imageable_id，imageable_type。这样就不需要新增EmployeePicture和ProductPicture两个model了，只需要一个Picture就可以了。</p>
+<p>这么说好像没啥感觉，通过一个小例子来实战一下。</p>
+<h4 id="怎么玩？"><a href="#怎么玩？" class="headerlink" title="怎么玩？"></a>怎么玩？</h4><ul>
+<li><p>新建一个rails项目 poly, 有article，event和comment，用户可以对article或者event进行评论，单个article，event可以拥有多个comments。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rails new poly</span><br><span class="line">cd poly</span><br><span class="line">rails g model article title:string content:text</span><br><span class="line">rails g model event title:string start_at:datetime end_at:datetime description:text</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>记得重启服务器：<code>rails s</code>。</p>
+<p>建controller：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g controller articles</span><br><span class="line">rails g controller events</span><br></pre></td></tr></table></figure>
+<p>完成ArticlesController，EventsController中的7个action，这里就不一一列出了。</p>
+<p>修改<code>routes.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  resources <span class="symbol">:events</span></span><br><span class="line">  resources <span class="symbol">:articles</span></span><br><span class="line">  root <span class="string">"articles#index"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>使用seeds或者task，生成一些测试数据，这里我用了seeds。</p>
+<p>添加articles和events的index，show页面。</p>
+<p>浏览器打开<code>localhost:3000</code>，类似这样：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fqjaoxvg4dj30l00cgq43.jpg" alt=""></p>
+<p>现在请上comment。</p>
+</li>
+</ul>
+<ul>
+<li><p>建model comment</p>
+<p>运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g model comment</span><br></pre></td></tr></table></figure>
+<p>修改生成的migrate文件如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CreateComments</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:comments</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.text <span class="symbol">:content</span></span><br><span class="line">      t.belongs_to <span class="symbol">:commentable</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span></span><br><span class="line">      t.timestamps</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    add_index <span class="symbol">:comments</span>, [<span class="symbol">:commentable_id</span>, <span class="symbol">:commentable_type</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里<code>t.belongs_to :commentable, polymorphic: true</code>等同与</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">t.integer <span class="symbol">:commentable_id</span></span><br><span class="line">t.string <span class="symbol">:commentable_type</span></span><br></pre></td></tr></table></figure>
+<p>运行<code>rake db:migrate</code>， 重启服务器。</p>
+</li>
+</ul>
+<ul>
+<li><p>给article，event，comment建立联系：</p>
+<p>修改<code>app/models/article.rb</code>, <code>app/models/event.rb</code>，添加上：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">has_many <span class="symbol">:comments</span>, <span class="symbol">as:</span> <span class="symbol">:commentable</span></span><br></pre></td></tr></table></figure>
+<p>好，我们去rails console 看看是不是可以给article和event添加comments。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqjdhgv3ukj30qo0b0wgt.jpg" alt=""></p>
+<p>可以看到成功为article创建了comment。</p>
+<p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  @article = Article.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @comments = @article.comments</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>app/views/articles/show.html.erb</code></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container-fluid"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h1</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> @<span class="attr">article.title</span> %&gt;</span><span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> @<span class="attr">article.content</span> %&gt;</span><span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ul</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%</span> <span class="attr">if</span> @<span class="attr">comments</span> %&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%</span> @<span class="attr">comments.each</span> <span class="attr">do</span> |<span class="attr">comment</span>| %&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">li</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> <span class="attr">comment.content</span> %&gt;</span><span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>打开<code>http://localhost:3000/articles/0</code>,可以看到刚刚添加的那个comment：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqje66qmksj30mf05tmxj.jpg" alt=""></p>
+</li>
+<li><p>DRY comment view</p>
+<p>新建comments controller：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller comments</span><br></pre></td></tr></table></figure>
+<p>修改<code>app/controllers/comments_controller.rb</code>, 内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CommentsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:load_commentable</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @comments = @commentable.comments</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">new</span></span></span><br><span class="line">    @comment = @commentable.comments.new</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @comment = @commentable.comments.new(comment_params)</span><br><span class="line">    <span class="keyword">if</span> @comment.save</span><br><span class="line">      redirect_to @commentable</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:new</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">load_commentable</span></span></span><br><span class="line">    resource, id = request.path.split(<span class="string">'/'</span>)[<span class="number">1</span>,<span class="number">2</span>]</span><br><span class="line">    @commetable = resource.singularize.classify.constantize.find(id)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">comment_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:comment</span>).permit(<span class="symbol">:content</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>routes.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  <span class="comment"># For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html</span></span><br><span class="line"></span><br><span class="line">  resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">    resources <span class="symbol">:comments</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  resources <span class="symbol">:articles</span> <span class="keyword">do</span></span><br><span class="line">    resources <span class="symbol">:comments</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  root <span class="string">"articles#index"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>新建 <code>app/views/comments/_form.html.erb</code>:</p>
+<p>内容如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">form_for</span> [@<span class="attr">commentable</span>, @<span class="attr">comment</span>] <span class="attr">do</span> |<span class="attr">f</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"field"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_area</span> <span class="attr">:content</span> %&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"action"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.submit</span> "<span class="attr">sumbit</span>" %&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  @commentable = Article.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @comments = @commentable.comments</span><br><span class="line">  @comment =  @commentable.comments.new</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>app/views/articles/show.html.erb</code>:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container-fluid"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h1</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> @<span class="attr">article.title</span> %&gt;</span><span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> @<span class="attr">article.content</span> %&gt;</span><span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ul</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%</span> <span class="attr">if</span> @<span class="attr">comments</span> %&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%</span> @<span class="attr">comments.each</span> <span class="attr">do</span> |<span class="attr">comment</span>| %&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">li</span>&gt;</span><span class="tag">&lt;<span class="name">%=</span> <span class="attr">comment.content</span> %&gt;</span><span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">%=</span> <span class="attr">render</span> "<span class="attr">comments</span>/<span class="attr">form</span>" %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>针对event做同样的处理，这样create comment就可以重复使用了。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqjfdf6zfsj30kl072gm6.jpg" alt=""></p>
+<p>看看events：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqjfretw42j30lu0903z3.jpg" alt=""></p>
+</li>
+</ul>
+<p>OK!! 基本功能实现，想要美观地码楼的话，就要用到Ajax部分了，继续写就没完没了了 ，下次在码字: P</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://jarlowrey.com/blog/polymorphic-rails-5.html" target="_blank" rel="noopener">Polymorphic Associations in Rails 5</a></p>
+<p><a href="https://rubyplus.com/articles/3901-Polymorphic-Association-in-Rails-5" target="_blank" rel="noopener">Polymorphic Association in Rails 5</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/19/manage-multiple-database-in-a-single-rails-app/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1921,210 +2151,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/08/introduction-to-ngrok/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/08/introduction-to-ngrok/" itemprop="url">
-                  内网穿透神器Ngrok
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-08T06:53:50+08:00">
-                2018-04-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Ngrok/" itemprop="url" rel="index">
-                    <span itemprop="name">Ngrok</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/08/introduction-to-ngrok/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/08/introduction-to-ngrok/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>520 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>简直就是个神器！</p>
-<p>设想一下，你在本地开发的rails项目，想要临时整个demo给别人看，但是你没买域名，没买服务器，怎么破？</p>
-<p>用Ngrok ！</p>
-<h4 id="Ngrok是什么？"><a href="#Ngrok是什么？" class="headerlink" title="Ngrok是什么？"></a>Ngrok是什么？</h4><p>官网定义：</p>
-<blockquote>
-<p>ngrok is a reverse proxy that creates a secure tunnel from a public endpoint to a locally running web service. ngrok captures and analyzes all traffic over the tunnel for later inspection and replay.</p>
-</blockquote>
-<p>一个反向代理，用于创建从公共端点到本地运行的Web服务之间的安全隧道，还可以捕获和分析隧道上的所有流量，以供后期的检查和回放。</p>
-<p>一图胜千言：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fq0r49j6wwj30m80dugpv.jpg" alt=""></p>
-<h4 id="Download"><a href="#Download" class="headerlink" title="Download"></a>Download</h4><p>直接去官网下载：<a href="https://ngrok.com/download" target="_blank" rel="noopener">https://ngrok.com/download</a></p>
-<p>Windows下直接双击压缩包安装，Linux和Mac OSX 使用命令：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unzip /path/to/ngrok.zip</span><br></pre></td></tr></table></figure>
-<p>使用<code>./ngrok help</code> 可以查看ngrok的所有命令。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fq0t1023iej30pe0ghju4.jpg" alt=""></p>
-<p>官网有非常详细的使用说明，直接查阅即可。</p>
-<h4 id="Usage"><a href="#Usage" class="headerlink" title="Usage"></a>Usage</h4><p>非常简单，告诉ngrok，哪个端口是用来访问web应用的即可。</p>
-<p>以一个简单的rails 项目为例。</p>
-<ul>
-<li><p>访问你本地的rails项目，浏览器打开：<a href="http://localhost:3000/" target="_blank" rel="noopener">http://localhost:3000/</a></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fq0pl7m3egj30zd0bj758.jpg" alt=""></p>
-</li>
-</ul>
-<ul>
-<li><p>使用Ngrok，打开http tunnel on port 3000, 终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ngrok http 3000</span><br></pre></td></tr></table></figure>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fq0pnjjd44j30p705y3zi.jpg" alt=""></p>
-<p>此时，访问<a href="http://b2aac9bf.ngrok.io或https://b2aac9bf.ngrok.io：" target="_blank" rel="noopener">http://b2aac9bf.ngrok.io或https://b2aac9bf.ngrok.io：</a></p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fq0pp2z43aj30zc0c8gmn.jpg" alt=""></p>
-<p>从内网到公网的完美过渡！别人也可以访问了。</p>
-<p>第一次看到这种操作的我，表示Ngrok真的是太酷了！！</p>
-</li>
-</ul>
-<h4 id="install-your-AUTHTOKEN"><a href="#install-your-AUTHTOKEN" class="headerlink" title="install your AUTHTOKEN"></a>install your AUTHTOKEN</h4><p>没有登录的情况下，session的有效期默认只有8小时，注册下，登录后，在你的dashboard(<a href="https://dashboard.ngrok.com)中可以看到AUTHTOKEN" target="_blank" rel="noopener">https://dashboard.ngrok.com)中可以看到AUTHTOKEN</a>.</p>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ngrok authtoken YOUR_AUTHTOKEN</span><br></pre></td></tr></table></figure>
-<p>成功后会出现：Authtoken saved to configuration file的信息。</p>
-<h4 id="Open-inspector"><a href="#Open-inspector" class="headerlink" title="Open inspector"></a>Open inspector</h4><p>如果想要查看request details，可以在浏览器打开<a href="http://localhost:4040/" target="_blank" rel="noopener">http://localhost:4040/</a> 👇</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fq0q3j8tx6j30z50icdjb.jpg" alt=""></p>
-<h4 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h4><p>Ngrok允许 custom subdomain， custom domains等，but not for free account : (</p>
-<p>Ngrok的另一个常用的情景是微信本地调试，以后用到再写写这块 :  P</p>
-<p>Natapp也是内网穿透的利器，它有免费使用的隧道提供，但是需要实名认证，戳<a href="https://natapp.cn/" target="_blank" rel="noopener">官网</a>了解更多。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ngrok.com/docs" target="_blank" rel="noopener">ngrok docs</a></p>
-<p><a href="https://github.com/inconshreveable/ngrok" target="_blank" rel="noopener">ngrok</a></p>
-<p><a href="http://www.54php.cn/default/211.html" target="_blank" rel="noopener">Ngrok NatApp 微信本地化调试利器</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2174,7 +2200,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">146</span>
+                <span class="site-state-item-count">147</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2185,7 +2211,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">22</span>
+                <span class="site-state-item-count">23</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2196,7 +2222,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">44</span>
+                <span class="site-state-item-count">45</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2307,7 +2333,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    137.0k
+    138.3k
   </span>
 
 </div>
