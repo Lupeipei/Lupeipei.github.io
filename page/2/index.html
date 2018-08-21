@@ -273,6 +273,175 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/27/bug-in-compact/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/07/27/bug-in-compact/" itemprop="url">
+                  踩坑之compact！
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-27T19:01:55+08:00">
+                2018-07-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Ruby/" itemprop="url" rel="index">
+                    <span itemprop="name">Ruby</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/07/27/bug-in-compact/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/07/27/bug-in-compact/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>247 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。</p>
+<p>出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。</p>
+<p>比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a = [ <span class="string">"a"</span>, <span class="literal">nil</span>, <span class="string">"b"</span>, <span class="literal">nil</span>, <span class="string">"c"</span> ]</span><br><span class="line"></span><br><span class="line">a.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", nil, "b", nil, "c"]</span></span><br><span class="line"></span><br><span class="line">a.compact!</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<p>But!!</p>
+<p>如果这个数组本身没有nil，两者的结果完全不同。调用compact或者compact！，数组都不变，但是compact！返回的却是nil。</p>
+<p>看例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">b = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]</span><br><span class="line"></span><br><span class="line">b.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line"></span><br><span class="line">b.compact!</span><br><span class="line"><span class="comment">#=&gt; nil</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<p>也就是说<strong>在数组中没有nil的情况下，使用compact！返回的值是nil，同时数组本身不会改变</strong>。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.0/Array.html#method-i-compact-21" target="_blank" rel="noopener">compact!</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/23/always-add-idea-to-gitignore/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2043,223 +2212,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/29/authorize-with-cancancan/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/06/29/authorize-with-cancancan/" itemprop="url">
-                  使用cancancan做权限管理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-29T23:11:26+08:00">
-                2018-06-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/06/29/authorize-with-cancancan/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/06/29/authorize-with-cancancan/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,819 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>cancancan是Rails中的运用较为广泛的权限管理gem，源码：<a href="https://github.com/CanCanCommunity/cancancan/wiki" target="_blank" rel="noopener">GitHub库</a>， <a href="https://github.com/CanCanCommunity/cancancan/wiki" target="_blank" rel="noopener">wiki</a></p>
-<p>目前最新的版本是<a href="https://rubygems.org/search?utf8=%E2%9C%93&amp;query=cancancan" target="_blank" rel="noopener">2.2.0</a>， 安装部分可见文档，这里我记录下自己在定义权限时遇到的问题，同时附上验证权限及Rspec下如何测试Ability。</p>
-<h4 id="定义权限"><a href="#定义权限" class="headerlink" title="定义权限"></a>定义权限</h4><p>cancancan的wiki中<a href="https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities" target="_blank" rel="noopener">Defining Abilities</a>中给到了权限定义的例子：</p>
-<p>较常规的，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    can <span class="symbol">:read</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">if</span> user.present?</span><br><span class="line">      can <span class="symbol">:manage</span>, Post, <span class="symbol">user_id:</span> user.id</span><br><span class="line">      can <span class="symbol">:manage</span>, Comment</span><br><span class="line">      can <span class="symbol">:read</span>, Tag, <span class="symbol">released:</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>简单说一下，<code>can :manage, Post, user_id: user.id</code>, 表明post含有字段user_id，且当前的user.id等于project的user_id，可以理解成对于所有current_user创建的post，都有manage的权限。</p>
-<p>而<code>can :read, Tag, released: true</code>则表明，用户只能阅读已经发布的tag。</p>
-<p>需要注意的是，Ability的初始化，默认是在application_controller中添加了helper method:current_ability， 可以在它的源码module CanCan的定义中看到，调用了钩子方法included，当include CanCan时，这些method会自动引入：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">included</span><span class="params">(base)</span></span></span><br><span class="line">  base.extend ClassMethods</span><br><span class="line">  base.helper_method <span class="symbol">:can?</span>, <span class="symbol">:cannot?</span>, <span class="symbol">:current_ability</span> <span class="keyword">if</span> base.respond_to? <span class="symbol">:helper_method</span></span><br><span class="line">  base.class_attribute <span class="symbol">:_cancan_skipper</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>而module CanCan是自动included 到所有的controller的，这样所有的controller都拥有了current_ability 这个helper method。</p>
-<p>我们可以通过在ApplicationController中自定义current_ability来定制权限分配。</p>
-<p>看一个稍微有点不一样的场景：</p>
-<p>现有model: project，user，member，task，其中project与task是一对多的关系，member是连接user与project之间多对多关系的中间表，4个model的表结构如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Table name: projects</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  name       :string</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                     :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  email                  :string           default(""), not null</span></span><br><span class="line"><span class="comment">#  name                   :string</span></span><br><span class="line"><span class="comment">#  admin                  :boolean          default(FALSE)</span></span><br><span class="line">......[users使用devise创建，其他的attributes省去]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: task</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id           :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  title        :string</span></span><br><span class="line"><span class="comment">#  content      :text</span></span><br><span class="line"><span class="comment">#  project_id   :bigint(8)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: members</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  role       :string           [owner, member]</span></span><br><span class="line"><span class="comment">#  project_id :bigint(8)</span></span><br><span class="line"><span class="comment">#  user_id    :bigint(8)</span></span><br></pre></td></tr></table></figure>
-<p>需要定义权限如下：</p>
-<ul>
-<li><p>user是admin时，拥有最高权限，即can :manage, :all</p>
-</li>
-<li><p>User不是admin时，根据user在project中的角色来决定他的权限，比如role为owner时，可以读和改project，manage task，role为member时，则只能读project, manage task。</p>
-<p>这里就相当于initialize ability的时候，user是参数，需要判断是否是admin，另外需要创建一个新的method，将member作为参数传递过去，根据member的role来定义权限。</p>
-<p>我们先来定义从user出发的权限：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>而current_ability的默认定义是这样的：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  @current_ability <span class="params">||</span>= Ability.new(current_user)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这样user的权限是OK了，但是member呢？我们需要基于项目给user授权，同一个user在不同的项目中可能有不同的角色。我们需要重新修改下ability的初始化，把user和member的授权都定义在单独的method中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(&amp;block)</span></span></span><br><span class="line">    block.(<span class="keyword">self</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_user_permissions</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    can <span class="symbol">:read</span>, Project, <span class="symbol">members:</span> &#123; <span class="symbol">user_id:</span> user.id &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_member_permissions</span><span class="params">(member)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> member</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.owner?</span><br><span class="line">      can [<span class="symbol">:read</span>, <span class="symbol">:update</span>], member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.member?</span><br><span class="line">      can <span class="symbol">:read</span>, member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这样权限就定义好了，要如何使用呢？</p>
-<p>在<code>application_controller.rb</code>中，添加current_ability method：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  @current_ability <span class="params">||</span>= Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(current_user) &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>传递给apply_user_permissions的参数是current_user，类似地，调用apply_member_permissions，传递的是current_member，而这个权限的初始化，则在project和task中，遵循着DRY原则，我们新建一个BaseController来定义current_ability， 然后让ProjectsController， TasksController继承它。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">BaseController</span> <span class="title">&lt;</span> <span class="title">ApplicationController</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这里，先调用了ApplicationController中的current_ability，判断如果user是admin，则直接manage all，如果不是admin，同时也不是nil，则调用apply_member_permissions来授权，那么current_member如何定义呢？参考<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>, 我们可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">  @current_member <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>首先找出当前project的所有members，然后在members中找出user_id == current_user.id的那一条member纪录即可。【此处，current_project的定义略去，可参见<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>】</p>
-<p>将这个method添加到BaseController中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">BaseController</span> <span class="title">&lt;</span> <span class="title">ApplicationController</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">    @current_member <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>让ProjectsController， TasksController都继承自BaseController：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### projects_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProjectsController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### tasks_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>OK!! 下面看看如何验证权限。</p>
-</li>
-</ul>
-<h4 id="验证权限"><a href="#验证权限" class="headerlink" title="验证权限"></a>验证权限</h4><p>验证权限其实比较简单，在view中直接添加if语句即可：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= link_to <span class="string">"New Post"</span>, new_post_path <span class="keyword">if</span> can? <span class="symbol">:create</span>, Post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">"edit Post"</span>, edit_post_path(@post) <span class="keyword">if</span> can? <span class="symbol">:edit</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to @post.title, post_path(@post) <span class="keyword">if</span> can? <span class="symbol">:read</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">"destroy Post"</span>, post_path(@post), <span class="symbol">method:</span> <span class="symbol">:delete</span> <span class="keyword">if</span> can? <span class="symbol">:destroy</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;% <span class="keyword">if</span> cannot? <span class="symbol">:destroy</span>, @post %&gt;</span><br><span class="line"> &lt;span class="permission-message"&gt;you are not allowed to delete this post&lt;/span&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
-<h4 id="加载资源并授权"><a href="#加载资源并授权" class="headerlink" title="加载资源并授权"></a>加载资源并授权</h4><p>非常好用的一个method：<code>load_and_authorize_resource</code>, 顾名思义，就是加载资源并授权，可以拆分成：<code>load_resource</code>, <code>authorize_resource</code>来单独使用。</p>
-<p>看个简单的例子：</p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_and_authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>等同于：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @post = Post.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    authorize! <span class="symbol">:read</span>, @post</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>你也可以按需择取，比如你load_resource的方式不是通过 <code>Post.find(params[:id])</code>，而是自定义了一个current_post的helper method，则可以这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; @post = current_post &#125;</span><br><span class="line">  authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<h4 id="有关Rspec"><a href="#有关Rspec" class="headerlink" title="有关Rspec"></a>有关Rspec</h4><p>Rspec部分比较简单，参见<a href="https://github.com/CanCanCommunity/cancancan/wiki/Testing-Abilities#rspec" target="_blank" rel="noopener">test Ability Rspec</a>.</p>
-<p>这里，直接用上面定义的ability为例，来写一写对应的Rspec。</p>
-<p>先写好factories：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### users.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:user</span> <span class="keyword">do</span></span><br><span class="line">    email &#123; Faker::Internet.email &#125;</span><br><span class="line">    name &#123; Faker::Name.name &#125;</span><br><span class="line">    password <span class="string">"password"</span></span><br><span class="line">    password_confirmation <span class="string">"password"</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      admin <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### projects.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:project</span> <span class="keyword">do</span></span><br><span class="line">    name <span class="string">"My project"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### members.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">    project</span><br><span class="line">    user</span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">"admin"</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">"member"</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>在<code>spec/models/ability_spec.rb</code>添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rails_helper'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'cancan/matchers'</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Ability, <span class="symbol">type:</span> <span class="symbol">:model</span> <span class="keyword">do</span></span><br><span class="line">  describe <span class="string">"#apply_user_permissions"</span> <span class="keyword">do</span></span><br><span class="line">    context <span class="string">"admin"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:admin</span>) &#123; create <span class="symbol">:user</span>, <span class="symbol">:admin</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(admin) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, <span class="symbol">:all</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"not admin but a member of a project"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">project:</span> project, <span class="symbol">user:</span> user, <span class="symbol">role:</span> <span class="string">"member"</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"neither admin nor member of a project"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.not_to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  describe <span class="string">"#apply_member_permissions"</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"admin"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:admin</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to([<span class="symbol">:read</span>, <span class="symbol">:update</span>], project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"member"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:member</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>OK ! 终端跑一下测试，pass！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2309,7 +2261,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">148</span>
+                <span class="site-state-item-count">149</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2442,7 +2394,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    139.9k
+    140.8k
   </span>
 
 </div>
