@@ -273,6 +273,221 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/01/skinny-controller-with-jbuilder/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/01/skinny-controller-with-jbuilder/" itemprop="url">
+                  Web API中，使用Jbuilder来给你的controller瘦个身
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-01T07:46:05+08:00">
+                2018-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/01/skinny-controller-with-jbuilder/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/01/skinny-controller-with-jbuilder/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,258 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>MVC 框架中的一个设计原则：fat model, skinny controller。且不说这原则是不是绝对的正确，不过面对臃肿的controller，IDE也会发出提醒表示抗议。</p>
+<p>比如在Web API中，一般用get获取资料的时候，返回的JSON中，字段会比较多，相应地，你在controller里面写的index或者show 也相对有些臃肿。那么如何简化？</p>
+<p>试试<a href="https://github.com/rails/jbuilder" target="_blank" rel="noopener">Jbuilder</a>。</p>
+<p>下面用个简单的例子来说明下怎么给controller瘦身。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>假定你完成了一个products的API接口，对应的<code>app/controllers/api/v1/products_controller.rb</code>文件内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">data:</span> @products.map <span class="keyword">do</span> <span class="params">|product|</span></span><br><span class="line">          &#123;</span><br><span class="line">              <span class="symbol">id:</span> product.id,</span><br><span class="line">              <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">              <span class="symbol">name:</span> product.name,</span><br><span class="line">              <span class="symbol">description:</span> product.description,</span><br><span class="line">              <span class="symbol">price:</span> product.price</span><br><span class="line">          &#125;</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(</span><br><span class="line">        <span class="symbol">name:</span> params[<span class="symbol">:name</span>],</span><br><span class="line">        <span class="symbol">description:</span> params[<span class="symbol">:description</span>],</span><br><span class="line">        <span class="symbol">price:</span> params[<span class="symbol">:price</span>]</span><br><span class="line">    )</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">id:</span> product.id,</span><br><span class="line">        <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">        <span class="symbol">name:</span> product.name,</span><br><span class="line">        <span class="symbol">description:</span> product.description,</span><br><span class="line">        <span class="symbol">price:</span> product.price</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(<span class="symbol">name:</span> params[<span class="symbol">:name</span>], <span class="symbol">description:</span> params[<span class="symbol">:description</span>],<span class="symbol">price:</span> params[<span class="symbol">:price</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>看着很冗长啊，怎么瘦？</p>
+<p>分三步走：</p>
+<ul>
+<li>对index, show部分，用Jbuilder，</li>
+<li>对create，update部分，用 strong params</li>
+<li>对show, update, destory部分共有的@product，抽出来，用before_action</li>
+</ul>
+<p>第一步：简化index，show</p>
+<p>这里可以看到show和index中重复代码较多，用上partial</p>
+<ul>
+<li><p>新建文件：<br><code>app/views/api/v1/products/_item.json.jbuilder</code>, <code>app/views/api/v1/products/show.json.jbuilder</code>,<br><code>app/views/api/v1/products/index.json.jbuilder</code>,</p>
+</li>
+<li><p>在<code>app/views/api/v1/products/_item.json.jbuilder</code>，添加如下内容：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">json.id  product.id</span><br><span class="line">json.creator product.user.user_name</span><br><span class="line">json.name product.name</span><br><span class="line">json.description product.description</span><br><span class="line">json.price product.price</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/views/api/v1/products/show.json.jbuilder</code>，添加如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.partial! &apos;item&apos;, product: @product</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/views/api/v1/products/index.json.jbuilder</code>， 添加如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.array! @products, partial: &apos;item&apos;, as: :product</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的index和show部分, 删除render：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>可以用postman测试一下，确保接口仍正常。</p>
+</li>
+</ul>
+<p>第二步：简化create，update， 用params.require</p>
+<ul>
+<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的create和update部分，如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  .....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span>         </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>注意，这里<strong>不能使用params.requrie(:product).permit(:name, :description, :price)</strong>，因为你是调用接口来新建或者修改的。</p>
+<p>可参见这个：<a href="https://stackoverflow.com/questions/38701746/when-json-data-posted-in-rails-throws-param-is-missing-or-the-value-is-empty-st" target="_blank" rel="noopener">When JSON data posted in rails throws param is missing or the value is empty: stall</a></p>
+</li>
+</ul>
+<p>第三步：简化show，update， destroy</p>
+<ul>
+<li><p>把show，update， destroy相同的部分： <code>@product = Product.find(params[:id])</code>抽出来：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line">.....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">.......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>最后瘦身的controller长这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'update product successfully'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'product deleted'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    param.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>是不是清爽了很多？看着舒服多了，大功告成！</p>
+<p>这里多一句，如果你的某个method部分代码较多，也可以使用拆分的方式， 比如下面这个show：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @categories = Category.all</span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>可以换成：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">before_action <span class="symbol">:fetch_current_category</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_categories</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_search_results</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_current_category</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_categories</span></span></span><br><span class="line">  @categories = Category.all</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_search_results</span></span></span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/30932732/what-is-meant-by-assignment-branch-condition-size-too-high-and-how-to-fix-it" target="_blank" rel="noopener">What is meant by ‘Assignment Branch Condition Size too high’ and how to fix it?</a></p>
+<p>对于”<strong>fat model, skinny controller</strong>“这个原则，也有人反对，提出<strong>“skinny everything”</strong>， 戳链接了解：</p>
+<p><a href="http://blog.joncairns.com/2013/04/fat-model-skinny-controller-is-a-load-of-rubbish/" target="_blank" rel="noopener">“Fat model, skinny controller” is a load of rubbish</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/27/how-to-call-javascript-through-href-or-onclick/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1839,302 +2054,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="url">
-                  Ubuntu16.04下, 使用Nginx和Unicorn部署Rails App
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-27T18:30:42+08:00">
-                2018-01-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Nginx/" itemprop="url" rel="index">
-                    <span itemprop="name">Nginx</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>2,463 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前用过Nginx  + Passengers来部署Rails 应用， 这次换Nginx  + Unicorn部署了Rails App，过程虽有些波折，但结果还是蛮赞的。【其实折腾了大半天，最后终于重新从坑里爬出来了，还多亏老大帮忙看了下……】</p>
-<p>下面以一个简单的rails项目的部署为例，来感受下Nginx + Unicorn。</p>
-<p>【如果你也和我一样是枚小白，补充下，这里，Unicorn是一个HTTP server，类似Passenger或者puma。由于Unicorn不能直接被用户访问，使用Nginx作为反向代理，来缓冲用户与Rails应用之间的请求与响应。】</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><h5 id="1、准备Rails-App"><a href="#1、准备Rails-App" class="headerlink" title="1、准备Rails App"></a>1、准备Rails App</h5><ul>
-<li><p>本地新建一个rails项目recipes</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">rails new recipes</span><br><span class="line">cd recipes</span><br><span class="line">git init</span><br><span class="line">git add .</span><br><span class="line">git commit -m "new project recipes"</span><br><span class="line"><span class="meta">#</span> 将recipes托管到第三方代码库，这里选GitHub</span><br><span class="line">git remote add origin https://github.com/XXXXX/recipes.git</span><br><span class="line">git push -u origin master</span><br><span class="line">rails g scaffold topic title:string description:text</span><br><span class="line">rake db:migrate</span><br><span class="line">git add .</span><br><span class="line">git commit -m "create topic model"</span><br><span class="line">rails s</span><br></pre></td></tr></table></figure>
-<p>修改<code>config/routes.rb</code>,把主页设定成topic的index, 添加<code>root &quot;topics#index&quot;</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  resources <span class="symbol">:topics</span></span><br><span class="line"> + root <span class="string">"topics#index"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这时，在浏览器打开<a href="http://localhost:3000/，画风是这样的：" target="_blank" rel="noopener">http://localhost:3000/，画风是这样的：</a></p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fnv0kthg2xj30og06874g.jpg" alt=""></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m "update routes"</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>添加gem： unicorn, foreman, dotenv-rails</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fnv3oaphuhj30k50g9abf.jpg" alt=""></p>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundler install</span><br></pre></td></tr></table></figure>
-<p>添加<code>config/deploy.rb</code>， 内容如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4da7cvhj30m50k040q.jpg" alt=""></p>
-<p>【repo_url 换成你自己的URL】</p>
-<p>根目录下添加Procfile 文件，内容如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4nzvr2mj30mw095t9v.jpg" alt=""></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m "add unicorn to project"</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-<p>将所有进度push至remote， 好，我们开始部署！</p>
-</li>
-</ul>
-<h5 id="2、安装套件"><a href="#2、安装套件" class="headerlink" title="2、安装套件"></a>2、安装套件</h5><p>这里以Ubuntu16.04为例，假定你已经添加一个免密登陆的用户deploy，我们将项目部署在home/deploy下。</p>
-<ul>
-<li><p>登陆服务器，更新，升级：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝套件，这些是Ruby on Rails 需要的：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
-<p>如果安装的nodejs版本低，尝试这样：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>nodejs v9</span><br><span class="line">curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -</span><br><span class="line">sudo apt-get install -y nodejs</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝Ruby</p>
-<p>检查版本：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ruby --version</span><br></pre></td></tr></table></figure>
-<p>如果有旧的版本，比如1.8/1.9， 卸载掉:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get remove -y ruby1.8 ruby1.9</span><br></pre></td></tr></table></figure>
-<p>下载，解压，编译，安装：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby</span><br><span class="line">wget https://cache.ruby-lang.org/pub/ruby/ruby-2.4.0.tar.gz</span><br><span class="line">tar -xzvf ruby-2.4.0.tar.gz</span><br><span class="line">cd ruby-2.4.0/</span><br><span class="line">./configure --prefix=/usr</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br><span class="line"></span><br><span class="line">ruby -v</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 处理SSL问题，加入国内gems镜像</span><br><span class="line">gem sources --add http://gems.ruby-china.org/ --remove https://rubygems.org/</span><br><span class="line"><span class="meta">#</span> 如果报错：uninitialized constant Gem::RemoteFetcher::Zlib， 则执行：sudo apt-get install zlib1g-dev</span><br><span class="line"></span><br><span class="line">gem sources -l</span><br><span class="line"></span><br><span class="line">sudo gem install bundler --no-ri --no-rdoc --source https://gems.ruby-china.org</span><br></pre></td></tr></table></figure>
-<p>戳这里<a href="http://cache.ruby-lang.org/pub/ruby/" target="_blank" rel="noopener">pub ruby</a> 查看ruby最新版本。</p>
-</li>
-<li><p>装 foreman gems:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo gem install rake bundler foreman --no-ri --no-rdoc</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>装runit：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install runit</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝SQL：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
-<p>执行过程中会让你配置一个数据库的 root 密码， 记下来，设定rails的数据库时会用到。</p>
-<p>建新的数据库：</p>
-<p>执行<code>mysql -u root -p</code> 进入console, 输入：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">DATABASE</span> recipes <span class="built_in">CHARACTER</span> <span class="keyword">SET</span> utf8mb4;</span><br></pre></td></tr></table></figure>
-<p>创建user deploy，并给user分配数据库 recipes的权限, 把$password 替换成你自己设置的密码：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">'deploy'</span>@<span class="string">'localhost'</span> <span class="keyword">IDENTIFIED</span> <span class="keyword">BY</span> <span class="string">'$password'</span>;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">SELECT</span>, <span class="keyword">INSERT</span>, <span class="keyword">UPDATE</span>, <span class="keyword">DELETE</span>, <span class="keyword">CREATE</span>, <span class="keyword">DROP</span>, <span class="keyword">INDEX</span>, <span class="keyword">ALTER</span>, <span class="keyword">LOCK</span> <span class="keyword">TABLES</span> <span class="keyword">ON</span> <span class="string">`recipes`</span>.* <span class="keyword">TO</span> <span class="string">'deploy'</span>@<span class="string">'localhost'</span>;</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
-<p>退出SQL的session后，尝试连接一下数据库：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mysql -u deploy -p -D recipes</span><br></pre></td></tr></table></figure>
-<p>这时会让你输入密码，输入刚刚替换$password的密码即可。</p>
-</li>
-</ul>
-<h5 id="3、部署项目"><a href="#3、部署项目" class="headerlink" title="3、部署项目"></a>3、部署项目</h5><ul>
-<li><p>clone项目到服务器</p>
-<p>deploy身份登陆，执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo git clone //github.com/XXXXX/recipes.git recipes</span><br><span class="line">cd recipes</span><br><span class="line">ls -la</span><br></pre></td></tr></table></figure>
-<p>如果recipes下面文件的owner不是deploy，执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chown deploy:deploy . -R</span><br></pre></td></tr></table></figure>
-<p><strong>确保deploy对recipes下的文件拥有读写权限，不然后面部署时会失败</strong>。</p>
-<p>配置文件：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sudo mkdir -p log tmp/pids tmp/sockets</span><br><span class="line">sudo chown -R deploy log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/</span><br><span class="line">sudo chmod -R u+rwX tmp/</span><br><span class="line">touch .env</span><br><span class="line">touch config/unicorn.rb</span><br></pre></td></tr></table></figure>
-<p>配置.env:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> ==== Required configuration settings  ====</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Replace the following with the output from "rake secret"</span><br><span class="line">APP_SECRET_TOKEN=REPLACE_ME_NOW!</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span>###########################</span><br><span class="line"><span class="meta">#</span>      Database Setup      #</span><br><span class="line"><span class="meta">#</span>###########################</span><br><span class="line"></span><br><span class="line">DATABASE_ADAPTER=mysql2</span><br><span class="line">DATABASE_ENCODING=utf8</span><br><span class="line">DATABASE_RECONNECT=true</span><br><span class="line">DATABASE_NAME=recipes</span><br><span class="line">DATABASE_POOL=20</span><br><span class="line">DATABASE_USERNAME=deploy</span><br><span class="line">DATABASE_PASSWORD="your_password"</span><br><span class="line"><span class="meta">#</span>DATABASE_HOST=your-domain-here.com</span><br><span class="line"><span class="meta">#</span>DATABASE_PORT=3306</span><br><span class="line"><span class="meta">#</span>DATABASE_SOCKET=/tmp/mysql.sock</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> MySQL only: If you are running a MySQL server &gt;=5.5.3, you should</span><br><span class="line"><span class="meta">#</span> set DATABASE_ENCODING to utf8mb4 instead of utf8 so that the</span><br><span class="line"><span class="meta">#</span> database can hold 4-byte UTF-8 characters like emoji.</span><br><span class="line"><span class="meta">#</span>DATABASE_ENCODING=utf8mb4</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> ==== Additional required production settings ====</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Configure Rails environment.  This should only be needed in production and may cause errors in development.</span><br><span class="line">RAILS_ENV=production</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Should Rails force all requests to use SSL?</span><br><span class="line">FORCE_SSL=false</span><br><span class="line"><span class="meta">#</span> 设置SECRET_KEY_BASE，config/secrets.yml中有用到，用development的secret_key_base即可</span><br><span class="line">SECRET_KEY_BASE= your_devlopment_secret_key_base</span><br></pre></td></tr></table></figure>
-<p>配置<code>config/unicorn.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">wd = File.expand_path(File.join(File.dirname(__FILE_<span class="number">_</span>), <span class="string">'..'</span>))</span><br><span class="line"></span><br><span class="line">app_path = wd</span><br><span class="line"></span><br><span class="line">worker_processes <span class="number">2</span></span><br><span class="line">preload_app <span class="literal">true</span></span><br><span class="line">timeout <span class="number">180</span></span><br><span class="line">listen <span class="string">"<span class="subst">#&#123;wd&#125;</span>/tmp/sockets/unicorn.socket"</span></span><br><span class="line"></span><br><span class="line">working_directory app_path</span><br><span class="line"></span><br><span class="line">rails_env = ENV[<span class="string">'RAILS_ENV'</span>] <span class="params">||</span> <span class="string">'production'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Log everything to one file</span></span><br><span class="line">stderr_path <span class="string">"log/unicorn.log"</span></span><br><span class="line">stdout_path <span class="string">"log/unicorn.log"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Set master PID location</span></span><br><span class="line">pid <span class="string">"<span class="subst">#&#123;wd&#125;</span>/tmp/pids/unicorn.pid"</span></span><br><span class="line"></span><br><span class="line">before_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.connection.disconnect!</span><br><span class="line">  old_pid = <span class="string">"<span class="subst">#&#123;server.config[<span class="symbol">:pid</span>]&#125;</span>.oldbin"</span></span><br><span class="line">  <span class="keyword">if</span> File.exist?(old_pid) &amp;&amp; server.pid != old_pid</span><br><span class="line">    <span class="keyword">begin</span></span><br><span class="line">      Process.kill(<span class="string">"QUIT"</span>, File.read(old_pid).to_i)</span><br><span class="line">    <span class="keyword">rescue</span> Errno::ENOENT, Errno::ESRCH</span><br><span class="line">      <span class="comment"># someone else did our job for us</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">after_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.establish_connection</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>安装gems：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle install --deployment --without development test</span><br></pre></td></tr></table></figure>
-<p>migrate 数据库：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle exec rake db:migrate RAILS_ENV=production</span><br></pre></td></tr></table></figure>
-<p>编译assets：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle exec rake assets:precompile RAILS_ENV=production</span><br></pre></td></tr></table></figure>
-<p>修改Procfile：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi Procfile</span><br></pre></td></tr></table></figure>
-<p>注释掉Procfile这两行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">web: bundle exec rails server -p $&#123;PORT-3000&#125; -b $&#123;IP-0.0.0.0&#125;</span><br><span class="line">jobs: bundle exec rails runner bin/threaded.rb</span><br></pre></td></tr></table></figure>
-<p>同时取消对Procfile这两行的注释：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># web: bundle exec unicorn -c config/unicorn.rb</span><br><span class="line"># jobs: bundle exec rails runner bin/threaded.rb</span><br></pre></td></tr></table></figure>
-<p>创建Unicorn的初始脚本：</p>
-<p>终端输入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/init.d/unicorn_recipes</span><br></pre></td></tr></table></figure>
-<p>然后在文件中放入以下内容：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>!/bin/sh</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span>## BEGIN INIT INFO</span><br><span class="line"><span class="meta">#</span> Provides:          unicorn</span><br><span class="line"><span class="meta">#</span> Required-Start:    $all</span><br><span class="line"><span class="meta">#</span> Required-Stop:     $all</span><br><span class="line"><span class="meta">#</span> Default-Start:     2 3 4 5</span><br><span class="line"><span class="meta">#</span> Default-Stop:      0 1 6</span><br><span class="line"><span class="meta">#</span> Short-Description: starts the unicorn app server</span><br><span class="line"><span class="meta">#</span> Description:       starts unicorn using start-stop-daemon</span><br><span class="line"><span class="meta">#</span>## END INIT INFO</span><br><span class="line"></span><br><span class="line">set -e</span><br><span class="line"></span><br><span class="line">USAGE="Usage: $0 &lt;start|stop|restart|upgrade|rotate|force-stop&gt;"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> app settings</span><br><span class="line">USER="deploy"</span><br><span class="line">APP_NAME="recipes"</span><br><span class="line">APP_ROOT="/home/$USER/$APP_NAME"</span><br><span class="line">ENV="production"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> environment settings</span><br><span class="line">PATH="/home/$USER/.rbenv/shims:/home/$USER/.rbenv/bin:$PATH"</span><br><span class="line">CMD="cd $APP_ROOT &amp;&amp; bundle exec unicorn -c config/unicorn.rb -E $ENV -D"</span><br><span class="line">PID="$APP_ROOT/tmp/pids/unicorn.pid"</span><br><span class="line">OLD_PID="$PID.oldbin"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> make sure the app exists</span><br><span class="line">cd $APP_ROOT || exit 1</span><br><span class="line"></span><br><span class="line">sig () &#123;</span><br><span class="line">  test -s "$PID" &amp;&amp; kill -$1 `cat $PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">oldsig () &#123;</span><br><span class="line">  test -s $OLD_PID &amp;&amp; kill -$1 `cat $OLD_PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">case $1 in</span><br><span class="line">  start)</span><br><span class="line">    sig 0 &amp;&amp; echo &gt;&amp;2 "Already running" &amp;&amp; exit 0</span><br><span class="line">    echo "Starting $APP_NAME"</span><br><span class="line">    su - $USER -c "$CMD"</span><br><span class="line">    ;;</span><br><span class="line">  stop)</span><br><span class="line">    echo "Stopping $APP_NAME"</span><br><span class="line">    sig QUIT &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Not running"</span><br><span class="line">    ;;</span><br><span class="line">  force-stop)</span><br><span class="line">    echo "Force stopping $APP_NAME"</span><br><span class="line">    sig TERM &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Not running"</span><br><span class="line">    ;;</span><br><span class="line">  restart|reload|upgrade)</span><br><span class="line">    sig USR2 &amp;&amp; echo "reloaded $APP_NAME" &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Couldn't reload, starting '$CMD' instead"</span><br><span class="line">    $CMD</span><br><span class="line">    ;;</span><br><span class="line">  rotate)</span><br><span class="line">    sig USR1 &amp;&amp; echo rotated logs OK &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Couldn't rotate logs" &amp;&amp; exit 1</span><br><span class="line">    ;;</span><br><span class="line">  *)</span><br><span class="line">    echo &gt;&amp;2 $USAGE</span><br><span class="line">    exit 1</span><br><span class="line">    ;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
-<p>更改权限，并设置可以在boot上启动：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo chmod 755 /etc/init.d/unicorn_recipes</span><br><span class="line">sudo update-rc.d unicorn_recipes defaults</span><br></pre></td></tr></table></figure>
-<p>开启：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /etc/init.d/unicorn_recipes start</span><br></pre></td></tr></table></figure>
-<p>检查unicorn的状态：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service unicorn status</span><br></pre></td></tr></table></figure>
-<p>设置logrotate：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/logrotate.d/recipes</span><br></pre></td></tr></table></figure>
-<p>内容如下：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">/home/deploy/recipes/log/*.log &#123;</span><br><span class="line">  daily</span><br><span class="line">  missingok</span><br><span class="line">  rotate 180</span><br><span class="line"><span class="meta">  #</span> must use with delaycompress below</span><br><span class="line">  compress</span><br><span class="line">  dateext</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span> this is important if using "compress" since we need to call</span><br><span class="line"><span class="meta">  #</span> the "lastaction" script below before compressing:</span><br><span class="line">  delaycompress</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span> note the lack of the evil "copytruncate" option in this</span><br><span class="line"><span class="meta">  #</span> config.  Unicorn supports the USR1 signal and we send it</span><br><span class="line"><span class="meta">  #</span> as our "lastaction" action:</span><br><span class="line">  lastaction</span><br><span class="line">    pid=/home/deploy/recipes/tmp/pids/unicorn.pid</span><br><span class="line">    test -s $pid &amp;&amp; kill -USR1 "$(cat $pid)"</span><br><span class="line">  endscript</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如果提示readonly, 无法写入，使用chmod或者chown来获取读写权限。</p>
-</li>
-<li><p>安装Ngnix</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y nginx</span><br></pre></td></tr></table></figure>
-<p>查看版本：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -v</span><br></pre></td></tr></table></figure>
-<p>在/etc/nginx/sites-available下，新增recipes文件：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/nginx/sites-available/recipes</span><br></pre></td></tr></table></figure>
-<p>内容如下：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>##################################</span><br><span class="line"><span class="meta">#</span>#         configuration         ##</span><br><span class="line"><span class="meta">#</span>##################################</span><br><span class="line"><span class="meta">#</span>#</span><br><span class="line"><span class="meta">#</span># See installation.md#using-https for additional HTTPS configuration details.</span><br><span class="line"></span><br><span class="line">upstream recipes &#123;</span><br><span class="line">  server unix:/home/deploy/recipes/tmp/sockets/unicorn.socket fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span># Normal HTTP host</span><br><span class="line">server &#123;</span><br><span class="line">  listen 0.0.0.0:80 default_server;</span><br><span class="line">  listen [::]:80 ipv6only=on default_server;</span><br><span class="line">  server_name 101.132.151.71; ## 这里填域名，如果没有，填服务器 IP 位置</span><br><span class="line">  server_tokens off; ## Don't show the nginx version number, a security best practice</span><br><span class="line">  root /home/deploy/recipes/public;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Increase this if you want to upload large attachments</span><br><span class="line">  client_max_body_size 20m;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Individual nginx logs for vhost</span><br><span class="line">  access_log  /var/log/nginx/recipes_access.log;</span><br><span class="line">  error_log   /var/log/nginx/recipes_error.log;</span><br><span class="line"></span><br><span class="line">  location / &#123;</span><br><span class="line">    ## Serve static files from defined root folder.</span><br><span class="line">    ## @huginn is a named location for the upstream fallback, see below.</span><br><span class="line">    try_files $uri $uri/index.html $uri.html @recipes;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># If a file, which is not found in the root folder is requested,</span><br><span class="line"><span class="meta">  #</span># then the proxy passes the request to the upsteam (huginn unicorn).</span><br><span class="line">  location @recipes &#123;</span><br><span class="line">    ## If you use HTTPS make sure you disable gzip compression</span><br><span class="line">    ## to be safe against BREACH attack.</span><br><span class="line">    # gzip off;</span><br><span class="line"></span><br><span class="line">    proxy_read_timeout      300;</span><br><span class="line">    proxy_connect_timeout   300;</span><br><span class="line">    proxy_redirect          off;</span><br><span class="line"></span><br><span class="line">    proxy_set_header    Host                $http_host;</span><br><span class="line">    proxy_set_header    X-Real-IP           $remote_addr;</span><br><span class="line">    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header    X-Forwarded-Proto   $scheme;</span><br><span class="line">    proxy_set_header    X-Frame-Options     SAMEORIGIN;</span><br><span class="line"></span><br><span class="line">    proxy_pass http://recipes;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Enable gzip compression as per rails guide:</span><br><span class="line"><span class="meta">  #</span># http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression</span><br><span class="line"><span class="meta">  #</span># WARNING: If you are using relative urls remove the block below</span><br><span class="line"><span class="meta">  #</span># See config/application.rb under "Relative url support" for the list of</span><br><span class="line"><span class="meta">  #</span># other files that need to be changed for relative url support</span><br><span class="line">  location ~ ^/(assets)/ &#123;</span><br><span class="line">    root /home/deploy/recipes/public;</span><br><span class="line">    gzip_static on; # to serve pre-gzipped version</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  error_page 502 /502.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>建立links:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/recipes /etc/nginx/sites-enabled/recipes</span><br></pre></td></tr></table></figure>
-<p>删除default：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm /etc/nginx/sites-enabled/default</span><br></pre></td></tr></table></figure>
-<p>测试设置：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo nginx -t</span><br></pre></td></tr></table></figure>
-<p>会弹出syntax is ok 和test is successful的信息，终端运行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>最后的效果：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnvasde46qj30o809rjrn.jpg" alt=""></p>
-<p>「终于出来了，太不容易了……」</p>
-<p>P.S</p>
-<p>如果<code>sudo service nginx restart</code>没有任何反应，可以检查以下路径的log：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /var/log/nginx</span><br><span class="line">cd recipes/log</span><br></pre></td></tr></table></figure>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/how-to-deploy-a-rails-app-with-unicorn-and-nginx-on-ubuntu-14-04" target="_blank" rel="noopener">How To Deploy a Rails App with Unicorn and Nginx on Ubuntu 14.04</a></p>
-<p><a href="https://linode.com/docs/development/ror/use-unicorn-and-nginx-on-ubuntu-14-04/" target="_blank" rel="noopener">Use Unicorn and Nginx to Configure Ruby on Rails Applications on Ubuntu 14.04</a></p>
-<p><a href="https://github.com/huginn/huginn/blob/master/doc/manual/installation.md" target="_blank" rel="noopener">Huginn install guide for Ubuntu/Debian</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2179,7 +2103,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">150</span>
+                <span class="site-state-item-count">151</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2312,7 +2236,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    141.7k
+    143.1k
   </span>
 
 </div>
