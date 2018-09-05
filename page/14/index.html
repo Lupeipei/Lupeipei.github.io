@@ -273,6 +273,203 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/10/login-server-without-password/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/10/login-server-without-password/" itemprop="url">
+                  SSH免密码登录远端服务器
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-10T08:24:21+08:00">
+                2017-10-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index">
+                    <span itemprop="name">Linux</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/10/login-server-without-password/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/10/login-server-without-password/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>612 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="吐个糟先"><a href="#吐个糟先" class="headerlink" title="吐个糟先"></a>吐个糟先</h4><p>前段时间开始学习Linux云服务器部署运维，在免密码登录那块卡了很久，一直没找到原因，删除实例，重新生成SSH key，折腾了几次，每次都以为这次没问题了，结果登录的时候，擦，还是要求输入密码，你说糟心不？索性先搁浅了起来，前几天又来找虐，试了两次，竟然成功登录了，小激动啊！</p>
+<p>记录下免密码登录的整个操作流程，庆祝下，也给没踩坑的参考下。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>远端登入如果每次都要输入密码，还是挺麻烦的，不过，别担心，聪明的前辈们早就想到解决办法啦！用非对称加密的方式来实现免密码登录。那，具体怎么玩？</p>
+<p><strong>步骤：</strong></p>
+<p>机器A： 本地的Mac</p>
+<p>机器B： 远端Linux服务器</p>
+<p>Step1、在<strong>本地机器A</strong>检查是否已经生成id_rsa.pub</p>
+<ul>
+<li><p>终端运行<code>cat ~/.ssh/id_rsa.pub</code></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fk9qp21kn2j30lt021gmk.jpg" alt=""></p>
+<ul>
+<li><p>如果存在该文件，终端运行：<code>ssh-keygen -p</code>, 将passphrase重新设置为空，直接按Enter即可，这一步很重要，不然的话，即使你设置了免密码登录，还是要每次都输入passphrase才可以登录到远端服务器。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fk9qp2mmr8j30gz02t3yy.jpg" alt=""></p>
+</li>
+<li><p>如果不存在该文件，需要先生成，终端运行：<code>ssh-keygen -t rsa</code>,  就会生成公钥 <code>~/.ssh/id_rsa.pub</code> 以及密钥 <code>~/.ssh/id_rsa</code>啦。同样的，一直按Enter，不要设置passphrase。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Step2、在<strong>机器B</strong>添上本地的公钥</p>
+<ul>
+<li><p>登录远端服务器后，新建authorized_keys</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ssh</span><br><span class="line">touch ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将公钥贴进远端服务器的authorized_keys中</p>
+<p>在A上运行：<code>cat ~/.ssh/id_rsa.pub</code>， 复制本机的公钥</p>
+<p>回到B上，运行：<code>nano ~/.ssh/authorized_keys</code>, 把公钥贴进去</p>
+</li>
+<li><p>设置机器B上的文件权限</p>
+<p>运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 ~/.ssh</span><br><span class="line">chmod 644 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+<p>有的参考文档要求设置成600，试了下，644，600，保证owner是可读写可执行，而其他用户和群组的最大权限是可读即可。</p>
+</li>
+</ul>
+<p>可以了！很简单是不是？试试看，退出重新登录下，不用敲密码啦！</p>
+<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p> BTW，我之前的问题是passphrase没有设置为空，另外SSH文件复制时也出错，后面重新生成才解决的。</p>
+<p>看了一些有关SSH免登录的操作说明，有一篇挺干货的。推荐：</p>
+<p><a href="https://my.oschina.net/magicalSam/blog/1466144" target="_blank" rel="noopener">Mac、Linux 上实现SSH免密码登陆到Linux服务器</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/09/introduction-to-jquery-module3-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2701,256 +2898,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/30/web-together-build-4/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/09/30/web-together-build-4/" itemprop="url">
-                  Together网站搭建之踩坑系列4
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-30T07:42:25+08:00">
-                2017-09-30
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/09/30/web-together-build-4/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/09/30/web-together-build-4/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,075 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是功能实现的第三篇，扯一扯<strong>如何添加省市自治区地址, 并实现热门城市筛选功能</strong>。</p>
-<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
-<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
-<li><a href="https://lupeipei.github.io/2017/09/28/web-together-build-2/">给活动添加收藏功能，并使用Ajax进行优化</a></li>
-<li><a href="https://lupeipei.github.io/2017/09/29/web-together-build-3/">给活动Events添加分类筛选</a></li>
-<li>添加省市自治区地址, 并实现热门城市筛选</li>
-<li><a href="https://lupeipei.github.io/2017/10/01/web-together-build-5/">添加时间筛选</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/03/web-together-build-7/">实作活动申请</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
-</ul>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先说<strong>如何添加省市区地址</strong>。</p>
-<p>上效果图：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1fjzauggy8ig30zh0i2aby.gif" alt=""></p>
-<p><strong>Step1、安装相应的gem及配件</strong></p>
-<ul>
-<li><p>在gemfile中添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;china_city&apos;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>终端运行：<code>bundle install</code></p>
-</li>
-<li><p>在<code>app/assets/javascripts/application.js</code>中，添加：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//= require jquery</span></span><br><span class="line"><span class="comment">//= require 'china_city/jquery.china_city'</span></span><br></pre></td></tr></table></figure>
-<p>注意：如果文件中已经添加了jquery， 则无需再添加</p>
-</li>
-<li><p>在<code>config/routes.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount ChinaCity::Engine =&gt; <span class="string">'/china_city'</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p><strong>Step2、使用</strong></p>
-<p>代码以together网站为例</p>
-<ul>
-<li><p>给event添加省区、城市栏位，终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_province_and_city_to_events</span><br></pre></td></tr></table></figure>
-<p>修改<code>db/migration/xxx_add_province_and_city_to_events</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddProvinceAndCityToEvents</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:events</span>, <span class="symbol">:province</span>, <span class="symbol">:string</span></span><br><span class="line">    add_column <span class="symbol">:events</span>, <span class="symbol">:city</span>, <span class="symbol">:string</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>终端运行：<code>rake db:migrate</code></p>
-</li>
-<li><p>将新增的province，city添加到<code>app/controllers/events_controller.rb</code>的params中。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">event_params</span></span></span><br><span class="line">-  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:title</span>, <span class="symbol">:logo</span>,.....)</span><br><span class="line">+  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:province</span>, <span class="symbol">:city</span>, <span class="symbol">:title</span>, <span class="symbol">:logo</span>,.....)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在events的<code>new.html.erb</code> 及<code>edit.html.erb</code>中添加如下代码, 让用户新建活动时选择省市区：【这里是用simple_form格式】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;div class="form-group"&gt;</span><br><span class="line">   &lt;div class="city-group"&gt;</span><br><span class="line">     &lt;%= f.select <span class="symbol">:province</span>, ChinaCity.list.unshift([<span class="string">"--省份--"</span>, <span class="number">230000</span>]), &#123;&#125;, <span class="class"><span class="keyword">class</span>: "<span class="title">city</span>-<span class="title">select</span>"%&gt;</span></span><br><span class="line">     &lt;%= f.select <span class="symbol">:city</span>, ChinaCity.list(f.object.province).presence <span class="params">||</span> [[<span class="string">"--城市--"</span>, <span class="number">230900</span>]], &#123;&#125;, <span class="class"><span class="keyword">class</span>: "<span class="title">city</span>-<span class="title">select</span>"%&gt;</span></span><br><span class="line">   &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp"> &lt;/div</span>&gt;</span><br><span class="line"> ......</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>回显省份及城市，这里，在需要回显的地方, 如index页面，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;% @events.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">......</span><br><span class="line">	&lt;div class="city"&gt;</span><br><span class="line">      &lt;%= ChinaCity.get(event.province) %&gt; - &lt;%= ChinaCity.get(event.city)%&gt;</span><br><span class="line">	&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">.....</span></span><br></pre></td></tr></table></figure>
-<p>这里，显示的都是XX省XX市， 如果只希望显示城市， 且没有”市”这个后缀，可以改成：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;% @events.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">......</span><br><span class="line">	&lt;div class="city"&gt;</span><br><span class="line">      &lt;%= ChinaCity.get(event.city).split(<span class="string">"市"</span>).first %&gt;</span><br><span class="line">	&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">.....</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>OK！</p>
-<p>接下来，看看如何实现热门城市筛选功能。</p>
-<p>上效果图：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79ly1fjzaug4ip2g30zh0i21kz.gif" alt=""></p>
-<p><strong>Step1、建model</strong></p>
-<ul>
-<li><p>建立city model，终端运行:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g model city city:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>这里，为了跟ChinaCity中城市的<a href="http://www.stats.gov.cn/tjsj/tjbz/xzqhdm/201504/t20150415_712722.html" target="_blank" rel="noopener">行政区划代码</a>保持一致，在<code>app/models/city.rb</code>中，添加了北上广深杭州，成都的行政区划代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">City</span> &lt; ApplicationRecord</span></span><br><span class="line"></span><br><span class="line"> + CITY = [<span class="string">"110000"</span>,<span class="string">"310000"</span>,<span class="string">"440100"</span>,<span class="string">"440300"</span>,<span class="string">"330100"</span>,<span class="string">"510100"</span>]</span><br><span class="line"> + validates_inclusion_of <span class="symbol">:city</span>, <span class="symbol">:in</span> =&gt; CITY</span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>BTW，最开始的时候，我想着如果根据活动添加的情况，将所有出现的city都罗列出来，那这个筛选项就是动态的，可能存在并发的情况，固定城市反而更好。</p>
-</li>
-<li><p>在seeds文档中，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># City部分</span></span><br><span class="line">City.delete_all</span><br><span class="line"></span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"110000"</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"310000"</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"440100"</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"440300"</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"330100"</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">"510100"</span>)</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p><strong>Step2、添加城市列表筛选</strong></p>
-<ul>
-<li><p>显示筛选项，在events的 <code>index.html.erb</code>中，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="submenu" style="margin-bottom: 3px;"&gt;</span><br><span class="line">  &lt;span&gt;&lt;i class="fa fa-paper-plane fa-lg"&gt;&lt;/i&gt; 城市: &lt;/span&gt;</span><br><span class="line">  &lt;div class="btn-group" style="margin-left: 20px;"&gt;</span><br><span class="line">    &lt;%= link_to <span class="string">"全部"</span>, events_path, <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:city</span>].blank?)? <span class="string">"active"</span> : <span class="string">""</span>&#125;</span>"</span>%&gt;</span><br><span class="line">    &lt;% City.all.each <span class="keyword">do</span> <span class="params">|c|</span> %&gt;</span><br><span class="line">      &lt;%= link_to ChinaCity.get(c.city).split(<span class="string">"市"</span>).first, events_path(<span class="symbol">city:</span> c.city), <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:city</span>] == c.city)? <span class="string">"active"</span> : <span class="string">""</span> &#125;</span>"</span>%&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;/div</span>&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>event.rb</code>中加入以下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope <span class="symbol">:by_city</span>, -&gt;(c)&#123;where( <span class="symbol">:city</span> =&gt; c )&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>events_controller.rb</code>，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">   @events = Event.order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">......</span><br><span class="line"> + <span class="keyword">if</span> params[<span class="symbol">:city</span>].present?</span><br><span class="line"> +  @events = @events.by_city(params[<span class="symbol">:city</span>]).order(<span class="string">"created_at DESC"</span>)</span><br><span class="line"> + <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>做到这里，试一试筛选功能，你会发现一个bug，直辖市是筛选不出来的，比如北京，上海这种，怎么回事？</p>
-<p>因为这些市，保存在了province这个栏位里面，而它们对应的city则保存了“市辖区”，“县”对应的区划代码。我们来修改一下：</p>
-<ul>
-<li><p>在<code>events_controller.rb</code>，对于create部分，做如下修改：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  @event = Event.new(event_params)</span><br><span class="line">  @event.user = current_user</span><br><span class="line">+  <span class="keyword">if</span> ChinaCity.get(@event.city) ==  <span class="string">"市辖区"</span> <span class="params">||</span> ChinaCity.get(event.city) == <span class="string">"县"</span></span><br><span class="line">+   @event.city = @event.province</span><br><span class="line">+ <span class="keyword">end</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>现在试试，可以筛选啦！</p>
-</li>
-</ul>
-<p>P.S. 是不是发现跟前面一篇添加分类筛选有相似之处？</p>
-<p>参考：</p>
-<p><a href="https://forum.qzy.camp/t/topic/1659/5" target="_blank" rel="noopener">省市区详细地址教程</a></p>
-<p><a href="https://github.com/saberma/china_city" target="_blank" rel="noopener">Rails Engine Gem China_City</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3000,7 +2947,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">154</span>
+                <span class="site-state-item-count">155</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3133,7 +3080,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    144.7k
+    145.5k
   </span>
 
 </div>
