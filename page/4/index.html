@@ -273,6 +273,351 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/18/learn-git-rebase/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/06/18/learn-git-rebase/" itemprop="url">
+                  学习git rebase
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-18T09:01:57+08:00">
+                2018-06-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Git/" itemprop="url" rel="index">
+                    <span itemprop="name">Git</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/18/learn-git-rebase/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/18/learn-git-rebase/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2,957 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>前段时间老大新教了一个技能，使用<code>git rebase master -i</code> 来修改或者合并commit，用了之后，顿时有种发现新世界的感觉，好工具有必要花时间了解下。</p>
+<p>过了下<a href="https://github.com/progit/progit2" target="_blank" rel="noopener">pro git</a>，梳理下git rebase的基本使用以及“偷天换日”的神技。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>基本用法</p>
+<p>pro git中，对于basic rebase是这么说的：</p>
+<blockquote>
+<p>With the rebase command, you can take all the changes that were committed on one branch and replay them on another one.</p>
+</blockquote>
+<p>简单来说，就是相当于把一个分支A嫁接到另一个分支上B。</p>
+<p>书中举了这么一个例子：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsd7h2d0w9j30hc07tdfx.jpg" alt=""></p>
+<p>现在需要将master 和experiment这两个分支合并。</p>
+<p>有两种方式：</p>
+<ul>
+<li>merge</li>
+<li>rebase</li>
+</ul>
+<p>先看merge，很简单，终端执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git checkout master ## 切到分支master</span><br><span class="line">git merge experiment  ## 将experiment merge 到master</span><br></pre></td></tr></table></figure>
+<p>用three-merge  【我理解为三路合并】的方式来将两个最新的分支快照（C3和C4）和它们最近的共同祖先（C2）之间进行合并，创建了一个新的快照 C5。</p>
+<p>效果：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd7rrxa4vj30g10683ym.jpg" alt=""></p>
+<p>​</p>
+<p>​</p>
+<p>rebase的方式，终端执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git checkout experiment ## 切到分支experiment</span><br><span class="line">git rebase master ## 将experiment嫁接到master上，即ancestor由原来的C2，变成了C3，生成了新的snapshot C4‘</span><br><span class="line">git checkout master ## 切回到master</span><br><span class="line">git merge experiment ## 将experiment merge进 master</span><br></pre></td></tr></table></figure>
+<p>效果：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd7ywqkh0j30g604sglo.jpg" alt=""></p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd81284n1j30he04sq2y.jpg" alt=""></p>
+<p>这里你估计要嘀咕了，git rebase好像多走了两步啊。对，相比merge，它是多走了两步，但是这两步，让整个整合的过程变得很清晰，不同于three-merge的方式，而是直线式，先嫁接再简单的合并。而且你还可以选择，只rebase，不merge，什么意思呢？看下面一个很常见的场景：</p>
+<blockquote>
+<p>你在master上开了新的分支B1，同时其他人也开了分支B2，随后B2被merge进了 master，此时，你将分支push到远端代码仓库，对分支进行<code>git push -u origin B1</code>时，会显示有冲突，因为此时B1是基于本地的master来开发的，而远端origin因为已经merge了B2， 跟本地的master已经不同，怎么处理？</p>
+</blockquote>
+<p>思路也很清晰，先把远端最新的代码pull下来，让本地的master与origin/master同步，然后将B1 rebase 到同步后的master上即可。</p>
+<p>终端执行：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git checkout master ## 切换到master</span><br><span class="line">git pull origin master ## 拉下origin/master，让本地master与origin/master同步</span><br><span class="line">git checkout B1 ## 切换到分支B1</span><br><span class="line">git rebase master ## 将B1嫁接到master上，这样B1就是在最新的master上进行开发了，随后你push B1时，项目的maintainer就可以直接merge你的分支了</span><br></pre></td></tr></table></figure>
+<p>当然， rebase master的时候，可能会出现冲突问题，比如B2分支和你的B1同时修改了同一个地方，此时需要手动修正冲突，修改后，<code>git add</code>， 不用commit，然后<code>git rebase —continue</code>，直到没有冲突，完成rebase。</p>
+<p>如果rebase仅仅只是这样，好像也没什么神奇的，下面才是重头戏。</p>
+</li>
+<li><p>偷天换日，篡改历史</p>
+<p>执行如下命令，可以进入git rebase的interactive 交互模式 ：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i xxx</span><br></pre></td></tr></table></figure>
+<p>其中XXX指的是你要在哪个commit的基础上进行修改，也就是最后一个修改的commit的父commit，比如你现在在分支B上，想要rebase 分支B的最后3个，那就写：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~3</span><br></pre></td></tr></table></figure>
+<p>这样rebase的时候，重新生成的commit history，就会是从HEAD, HEAD~1到HEAD~2的快照，而不会影响其它的snapshot。</p>
+<p>同样，想要rebase 分支B的所有commit，假定B是从master主分支上开发的，则可以直接：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i master</span><br></pre></td></tr></table></figure>
+<p>进入到interactive 模式后， 可以看到目前有7个命令可以使用：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1frl89ao69gj30yk0f0whk.jpg" alt=""></p>
+<p>简单过一下上面的命令列表：</p>
+<ul>
+<li>p, <code>pick</code> = 要这条 commit ，什麼都不改</li>
+<li>r, <code>reword</code> = 要这条 commit ，但要改 commit message</li>
+<li>e, <code>edit</code> = 要这条 commit，stop for  amending，不仅仅是edit message</li>
+<li>s, <code>squash</code> = 要這條 commit，但要跟前面那条合并，合并后的message可以自己定义</li>
+<li>f, <code>fixup</code> = 类似squash，但是不要这条 message，直接用前面的那条</li>
+<li>e, <code>exec</code> = 使用shell执行指令</li>
+<li>d, <code>drop</code> = 移除这条commit</li>
+</ul>
+<p>编辑好后，退出即可。</p>
+<p>光说不练没什么感觉，找个项目练练。</p>
+<p>假定现在有一个rails的项目movie，目前的commit history长这样：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdb6606a4j30ov07qtae.jpg" alt=""></p>
+<p>我们把最后6个拎出来练练。</p>
+<p>终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~6</span><br></pre></td></tr></table></figure>
+<p>使用默认编辑器打开了git-rebase-todo：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fsdbrskqurj30hy0fktar.jpg" alt=""></p>
+<p>我们修改一下commit “  implement like &amp; dislike movie “ ，把 &amp; 换成 and， 使用reword 命令试试。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdbworp60j30h503cwew.jpg" alt=""></p>
+<p>保存后退出，会打开COMMIT_EDITMSG， 我们将&amp;改成了and：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdc1cpth8j30j8098ta8.jpg" alt=""></p>
+<p>保存后退出，打开fork，这时会发现最后6个commit的short SHA-1已经变了，生成了新的short SHA-1：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fsdc4xhyvtj30pc09o769.jpg" alt=""></p>
+<p>看看edit:</p>
+<p>同样的步骤，我们这次动 <strong>41e6c73</strong> implement my favorite movies, 把my 改成 users‘：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdcefvmkdj30g4034wev.jpg" alt=""></p>
+<p>保存后退出，终端会输出如下的内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Stopped at 41e6c73... implement my favorite movies</span><br><span class="line">You can amend the commit now, with</span><br><span class="line"></span><br><span class="line">	git commit --amend</span><br><span class="line"></span><br><span class="line">Once you are satisfied with your changes, run</span><br><span class="line"></span><br><span class="line">	git rebase --continue</span><br></pre></td></tr></table></figure>
+<p>按照指示来，执行<code>git commit --amend</code>, 在打开的编辑器中修改：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fsdclnuardj30i5024aa7.jpg" alt=""></p>
+<p>保存后退出，执行<code>git rebase --continue</code>, 完成， 此时查看short SHA-1, 会发现，从刚刚修改的那条commit开始，又重新生成了新的short SHA-1。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdcolt6gpj30p303h3z9.jpg" alt=""></p>
+<p>这样看，edit 和reword好像没啥区别，额，你这可就小看edit了，修改message只是amending的一种哦，我们还可以使用edit来拆分commit。</p>
+<p>比如我们来拆分 <strong>9d1e108</strong> implement like and dislike movie</p>
+<p>还是一样的，在它前面添加e:</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdcw0a3f4j30hr03dmxl.jpg" alt=""></p>
+<p>同样，保存后退出，回到命令行，我们reset下这个commit，将所有的文件从history里面捞出来，变成unstaged状态，然后再创建多个commit。终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git reset HEAD~</span><br><span class="line">git add app/controllers/movies_controller.rb</span><br><span class="line">git commit -m &quot;add like and dislike actions&quot;</span><br><span class="line">git add app/views/movies/show.html.erb</span><br><span class="line">git commit -m &quot;add like and dislike button on movie&apos;s show page&quot;</span><br><span class="line">git add config/routes.rb</span><br><span class="line">git commit -m &quot;update routes for like and dislike actions&quot;</span><br><span class="line">git rebase --continue</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdd83pbc6j30r408wdi9.jpg" alt=""></p>
+<p>此时，一个commit被拆成了三个，short SHA-1也都更新了。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsddapyuonj30pc04jmy2.jpg" alt=""></p>
+<p>好，下一个，squash。</p>
+<p>刚刚我们用<code>edit</code>拆了一个commit，现在我们使用<code>squash</code>把它们合并回来。</p>
+<p>终端执行：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~8</span><br></pre></td></tr></table></figure>
+<p>在<strong>bf9a37c</strong> 和<strong>66c0d7e</strong>前面的pick改成s:</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsddmig2w9j30ja04taas.jpg" alt=""></p>
+<p>保存后退出，会打开COMMIT_EDITMSG:</p>
+<p> <img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsddoiz6i9j30l206w754.jpg" alt=""></p>
+<p>它会列出三个commit，如果你什么都不做，直接退出，它会自动将第2，3的commit合并到第一条，最后的commit message 变成：</p>
+<blockquote>
+<p>add method of like/dislike to movie</p>
+<p>add like and dislike actions</p>
+<p>add like and add like and dislike button on movie’s show page</p>
+</blockquote>
+<p>当然你也可以自己修改message，这里我们直接退出。</p>
+<p>打开fork，会发现已经合并了，三个add 变成了一个add。【换行的缘故，没有显示全部的message】</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fsddyiom7mj30p803saar.jpg" alt=""></p>
+<p>​</p>
+<p>额，我发现改错了，刚刚拆出来的不是这三条……擦，终端<code>git rebase -i HEAD~9</code>了，把第9个commit给添加进来了……</p>
+<p>正好，我们再来一次，把<strong>0d92196</strong>  add method of like/dislike to movie , <strong>c2795c3 </strong> update  routes for like and dislike actions 合并， 这次换成自己定义新的commit message。</p>
+<p>按照前面的方式再走一遍，在打开的COMMIT_EDITMSG中：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fsde56gortj30ib07haas.jpg" alt=""></p>
+<p>修改成：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsde96aeaxj30h202f3yo.jpg" alt=""></p>
+<p>保存后退出，查看fork， 合并完成！</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdeb2pe57j30p503f3z5.jpg" alt=""></p>
+<p>fixup类似squash，只是它是直接用前面一条commit，舍弃这一条，我们来试试。</p>
+<p>对 <strong>b4062de</strong> use self delimit helper 进行fixup:</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fsdejlqhgtj30ka04774t.jpg" alt=""></p>
+<p>保存后退出，rebase完成，查看fork：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdelazwpvj30p9030mxr.jpg" alt=""></p>
+<p>刚刚的 <strong>b4062de</strong> use self delimit helper  已经被合并进了implement my reviews里面了，导致从implement my reviews 开始后的三个commit 的short SHA-1都更新了。【箭头画偏了……】</p>
+<p>exec，运行命令：</p>
+<p>在pro git中没有看到exec相关的例子，不过在这篇文章<a href="http://kamalmarhubi.com/blog/2016/03/08/git-rebase-exec-make-sure-your-tests-pass-at-each-commit-and-other-rebase-goodies/" target="_blank" rel="noopener">git rebase –exec: make sure your tests pass at each commit! (and other rebase goodies)</a>里面看到相关的操作, 照着试试。</p>
+<p>选择<strong>9996f59</strong> render partial with collection， 我们添加上exec。</p>
+<p>终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i --exec &quot;pwd&quot; 9996f59</span><br></pre></td></tr></table></figure>
+<p>会在<strong>9996f59</strong>后执行 pwd 命令，可以看到已经执行了pwd命令：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdgn2vahrj30k401s0sv.jpg" alt=""></p>
+<p>额，Google上exec相关的内容还是较少的，少有的几篇说到了测试与重置authors的：</p>
+<ul>
+<li><a href="https://til.hashrocket.com/posts/2839b35a3b-execute-a-shell-command-on-every-commit-in-rebase" target="_blank" rel="noopener">Execute a shell command on every commit in rebase</a></li>
+<li><a href="https://stackoverflow.com/questions/21560896/how-to-run-tests-for-all-commits-during-a-rebase" target="_blank" rel="noopener">How to run tests for all commits during a rebase</a></li>
+</ul>
+<p>d，移除commit：</p>
+<p>终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD-6</span><br></pre></td></tr></table></figure>
+<p>删除最后一条 <strong>bac0634</strong>：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdgv7qw4lj30hk044q3h.jpg" alt=""></p>
+<p>保存后退出， 查看fork：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdgw5d060j30pb02adg5.jpg" alt=""></p>
+<p>最后一条commit已经被移除了。</p>
+</li>
+</ul>
+<ul>
+<li><p>Rebase的危险性</p>
+<p>rebase也不是想rebase就rebase的，这么强大的权利，用的时候，要注意的。</p>
+<p>用书中的一句话就是：<strong>Do not rebase commits that exist outside your repository.</strong></p>
+<p>换句话说，在你的分支还没有push到远端代码仓库时，你想怎么rebase都可以，但是如果你的代码已经push到远端了，而且你的同事是在你的分支的基础上开发的，那么请不要使用rebase来刷你的存在感。因为你rebase后，他们需要重新pull下你提交的最新代码，此时你之前的commit history和rebase后的commit history会让他们生生抓狂的。</p>
+<p>看个场景理解下：【偷懒，直接用书中的例子】</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsd964ruh1j30fo08waac.jpg" alt=""></p>
+<p>此时，远端的分支master指向snapshot C1。</p>
+<p>本地你在teamone/master上开发后，commit了两次，history中有snapshot C2， C3。</p>
+<p>随后，你的同事A merge了C4， C5，生成了新的snapshot C6，然后git push，提交了新的代码，将master指向了C6。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsd9gh66bej30fn04d74d.jpg" alt=""></p>
+<p>那很显然，你需要把teamone/master的代码fetch下来，merge后继续开发。同样，按照three-merge方式，这时git会将C3，C6和C1三路合并，生成新的snapshot C7。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd9grqz5dj30g805kweo.jpg" alt=""></p>
+<p>不幸的是，你的同事针对之前提交的分支，进行了rebase的操作，将C4嫁接到C5上，生成了新的snapshot C4‘， 然后<code>git push —force</code> 强制push到了远端，等同于刷新了之前的commit history。然后你继续fetch，再merge。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fsd9qid4wyj30gl085jrt.jpg" alt=""></p>
+<p>此时，git merge了C4‘， C7和C1，重新生成快照C8，这时C8中来自于C4‘中的commit history，会跟C7中的commit history有重合的部分，相当于存在两个C4，导致出现两个一模一样的commit。</p>
+<p>书中在rebase your rebase 部分中，提到一个针对这种情况的解决方法，思路就是分辨出所有的snapshot中，哪些是你做的修改，哪些是你的同事做的，值得庆幸的是，git 帮我们处理了这种情况。</p>
+<p>终端执行：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git fetch</span><br><span class="line">git rebase teamone/master</span><br></pre></td></tr></table></figure>
+<p>会得到这样的效果：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsda5p6fh0j30gl086wet.jpg" alt=""></p>
+<p>相当于将C2，C3直接嫁接到C4‘上，生成了新的commit，厉害！不过这种方法的前提是C4与C4’需要是一样的snapshot。至于原因，书中这样说的：</p>
+<blockquote>
+<p>Otherwise the rebase won’t be able to tell that it’s a duplicate and will add another C4-like patch (which will probably fail to apply cleanly, since the changes would already be at least somewhat there).</p>
+</blockquote>
+<p>如果C4与C4’不一样的话，rebase 无法分辨出C4‘是不是一个复制的commit snapshot？额，这里暂时没有理解透。</p>
+<p>不过个人看完的感觉就是，push后的分支，应当尽量避免使用rebase。</p>
+</li>
+<li><p>rebase VS merge</p>
+<p>个人的理解，两者还是不一样的，merge类似把两个东西融为一体，而rebase 则好比进行重新嫁接。书中提到commit history的一个意义就在于记录下发生了什么，使用merge会真实的记录下所有发生的事情，而rebase，诚如上面做过的那些commands，有着篡改历史的嫌疑，但也有好处，可以把杂乱的commit history整理的清清爽爽，谁喜欢一个分支上一堆没什么用的commits呢。</p>
+<p>借书中一段话作为结尾：</p>
+<blockquote>
+<p>In general the way to get the best of both worlds is to rebase local changes you’ve made but haven’t shared yet before you push them in order to clean up your story, but never rebase anything you’ve pushed somewhere.</p>
+</blockquote>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/progit/progit2" target="_blank" rel="noopener">pro git</a></p>
+<p><a href="http://kamalmarhubi.com/blog/2016/03/08/git-rebase-exec-make-sure-your-tests-pass-at-each-commit-and-other-rebase-goodies/" target="_blank" rel="noopener">git rebase –exec: make sure your tests pass at each commit! (and other rebase goodies)</a></p>
+<p><a href="https://til.hashrocket.com/posts/2839b35a3b-execute-a-shell-command-on-every-commit-in-rebase" target="_blank" rel="noopener">Execute a shell command on every commit in rebase</a></p>
+<p>推荐阅读：<a href="https://blog.yorkxin.org/2011/07/29/git-rebase" target="_blank" rel="noopener">git rebase</a>， 写的很详细，类比也很形象。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/17/film-back-to-back-face-to-face/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1981,262 +2326,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/13/learn-webpack/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/13/learn-webpack/" itemprop="url">
-                  Webpack学习笔记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-13T21:56:27+08:00">
-                2018-05-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Webpack/" itemprop="url" rel="index">
-                    <span itemprop="name">Webpack</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/13/learn-webpack/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/13/learn-webpack/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,389 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="是什么？"><a href="#是什么？" class="headerlink" title="是什么？"></a>是什么？</h4><p>官方给到的解释：</p>
-<blockquote>
-<p> webpack is a <em>static module bundler</em> for modern JavaScript applications.</p>
-</blockquote>
-<p>它是一款针对JS应用的静态模块打包工具，当使用webpack处理应用程序时，它会在内部建一个依赖关系图，这个图能映射应用需要的每一个module并生成一个或多个bundles。</p>
-<p>2018.3.12，Webpack4.0 正式发布，<a href="https://medium.com/@TheLarkInn?source=post_header_lockup" target="_blank" rel="noopener">Sean T. Larkin</a> 在当天发表了文章<a href="https://medium.com/webpack/webpack-4-released-today-6cdb994702d4" target="_blank" rel="noopener">webpack 4: released today!!</a>， 列出了新版的变动。通过查看<a href="https://github.com/webpack/webpack/releases" target="_blank" rel="noopener">releases</a>可以得到changelog， 目前的最新版本是<a href="https://github.com/webpack/webpack/releases/tag/v4.8.3" target="_blank" rel="noopener">4.8.3</a>。</p>
-<p>使用webpack来打包module时，需要设定配置文件，默认的配置文件是<code>webpack.config.js</code>，不过对于4.0及以上的版本，webpack已经不再强制要求配置文件了。针对需要设定的属性，有其相对应的默认值。</p>
-<p>在使用webpack前，有必要了解一些重要的概念。</p>
-<h4 id="几个重要的概念"><a href="#几个重要的概念" class="headerlink" title="几个重要的概念"></a>几个重要的概念</h4><ul>
-<li><p>Entry</p>
-<p>entry用于告诉webpack从哪个文件开始创建内部的依赖关系图，默认情况下是<code>./src/index.js</code>。 我们也可以在配置文件<code>webpack.config.js</code>中自定义，比如：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  entry: <span class="string">'./path/file.js'</span>  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>entry可以有多个，比如：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    entry: &#123;</span><br><span class="line">        pageOne: <span class="string">'./src/pageOne/index.js'</span>,</span><br><span class="line">        pageTwo: <span class="string">'./src/pageTwo/index.js'</span>,</span><br><span class="line">        pageThree: <span class="string">'./src/pageThree/index.js'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
-<p>这里设置了三个entries，告诉webpack要生成三个独立的内部依赖图。</p>
-</li>
-<li><p>Output</p>
-<p>output用于告诉webpack，打包编译后的文件放在哪里。主要通过给filename和path赋值的方式来指定。</p>
-<p>看个例子：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    output: &#123;</span><br><span class="line">        filename: <span class="string">'bundle.js'</span>,</span><br><span class="line">        path: <span class="string">'/home/project/public/assets'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
-<p>这里告诉webpack，最后的输出文件是bundle.js， 存放在<code>&#39;/home/project/public/assets&#39;</code>下。</p>
-<p>上面提到了entry可以有多个，但是output只能有一个，不能配置多个。那么如何让每一个entry都有一个output文件而不是混合在一起呢？官方给到了一个这样的例子做参考：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    entry: &#123;</span><br><span class="line">        app: <span class="string">'./src/app.js'</span>,</span><br><span class="line">        search: <span class="string">'./src/search.js'</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    output: &#123;</span><br><span class="line">        filename: <span class="string">'[name].js'</span>,</span><br><span class="line">        path: __dirname + <span class="string">'/dist</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>这样会在<code>/dist</code>下面输出两个打包后的文件，<code>./dist/app.js</code>, <code>./dist/search.js</code>.</p>
-</li>
-<li><p>Loaders</p>
-<p>loaders用于告诉webpack，不同的文件需要用什么加载器进行处理，比如把其他非JS文件，如TS，转换成JS，或者import一些CSS文件。loader好比在导入或者加载文件时，对文件进行了一次预处理，使之符合打包要求。</p>
-<p>设定loaders有三种方式：</p>
-<ul>
-<li><p>在配置文件中设定</p>
-<p>比如需要加载css,转换ts文件，可以这么用：</p>
-<p>先在本地安装对应的loaders：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev css-loader</span><br><span class="line">npm install --save-dev ts-loader</span><br></pre></td></tr></table></figure>
-<p>然后在配置文件中指定用哪个loader处理哪些文件：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  <span class="built_in">module</span>: &#123;</span><br><span class="line">      rules: [</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.css$/</span>, <span class="attr">use</span>: <span class="string">'css-loader'</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.ts$/</span>, <span class="attr">use</span>: <span class="string">'ts-loader'</span> &#125;</span><br><span class="line">      ]</span><br><span class="line">  &#125;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-<p>这里告诉webpack，用css-loader处理<code>.css</code>文件，用ts-loader处理<code>.ts</code>文件。</p>
-</li>
-<li><p>在<code>import</code>中声明</p>
-<p>比如：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import Styles from &apos;style-loader!css-loader?modules!./styles.css&apos;;</span><br></pre></td></tr></table></figure>
-<p>这里用style-loader和css-loader来处理modules和<code>./styles.css</code>。</p>
-</li>
-<li><p>使用命令行</p>
-<p>看官方给出的例子：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --module-bind jade-loader --module-bind &apos;css=style-loader!css-loader&apos;</span><br></pre></td></tr></table></figure>
-<p>这里告诉webpack，用jade-loader处理<code>.jade</code> 文件, 用style-loader和css-loader处理<code>.css</code>文件。</p>
-<p>官方还给到了loader <a href="https://webpack.js.org/loaders/" target="_blank" rel="noopener">列表</a>以及如何<a href="https://webpack.js.org/api/loaders/" target="_blank" rel="noopener">write your own loader</a>。</p>
-</li>
-</ul>
-</li>
-<li><p>Plugins</p>
-<p>loader可以用来转换某些类型的module，而plugin则用来扩展webpack的功能，比如优化bundle，管理assets。</p>
-<p><a href="https://webpack.js.org/api/plugins/" target="_blank" rel="noopener">Tapable</a>可以提供简单的plugin接口，官方还给出了如何自己写一个plugin的教程<a href="https://webpack.js.org/contribute/writing-a-plugin/" target="_blank" rel="noopener">write a plugin</a>.</p>
-<p>在使用某个plugin之前，需要用<code>require()</code>来将它先添加到plugins 数组中。调用时，则需要使用<code>new</code>来创建一个plugin的实例。</p>
-<p>看个官方给到的例子：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    <span class="built_in">module</span>: &#123;</span><br><span class="line">        rules: [</span><br><span class="line">            &#123;<span class="attr">test</span>: <span class="regexp">/\.txt$\/, use: 'raw-loader'&#125;</span></span><br><span class="line"><span class="regexp">        ]</span></span><br><span class="line"><span class="regexp">    &#125;,</span></span><br><span class="line"><span class="regexp">    plugins: [</span></span><br><span class="line"><span class="regexp">      new  HtmlWebpackPlugin(&#123;template: './src/index.html'&#125;);     </span></span><br><span class="line"><span class="regexp">    ]</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp">module.exports = config;</span></span><br></pre></td></tr></table></figure>
-<p>这里使用html-webpack-plugin这个plugin，将会自动生成一个index.html文件。</p>
-<p><a href="https://webpack.js.org/plugins/" target="_blank" rel="noopener">戳这里</a>查看目前的plugin list。</p>
-</li>
-<li><p>Mode</p>
-<p>mode用于告诉webpack， 根据mode指定的环境来启用webpack的内置优化，其实是启用了对应每个环境下的默认plugins，mode默认值是production，即生产环境。</p>
-<p>mode的取值可以为production，development，或者none。取值为none就是不用任何默认的plugin来优化。</p>
-<p>可以通过命令行或者config文件来设置mode：</p>
-<ul>
-<li><p>配置文件</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    mode: <span class="string">'development'</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>命令行</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --mode=development</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>分本地安装和全局安装：</p>
-<ul>
-<li><p>global installation</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --global webpack</span><br></pre></td></tr></table></figure>
-<p>全局安装会让你固定在特定版本的webpack，对于使用不同版本webpack的项目而言，不是件好事。</p>
-</li>
-<li><p>local installation</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev webpack</span><br></pre></td></tr></table></figure>
-<p>这会在本地安装最新版的webpack，如果需要安装指定版本，可以执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev webpack@&lt;version&gt; ## version是版本号</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h4 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h4><p>启动：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack</span><br></pre></td></tr></table></figure>
-<p>让webpack 时时编译：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --build</span><br></pre></td></tr></table></figure>
-<p>自定义配置文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --config yourconfig.js</span><br></pre></td></tr></table></figure>
-<h4 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h4><p>如果你也是和我一样的JS新手，在了解Webpack前，有必要对模块及模块化打包进行更为清晰的了解。推荐阅读<a href="https://medium.freecodecamp.org/@preethikasireddy?source=post_header_lockup" target="_blank" rel="noopener">Preethi Kasireddy</a>的这两篇<a href="https://medium.freecodecamp.org/javascript-modules-a-beginner-s-guide-783f7d7a5fcc" target="_blank" rel="noopener">JavaScript Modules: A Beginner’s Guide</a>，<a href="https://medium.freecodecamp.org/javascript-modules-part-2-module-bundling-5020383cf306" target="_blank" rel="noopener">JavaScript Modules Part 2: Module Bundling</a>， 对于理解JS中的module 以及为何要bundle module有很大帮助，文中还对比了下webpack与Browserify, RequireJS等其他module bundle的差异，很有启发性。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://webpack.js.org/" target="_blank" rel="noopener">webpack 官网</a></p>
-<p><a href="https://medium.com/webpack/webpack-4-released-today-6cdb994702d4" target="_blank" rel="noopener">webpack 4: released today!!</a></p>
-<p><a href="https://medium.freecodecamp.org/javascript-modules-a-beginner-s-guide-783f7d7a5fcc" target="_blank" rel="noopener">JavaScript Modules: A Beginner’s Guide</a></p>
-<p><a href="https://medium.freecodecamp.org/javascript-modules-part-2-module-bundling-5020383cf306" target="_blank" rel="noopener">JavaScript Modules Part 2: Module Bundling</a></p>
-<p><a href="https://github.com/wangning0/Autumn_Ning_Blog/blob/master/blogs/3-12/webpack.md" target="_blank" rel="noopener">Webpack学习之路</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2286,7 +2375,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">155</span>
+                <span class="site-state-item-count">156</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2419,7 +2508,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    145.5k
+    147.0k
   </span>
 
 </div>
