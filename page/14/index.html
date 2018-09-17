@@ -273,6 +273,192 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/20/how-to-debug-with-RSpec/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/20/how-to-debug-with-RSpec/" itemprop="url">
+                  如何在测试中debug?
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-20T14:38:45+08:00">
+                2017-10-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RSpec/" itemprop="url" rel="index">
+                    <span itemprop="name">RSpec</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/20/how-to-debug-with-RSpec/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/20/how-to-debug-with-RSpec/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>407 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做测试的时候，案例未通过，满屏飘红是常有的事，所以在测试中debug就显得很有必要，为便于阐述，以我自己做的一个events_controller 的测试为例，看看如何debug。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>一个测试报错了，而提示又不足以让你立马get到点，比如在做controller的单位测试时，验证create这个method，出错：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkqyujzh4nj30o704bgm8.jpg" alt=""></p>
+<p>很显然，event没有成功写入数据库，如何debug？</p>
+<p>首先，你可能想单独跑这一个案例，其他的注释掉。</p>
+<p>比较粗暴的方法是注解掉其他的测试案例，只留下你要纠正的那个，另一个方法是用<code>:focus =&gt; true</code>。</p>
+<p>两步走：</p>
+<ul>
+<li><p>编辑<code>spec/rails_helper.rb</code>， 加入两行设定：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">  RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line">+  config.filter_run <span class="symbol">:focus</span> =&gt; <span class="literal">true</span></span><br><span class="line">+  config.run_all_when_everything_filtered = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改你的test文件，比如针对上面的报错，我的文件是<code>spec/controllers/events_controller_spec.rb</code>, 在未通过的案例中，加入了<code>:focus =&gt; true</code></p>
+<p>​</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkqz77tr3uj30eh076jsg.jpg" alt=""></p>
+</li>
+</ul>
+<p>终端运行<code>rspec spec/controllers/events_controller_spec.rb</code>, 将会只运行这一个实例。</p>
+<p>「需要注意的是，测试通过后，记得把<code>:focus =&gt; true</code> 移除。」</p>
+<p>确认只有这个案例运行后，接下来，我们用byebug下断点，检查下为什么event没有存入数据库。</p>
+<p>在<code>app/controllers/events_controller.rb</code>中，create部分，加入byebug：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkqzl4lewgj30i505p0tc.jpg" alt=""></p>
+<p>终端再次运行<code>rspec spec/controllers/events_controller_spec.rb</code>， 会发现程序停在那里了:</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fkqzmdxoxdj30u6093q4v.jpg" alt=""></p>
+<p>这时就可以检查变量了。比如我输入@event查看各个字段的赋值情况，发现eventlogo没有赋值成功，fix it。</p>
+<p>最后输入<code>continue</code>, 程序就会继续执行下去。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkr0525em2j30u60ab0uv.jpg" alt=""></p>
+<h4 id="the-End"><a href="#the-End" class="headerlink" title="the End"></a>the End</h4><p>Happy debugging! ：P</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/18/website-padlock-green-issue/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2567,274 +2753,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/03/web-together-build-7/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/03/web-together-build-7/" itemprop="url">
-                  Together网站搭建之踩坑系列7
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-03T07:08:45+08:00">
-                2017-10-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/03/web-together-build-7/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/03/web-together-build-7/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,382 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是功能实现的第六篇，扯一扯<strong>如何实作活动申请</strong>.</p>
-<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
-<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
-<li><a href="https://lupeipei.github.io/2017/09/28/web-together-build-2/">给活动添加收藏功能，并使用Ajax进行优化</a></li>
-<li><a href="https://lupeipei.github.io/2017/09/29/web-together-build-3/">给活动Events添加分类筛选</a></li>
-<li><a href="https://lupeipei.github.io/2017/09/30/web-together-build-4/">添加省市自治区地址, 并实现热门城市筛选</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/01/web-together-build-5/">添加时间筛选</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
-<li>实作活动申请</li>
-<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
-</ul>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>具体说，是实作以下两个功能：</p>
-<ul>
-<li>用户可申请参与活动<ul>
-<li>如果活动已过期，则无法申请，显示已结束；</li>
-<li>如果人数已满，则显示活动已经满员，报名截止；</li>
-<li>既未过期，也没有满员，则用户可申请参与活动；</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li>用户可以查看自己的申请列表</li>
-</ul>
-<p>一步步来：</p>
-<p>BTW，请无视CSS部分，只讲如何实作功能。</p>
-<p><strong>Step1、 用户可以申请参与活动</strong></p>
-<p>效果图：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fk0k6757yzg30yb0jyhdu.gif" alt=""></p>
-<ul>
-<li><p>新建model apply_event，终端：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g model apply_event user_id:integer event_id:integer</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>建立apply_event, user, event三者之间的关系:</p>
-<ul>
-<li><p>在<code>app/models/apply_event.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ApplyEvent</span> &lt; ApplicationRecord</span></span><br><span class="line"> + belongs_to <span class="symbol">:user</span></span><br><span class="line"> + belongs_to <span class="symbol">:event</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>app/models/event.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">has_many <span class="symbol">:apply_events</span></span><br><span class="line">has_many <span class="symbol">:appliers</span>, <span class="symbol">:through</span> =&gt; <span class="symbol">:apply_events</span>, <span class="symbol">:source</span> =&gt; <span class="symbol">:user</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在<code>app/models/user.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">has_many <span class="symbol">:apply_events</span></span><br><span class="line">has_many <span class="symbol">:applied_events</span>, <span class="symbol">through:</span> <span class="symbol">:apply_events</span>, <span class="symbol">source:</span> <span class="symbol">:event</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>用户可以申请参加活动或取消申请</p>
-<ul>
-<li><p>在<code>app/models/user.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">apply_already?</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events.<span class="keyword">include</span>?(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">apply!</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events &lt;&lt; event</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">cancel!</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events.delete(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-<p>​</p>
-</li>
-<li><p>在<code>app/controllers/events_controller.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EventsController</span> &lt; ApplicationController</span></span><br><span class="line">  ......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span></span><br><span class="line">    @event = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">"apply"</span></span><br><span class="line">      current_user.apply!(@event)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">"cancel"</span></span><br><span class="line">      current_user.cancel!(@event)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>申请参加活动，需要用户在登录状态下，修改<code>app/controllers/events_controller.rb</code>的<code>before_action :authenticate_user!</code>部分，加上apply</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:new</span>, <span class="symbol">:create</span>,.....]</span><br><span class="line">+ before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:apply</span>,<span class="symbol">:new</span>, <span class="symbol">:create</span>,.....]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改<code>config/routes.rb</code>， 添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> ......</span><br><span class="line"> resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">......</span><br><span class="line"> + put <span class="symbol">:apply</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改<code>app/views/events/show.html.erb</code>， 添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;% <span class="keyword">if</span> @event.end_time &lt; Time.now %&gt;</span><br><span class="line">	&lt;label class="label label-default event-over"&gt;活动已结束&lt;/label&gt;</span><br><span class="line">&lt;% <span class="keyword">elsif</span> @event.appliers.count &gt;= @event.limited_num %&gt;</span><br><span class="line">	&lt;label class="label label-default event-over"&gt;活动已满员&lt;/label&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(@event) %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">"取消申请"</span>, apply_event_path(@event, <span class="symbol">type:</span> <span class="string">"cancel"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">apply</span>")%&gt;</span></span><br><span class="line">  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">"申请赴约"</span>, apply_event_path(@event, <span class="symbol">type:</span> <span class="string">"apply"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span> <span class="title">event</span>-<span class="title">apply</span>")%&gt;</span></span><br><span class="line">  &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-<p>现在看看，可以实现申请及取消申请了。但是，你很快就会发现，点击按钮后页面会refresh一下，这个不好不好，我们请上ajax。</p>
-</li>
-</ul>
-</li>
-<li><p>使用ajax来优化</p>
-<ul>
-<li><p>新增<code>app/views/events/_apply.html.erb</code>, <code>app/views/events/apply.js.erb</code></p>
-</li>
-<li><p>修改<code>app/views/events/show.html.erb</code>, 给这块要动态变化的区域加上ID</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">+ &lt;div class="col-md-2" id="apply-&lt;%= @event.id %&gt;"&gt;</span><br><span class="line">-              &lt;% <span class="keyword">if</span> @event.end_time &lt; Time.now %&gt;</span><br><span class="line">-              	&lt;label class="label label-default event-over"&gt;活动已结束&lt;/label&gt;</span><br><span class="line">-              &lt;% <span class="keyword">elsif</span> @event.appliers.count &gt;= @event.limited_num %&gt;</span><br><span class="line">-              	&lt;label class="label label-default event-over"&gt;活动已满员&lt;/label&gt;</span><br><span class="line">-              &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-                &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(@event) %&gt;</span><br><span class="line">-                  &lt;%= link_to(<span class="string">"取消申请"</span>, apply_event_path(@event, <span class="symbol">type:</span> <span class="string">"cancel"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">apply</span>")%&gt;</span></span><br><span class="line">-                &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-                  &lt;%= link_to(<span class="string">"申请赴约"</span>, apply_event_path(@event, <span class="symbol">type:</span> <span class="string">"apply"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span> <span class="title">event</span>-<span class="title">apply</span>")%&gt;</span></span><br><span class="line">-                &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">-              &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">+              &lt;%= render <span class="symbol">:partial</span> =&gt; <span class="string">"apply"</span>, <span class="symbol">:locals</span> =&gt; &#123;<span class="symbol">:event</span> =&gt; @event &#125;%&gt;</span><br><span class="line">+ &lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/views/events/_apply.html.erb</code>, 添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> event.end_time &lt; Time.now %&gt;</span><br><span class="line">  &lt;label class="label label-default event-over"&gt;活动已结束&lt;/label&gt;</span><br><span class="line">&lt;% <span class="keyword">elsif</span> event.appliers.count &gt;= event.limited_num %&gt;</span><br><span class="line">  &lt;label class="label label-default event-over"&gt;活动已满员&lt;/label&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(event) %&gt;</span><br><span class="line">    &lt;%= link_to apply_event_path(event, <span class="symbol">type:</span> <span class="string">"cancel"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;span class="btn btn-default event-apply"&gt;取消申请&lt;/span&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to apply_event_path(event, <span class="symbol">type:</span> <span class="string">"apply"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;span class="btn btn-success event-apply"&gt;申请赴约&lt;/span&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/views/events/apply.js.erb</code>, 添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">str = <span class="string">"&lt;%=j render :partial =&gt; "</span>apply<span class="string">", :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;"</span>;</span><br><span class="line">$(<span class="string">"#apply-&lt;%= @event.id %&gt;"</span>).html(str);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/controllers/events_controller.rb</code>， 拿掉apply的redirect_to</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> ......</span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span></span><br><span class="line">......</span><br><span class="line">   <span class="comment"># redirect_to :back</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>现在试试，可以快速申请，快速取消啦，棒棒哒！！</p>
-</li>
-</ul>
-<p><strong>Step2、 用户可以查看自己的申请列表</strong></p>
-<p>效果图：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fk1chgct37g310b0gs7wh.gif" alt=""></p>
-<p>这部分就比较简单啦。</p>
-<ul>
-<li><p>新增controller，终端运行：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller account::apply_events</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改<code>config/routes.rb</code>， 添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"> ......</span><br><span class="line"> namespace <span class="symbol">:account</span> <span class="keyword">do</span></span><br><span class="line">......</span><br><span class="line"> + resources <span class="symbol">:apply_events</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑<code>app/controllers/account/apply_events_controller.rb</code>，添加</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::ApplyEventsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @events = current_user.applied_events</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>新增<code>app/views/account/apply_events/index.html.erb</code>, 添加如下代码：</p>
-</li>
-</ul>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">&lt;h1 class="text-center"&gt;我的申请&lt;/h1&gt;</span><br><span class="line"></span><br><span class="line">&lt;div class="col-md-10 col-md-offset-1" style="margin-top: 20px;"&gt;</span><br><span class="line">  &lt;table class="table table-bordered"&gt;</span><br><span class="line">    &lt;thead&gt;</span><br><span class="line">      &lt;tr&gt;</span><br><span class="line">        &lt;th&gt;活动名称&lt;<span class="regexp">/th&gt;</span></span><br><span class="line"><span class="regexp">        &lt;th&gt;开始时间&lt;/th</span>&gt;</span><br><span class="line">        &lt;th&gt;结束时间&lt;<span class="regexp">/th&gt;</span></span><br><span class="line"><span class="regexp">        &lt;th&gt;地点&lt;/th</span>&gt;</span><br><span class="line">        &lt;th&gt;主办方&lt;<span class="regexp">/th&gt;</span></span><br><span class="line"><span class="regexp">        &lt;th&gt;类别&lt;/th</span>&gt;</span><br><span class="line">        &lt;th&gt;人数限额&lt;<span class="regexp">/th&gt;</span></span><br><span class="line"><span class="regexp">        &lt;th&gt;剩余名额&lt;/th</span>&gt;</span><br><span class="line">        &lt;th&gt;状态&lt;<span class="regexp">/th&gt;</span></span><br><span class="line"><span class="regexp">      &lt;/tr</span>&gt;</span><br><span class="line">    &lt;<span class="regexp">/thead&gt;</span></span><br><span class="line"><span class="regexp">    &lt;tbody&gt;</span></span><br><span class="line"><span class="regexp">      &lt;% @events.each do |event| %&gt;</span></span><br><span class="line"><span class="regexp">        &lt;tr&gt;</span></span><br><span class="line"><span class="regexp">          &lt;td&gt;</span></span><br><span class="line"><span class="regexp">            &lt;% link_to event_path(event)%&gt;</span></span><br><span class="line"><span class="regexp">             &lt;% if event.logo.present? %&gt;</span></span><br><span class="line"><span class="regexp">              &lt;%= link_to image_tag(event.logo.thumb.url, class:"event_logo_sm")%&gt;</span></span><br><span class="line"><span class="regexp">            &lt;% else %&gt;</span></span><br><span class="line"><span class="regexp">              &lt;%= link_to image_tag("http:/</span><span class="regexp">/placehold.it/</span><span class="number">100</span>x10<span class="number">0</span>&amp;text=No Pic<span class="string">", class: "</span>event_logo_sm<span class="string">")%&gt;</span></span><br><span class="line"><span class="string">            &lt;% end %&gt;</span></span><br><span class="line"><span class="string">            &lt;%= link_to(event.title, event_path(event)) %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.start_time %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.end_time %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.address %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.sponsor %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.category.name %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.limited_num %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.limited_num - event.appliers.count %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= t(event.status, :scope =&gt; "</span>event.status<span class="string">") %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">        &lt;/tr&gt;</span></span><br><span class="line"><span class="string">      &lt;% end %&gt;</span></span><br><span class="line"><span class="string">    &lt;/tbody&gt;</span></span><br><span class="line"><span class="string">  &lt;/table&gt;</span></span><br><span class="line"><span class="string">&lt;/div&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&lt;!-- 分页 --&gt;</span></span><br><span class="line"><span class="string">&lt;div class="</span>text-center<span class="string">"&gt;</span></span><br><span class="line"><span class="string">  &lt;%= will_paginate @events, renderer: BootstrapPagination::Rails, :previous_label =&gt; '上一页', :next_label =&gt; '下一页' %&gt;</span></span><br><span class="line"><span class="string">&lt;/div&gt;</span></span><br></pre></td></tr></table></figure>
-<ul>
-<li><p>编辑<code>app/views/common/_navbar.html.erb</code>，加上<strong>我的申请</strong>入口：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">+ &lt;li&gt;&lt;%= link_to(<span class="string">" 我的申请"</span>,account_apply_events_path(current_user), <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>")%&gt;&lt;/<span class="title">li</span>&gt;</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>试试看，可以啦！</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2884,7 +2802,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">157</span>
+                <span class="site-state-item-count">158</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3017,7 +2935,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    158.2k
+    166.5k
   </span>
 
 </div>
