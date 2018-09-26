@@ -273,6 +273,193 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/02/error-recording-of-dangerous-query-method/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/07/02/error-recording-of-dangerous-query-method/" itemprop="url">
+                  报错纪录Dangerous query method called with non-attribute argument(s)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-02T22:45:21+08:00">
+                2018-07-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/07/02/error-recording-of-dangerous-query-method/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/07/02/error-recording-of-dangerous-query-method/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>565 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
+<p>使用scope进行处理：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(order_by.join(<span class="string">' '</span>))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>在controller中调用了该scope。刷新页面后，发现服务器报出warning message：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DEPRECATION <span class="symbol">WARNING:</span> Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): <span class="string">"CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END"</span>. Non-attribute arguments will be disallowed <span class="keyword">in</span> Rails <span class="number">6.0</span>. This method should <span class="keyword">not</span> be called with user-provided values, such as request parameters <span class="keyword">or</span> model attributes. Known-safe values can be passed by wrapping them <span class="keyword">in</span> Arel.sql().</span><br></pre></td></tr></table></figure>
+<h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
+<p>很简单，就是使用warning message里面提到的Arel.sql()方法，将<code>CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END</code> 用Arel.sql() 包起来即可。</p>
+<p>修改scope：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(Arel.sql(order_by.join(<span class="string">' '</span>)))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>OK!</p>
+<p>但是，这个Arel.sql(raw_sql)是什么？</p>
+<p>先看看Arel是什么。</p>
+<p>官方文档的解释：</p>
+<blockquote>
+<p>Arel is a SQL AST manager for Ruby. It</p>
+<ul>
+<li>Simplifies the generation of complex SQL queries</li>
+<li>Adapts to various RDBMSes</li>
+</ul>
+</blockquote>
+<p>文档里面还列出了很多例子，从简单的select * from users 到复杂点的joins table，我猜是因为我接触Rails的时间不长，反正是从来没用过这东西。</p>
+<p>Arel.sql(raw_sql) 这个类方法的源代码如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">sql</span> <span class="title">raw_sql</span></span></span><br><span class="line">  Arel::Nodes::SqlLiteral.new raw_sql</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>也就是新建了一个Arel::Nodes::SqlLiteral实例，而Arel::Nodes::SqlLiteral为什么是安全的呢？用Arel::Nodes::SqlLiteral 把raw_sql包起来的用意是什么？估计也能猜到，防攻击啥的。果然，Google了下，发现说是可以防止<strong>SQL注入</strong>的情况。</p>
+<p>有些复杂了，脑子暂时消化不了。</p>
+<p>此外，文档中有关<a href="https://www.rubydoc.info/github/rails/rails/ActiveRecord%2FConnectionAdapters%2FDatabaseStatements:sanitize_limit" target="_blank" rel="noopener"><strong>sanitize_limit</strong></a> 部分也有提到SQL injection的问题。</p>
+<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://www.rubydoc.info/github/rails/arel" target="_blank" rel="noopener">Arel</a></p>
+<p><a href="https://groups.google.com/forum/#!topic/rubyonrails-core/UGZmPT1nDX4" target="_blank" rel="noopener">A “strict Arel” mode for ActiveRecord to prevent SQL injection vulnerabilities</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/30/notes-of-dear-andreas/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2187,215 +2374,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/03/update-password-with-devise-and-cancancan/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/06/03/update-password-with-devise-and-cancancan/" itemprop="url">
-                  allow user to update password with Devise and cancancan
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-03T20:38:05+08:00">
-                2018-06-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/06/03/update-password-with-devise-and-cancancan/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/06/03/update-password-with-devise-and-cancancan/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,002 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h4><p>使用devise做用户管理，cancancan做权限管理，生成model user，user含有name，avatar等字段，现在需要让user可以修改自己的密码，姓名，头像等。即：</p>
-<ul>
-<li>用户可以不修改密码，只修改姓名或者头像</li>
-<li>用户修改密码时，需要填写原来的密码来进行验证，同时新密码需要输入两次以确认</li>
-</ul>
-<p>也就是，当用户输入current_password, password, password_confirmation中的任意一个时，就进行相关的密码验证，如果三者均为空，则不更新密码部分，更新其他属性。</p>
-<h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>在修改代码前，需要知道这两点：</p>
-<ul>
-<li><p>使用devise作用户管理时，如果你的 <code>app/models/user.rb</code>中，devise添加了validatable:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">devise :xxxx, :..., :validatable</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>那么相当于给user添加了如下的validates：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">validates_uniqueness_of <span class="symbol">:email</span>, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_format_of     <span class="symbol">:email</span>, <span class="symbol">with:</span> email_regexp, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_presence_of     <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_confirmation_of <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_length_of       <span class="symbol">:password</span>, <span class="symbol">within:</span> password_length, <span class="symbol">allow_blank:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-<p>这里注意到<code>validates_presence_of     :password, if: :password_required?</code>,当password_required?为true时，password必填。password_required?这个method的源代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  !persisted? <span class="params">||</span> !password.<span class="literal">nil</span>? <span class="params">||</span> !password_confirmation.<span class="literal">nil</span>?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>如果更新的时候，我们不更新密码部分，只更新姓名或者头像，就会报错，因为此时表单送出的password是“”，即空值，但不是nil，这样 !password.nil? 就会为true，导致password_required?为true，所以我们需要重写这个method，当password为空时，也可以更新用户信息。</p>
-<p>在<code>app/models/user.rb</code>中，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  new_record? <span class="params">||</span> password.present? <span class="params">||</span> password_confirmation.present?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这样添加后，当你修改用户信息时，如果password那一栏没有填写，不会出现如下报错：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg" alt=""></p>
-<ul>
-<li><p>修改密码时，因为需要输入当前的密码，也就是current_password这个字段，而原先user中是没有添加这个字段的，所以需要在<code>app/models/user.rb</code>中，添加如下代码，保证current_password可读写。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">attr_writer</span> <span class="symbol">:current_password</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>好了，准备工作完成，算是解决了大半了，我们的重头戏来了。</p>
-<p>新增一个controller account::user 来让让用户完成修改密码的操作：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller account::user</span><br></pre></td></tr></table></figure>
-<p>在<code>routes.rb</code>中添加路径：【因为修改密码是用户单个个体的行为，所以我们使用resource】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">namespace <span class="symbol">:account</span> <span class="keyword">do</span></span><br><span class="line">  resource <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>我们添加上view，让用户可以修改个人信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch app/views/account/users/show.html.erb</span><br></pre></td></tr></table></figure>
-<p>在 <code>app/views/account/users/show.html.erb</code> 中添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= simple_form_for @user, <span class="symbol">url:</span> &#123; <span class="symbol">action:</span> <span class="symbol">:update</span> &#125; <span class="keyword">do</span> <span class="params">|f|</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:name</span> %&gt;</span><br><span class="line">  &lt;%= f.file_field <span class="symbol">:avatar</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.input <span class="symbol">:current_password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password_confirmation</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.submit <span class="string">"更新"</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>"%&gt;    </span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
-<p>同时需要在其他页面，比如navbar中提供入口，让用户可以进入该页面更新个人信息，这里略去。</p>
-<p>在<code>app/controllers/account/users_controller.rb</code>中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @user = User.find(current_user.id)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @user = User.find(current_user.id)</span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      @user.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      @user.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, <span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>)</span><br><span class="line">  <span class="keyword">end</span>    </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>其中，因为使用cancancan做权限管理，所以这里我们用<code>authorize_resource :user, parent: false</code>来给user授权authorize，让user可以有读写的权利， update action部分中，我们使用了devise的instance method <a href="https://github.com/plataformatec/devise/blob/715192a7709a4c02127afb067e66230061b82cf2/lib/devise/models/database_authenticatable.rb#L67" target="_blank" rel="noopener">update_with_password</a>来修改密码，它会检查用户的:current_password, :password, :password_confirmation这三者的有效性。</p>
-<p>上面的代码看着有些不够简洁，我们稍稍重构下：</p>
-<p>把@user = User.find(current_user.id)拎出来，放在before action里面，把[:current_password, :password, :password_confirmation]这三个密码相关的变量用一个method包起来。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; @user = User.find(current_user.id) &#125;</span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(*password_param_lists).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      @user.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      @user.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, *password_param_lists)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">password_param_lists</span></span></span><br><span class="line">    [<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>OK!  基本功能实现。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/plataformatec/devise" target="_blank" rel="noopener">devise</a></p>
-<p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/3/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/page/5/">5</a><span class="space">&hellip;</span><a class="page-number" href="/page/17/">17</a><a class="extend next" rel="next" href="/page/5/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2440,7 +2423,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">160</span>
+                <span class="site-state-item-count">161</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2573,7 +2556,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    172.9k
+    173.2k
   </span>
 
 </div>
