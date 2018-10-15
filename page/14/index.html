@@ -273,6 +273,196 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/24/test-concepts-about-stub/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/24/test-concepts-about-stub/" itemprop="url">
+                  测试概念之stub篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-24T21:47:23+08:00">
+                2017-10-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RSpec/" itemprop="url" rel="index">
+                    <span itemprop="name">RSpec</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/24/test-concepts-about-stub/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/24/test-concepts-about-stub/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>773 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>学习测试的时候，一直不大懂stub，后来刷多了课程，感觉好像不那么懵逼了。</p>
+<p>决定结合自己的学习与思考，说说stub到底是个啥。</p>
+<p>BTW，if  you want to be a rocking unit tester, you must know stub and mock.：P</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先来看一个问题：</p>
+<p>你准备测试method A，method A 依赖于method B，比如method A要调用远端的API，而你只想测试method A有没有被正确调用，method B 存在与否，是不是返回了预期的结果，你并不care， 那么要怎么做才能保证测试的独立性？</p>
+<p>这样的测试，就要用到stub。</p>
+<p>下面以一个movie model来说明一下如何使用stub。</p>
+<p>设想一个简单的movie影片查询情景：</p>
+<p>用户在TMDb页面中输入影片名称，点击查询按钮，这时MoviesController 中对应的 search_tmdb method会去调用movie model里面真正执行search行为的method，这个method在数据库中进行搜索匹配，最后返回搜索结果，随后controller的 search_tmdb会render到搜索结果的页面，用户看到搜索结果，这样整个的搜索动作才算完成。</p>
+<p>现在的情况是，movie model里面没有定义任何执行search 行为的method，而我们只想要验证controller的search_tmdb 调用了model里面执行search的method，不管这个method的存不存在，有没有返回预期结果，我们不care, 我们只想确定controller的search_tmdb做了正确的事，怎么破？</p>
+<p>用stub来打破依赖。用一个伪造的method去替代，确保这个伪造的method被调用即可。</p>
+<p>你的<code>movies_controller.rb</code>中定义了一个search_tmdb,但是里面啥也没有：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>你的test文件长这样：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fktni1u9gaj30df05o3z5.jpg" alt=""></p>
+<p>这时运行测试文件，会报错，因为你的search_tmdb并没有说让Movie去调用这个find_in_tmdb，如何让测试通过？</p>
+<p>在<code>movies_controller.rb</code>中修改search_tmdb method，使它长这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line">+ Movie.find_in_tmdb(params[<span class="symbol">:search_terms</span>])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>再次运行测试文件，通过！！</p>
+<p>这里值得注意的是，你的movie model中，<strong>根本就没有find_in_tmdb这个method</strong>，很神奇是不是？</p>
+<p>事实上，为了打破method之间的依赖，保证测试的独立性，这里伪造了一个针对find_in_tmdb的调用，<strong>即使这个find_in_tmdb本身存在model中，也会被忽视，overriding it</strong>。</p>
+<p>这就是Stub了，很特别是不是？我第一次接触的时候，觉得很special。</p>
+<p>看第二个测试： <strong>selects the Search Results template for rendering</strong></p>
+<p>这里我们要确认controller的search_tmdb在调用find_in_tmdb后，是否render到了特定的template，即<code>search_tmdb.html.erb</code>。由于find_in_tmdb并没有定义，故这里也要用stub。怎么写呢？</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fkuj2c03kjj30h606qgmv.jpg" alt=""></p>
+<p>[这里用了matchers: render_template, response.]</p>
+<p><code>Movie.stub(:find_in_tmbd)</code>： 假定执行了find_in_tmdb</p>
+<p><code>expect(response).to render_template</code>:  验证最后的结果，是否render到了search_tmbd.html.erb这个template</p>
+<p>运行测试文件，pass。</p>
+<p>这里要注意，如果测试失败了，请检查一下你的app/views/movies/下是否存在search_tmbd.html.erb，如果不存在，新建，不然这个测试是无法通过的。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>记住一句话，有助于理解stub： The code you wish you had。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/passenger-deploy-rails/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2216,305 +2406,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/07/introduction-to-jquery-module2-2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/07/introduction-to-jquery-module2-2/" itemprop="url">
-                  Introduction to jQuery_3
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-07T06:34:37+08:00">
-                2017-10-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Web/" itemprop="url" rel="index">
-                    <span itemprop="name">Web</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/07/introduction-to-jquery-module2-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/07/introduction-to-jquery-module2-2/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,526 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="Before-Start"><a href="#Before-Start" class="headerlink" title="Before Start"></a>Before Start</h4><p>The following contents are the notes I took when learning  jQuery on Edx.</p>
-<p>Mainly for  front-End Web developers, check <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">here</a> to get more details.</p>
-<h4 id="CONTENTS"><a href="#CONTENTS" class="headerlink" title="CONTENTS"></a>CONTENTS</h4><p>Three parts:</p>
-<ul>
-<li><a href="https://lupeipei.github.io/2017/10/05/introduction-to-jQuery-module1/">Adding jQuery to web pages</a></li>
-<li>Managing content, events and effects</li>
-<li><a href="https://lupeipei.github.io/2017/10/08/introduction-to-jquery-module3-1/">Asynchronous operations and Ajax calls</a></li>
-</ul>
-<h4 id="Module2-Managing-content-events-and-effects"><a href="#Module2-Managing-content-events-and-effects" class="headerlink" title="Module2 : Managing content, events and effects"></a>Module2 : Managing content, events and effects</h4><p>Module2 includes six parts:</p>
-<ul>
-<li>Event handlers</li>
-<li>Modifying elements</li>
-<li>Registering event handlers</li>
-<li>Adding new elements</li>
-<li>Animations</li>
-<li>Removing, replacing and cloning</li>
-</ul>
-<p>Let’s get to know something about the last three parts of Module2.</p>
-<ul>
-<li><p><strong>Adding new elements</strong></p>
-<ul>
-<li><p>Internal DOM manipulation</p>
-<p><code>append</code>, <code>appendTo</code>, <code>prepend</code> and <code>prependTo</code>.</p>
-<p>Remember that the element you target will become the <strong>container</strong> for the new element. So using <code>append</code> will add a new element <strong>inside</strong> the target, not after the element.</p>
-<ul>
-<li><p><code>prepend</code> and <code>prependTo</code></p>
-<p>Add new content to the <strong>begining</strong> of the contents of a target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// prepend is called on the target, and accepts the new content as the parameter</span><br><span class="line">$('#target').prepend('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">//or you can use prependTo</span><br><span class="line">// prependTo is called on the new content, and accepts the target as the parameter</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').prependTo('#target');</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>append</code> and <code>appendTo</code></p>
-<p>Add new content to the <strong>end</strong> of the contents of a target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// append is called on the target, and accepts the new content as the parameter</span><br><span class="line">$('#target').append('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">// appendTo is called on the new content, and accepts the target as the parameter</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').appendTo('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>External DOM manipulation</p>
-<p><code>after</code>, <code>insertAfter</code>, <code>before</code>, and <code>insertBefore</code></p>
-<ul>
-<li><p><code>after</code> and <code>insertAfter</code></p>
-<p>Add new content after the target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// after is called on the target, and accepts the new content as a parameter</span><br><span class="line">$('target').after(' New content');</span><br><span class="line"></span><br><span class="line">// insertAfter is called on the new content, and accepts the target as a parameter</span><br><span class="line">$(' New content').insertAfter('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>before</code> and <code>insertBefore</code></p>
-<p>Add new content before the target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// before is called on the target, and accepts the new content as a parameter</span><br><span class="line">$('target').before('New content');</span><br><span class="line"></span><br><span class="line">// insertBefore is called on the new content, and accepts the target as a parameter</span><br><span class="line">$('New content').insertBefore('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>Wrapping content</p>
-<p>To manipulate the DOM by surrounding existing content with a new element.</p>
-<ul>
-<li><p><code>wrap</code></p>
-<p>wraps <strong>each item</strong> with the element passed into the function.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('.demo').wrap('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>wrapAll</code></p>
-<p> returned content with one new element.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('.demo').wrapAll('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>wrapInner</code></p>
-<p>Operates on the children of the target, rather than on the target itself.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('#target').wrapInner('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Animations</strong></p>
-<ul>
-<li><p><code>hide</code>, <code>show</code>, <code>toggle</code></p>
-<p><code>hide</code> causes something to disappear from the screen;</p>
-<p><code>show</code> causes something to appear;</p>
-<p><code>toggle</code>, on the other hand, determines the current status of the item in question and changes it.</p>
-<p> jQuery controls visibility by using the <code>display</code> property in CSS.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span>Show or hide<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"btn-toggle"</span>&gt;</span>Toggle<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#btn-toggle').click(function() &#123;</span><br><span class="line">		// animation will take one second</span><br><span class="line">		$('#target').toggle(1000);</span><br><span class="line">	&#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>More:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="css">    <span class="selector-class">.hidden</span> &#123; <span class="attribute">display</span>: none; &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span>Name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"show-additional-information"</span>&gt;</span></span><br><span class="line">        Show additional information</span><br><span class="line">    <span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"additional-information"</span> <span class="attr">class</span>=<span class="string">"hidden"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span>Additional information:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('#show-additional-information').click(function() &#123;</span><br><span class="line">        $('#additional-information').show(750);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>fading and sliding</p>
-<ul>
-<li><p><code>fadeIn</code>, <code>fadeOut</code>, <code>fadeToggle</code></p>
-<p>The fading functions perform their work by both modifying the CSS <code>display</code> property, and animates the item by modifying its <code>opacity</code>.</p>
-<p><code>fadeIn</code> and <code>fadeOut</code> will display and hide an item respectively.</p>
-<p><code>fadeToggle</code> will reverse the current state of the item.</p>
-</li>
-<li><p><code>slideDown</code>, <code>slideUp</code> , <code>slideToggle</code></p>
-<p>The sliding functions perform their work by both modifying the CSS <code>display</code> property, and animates the item by modifying its <code>position</code>.</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Removing, replacing and cloning</strong></p>
-<ul>
-<li><p>Removing and replacing items</p>
-<ul>
-<li><p><code>remove</code> and <code>empty</code></p>
-<p>Both completely delete items from the DOM.</p>
-<p> <code>remove</code> deletes the item you target.</p>
-<p> <code>empty</code> deletes the contents of the item you target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some more cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">//the resulting HTML would be, well, nothing. The entire contents of the sample are removed</span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#target').remove();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//deletes the contents of the target, so the resulting HTML would be as <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#target').empty();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>replaceAll</code> and <code>replaceWith</code></p>
-<p> replace existing content with new content.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some more cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS. execute either of them</span><br><span class="line">// replaceWith replaces the content on the left with the new content in the parameter</span><br><span class="line">$('#target').replaceWith('<span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">// replaceAll replaces the target in the parameter with the content on the left</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').replaceAll('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>Cloning</p>
-<ul>
-<li><code>clone</code></li>
-</ul>
-<p><code>clone</code> allows you to make a copy of jQuery objects.</p>
-<p>Let’s say you were building a page to allow an administrator to create email addresses and passwords. You’d like to ensure the administrator can create as many accounts as they would like on one page, and be able to send up all of the information to the server <strong>in one round trip</strong>, rather than using Ajax calls or submitting the form for each account.</p>
-<p>code:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"add-line"</span>&gt;</span>Add new line<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"user-entry"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">label</span>&gt;</span>Email:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"email"</span> /&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">label</span>&gt;</span>Password:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"password"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line"> $(function() &#123;</span><br><span class="line"> 	$userForm = $('.user-entry').clone;</span><br><span class="line">	$('#add-line').click(function() &#123;</span><br><span class="line">		$('#container').append($userForm.clone());</span><br><span class="line">	&#125;);</span><br><span class="line"> &#125;);</span><br></pre></td></tr></table></figure>
-<p><strong>Attention:</strong></p>
-<p>When you’re working with an object, JavaScript passes a reference to the object, not a copy of the object. This would mean that we’ve added in a pointer to the clone we created earlier, <strong>not</strong> a brand new copy. The end result is that if we did not call <code>clone()</code> a second time, we’d be trying to add <strong>the exact same object</strong> into the container again, <strong>not</strong> a brand new copy. By calling <code>clone()</code> again, we pass in a copy of our user form, rather than a pointer to the one we already used.</p>
-<ul>
-<li><p>Cloning and animations</p>
-<p>Combinnig cloning and animations.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"add-line"</span>&gt;</span>Add new line<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"user-entry"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span>Email:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"email"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span>Password:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"password"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $userForm = $('.user-entry').clone();</span><br><span class="line">    $userForm.css('display', 'none');</span><br><span class="line">    $('#add-line').click(function() &#123;</span><br><span class="line">        var newUserForm = $userForm.clone();</span><br><span class="line">        $('#container').append($newUserForm);</span><br><span class="line">        newUserForm.show(1000);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-<p>This is  Module2 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2564,7 +2455,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">161</span>
+                <span class="site-state-item-count">162</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2575,7 +2466,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">23</span>
+                <span class="site-state-item-count">24</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2586,7 +2477,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">45</span>
+                <span class="site-state-item-count">46</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2697,7 +2588,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    173.2k
+    173.6k
   </span>
 
 </div>
