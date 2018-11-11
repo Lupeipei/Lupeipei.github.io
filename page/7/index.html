@@ -273,6 +273,256 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/14/phone-verification-in-wechat-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/14/phone-verification-in-wechat-on-rails/" itemprop="url">
+                  Rails微信网页开发之手机验证
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-14T18:31:24+08:00">
+                2018-04-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/14/phone-verification-in-wechat-on-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/14/phone-verification-in-wechat-on-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2,291 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>这周在做微信公众号那块，手机验证是比较难啃的一块，Google后也没找到合适的指导，趁着周末，写下来，供日后参考。</p>
+<p>以下以一个测试公众号虫虫宠物生活馆的手机认证为例。</p>
+<h4 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h4><p>用户登录公众号后，需要绑定会员，会员数据库中含有用户的手机号等信息，需要用户先输入手机进行验证。</p>
+<p>然后根据手机号来判定用户是否是会员。</p>
+<p>类似下面这种：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fqbzr7ii8rj30a90g6755.jpg" alt=""></p>
+<h4 id="实现效果"><a href="#实现效果" class="headerlink" title="实现效果"></a>实现效果</h4><p>用户输入手机后，点击获取验证码，第三方短信服务平台发送验证码信息，用户收到信息，输入验证码，完成绑定。</p>
+<p>最后大致如下，这里没有用手机录屏了，在微信开发者工具上简单做个了动图，<strong>中间的白屏有些奇怪，手机上没有出现这种情况</strong>：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fqbzim2z67g30ab0gwdje.gif" alt=""></p>
+<h4 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h4><p>分解下任务：</p>
+<ul>
+<li>点击获取验证码，验证手机号的有效性，并发送验证码到用户的手机上</li>
+<li>输入验证码后，用户点击确认，验证手机号与验证码的有效性，无误后，跳转至主页</li>
+</ul>
+<p>下面的代码示例，还是在<a href="https://github.com/goofansu/wechat-starter" target="_blank" rel="noopener">wechat-starter</a>的基础上进行功能添加 ，有关微信网页授权部分，可参见<a href="https://luciaca.cn/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" target="_blank" rel="noopener">Rails对接微信公众号简易指南</a>，这里只说手机验证。</p>
+<p>不得不说，好的轮子真的可以节省很多时间，Thanks for OpenSource , Thanks for sharing ：P</p>
+<p>好，一步步来。</p>
+<p><strong>Step1、建手机验证的model phone_tokens</strong></p>
+<p>终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g model phone_token</span><br></pre></td></tr></table></figure>
+<p>在生成的migration文档中，修改成这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">lass CreatePhoneTokens &lt; ActiveRecord::Migration[<span class="number">5.1</span>]</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:phone_tokens</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:phone</span></span><br><span class="line">      t.string <span class="symbol">:token</span></span><br><span class="line">      t.datetime <span class="symbol">:expired_at</span></span><br><span class="line">      t.timestamps</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    add_index <span class="symbol">:phone_tokens</span>, [<span class="symbol">:phone</span>, <span class="symbol">:token</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>修改<code>app/models/phone_tokenk.rb</code>, 要求token ，phone 必填：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>config/route.rb</code> ， 添加：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:phone_tokens</span>, <span class="symbol">only:</span> [<span class="symbol">:create</span>]</span><br></pre></td></tr></table></figure>
+<p><strong>Step2、建controller phone_tokens，实现手机验证码发送</strong></p>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller phone_tokens</span><br></pre></td></tr></table></figure>
+<p>修改<code>app/controllers/phone_tokens_controller.rb</code></p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneTokensController</span> &lt; ApplicationController</span></span><br><span class="line"></span><br><span class="line">  before_action <span class="symbol">:verify_phone_unrepeated</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">unless</span> params[<span class="symbol">:phone</span>] =~ User::CELLPHONE_RE</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'手机号格式不正确！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> session[<span class="symbol">:token_created_at</span>] &amp;&amp; session[<span class="symbol">:token_created_at</span>] + <span class="number">60</span> &gt; Time.now.to_i</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'您已经申请过验证码，请60s后再试！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">     <span class="comment">## 生成验证码</span></span><br><span class="line">    token = sms_send(params[<span class="symbol">:phone</span>])</span><br><span class="line">    <span class="comment">## 初次生成验证码，新增record，验证码过期二次生成token，则更新record</span></span><br><span class="line">    PhoneToken.add_or_update params[<span class="symbol">:phone</span>], token</span><br><span class="line">    render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'ok'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">verify_phone_unrepeated</span></span></span><br><span class="line">    phone = User.find_by(<span class="symbol">phone:</span> params[<span class="symbol">:phone</span>])</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123; <span class="symbol">status:</span> <span class="string">'repeated'</span>&#125; <span class="keyword">if</span> phone.present?</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里添加了手机重复绑定的检查。其中，User::CELLPHONE_RE是定义在<code>user.rb</code>, 用正则验证手机号码有效，稍后会加上。</p>
+<p>另外，生成验证码的method sms_send 我们在下一步调用第三方短信服务来实现。</p>
+<p>而对于add_or_update 类方法，我们在<code>app/models/phone_token.rb</code>中定义，实现新增和更新：</p>
+<p>修改<code>app/models/phone_token.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">add_or_update</span><span class="params">(phone, token)</span></span></span><br><span class="line">    record = find_by(<span class="symbol">phone:</span> phone)</span><br><span class="line">    <span class="keyword">if</span> record</span><br><span class="line">      record.update_attributes <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      create <span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p><strong>Step3、调用第三方短信服务</strong></p>
+<p>这里，以阿里云的短信服务为例，官方文档的接口调用代码示例是Java，也没找到ruby的，google了下，有一个现成的gem <a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a>，用这个。</p>
+<p>购买服务后，进行设置，你会得到四个参数值：</p>
+<ol>
+<li>ACCESS_KEY_SECRET</li>
+<li>ACCESS_KEY_ID</li>
+<li>SIGN_NAME</li>
+<li>TEMPLATE_CODE</li>
+</ol>
+<p>开始调用吧！</p>
+<p>修改gemfile：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;aliyun-sms&apos;</span><br></pre></td></tr></table></figure>
+<p>执行<code>bundle</code>，服务器重启.</p>
+<p>修改<code>config/applicaton.yml</code>，将重要的参数值放进去，供调用：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">access_key_secret:</span> <span class="string">"ACCESS_KEY_SECRET"</span></span><br><span class="line"><span class="attr">access_key_id:</span> <span class="string">"ACCESS_KEY_ID"</span></span><br><span class="line"><span class="attr">sign_name:</span> <span class="string">"SIGN_NAME"</span></span><br><span class="line"><span class="attr">template_code:</span> <span class="string">"TEMPLATE_CODE"</span></span><br></pre></td></tr></table></figure>
+<p>新增文件<code>config/initializers/aliyun-sms.rb</code>, 内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Aliyun::Sms.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.access_key_secret = Figaro.env.access_key_secret</span><br><span class="line">  config.access_key_id = Figaro.env.access_key_id</span><br><span class="line">  config.action = <span class="string">'SendSms'</span>                       <span class="comment"># default value</span></span><br><span class="line">  config.format = <span class="string">'XML'</span>                           <span class="comment"># http return format, value is 'JSON' or 'XML'</span></span><br><span class="line">  config.region_id = <span class="string">'cn-hangzhou'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.sign_name = Figaro.env.sign_name</span><br><span class="line">  config.signature_method = <span class="string">'HMAC-SHA1'</span>           <span class="comment"># default value</span></span><br><span class="line">  config.signature_version = <span class="string">'1.0'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.version = <span class="string">'2017-05-25'</span>                   <span class="comment"># default value</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a> 提供了调用方法Aliyun::Sms.send，我稍微进行了封装，封装后的method只有一个参数phone number。</p>
+<p>新增<code>lib/sms.rb</code>, 内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Send</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Sms</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">sms_send</span><span class="params">(phone)</span></span></span><br><span class="line">      template_code = Figaro.env.template_code</span><br><span class="line">      code = rand(<span class="number">100000</span>..<span class="number">999999</span>)</span><br><span class="line">      template_param = &#123;<span class="string">"code"</span> =&gt; code.to_s&#125;.to_json</span><br><span class="line">      Aliyun::Sms.send(phone, template_code, template_param)</span><br><span class="line">      code</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> Send::Sms</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>修改<code>app/controllers/phone_tokens_controller.rb</code>, 添加上relative_require, 加载下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">require_relative <span class="string">'../../lib/sms'</span></span><br></pre></td></tr></table></figure>
+<p>OK，短信发送完成！</p>
+<p>下面给授权页面添加上手机验证的表单。</p>
+<p><strong>Step4、在授权页面添加手机验证</strong></p>
+<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 添加上手机验证：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">form_for</span>(<span class="attr">resource</span>, <span class="attr">as:</span> <span class="attr">resource_name</span>, <span class="attr">url:</span> <span class="attr">registration_path</span>(<span class="attr">resource_name</span>)) <span class="attr">do</span> |<span class="attr">f</span>| %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells_title"</span>&gt;</span>请输入您的手机号，绑定会员<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells weui-cells_form"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>手机号, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:phone</span>, <span class="attr">class:</span> '<span class="attr">weui-input</span>',<span class="attr">id:</span> '<span class="attr">user_cellphone</span>',<span class="attr">type:</span> "<span class="attr">tel</span>", <span class="attr">placeholder:</span> '请输入手机号' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__ft"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">style</span>=<span class="string">"background: none; border: none "</span> <span class="attr">value</span>=<span class="string">"获取验证码"</span> <span class="attr">class</span>=<span class="string">"weui-vcode-btn"</span> <span class="attr">id</span>=<span class="string">"token_btn"</span>&gt;</span>获取验证码<span class="tag">&lt;/<span class="name">input</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>验证码, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:token</span>, <span class="attr">class:</span>"<span class="attr">weui-input</span>", <span class="attr">type:</span> "<span class="attr">number</span>", <span class="attr">placeholder:</span> "请输入验证码" %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"weuiAgree"</span> <span class="attr">class</span>=<span class="string">"weui-agree"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"weuiAgree"</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">checked</span>=<span class="string">"checked"</span> <span class="attr">class</span>=<span class="string">"weui-agree__checkbox"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"weui-agree__text"</span>&gt;</span></span><br><span class="line">        获得您的公开信息（昵称，头像等）</span><br><span class="line">    <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-btn-area"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.submit</span> "确认", <span class="attr">class:</span> '<span class="attr">weui-btn</span> <span class="attr">weui-btn_primary</span>' %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:wx.closeWindow();"</span> <span class="attr">class</span>=<span class="string">"weui-btn weui-btn_plain-default"</span>&gt;</span>关闭<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br></pre></td></tr></table></figure>
+<p>点击获取验证码的按钮，调用phone_tokens的create 方法，发送验证码，同时phone_token插入或更新一个record。</p>
+<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 在最下面添加如下代码：「这里也一并加上手机验证码的60秒倒计时特效和手机号的验证」</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">        (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="comment">// 手机验证码</span></span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span>;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> token_wait = <span class="number">60</span>, token_interval;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> $token_btn = $(<span class="string">'#token_btn'</span>);</span></span><br><span class="line"><span class="javascript">            $token_btn.click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                <span class="keyword">var</span> $<span class="keyword">this</span> = $(<span class="keyword">this</span>), cellphone = $(<span class="string">'#user_cellphone'</span>).val();</span></span><br><span class="line"><span class="javascript">                $.ajax(&#123;</span></span><br><span class="line"><span class="javascript">                    url: <span class="string">"/phone_tokens?phone="</span> + cellphone,</span></span><br><span class="line"><span class="javascript">                    method: <span class="string">'post'</span>,</span></span><br><span class="line"><span class="javascript">                    beforeSend: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (!CELLPHONE_RE.test(cellphone)) &#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"手机号码格式错误,请重填!"</span>);</span></span><br><span class="line"><span class="javascript">                            $(<span class="string">'#user_cellphone'</span>).val(<span class="string">""</span>);</span></span><br><span class="line"><span class="javascript">                            <span class="keyword">return</span> <span class="literal">false</span>;</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="javascript">                        $<span class="keyword">this</span>.attr(<span class="string">'value'</span>,<span class="string">"已发送"</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;,</span></span><br><span class="line"><span class="javascript">                    success: <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (data.status == <span class="string">'error'</span>) &#123;</span></span><br><span class="line"><span class="undefined">                            alert(data.message);</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span> <span class="keyword">if</span>(data.status == <span class="string">'repeated'</span>)&#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"您的手机号已经验证过，无需验证"</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span></span></span><br><span class="line"><span class="undefined">                        &#123;</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'已发送'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="javascript">                            $<span class="keyword">this</span>.trigger(<span class="string">'start_token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">            &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'start_token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                    token_interval = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.trigger(<span class="string">'token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;, 1000);</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="undefined">                    token_wait--;</span></span><br><span class="line"><span class="javascript">                    <span class="keyword">if</span> (token_wait &lt;= <span class="number">0</span>) &#123;</span></span><br><span class="line"><span class="undefined">                        clearInterval(token_interval);</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="undefined">                        token_wait = 60;</span></span><br><span class="line"><span class="javascript">                    &#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'重新发送 '</span> + token_wait + <span class="string">' 秒'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">        &#125;)()</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>以上，手机验证码的发送基本完成，下面来完成验证码的验证，即用户填写的验证码就是发送给他的验证码。</p>
+<p><strong>Step5、给User添加字段phone，并验证token填写正确</strong></p>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_phone_to_users</span><br></pre></td></tr></table></figure>
+<p>在生成的migration文档中，修改成这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddPhoneToUsers</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:users</span>, <span class="symbol">:phone</span>, <span class="symbol">:string</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>修改<code>app/controllers/users/registrations_controller.rb</code>的configure_sign_up_params method：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">configure_sign_up_params</span></span></span><br><span class="line">  devise_parameter_sanitizer.permit(<span class="symbol">:sign_up</span>, <span class="symbol">keys:</span> %i[phone token])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样在授权页面用户必须输入手机和验证码才能通过。</p>
+<p>修改<code>app/models/user.rb</code>，添加验证码的检验，如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  <span class="comment"># Include default devise modules. Others available are:</span></span><br><span class="line">  <span class="comment"># :confirmable, :lockable, :timeoutable and :omniauthable</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:registerable</span>,</span><br><span class="line">         <span class="symbol">:recoverable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:trackable</span>, <span class="symbol">:validatable</span>, <span class="symbol">:omniauthable</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:token</span></span><br><span class="line">  CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span></span><br><span class="line"></span><br><span class="line">  before_validation <span class="symbol">:set_password</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line">  validate <span class="symbol">:validate_phone</span>, <span class="symbol">on:</span> <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">from_omniauth</span><span class="params">(auth)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">new_with_session</span><span class="params">(params, session)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">email_required?</span></span></span><br><span class="line">    <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">set_password</span></span></span><br><span class="line">    <span class="keyword">self</span>.password <span class="params">||</span>= Devise.friendly_token[<span class="number">0</span>, <span class="number">20</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">validate_phone</span></span></span><br><span class="line">    <span class="keyword">if</span> phone.<span class="literal">nil</span>?</span><br><span class="line">      errors.add <span class="symbol">:base</span>, <span class="string">'手机号不能为空'</span></span><br><span class="line">    <span class="keyword">elsif</span> !PhoneToken.find_by(<span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token)</span><br><span class="line">      errors.add <span class="symbol">:phone</span>, <span class="string">'手机验证码不正确或已过期,请重填'</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>通过validate_phone 这个method，来检验用户输入的token是否正确。</p>
+<p>OK，基本功能已经完成！</p>
+<p>最后，简单的美化一下弹窗。</p>
+<p><strong>Step6、美化报错的弹窗</strong></p>
+<p>上面<code>new.html.erb</code>中的alert是自带的弹窗，无法定制，很是难看，此外，当用户输入错误的验证码后，<code>user.rb</code>中error message也会弹出，置于页面顶层，很难看：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fqccjt2h6sj30b90fl750.jpg" alt=""></p>
+<p><a href="https://github.com/Tencent/weui" target="_blank" rel="noopener">weui</a>提供了<a href="https://github.com/Tencent/weui/wiki/Dialog" target="_blank" rel="noopener">Dialog</a>组件，我们用这个。</p>
+<p>鉴于这里涉及的代码较多，就不放了，参看这个<a href="https://gist.github.com/Lupeipei/d8fcb48b588c2c0fb217052baa482eed" target="_blank" rel="noopener">gist</a>，修改<code>app/views/devise/registrations/new.html.erb</code>, 最后的效果长这样：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fqcc4szg58j30a50hfmxp.jpg" alt=""></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p>因为没有搜到合适的教程，所以参考的是付费课程<a href="https://fullstackhelper.herokuapp.com/lessons/3" target="_blank" rel="noopener">手机短信验证码注册、短信通知</a>，跟着修修改改做的，该课程的最终参考来源：<a href="https://eggman.tv/" target="_blank" rel="noopener">蛋人网</a>。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1998,199 +2248,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/05/notes-of-written-on-the-edge-of-life/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/05/notes-of-written-on-the-edge-of-life/" itemprop="url">
-                  读《写在人生边上》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-05T19:07:18+08:00">
-                2018-04-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,760 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p><strong>人生的刺，就在这里，留恋着不肯快走的，偏是你所不留恋的东西</strong>。</p>
-<p>&emsp;语出《写在人生边上》</p>
-<p>这本钱钟书的散文集，共9篇，很短，适合在一个下着细雨的午后，泡杯茶，翻一翻。</p>
-<p>文中偶有些让人捧腹的句子，但更多的是一个人的娓娓道来，好似在听一个人絮絮叨叨跟你闲扯。</p>
-<p>魔鬼夜访那篇，听听鬼的牢骚：</p>
-<blockquote>
-<p>你知道，我是做灵魂生意的。人类的灵魂一部分由上帝挑去，此外全归我。谁料这几十年来，生意清淡得只好喝阴风。一向人类灵魂有好坏之分。好的归上帝收存，坏的由我买卖。到了十九世纪中叶，忽然来了个大变动，除了极少数外，人类几乎全无灵魂。有点灵魂的又都是好人，该归上帝掌管。譬如战士们是有灵魂的，但是他们的灵魂，直接升入天堂，全没有我的份。近代心理学者提倡”没有灵魂的心理学“，这种学说在人人有灵魂的古代，决不会发生。到了现在，即使有一两个给上帝挑剩的灵魂，往往又臭又脏，不是带着实验室里的药味，就是罩了一层旧书的灰尘，再不然还有刺鼻的铜臭，我<strong>有爱洁的脾气，不愿意捡破烂</strong>。近代当然也有坏人，但是他们坏得没有性灵，没有人格，不动声色像无机体，富有效率像机械。就是诗人之类，也很使我失望；他们常说表现灵魂，把灵魂全部表现完了，更不留一点儿给我。你说我忙，你怎知道我闲得发慌，我也是近代物质和机械文明的牺牲品，一个失业者，而且我的家庭负担很重，有七百万子孙待我养活。当然应酬还是有的，像我这样有声望的人，不会没有应酬，今天就是吃了饭来。在这个年头儿，不愁没有人请你吃饭，<strong>只是人不让你用本事来换饭吃</strong>。这是一种苦闷。</p>
-</blockquote>
-<p>这本书写于动乱的抗战时期，这篇与其说是鬼话连篇，不如说是借鬼之口来表达对世事的看法。</p>
-<p>关于门窗：</p>
-<p>这篇写的挺好玩，分析了下门窗的区别，进而由窗想到人的眼睛。</p>
-<blockquote>
-<p>门许我们追求，表示欲望，窗子许我们占领，表示享受。</p>
-<p>关窗的作用等于闭眼。<strong>天地间有许多景象是要闭了眼才看得见的</strong>，譬如梦。假使窗外的人声物态太嘈杂了，关了窗好让灵魂自由地去探胜，安静地默想。有时，关窗和闭眼也有连带关系，你觉得窗外的世界不过尔尔，并不能给予你什么满足，你想回到故乡，你要看见跟你分离的亲友，你只有睡觉，闭了眼向梦里寻去，于是你起来先关了窗。<strong>因为只是春天，还留着残冷，窗子也不能整天整夜不关的</strong>。</p>
-</blockquote>
-<p>开窗观室外风光，关窗观人心内在。</p>
-<p>关于快乐：</p>
-<blockquote>
-<p><strong>一切快乐的享受都属于精神的，尽管快乐的原因是肉体上的物质刺激</strong>。</p>
-<p>洗一个澡，看一朵花，吃一顿饭，假使你觉得快活，并非全因为澡洗得干净，花开得好，或者菜合你口味，主要因为你心上没有挂碍，轻松的灵魂可以专注肉体的感觉，来欣赏，来审定。</p>
-</blockquote>
-<p>心上没有挂碍是幸福的，但有时心上有所挂碍，念着对你重要的人，也是一种幸福吧？</p>
-<p>不过人生苦短，多笑笑，它是会传染的。</p>
-<p>关于小孩子能不能读《伊索寓言》，他也发表了一段颇为精彩的个人观点：</p>
-<blockquote>
-<p>小孩子该不该读寓言，<strong>全看我们成年人在造成什麽一个世界、什麽一个社会，给小孩子长大了来过活</strong>。卢梭认为寓言会把纯朴的小孩子教得复杂了，失去了天真，所以要不得。我认为寓言要不得，因为它把纯朴的小孩子教得愈简单了，愈幼稚了，以为人事里是非的分别、善恶的果报，也象在禽兽中间一样的公平清楚，长大了就处处碰壁上当。缘故是，卢梭是原始主义者（Primitivist），主张复古，<strong>而我呢，是相信进步的人</strong>——虽然并不象寓言里所说的苍蝇，坐在车轮的轴心上，嗡嗡地叫到：“车子的前进，都是我的力量。”</p>
-</blockquote>
-<p>我呢，也是相信进步的人。</p>
-<p>关于吃饭：</p>
-<blockquote>
-<p>有这样优裕的物质环境，舌头像身体一般，本来是极随便的，此时也会有贞操和气节了；许多从前惯吃的东西，现在吃了彷佛玷污清白，决不肯再进口。精细到这种田地，似乎应当少吃，实则反而多吃。</p>
-</blockquote>
-<p>突然想到老庄有句话：虽富贵，不以养伤身，虽贫贱，不以利累形。呃，这个貌似跟吃饭没什么关系。</p>
-<p>一直觉得毛姆很会一本正经，拽着文气，优雅地骂人，在这点上，我觉得钱钟书老人家一点也不逊色。</p>
-<blockquote>
-<p>说笑自从幽默文学提倡以来，卖笑变成了文人的职业。【顺带黑自己吗？】</p>
-<p>常将一群妇女的说笑声比于“莺啼燕语”，那简直是对于禽类的悔辱了。</p>
-<p>色盲决不学绘画，文盲却有时谈文学，而且谈得还特别起劲。于是产生了印象主义的又唤作自我表现或创造的文学批评。</p>
-<p>这种文艺鉴赏，称为“创造”的或“印象主义”的批评，还欠贴切。我们不妨小试点铁成金的手段，各改一字。“创造的”改为“捏造的”，取“捏”鼻头做梦和向壁虚“造”之意，至于“印象派”呢，我们当然还记得四个瞎子摸白象的故事，改为“摸象派”，你说怎样？这跟文盲更拍合了。</p>
-</blockquote>
-<p>有格调的作家和有格调的导演一样讨人喜欢，他们创作不在于取悦读者或观众，更多的是宣扬下个人理论。</p>
-<p>在谈教训那一篇的文章结尾，他来了这么一句结语：</p>
-<blockquote>
-<p>写到这里，我忽然心血来潮。这篇文章不恰恰也在教训麽？难道我自己也人到中年，走到生命的半路了！白纸上黑字是收不回来的，扯个淡收场罢。</p>
-</blockquote>
-<p>这么短的一本小书，我也硬要自己写出个读书笔记什么的，也是够了, 引用《传习录》中的一句话收场吧！</p>
-<p><strong>人生大病只一傲字，有我即傲，众恶之魁</strong>。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2240,7 +2297,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">163</span>
+                <span class="site-state-item-count">164</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2373,7 +2430,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    174.0k
+    174.7k
   </span>
 
 </div>

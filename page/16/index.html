@@ -273,6 +273,213 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/29/web-together-build-3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/29/web-together-build-3/" itemprop="url">
+                  Together网站搭建之踩坑系列3
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-29T06:34:34+08:00">
+                2017-09-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/29/web-together-build-3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/09/29/web-together-build-3/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>475 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是功能实现的第二篇，扯一扯<strong>如何添加分类筛选功能</strong>。</p>
+<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
+<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
+<li><a href="https://lupeipei.github.io/2017/09/28/web-together-build-2/">给活动添加收藏功能，并使用Ajax进行优化</a></li>
+<li>给活动Events添加分类筛选</li>
+<li><a href="https://lupeipei.github.io/2017/09/30/web-together-build-4/">添加省市自治区地址, 并实现热门城市筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/01/web-together-build-5/">添加时间筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/03/web-together-build-7/">实作活动申请</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
+</ul>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先上效果图：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fjqcf5bajjg30x40i0k2j.gif" alt=""></p>
+<p><strong>如何实现？</strong></p>
+<ul>
+<li><p>新建model category</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g model category name:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event中新增category的栏位</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_category_id_to_event category_id:integer</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立category和event的关系，在<code>event.rb</code>中添加</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">belongs_to <span class="symbol">:categroy</span></span><br></pre></td></tr></table></figure>
+<p><code>category.rb</code>中添加：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">has_many <span class="symbol">:events</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event的new ，edit中添加如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= select_tag(:category_id, options_for_select(@categories), :prompt =&gt; &quot;类别&quot;) %&gt;</span><br></pre></td></tr></table></figure>
+<p>如果是simple_form格式，可添加如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-group"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.association</span> <span class="attr">:category</span> %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>events_controller.rb</code>中，将category_id添加到params白名单中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">event_params</span></span></span><br><span class="line">  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:title</span>, ......, <span class="symbol">:category_id</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>为方便后续部署到heroku,可在seeds文档中新建category。在seeds.rb中添加如下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Category部分</span></span><br><span class="line">Category.delete_all</span><br><span class="line"></span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">1</span>, <span class="symbol">name:</span> <span class="string">"音乐"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">2</span>, <span class="symbol">name:</span> <span class="string">"户外"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">3</span>, <span class="symbol">name:</span> <span class="string">"约厨"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">4</span>, <span class="symbol">name:</span> <span class="string">"交友"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">5</span>, <span class="symbol">name:</span> <span class="string">"读书"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">6</span>, <span class="symbol">name:</span> <span class="string">"游戏"</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event 的index页面显示分类列表，在event的<code>index.html.erb</code>中添加如下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="btn-group"&gt;</span><br><span class="line">	&lt;%= link_to <span class="string">"全部"</span>, events_path, <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>].blank?)? <span class="string">"active"</span> : <span class="string">""</span>&#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% Category.all.each <span class="keyword">do</span> <span class="params">|c|</span> %&gt;</span><br><span class="line">  	&lt;%= link_to c.name, events_path(<span class="symbol">category:</span> c), <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>] == c)? <span class="string">"active"</span> : <span class="string">""</span> &#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用上scope，在<code>event.rb</code>中加入以下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope <span class="symbol">:by_category</span>, -&gt;(c)&#123;where( <span class="symbol">:category_id</span> =&gt; c )&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改<code>events_controller.rb</code>，修改index部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  @events = Event.order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:category</span>].present?</span><br><span class="line">    @events = @events.by_category(params[<span class="symbol">:category</span>]).order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>大功告成！</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/28/web-together-build-2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2260,197 +2467,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/07/31/notes-of-together-is-better/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/07/31/notes-of-together-is-better/" itemprop="url">
-                  读《together is better》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-31T10:02:08+08:00">
-                2017-07-31
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>996 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="缘起："><a href="#缘起：" class="headerlink" title="缘起："></a>缘起：</h4><p>在一个暴雨后的夜晚，读一本带着香气的书，真的是一件顶幸福的事儿。</p>
-<p>不仅仅是书香沁脾，更重要的是内容很有营养，推荐这本《together is better》.</p>
-<h4 id="正文："><a href="#正文：" class="headerlink" title="正文："></a>正文：</h4><p>本书作者Simon  Sinek，在他著名的Ted演讲：<a href="https://www.ted.com/talks/simon_sinek_how_great_leaders_inspire_action" target="_blank" rel="noopener">how great leaders inspire action</a> 中提到了黄金圈法则：What，How,Why. 去年第一次看了他的演讲时，便觉得观点独特，但是看完后，我的想法是：“嗯，这很对，很cool，可是离我很遥远，leadership这种东西我应该是用不上的。” 现在想来，当时的想法真的是够愚蠢的。狭隘地理解了领导力，错以为领导力只是在职场中运用，更错到离谱地以为领导力代表着强权与控制欲。呃，貌似跑题了，言归正传。</p>
-<p>Simon Sinek的这本《together is better》主要也是以阐述领导力为主，但是全书通篇以简短的文字加配图相结合的方式，还创造性地为书添加上了香气，读来让人感觉特别舒服。通过三位主角从逃离原有环境，一起去寻找愿景，历经磨难，抵达目的地，成功后选择回到原地，回报他人，最后成长为被他人追随的领导者的过程，将那些简单却深刻的道理娓娓道来，真是个很欢畅的洗脑过程。</p>
-<p>下面就从领导力，领导者属性，团队这三个方面，摘录文中的几个要点，顺便附上个人的一些见解。</p>
-<h5 id="什么是领导力？"><a href="#什么是领导力？" class="headerlink" title="什么是领导力？"></a>什么是领导力？</h5><ul>
-<li><p>It is not about being in charge, it is about taking care of those in your charge.</p>
-</li>
-<li><p>It is not a rank or position to be attained, it is a service to be given.</p>
-</li>
-<li><p>Leadership is an education. And the best leaders think of themselves as the students, not the teachers.</p>
-<blockquote>
-<p>书中提到领导力是可以通过日常的练习习得的一种能力，如何练习？方法是通过考量他人的生活（consider the lives of others），即使损及自身的利益。 个人的理解是和他人一起共同成长，创造双赢的局面，嗯，together is better。</p>
-</blockquote>
-</li>
-</ul>
-<h5 id="好的领导具有哪些属性？"><a href="#好的领导具有哪些属性？" class="headerlink" title="好的领导具有哪些属性？"></a>好的领导具有哪些属性？</h5><ul>
-<li><p>With good leader, we feel like we work for each other.</p>
-</li>
-<li><p>Leaders give us the chance to try and fail, then give us another chance to try and succeed.</p>
-</li>
-<li><p>Bad leaders care about who’s right, good leaders care about what’s right.</p>
-</li>
-<li><p>A good leader doesn’t only inspire us to have confidence in what they can do, A great leader inspires us to have confidence in what we can do.</p>
-</li>
-<li><p>The true value of a leader is not measured by the work they do, the true value of a leader is measured by the work they inspire others to do.</p>
-</li>
-<li><p>A leader must be inspired by the people before a leader can inspire the people</p>
-<blockquote>
-<p>一句话小结就是：好的领导是给你提供成长的机会，鼓励你突破你的玻璃顶的人。可是问题来了，一是现实中这样的领导实在是太少，二是对于绝大多数的普通人，比如我，遇到这样的领导的概率几乎等于零。那怎么破？我能想到的是，不断提高自身的能力，特别是专业水平，这样才有可能遇到。</p>
-</blockquote>
-</li>
-</ul>
-<h5 id="什么是团队？"><a href="#什么是团队？" class="headerlink" title="什么是团队？"></a>什么是团队？</h5><ul>
-<li>A team is not a group of people who work together, a team is a group of people who trust each other.</li>
-</ul>
-<blockquote>
-<p>单单从相互信任这一点看，大部分的团队其实都是不合格的，现实中更多的是找一群人来做一件事，重要的是把这件事情完成了，至于是否能做到相互信任倒是其次了.</p>
-</blockquote>
-<p>当然文中还有很多金句，不过我个人特别喜欢亚里士多德的这句：</p>
-<blockquote>
-<p>There is only one way to avoid criticism: do nothing, say nothing , and be nothing.</p>
-</blockquote>
-<p>P.S. 这本由台湾远流出版社发行的书，里面的一些翻译用语可能与大陆读者平时的用词不大一样，读来有些别扭，但如果你对繁体字有偏爱，那么读这本书会是个很享受的过程，Enjoy！</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fi32kel7ifj30zk0qotcx.jpg" alt=""></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2500,7 +2516,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">163</span>
+                <span class="site-state-item-count">164</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2633,7 +2649,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    174.0k
+    174.7k
   </span>
 
 </div>

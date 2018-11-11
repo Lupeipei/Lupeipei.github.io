@@ -1,0 +1,893 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="ROR,cancancan," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="cancancan中load_resource的用法小结。 正文：最基本的用法: 12345class TasksController &amp;lt; ApplicationController  load_resourceend#### 等同于 @task = Task.find(params[:id]), @task = Task.new, @tasks = Task.all options 众多，">
+<meta name="keywords" content="ROR,cancancan">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Load resource in cancancan">
+<meta property="og:url" content="http://lupeipei.github.io/2018/11/11/Load-resource-in-cancancan/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="cancancan中load_resource的用法小结。 正文：最基本的用法: 12345class TasksController &amp;lt; ApplicationController  load_resourceend#### 等同于 @task = Task.find(params[:id]), @task = Task.new, @tasks = Task.all options 众多，">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-11T07:37:27.892Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Load resource in cancancan">
+<meta name="twitter:description" content="cancancan中load_resource的用法小结。 正文：最基本的用法: 12345class TasksController &amp;lt; ApplicationController  load_resourceend#### 等同于 @task = Task.find(params[:id]), @task = Task.new, @tasks = Task.all options 众多，">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/11/11/Load-resource-in-cancancan/"/>
+
+
+
+
+
+  <title> Load resource in cancancan | Lucia </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/11/11/Load-resource-in-cancancan/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Load resource in cancancan
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-11T15:35:53+08:00">
+                2018-11-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/11/11/Load-resource-in-cancancan/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/11/11/Load-resource-in-cancancan/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>780 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>cancancan中load_resource的用法小结。</p>
+<h4 id="正文："><a href="#正文：" class="headerlink" title="正文："></a>正文：</h4><p>最基本的用法:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于 <span class="doctag">@task</span> = Task.find(params[:id]), <span class="doctag">@task</span> = Task.new, <span class="doctag">@tasks</span> = Task.all</span></span><br></pre></td></tr></table></figure>
+<p>options 众多，来一一捋捋。【借鉴cancancan的wiki，以下代码多以 task，project 为例。】</p>
+<ul>
+<li><p>only  / except</p>
+<p>同before_action中的only  / except，指明load_resource在哪些action前调用。</p>
+<p>only:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">only:</span> [<span class="symbol">:index</span>, <span class="symbol">:show</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 仅在 index，show action 前调用load_resource</span></span><br></pre></td></tr></table></figure>
+<p>except:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">except:</span> [<span class="symbol">:sent</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 在除 sent action 外的其他actions前调用load_resource</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>through</p>
+<p>通过A，B之间的关联来load某一方。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_many <span class="symbol">:tasks</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span> <span class="comment">## 这里也可以省略 :task</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@project</span> = Project.find(params[:project_id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.tasks.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+<p>也可以通过method，比如：current_user，也就是wiki中所说的nested through method：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">through:</span> <span class="symbol">:current_user</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@task</span> = current_user.tasks.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>through_association</p>
+<p>与through的不同在于，project中，如果给tasks起了“别名”，不是，<code>has_many tasks</code>, 而是长这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_many <span class="symbol">:events</span>, <span class="symbol">class_name:</span> <span class="string">'Task'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>则在taskController中需要通过through_association来指明：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">through_association:</span> <span class="symbol">:events</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：<span class="doctag">@project</span> = Project.find(params[:project_id]),</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.events.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>shallow</p>
+<p>shallow是跟着through的，设置为true则允许parent resource为 nil，设置为false则不允许nil，默认为false。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">shallow:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@project</span>存在，则<span class="doctag">@task</span> = <span class="doctag">@project</span>.events.find(params[:id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@project</span>不存在，则<span class="doctag">@task</span> = Task.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>singleton</p>
+<p>当project与task存在一对一关系：</p>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_one <span class="symbol">:task</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">singleton:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@project</span> = Project.find(params[:project_id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.task</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>parent</p>
+<p>根据这个resource是不是一个parent resource来决定，当resource的name与controller无法匹配时，则默认为是parent resource。比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，project在task的controller中，就是一个parent resource。</p>
+</li>
+<li><p>class</p>
+<p>指定类名。多用于当controller与model无法匹配时。</p>
+<p>常见的是个人中心这样的ProfilesController，对应的类名是User：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProfilesController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:profile</span>, <span class="class"><span class="keyword">class</span>: <span class="title">User</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@profile</span> = User.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>find_by</p>
+<p>指定find_by_[attribute]。比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PersonationsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">find_by:</span> <span class="symbol">:token</span>, <span class="class"><span class="keyword">class</span>: <span class="title">User</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@personation</span> = User.find_by_token(params[:id])</span></span><br></pre></td></tr></table></figure>
+<p>注意，此处是params[:id]， 不是params[:token]，如果需要设置params fetch的attribute，可以用id_params.</p>
+</li>
+<li><p>Id_params</p>
+<p>默认是id，可以改为其他的param key，比如上面的例子:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PersonationsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">find_by:</span> <span class="symbol">:token</span>,, <span class="class"><span class="keyword">class</span>: <span class="title">User</span>, <span class="title">id_params</span>: :<span class="title">token</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@personation</span> = User.find_by_token(params[:token])</span></span><br></pre></td></tr></table></figure>
+<p>可以将through，find_by,  id_params 结合运用：</p>
+<p>以常见的一个订阅为例， 用户订阅项目：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SubscriptionsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action &#123; @user = current_user &#125;</span><br><span class="line">  load_resource <span class="symbol">through:</span> <span class="symbol">:user</span>, <span class="symbol">find_by:</span> <span class="symbol">:project_id</span>, <span class="symbol">id_param:</span> <span class="symbol">:project_id</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@subscription</span> = <span class="doctag">@user</span>.subscriptions.find_by_project_id(params[:project_id])</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>new</p>
+<p>指定除默认的new，create之外，哪些action需要new resource。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">new:</span> <span class="symbol">:build</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">build</span></span></span><br><span class="line">    .....</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： 在调用build action前，执行 <span class="doctag">@task</span> = Task.new</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>prepend</p>
+<p>值为true或者false，默认false。如果设置为true，则会调用prepend_before_filter 而不是 before_filter。</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
+<p><a href="https://www.rubydoc.info/github/CanCanCommunity/cancancan/CanCan%2FControllerAdditions%2FClassMethods:load_resource" target="_blank" rel="noopener">cancancan load_resource</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/ROR/" rel="tag"># ROR</a>
+          
+            <a href="/tags/cancancan/" rel="tag"># cancancan</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/16/manage-travis-node-version/" rel="next" title="travis CI：非node项目下指定node版本">
+                <i class="fa fa-chevron-left"></i> travis CI：非node项目下指定node版本
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Lucia" />
+          <p class="site-author-name" itemprop="name">Lucia</p>
+           
+              <p class="site-description motion-element" itemprop="description">曲肱而枕</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">164</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">25</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">47</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#正文："><span class="nav-number">1.</span> <span class="nav-text">正文：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    174.7k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://https-luciaca-cn.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lupeipei.github.io/2018/11/11/Load-resource-in-cancancan/';
+          this.page.identifier = '2018/11/11/Load-resource-in-cancancan/';
+          this.page.title = 'Load resource in cancancan';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://https-luciaca-cn.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
