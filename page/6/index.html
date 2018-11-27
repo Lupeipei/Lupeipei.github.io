@@ -273,6 +273,262 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/13/learn-webpack/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/13/learn-webpack/" itemprop="url">
+                  Webpack学习笔记
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-13T21:56:27+08:00">
+                2018-05-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Webpack/" itemprop="url" rel="index">
+                    <span itemprop="name">Webpack</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/13/learn-webpack/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/13/learn-webpack/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,389 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="是什么？"><a href="#是什么？" class="headerlink" title="是什么？"></a>是什么？</h4><p>官方给到的解释：</p>
+<blockquote>
+<p> webpack is a <em>static module bundler</em> for modern JavaScript applications.</p>
+</blockquote>
+<p>它是一款针对JS应用的静态模块打包工具，当使用webpack处理应用程序时，它会在内部建一个依赖关系图，这个图能映射应用需要的每一个module并生成一个或多个bundles。</p>
+<p>2018.3.12，Webpack4.0 正式发布，<a href="https://medium.com/@TheLarkInn?source=post_header_lockup" target="_blank" rel="noopener">Sean T. Larkin</a> 在当天发表了文章<a href="https://medium.com/webpack/webpack-4-released-today-6cdb994702d4" target="_blank" rel="noopener">webpack 4: released today!!</a>， 列出了新版的变动。通过查看<a href="https://github.com/webpack/webpack/releases" target="_blank" rel="noopener">releases</a>可以得到changelog， 目前的最新版本是<a href="https://github.com/webpack/webpack/releases/tag/v4.8.3" target="_blank" rel="noopener">4.8.3</a>。</p>
+<p>使用webpack来打包module时，需要设定配置文件，默认的配置文件是<code>webpack.config.js</code>，不过对于4.0及以上的版本，webpack已经不再强制要求配置文件了。针对需要设定的属性，有其相对应的默认值。</p>
+<p>在使用webpack前，有必要了解一些重要的概念。</p>
+<h4 id="几个重要的概念"><a href="#几个重要的概念" class="headerlink" title="几个重要的概念"></a>几个重要的概念</h4><ul>
+<li><p>Entry</p>
+<p>entry用于告诉webpack从哪个文件开始创建内部的依赖关系图，默认情况下是<code>./src/index.js</code>。 我们也可以在配置文件<code>webpack.config.js</code>中自定义，比如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  entry: <span class="string">'./path/file.js'</span>  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>entry可以有多个，比如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    entry: &#123;</span><br><span class="line">        pageOne: <span class="string">'./src/pageOne/index.js'</span>,</span><br><span class="line">        pageTwo: <span class="string">'./src/pageTwo/index.js'</span>,</span><br><span class="line">        pageThree: <span class="string">'./src/pageThree/index.js'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
+<p>这里设置了三个entries，告诉webpack要生成三个独立的内部依赖图。</p>
+</li>
+<li><p>Output</p>
+<p>output用于告诉webpack，打包编译后的文件放在哪里。主要通过给filename和path赋值的方式来指定。</p>
+<p>看个例子：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    output: &#123;</span><br><span class="line">        filename: <span class="string">'bundle.js'</span>,</span><br><span class="line">        path: <span class="string">'/home/project/public/assets'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
+<p>这里告诉webpack，最后的输出文件是bundle.js， 存放在<code>&#39;/home/project/public/assets&#39;</code>下。</p>
+<p>上面提到了entry可以有多个，但是output只能有一个，不能配置多个。那么如何让每一个entry都有一个output文件而不是混合在一起呢？官方给到了一个这样的例子做参考：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    entry: &#123;</span><br><span class="line">        app: <span class="string">'./src/app.js'</span>,</span><br><span class="line">        search: <span class="string">'./src/search.js'</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    output: &#123;</span><br><span class="line">        filename: <span class="string">'[name].js'</span>,</span><br><span class="line">        path: __dirname + <span class="string">'/dist</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>这样会在<code>/dist</code>下面输出两个打包后的文件，<code>./dist/app.js</code>, <code>./dist/search.js</code>.</p>
+</li>
+<li><p>Loaders</p>
+<p>loaders用于告诉webpack，不同的文件需要用什么加载器进行处理，比如把其他非JS文件，如TS，转换成JS，或者import一些CSS文件。loader好比在导入或者加载文件时，对文件进行了一次预处理，使之符合打包要求。</p>
+<p>设定loaders有三种方式：</p>
+<ul>
+<li><p>在配置文件中设定</p>
+<p>比如需要加载css,转换ts文件，可以这么用：</p>
+<p>先在本地安装对应的loaders：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev css-loader</span><br><span class="line">npm install --save-dev ts-loader</span><br></pre></td></tr></table></figure>
+<p>然后在配置文件中指定用哪个loader处理哪些文件：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  <span class="built_in">module</span>: &#123;</span><br><span class="line">      rules: [</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.css$/</span>, <span class="attr">use</span>: <span class="string">'css-loader'</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.ts$/</span>, <span class="attr">use</span>: <span class="string">'ts-loader'</span> &#125;</span><br><span class="line">      ]</span><br><span class="line">  &#125;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>这里告诉webpack，用css-loader处理<code>.css</code>文件，用ts-loader处理<code>.ts</code>文件。</p>
+</li>
+<li><p>在<code>import</code>中声明</p>
+<p>比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">import Styles from &apos;style-loader!css-loader?modules!./styles.css&apos;;</span><br></pre></td></tr></table></figure>
+<p>这里用style-loader和css-loader来处理modules和<code>./styles.css</code>。</p>
+</li>
+<li><p>使用命令行</p>
+<p>看官方给出的例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --module-bind jade-loader --module-bind &apos;css=style-loader!css-loader&apos;</span><br></pre></td></tr></table></figure>
+<p>这里告诉webpack，用jade-loader处理<code>.jade</code> 文件, 用style-loader和css-loader处理<code>.css</code>文件。</p>
+<p>官方还给到了loader <a href="https://webpack.js.org/loaders/" target="_blank" rel="noopener">列表</a>以及如何<a href="https://webpack.js.org/api/loaders/" target="_blank" rel="noopener">write your own loader</a>。</p>
+</li>
+</ul>
+</li>
+<li><p>Plugins</p>
+<p>loader可以用来转换某些类型的module，而plugin则用来扩展webpack的功能，比如优化bundle，管理assets。</p>
+<p><a href="https://webpack.js.org/api/plugins/" target="_blank" rel="noopener">Tapable</a>可以提供简单的plugin接口，官方还给出了如何自己写一个plugin的教程<a href="https://webpack.js.org/contribute/writing-a-plugin/" target="_blank" rel="noopener">write a plugin</a>.</p>
+<p>在使用某个plugin之前，需要用<code>require()</code>来将它先添加到plugins 数组中。调用时，则需要使用<code>new</code>来创建一个plugin的实例。</p>
+<p>看个官方给到的例子：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">'html-webpack-plugin'</span>);</span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">'webpack'</span>);</span><br><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    <span class="built_in">module</span>: &#123;</span><br><span class="line">        rules: [</span><br><span class="line">            &#123;<span class="attr">test</span>: <span class="regexp">/\.txt$\/, use: 'raw-loader'&#125;</span></span><br><span class="line"><span class="regexp">        ]</span></span><br><span class="line"><span class="regexp">    &#125;,</span></span><br><span class="line"><span class="regexp">    plugins: [</span></span><br><span class="line"><span class="regexp">      new  HtmlWebpackPlugin(&#123;template: './src/index.html'&#125;);     </span></span><br><span class="line"><span class="regexp">    ]</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp">module.exports = config;</span></span><br></pre></td></tr></table></figure>
+<p>这里使用html-webpack-plugin这个plugin，将会自动生成一个index.html文件。</p>
+<p><a href="https://webpack.js.org/plugins/" target="_blank" rel="noopener">戳这里</a>查看目前的plugin list。</p>
+</li>
+<li><p>Mode</p>
+<p>mode用于告诉webpack， 根据mode指定的环境来启用webpack的内置优化，其实是启用了对应每个环境下的默认plugins，mode默认值是production，即生产环境。</p>
+<p>mode的取值可以为production，development，或者none。取值为none就是不用任何默认的plugin来优化。</p>
+<p>可以通过命令行或者config文件来设置mode：</p>
+<ul>
+<li><p>配置文件</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    mode: <span class="string">'development'</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>命令行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --mode=development</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>分本地安装和全局安装：</p>
+<ul>
+<li><p>global installation</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --global webpack</span><br></pre></td></tr></table></figure>
+<p>全局安装会让你固定在特定版本的webpack，对于使用不同版本webpack的项目而言，不是件好事。</p>
+</li>
+<li><p>local installation</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev webpack</span><br></pre></td></tr></table></figure>
+<p>这会在本地安装最新版的webpack，如果需要安装指定版本，可以执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm install --save-dev webpack@&lt;version&gt; ## version是版本号</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h4><p>启动：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack</span><br></pre></td></tr></table></figure>
+<p>让webpack 时时编译：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --build</span><br></pre></td></tr></table></figure>
+<p>自定义配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">webpack --config yourconfig.js</span><br></pre></td></tr></table></figure>
+<h4 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h4><p>如果你也是和我一样的JS新手，在了解Webpack前，有必要对模块及模块化打包进行更为清晰的了解。推荐阅读<a href="https://medium.freecodecamp.org/@preethikasireddy?source=post_header_lockup" target="_blank" rel="noopener">Preethi Kasireddy</a>的这两篇<a href="https://medium.freecodecamp.org/javascript-modules-a-beginner-s-guide-783f7d7a5fcc" target="_blank" rel="noopener">JavaScript Modules: A Beginner’s Guide</a>，<a href="https://medium.freecodecamp.org/javascript-modules-part-2-module-bundling-5020383cf306" target="_blank" rel="noopener">JavaScript Modules Part 2: Module Bundling</a>， 对于理解JS中的module 以及为何要bundle module有很大帮助，文中还对比了下webpack与Browserify, RequireJS等其他module bundle的差异，很有启发性。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://webpack.js.org/" target="_blank" rel="noopener">webpack 官网</a></p>
+<p><a href="https://medium.com/webpack/webpack-4-released-today-6cdb994702d4" target="_blank" rel="noopener">webpack 4: released today!!</a></p>
+<p><a href="https://medium.freecodecamp.org/javascript-modules-a-beginner-s-guide-783f7d7a5fcc" target="_blank" rel="noopener">JavaScript Modules: A Beginner’s Guide</a></p>
+<p><a href="https://medium.freecodecamp.org/javascript-modules-part-2-module-bundling-5020383cf306" target="_blank" rel="noopener">JavaScript Modules Part 2: Module Bundling</a></p>
+<p><a href="https://github.com/wangning0/Autumn_Ning_Blog/blob/master/blogs/3-12/webpack.md" target="_blank" rel="noopener">Webpack学习之路</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/10/create-your-first-vue-project/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2087,193 +2343,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/19/manage-multiple-database-in-a-single-rails-app/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/19/manage-multiple-database-in-a-single-rails-app/" itemprop="url">
-                  单个Rails APP中多数据库的处理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-19T21:44:34+08:00">
-                2018-04-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/19/manage-multiple-database-in-a-single-rails-app/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/19/manage-multiple-database-in-a-single-rails-app/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>492 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h4><p>Rails中，有model user和 article，article与user的关系是一对多，现在需要针对每一个User，列出所有ta发布的文章，而 article的数据来源于另一个外部的数据库，比如 works 。</p>
-<p>怎么处理？</p>
-<p>用establish_connection。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>拆解成两步：</p>
-<ul>
-<li>为外部数据库建配置文件</li>
-<li>为model和外部数据库建立连接</li>
-</ul>
-<p>具体如下：</p>
-<p>Step1、 新增文件<code>config/works_database.yml</code>，内容如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"># using another database</span><br><span class="line">default: &amp;default</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8</span><br><span class="line">  username: root</span><br><span class="line">  password:</span><br><span class="line">  host: localhost</span><br><span class="line">  pool: 5</span><br><span class="line"></span><br><span class="line">development:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_development</span><br><span class="line"></span><br><span class="line">test:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_test</span><br><span class="line"></span><br><span class="line">production:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_production</span><br></pre></td></tr></table></figure>
-<p>这里，假定数据库works_development是已经存在的，其实就是场景描述中的works数据库。</p>
-<p>Step2、创建initializer去读取配置文件并存入环境变量中</p>
-<p>在config/initializers/下，新增文件<code>works_database.rb</code>，内容如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">WORKS_DB = YAML.load_file(File.join(Rails.root.join(&apos;config&apos;,&apos;works_database.yml&apos;)))[Rails.env.to_s]</span><br></pre></td></tr></table></figure>
-<p>这样，我们外部数据库的配置信息就会存储在WORKS_DB中了。</p>
-<p>Step3、 创建一个基类来处理数据库的连接</p>
-<p>新建文件<code>app/models/works_database.rb</code>，放入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorksDatabase</span> &lt; ApplicationRecord</span></span><br><span class="line">  <span class="keyword">self</span>.abstract_class = <span class="literal">true</span></span><br><span class="line">  establish_connection WORKS_DB</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>establish_connection是ActiveRecord::Base的一个类方法，由于WorksDatabase继承自ApplicationRecord，所以可以直接调用，它的作用就是用于连接数据库的。</p>
-<p>Step4、 将需要连接到WORKS_DB的model都继承自WorksDatabase</p>
-<p>修改<code>app/models/article.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Article</span> &lt; WorksDatabase</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>OK !</p>
-<p>Step 3 和Step 4其实可以合并成一步，直接在<code>app/models/article.rb</code>中修改成如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Article</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  establish_connection WORKS_DB</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>但是这种一般在只有一个或少数几个model需要用到外部数据库时使用的较多，当存在多个models的时候，则推荐用baseclass的方式，把establish_connection封装起来，其他类直接继承该基类即可。即遵守DRY原则。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.thegreatcodeadventure.com/managing-multiple-databases-in-a-single-rails-application/" target="_blank" rel="noopener">Managing Multiple Databases in a Single Rails Application</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2323,7 +2392,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">165</span>
+                <span class="site-state-item-count">166</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2345,7 +2414,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">47</span>
+                <span class="site-state-item-count">48</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2456,7 +2525,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    176.2k
+    176.7k
   </span>
 
 </div>
