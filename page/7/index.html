@@ -273,6 +273,283 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/26/notes-of-the-little-redis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/26/notes-of-the-little-redis/" itemprop="url">
+                  读《The Little Redis Book》
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-26T19:14:02+08:00">
+                2018-04-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/26/notes-of-the-little-redis/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/26/notes-of-the-little-redis/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,633 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h4><p><a href="https://github.com/karlseguin" target="_blank" rel="noopener">Karl Seguin</a>的一本小册子，很短，边读边实作，发现这把瑞士小军刀挺特别，哈哈。</p>
+<p>戳<a href="https://github.com/karlseguin/the-little-redis-book" target="_blank" rel="noopener">这里</a> 获取小册子的最新版。</p>
+<p>整本小册子主要介绍了五种数据结构String,  Hash, List, Set, SortedSet 以其基本用法，一些更为高级的主题如Big O Notation, Transaction和一些重要的命令如expirt, sort，最后提到了有关配置configuration，验证authentication，备份backups，Redis集群cluster等等内容。</p>
+<p>我们先安装，然后来看看五个主要的数据结构具体都是怎么玩的。</p>
+<p>【以下均以Mac OSX上的操作为例】</p>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>官方下载地址：<a href="https://redis.io/download" target="_blank" rel="noopener">https://redis.io/download</a></p>
+<p>官方给到的安装命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget http://download.redis.io/releases/redis-4.0.9.tar.gz</span><br><span class="line">tar xzf redis-4.0.9.tar.gz</span><br><span class="line">cd redis-4.0.9</span><br><span class="line">make</span><br></pre></td></tr></table></figure>
+<p>如果你的Mac OSX裝了homebrew的话，直接:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install redis</span><br></pre></td></tr></table></figure>
+<p>装好后，根目录下执行 <code>redis-server</code>, 就跑起来了。</p>
+<p>开另一个窗口，执行<code>redis-cli</code> ， 进入redis的console， 可以通过<code>info</code>命令来查看更多服务器相关信息。</p>
+<p>好了，准备工作完成，来看看这五种数据结构。</p>
+<h4 id="Strings"><a href="#Strings" class="headerlink" title="Strings"></a>Strings</h4><p>基本用法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">set users:leto &quot;&#123;name: leto, planet: dune, likes: [spice]&#125;&quot;</span><br><span class="line">get users:leto</span><br><span class="line">strlen users:leto</span><br><span class="line">getrange users:leto 1 9</span><br><span class="line">append users:leto hello</span><br><span class="line">get users:leto</span><br><span class="line">incr stats:page:about</span><br><span class="line">incrby rating:video:12333 5</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqpvulp6obj30k00afdh2.jpg" alt=""></p>
+<p>简单说一下：</p>
+<p><code>set &lt;key&gt; &lt;value&gt;</code> : 存储key-value</p>
+<p><code>get &lt;key&gt;</code> : 获取key</p>
+<p><code>strlen &lt;key&gt;</code>: 获取value的长度</p>
+<p><code>getrange &lt;key&gt; &lt;start&gt; &lt;end&gt;</code> : 获取指定起始与终止位置的value子串</p>
+<p><code>append &lt;key&gt; &lt;new_value&gt;</code> : 给key对应的value追加new_value</p>
+<p><code>incr &lt;key&gt;</code>:  value自动加1，没有设置value时，value默认是0</p>
+<p><code>incrbr &lt;key&gt; &lt;num&gt;</code>: 给value加上num</p>
+<p>Redis的所有命令可以查阅这里：<a href="https://redis.io/commands" target="_blank" rel="noopener">https://redis.io/commands</a></p>
+<p>此外，可以使用<code>flushdb</code> 清空所有数据。</p>
+<h4 id="Hashes"><a href="#Hashes" class="headerlink" title="Hashes"></a>Hashes</h4><p>类似Strings的set，get, Hash中使用<code>hset</code>, <code>hget</code>, <code>hmset</code>, <code>hmget</code>.</p>
+<p>基本用法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">hset users:goku powerlevel 900</span><br><span class="line">hget users:goku powerlevel</span><br><span class="line">hmset users:goku race cool age 20</span><br><span class="line">hmget users:goku race powerlevel</span><br><span class="line">hgetall users:goku</span><br><span class="line">hkeys users:goku</span><br><span class="line">hdel users:goku age</span><br><span class="line">del users:goku</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq3ku5aohj30h10en3zl.jpg" alt=""></p>
+<p>看输出其实就知道这些命令都是干嘛的，这里还是简单说一下：</p>
+<p>【这里的field，指的就是hash中的key，为了便于区分，用field来代替。】</p>
+<p><code>mset &lt;key&gt; &lt;field1&gt; &lt;value1&gt; &lt;field2&gt; &lt;value2&gt;...</code>： set多个field-value，value默认是string类型</p>
+<p><code>mget &lt;key&gt; &lt;field1&gt; &lt;field2&gt;...</code>: get多个field对应的value</p>
+<p><code>hgetall &lt;key&gt;</code> : 获取所有的field-value</p>
+<p><code>hkeys &lt;key&gt;</code> : 获取所有的fields</p>
+<p><code>hdel &lt;key&gt; &lt;field&gt;</code>： 删除某个field</p>
+<p><code>del &lt;key&gt;</code> : 删除所有的fileds</p>
+<p>第四章提到了keys Anti-Pattern, 给到的例子就是用Hashes来CRUD每个账户的bug信息。</p>
+<h4 id="Lists"><a href="#Lists" class="headerlink" title="Lists"></a>Lists</h4><p>基本用法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">rpush newusers goku</span><br><span class="line">rpush newusers tom</span><br><span class="line">ltrim newusers 0 10</span><br><span class="line">lrange newusers 0 3</span><br><span class="line">lrange newusers 2 10</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq515sib9j30cu05874m.jpg" alt=""></p>
+<p>简单说一下这些命令：</p>
+<p><code>rpush &lt;list&gt; &lt;item&gt;</code> : push一个item到list， 例子中是在newusers的list中push了一个user goku</p>
+<p><code>ltrim &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : trim成指定的长度，例子中是到0~10</p>
+<p><code>lrange &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : 获取指定长度的list,上面的例子中，newusers这个list中有goku, tom，对应的index是0，1，所以<code>lrange newuser 0 3</code>输出了goku, tom, 而<code>lrange newuser 2 10</code>则为空。</p>
+<p>书中提到了sets的一些场景，可用于存储logs或者跟踪用户浏览网站的足迹。</p>
+<h4 id="Sets"><a href="#Sets" class="headerlink" title="Sets"></a>Sets</h4><p>sets用来存储唯一值，同时提供一系列以集合为基础的运算，比如并集，交集。</p>
+<p>一些基本用法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sadd friends:leto paul tom jessica</span><br><span class="line">sadd friends:duncan paul jessica alia</span><br><span class="line">sismember friends:leto jessica</span><br><span class="line">sismember friends:leto alia</span><br><span class="line">sinter friends:leto friends:duncan</span><br><span class="line">sinterstore friends:leto_duncan friends:leto friends:duncan</span><br><span class="line">smembers friends:leto_duncan</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq5q2vcmrj30in07lt9i.jpg" alt=""></p>
+<p>简单说一下这些命令：</p>
+<p><code>sadd &lt;set&gt; &lt;member1&gt; &lt;member2&gt; ....</code> : 给集合添加members</p>
+<p><code>sismember &lt;set&gt; &lt;member&gt;</code> : 判断member是不是set中的元素， 1代表是，0代表不是。</p>
+<p><code>sinter &lt;set1&gt; &lt;set2&gt;</code>:  求两个集合的交集</p>
+<p><code>sinterstore &lt;set1&gt; &lt;set2&gt; &lt;new_set&gt;</code>:将两个集合的交集存储在一个新的集合new_set中</p>
+<p><code>smembers &lt;set&gt;</code> ： 查看set的members</p>
+<h4 id="Sorted-Sets"><a href="#Sorted-Sets" class="headerlink" title="Sorted Sets"></a>Sorted Sets</h4><p>Sorted Sets可以看成是带有score的sets。</p>
+<p>基本用法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">zadd friends:leto 100 paul 90 tom 98 jessica 80 chani</span><br><span class="line">zcount friends:leto 90 100</span><br><span class="line">zrevrank friends:leto chani</span><br><span class="line">zrank friends:leto chani</span><br><span class="line">zrangebyscore friends:leto -inf +inf</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq6a6h7xgj30ht06774s.jpg" alt=""></p>
+<p>简单说一下这些命令：</p>
+<p><code>zadd &lt;set&gt; &lt;score1&gt; &lt;member1&gt; &lt;score2&gt; &lt;member2&gt;....</code> : 给set的members添加上score</p>
+<p><code>zcount &lt;set&gt; &lt;score_start&gt; &lt;score_end&gt;</code> : set中score在score_start ～ score_end之间的member个数</p>
+<p><code>zrevrank &lt;set&gt; &lt;member&gt;</code> : 降序排序后member的位置</p>
+<p><code>zrank &lt;set&gt; &lt;member&gt;</code> ：升序排序后member的位置【Redis的默认排序是升序】</p>
+<p> <code>zrangebyscore &lt;set&gt; -inf +inf</code> : 输出sorted set</p>
+<p>sorted set的一个比较常用的场景是用来追踪以时间为纬度的事件。好吧，我没用过，这里就不举例子了。</p>
+<h4 id="其他一些好玩的命令"><a href="#其他一些好玩的命令" class="headerlink" title="其他一些好玩的命令"></a>其他一些好玩的命令</h4><ul>
+<li><p>Expire</p>
+<p>用来设置key的过期时间。</p>
+<p>看个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">set pages:about 30</span><br><span class="line">get pages:about</span><br><span class="line">expire pages:about 20 # 设置过期为20秒后</span><br><span class="line">ttl pages:about # 查看还剩多少秒过期</span><br><span class="line">persist pages:about # 取消过期设置</span><br><span class="line">get pages:about</span><br><span class="line">expire pages:about 5</span><br><span class="line">get pages:about # 此时pages:about过期，值变成了nil</span><br><span class="line">setex pages:detail 30 &apos;More details&apos; # set key= pages:about ,值为More details, 30秒后过期</span><br></pre></td></tr></table></figure>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7braobij30h808ngm9.jpg" alt=""></p>
+<p>​</p>
+</li>
+<li><p>Publication and subscriptions</p>
+<p>可以订阅channel，取消channel，publish message，很cool！</p>
+<p>玩一下。</p>
+<p>在一个window上跑<code>redis-cli</code>, 执行<code>subscribe warnings</code>, 另开一个window跑<code>redis-cli</code>, 执行：<code>publish warnings &quot;hi,Redis~&quot;</code></p>
+<p>你会看到第一个window中的warnings channel接受到了信息“hi,Redis~”。</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fqq7pb02wxj30fg04ajrj.jpg" alt=""></p>
+</li>
+<li><p>Monitor</p>
+<p>好用的debugging 工具，可以清晰看到你的所有历史操作。</p>
+<p>直接上图感受下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqq7npsw9cj30ol08k40y.jpg" alt=""></p>
+</li>
+<li><p>Sort</p>
+<p>sort可以用来给list，set， sorted set进行排序。</p>
+<p>可以用limit来限定哪些records需要排序，用by指定排序依据。</p>
+<p>看个例子感受下：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7vfvj2wj30l50c9t9r.jpg" alt=""></p>
+<p>​</p>
+</li>
+</ul>
+<h4 id="Something-else"><a href="#Something-else" class="headerlink" title="Something else"></a>Something else</h4><ul>
+<li><p>pipelining</p>
+<blockquote>
+<p>Normally when a client sends a request to Redis it waits for the reply before sending the next request. With pipelining you can send a number of requests without waiting for their responses. This reduces the networking overhead and can result in significant performance gains.</p>
+<p>正常情况下，当客户端发送请求给到redis时，它需要得到回复后才可能发送下一条请求。但是通过pipelining， 你可以在不需要等待回复的情况下，向Redis发送大量的请求。这减少了网络开支，显著提升了性能。</p>
+<p>没用过，先记着。</p>
+</blockquote>
+</li>
+<li><p>Transaction</p>
+<blockquote>
+<p>每个Redis的命令都是原子性的，当使用多个命令时，Redis同样支持transaction。</p>
+<p>Redis is actually single-threaded, which is how every command is guaranteed to be atomic. While one command is executing, no other command will run.</p>
+<p>Redis如何保证translation? 即原子性，一致性，隔离性，持久性？</p>
+<ul>
+<li>The commands will be executed in order</li>
+<li>The commands will be executed as a single atomic operation (without another client’s command being executed halfway through)</li>
+<li>That either all or none of the commands in the transaction will be executed</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>读技术类书籍果然不比一般书籍，得跟着实作才有感觉，真想向天再借500年……</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/24/passing-array-with-hash-inside-in-cucumber/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1937,215 +2214,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" itemprop="url">
-                  Rails对接微信公众号简易指南
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-10T07:00:07+08:00">
-                2018-04-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>793 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>作为第一次整微信公众号开发的小白而言，刚开始是懵逼的。</p>
-<p>趁着不那么懵逼了，记录下Rails项目的公众号开发流程，给同样是小白的一个参考。</p>
-<p>GitHub上有一个现成的模版<a href="https://github.com/goofansu/wechat-starter" target="_blank" rel="noopener">wechat-starter</a>， 里面包含了认证，接口的调用，连支付都有，我们从这个template开始，同时申请一个测试账号试试水。</p>
-<p>以下操作不涉及支付部分。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>按照指示，clone下这个repos。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fq5iz6vtqij30j705rjru.jpg" alt=""></p>
-<p>执行<code>rake db:create</code>中，如果遇到<code>could not connect to server: No such file or directory</code>的问题，多半是PostgreSQL的版本兼容问题，可参见<a href="http://luciaca.cn/2018/04/05/Postgres-could-not-connect-to-server/" target="_blank" rel="noopener">Postgres could not connect to server</a></p>
-</li>
-<li><p>新建config/application.yml，内容：</p>
-<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">wechat_app_id:</span> <span class="string">"AppID"</span></span><br><span class="line"><span class="attr">wechat_secret:</span> <span class="string">"AppSecret"</span></span><br><span class="line"><span class="attr">wechat_token:</span>  <span class="string">"Tokenwechatdemo"</span></span><br><span class="line"><span class="attr">wechat_encoding_aes_key:</span> <span class="string">"EncodingAESKey"</span></span><br><span class="line"><span class="attr">wechat_trusted_domain_fullname:</span> <span class="string">"http://your-domain"</span></span><br></pre></td></tr></table></figure>
-<p>这里wechat_token的值可以自定义，这里我们写“Tokenwechatdemo”。</p>
-<p>wechat_encoding_aes_key是指你的信息加密密钥，这里我们保持不变，测试公众号是不需要配置的，正式的公众号才需要。</p>
-<p>wechat_app_id，wechat_secret，可以在申请公众号后得到。</p>
-<p>wechat_trusted_domain_fullname，通过Ngrok获取。</p>
-<p>好，我们一个个来获取需要的数据。</p>
-</li>
-<li><p>申请测试账号，得到appID，appsecret</p>
-<p>去微信的公众平台申请一个测试账号，申请后会得到一个appID和appsecret。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fq5jfufptaj30un04pq35.jpg" alt=""></p>
-</li>
-<li><p>使用Ngrok获取一个domain</p>
-<p>如果已经安装了ngrok，终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ngrok http 3000</span><br></pre></td></tr></table></figure>
-<p>查看forwarding，会得到一个http，https的URL。这就是我们要获取的domain了。比如<a href="http://d81dbd6f.ngrok.io。" target="_blank" rel="noopener">http://d81dbd6f.ngrok.io。</a></p>
-<p>有关ngrok的使用，官网有详尽的说明，也可参见简易版<a href="http://luciaca.cn/2018/04/08/introduction-to-ngrok/" target="_blank" rel="noopener">内网穿透神器Ngrok</a></p>
-</li>
-<li><p>完成<code>config/applicajtion.yml</code></p>
-<p>根据得到的appID，appsecret，domain，更新文件<code>config/applicajtion.yml</code>， 修改gemfile，注释掉puma。 <code>bundle</code>，然后<code>rails s</code>。</p>
-<p>这里选择注释掉puma， 改用rails默认的服务器WEBrick, 是为了后面可以与微信公众号成功对接，具体原因可参见 <a href="https://ruby-china.org/topics/31815" target="_blank" rel="noopener">Rails 公众号开发碰到的一个小坑: 公众号对接失败</a></p>
-</li>
-<li><p>完成接口配置</p>
-<p>在测试公众号中，添加URL和token，记得URL后面添加上<code>/wechat</code>，token要与<code>config/application.yml</code>中的token保持一致。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fq57qe8kzrj30th0aygmw.jpg" alt=""></p>
-<p>提交接口配置信息，弹出接口“配置成功”的信息。</p>
-<p>「如果弹出“配置失败”，试试重启服务器<code>rails s</code>.」</p>
-<p>在微信公众平台的测试号管理的网页账号中，添加授权回调页面域名：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fq53p5hzhwj30v008qdh1.jpg" alt=""></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fq53q9pu0hj30jq0dcgm8.jpg" alt=""></p>
-<p>记住，<strong>不要加上http://, 或者https://</strong></p>
-<p>此时在微信开发者工具【<a href="https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html" target="_blank" rel="noopener">下载地址</a>】中，输入网址<a href="">http://d81dbd6f.ngrok.io</a>，会出现认证页面，类似：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fq76l058ngj30bd0hijs6.jpg" alt=""></p>
-<p>OK！！</p>
-</li>
-</ul>
-<h4 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h4><p>微信网页的授权是通过OAuth2.0机制实现的，使用的授权模式是授权码模式(authorization code)，关于该模式，推荐阮一峰老师写的<a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="noopener">理解OAuth 2.0</a>， 深入浅出，对理解授权帮助很大。</p>
-<p>有关接口的调用，因为这个template使用了gem<a href="https://github.com/Eric-Guo/wechat" target="_blank" rel="noopener">WeChat</a> , 可以查阅它的<a href="https://github.com/Eric-Guo/wechat#command-line-mode" target="_blank" rel="noopener">Command line mode</a>， 也可以自己写task来调用， 基本上可以满足大部分的调用需求。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-china.org/topics/31815" target="_blank" rel="noopener">Rails 公众号开发碰到的一个小坑: 公众号对接失败</a></p>
-<p><a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="noopener">理解OAuth 2.0</a></p>
-<p><a href="https://mp.weixin.qq.com/wiki?t=resource/res_main&amp;id=mp1445241432" target="_blank" rel="noopener">微信公众平台技术文档</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2195,7 +2263,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">168</span>
+                <span class="site-state-item-count">169</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2328,7 +2396,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    177.9k
+    178.2k
   </span>
 
 </div>

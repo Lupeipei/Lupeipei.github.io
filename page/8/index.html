@@ -273,6 +273,215 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" itemprop="url">
+                  Rails对接微信公众号简易指南
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-10T07:00:07+08:00">
+                2018-04-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>793 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>作为第一次整微信公众号开发的小白而言，刚开始是懵逼的。</p>
+<p>趁着不那么懵逼了，记录下Rails项目的公众号开发流程，给同样是小白的一个参考。</p>
+<p>GitHub上有一个现成的模版<a href="https://github.com/goofansu/wechat-starter" target="_blank" rel="noopener">wechat-starter</a>， 里面包含了认证，接口的调用，连支付都有，我们从这个template开始，同时申请一个测试账号试试水。</p>
+<p>以下操作不涉及支付部分。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>按照指示，clone下这个repos。</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fq5iz6vtqij30j705rjru.jpg" alt=""></p>
+<p>执行<code>rake db:create</code>中，如果遇到<code>could not connect to server: No such file or directory</code>的问题，多半是PostgreSQL的版本兼容问题，可参见<a href="http://luciaca.cn/2018/04/05/Postgres-could-not-connect-to-server/" target="_blank" rel="noopener">Postgres could not connect to server</a></p>
+</li>
+<li><p>新建config/application.yml，内容：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">wechat_app_id:</span> <span class="string">"AppID"</span></span><br><span class="line"><span class="attr">wechat_secret:</span> <span class="string">"AppSecret"</span></span><br><span class="line"><span class="attr">wechat_token:</span>  <span class="string">"Tokenwechatdemo"</span></span><br><span class="line"><span class="attr">wechat_encoding_aes_key:</span> <span class="string">"EncodingAESKey"</span></span><br><span class="line"><span class="attr">wechat_trusted_domain_fullname:</span> <span class="string">"http://your-domain"</span></span><br></pre></td></tr></table></figure>
+<p>这里wechat_token的值可以自定义，这里我们写“Tokenwechatdemo”。</p>
+<p>wechat_encoding_aes_key是指你的信息加密密钥，这里我们保持不变，测试公众号是不需要配置的，正式的公众号才需要。</p>
+<p>wechat_app_id，wechat_secret，可以在申请公众号后得到。</p>
+<p>wechat_trusted_domain_fullname，通过Ngrok获取。</p>
+<p>好，我们一个个来获取需要的数据。</p>
+</li>
+<li><p>申请测试账号，得到appID，appsecret</p>
+<p>去微信的公众平台申请一个测试账号，申请后会得到一个appID和appsecret。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fq5jfufptaj30un04pq35.jpg" alt=""></p>
+</li>
+<li><p>使用Ngrok获取一个domain</p>
+<p>如果已经安装了ngrok，终端运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ngrok http 3000</span><br></pre></td></tr></table></figure>
+<p>查看forwarding，会得到一个http，https的URL。这就是我们要获取的domain了。比如<a href="http://d81dbd6f.ngrok.io。" target="_blank" rel="noopener">http://d81dbd6f.ngrok.io。</a></p>
+<p>有关ngrok的使用，官网有详尽的说明，也可参见简易版<a href="http://luciaca.cn/2018/04/08/introduction-to-ngrok/" target="_blank" rel="noopener">内网穿透神器Ngrok</a></p>
+</li>
+<li><p>完成<code>config/applicajtion.yml</code></p>
+<p>根据得到的appID，appsecret，domain，更新文件<code>config/applicajtion.yml</code>， 修改gemfile，注释掉puma。 <code>bundle</code>，然后<code>rails s</code>。</p>
+<p>这里选择注释掉puma， 改用rails默认的服务器WEBrick, 是为了后面可以与微信公众号成功对接，具体原因可参见 <a href="https://ruby-china.org/topics/31815" target="_blank" rel="noopener">Rails 公众号开发碰到的一个小坑: 公众号对接失败</a></p>
+</li>
+<li><p>完成接口配置</p>
+<p>在测试公众号中，添加URL和token，记得URL后面添加上<code>/wechat</code>，token要与<code>config/application.yml</code>中的token保持一致。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fq57qe8kzrj30th0aygmw.jpg" alt=""></p>
+<p>提交接口配置信息，弹出接口“配置成功”的信息。</p>
+<p>「如果弹出“配置失败”，试试重启服务器<code>rails s</code>.」</p>
+<p>在微信公众平台的测试号管理的网页账号中，添加授权回调页面域名：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fq53p5hzhwj30v008qdh1.jpg" alt=""></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fq53q9pu0hj30jq0dcgm8.jpg" alt=""></p>
+<p>记住，<strong>不要加上http://, 或者https://</strong></p>
+<p>此时在微信开发者工具【<a href="https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html" target="_blank" rel="noopener">下载地址</a>】中，输入网址<a href="">http://d81dbd6f.ngrok.io</a>，会出现认证页面，类似：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fq76l058ngj30bd0hijs6.jpg" alt=""></p>
+<p>OK！！</p>
+</li>
+</ul>
+<h4 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h4><p>微信网页的授权是通过OAuth2.0机制实现的，使用的授权模式是授权码模式(authorization code)，关于该模式，推荐阮一峰老师写的<a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="noopener">理解OAuth 2.0</a>， 深入浅出，对理解授权帮助很大。</p>
+<p>有关接口的调用，因为这个template使用了gem<a href="https://github.com/Eric-Guo/wechat" target="_blank" rel="noopener">WeChat</a> , 可以查阅它的<a href="https://github.com/Eric-Guo/wechat#command-line-mode" target="_blank" rel="noopener">Command line mode</a>， 也可以自己写task来调用， 基本上可以满足大部分的调用需求。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-china.org/topics/31815" target="_blank" rel="noopener">Rails 公众号开发碰到的一个小坑: 公众号对接失败</a></p>
+<p><a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html" target="_blank" rel="noopener">理解OAuth 2.0</a></p>
+<p><a href="https://mp.weixin.qq.com/wiki?t=resource/res_main&amp;id=mp1445241432" target="_blank" rel="noopener">微信公众平台技术文档</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/09/remove-app-stuck-in-waiting-mode/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2039,200 +2248,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/31/ruby-metaprogramming-part6-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/31/ruby-metaprogramming-part6-rails/" itemprop="url">
-                  读《Ruby元编程》之Rails源代码赏析
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-31T09:14:03+08:00">
-                2018-03-31
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/31/ruby-metaprogramming-part6-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/31/ruby-metaprogramming-part6-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>715 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《Ruby元编程》part 2 说的是rails中的元编程，相比part 1 ，这部分的篇幅少了很多。</p>
-<p>主要说了这四块：</p>
-<ul>
-<li>ActiveRecord的组成</li>
-<li>ActiveSupport的concern模块</li>
-<li>alias_method_chain</li>
-<li>属性方法</li>
-</ul>
-<p>来逐一看看。</p>
-<h4 id="ActiveRecord的组成"><a href="#ActiveRecord的组成" class="headerlink" title="ActiveRecord的组成"></a>ActiveRecord的组成</h4><ul>
-<li>是什么？</li>
-</ul>
-<p>ActiveRecord是一个库，用来将Ruby对象映射到数据库中，然后你就可以直接对model进行操作，使用类的对象与数据库交互，不需要通过传统的SQL语句，rails会帮你转化成SQL语句。</p>
-<ul>
-<li>依赖和组成</li>
-</ul>
-<p>ActiveRecord依赖ActiveSupport，ActiveModel，并且使用ActiveSupport::Autoload来扩展了类。</p>
-<p>ActiveRecord::Base是它最重要的类，由一堆模块组装起来，通过extend，include 多个module，获得了大量的实例方法和类方法。</p>
-<h4 id="ActiveSupport的concern模块"><a href="#ActiveSupport的concern模块" class="headerlink" title="ActiveSupport的concern模块"></a>ActiveSupport的concern模块</h4><p>concern模块是一个最小依赖管理系统，它的诞生，是为了解决包含并扩展类中链式包含的问题。</p>
-<p>书中较详细地说明了concern的实现机制，通过覆写内核方法append_features来决定module是否进入祖先链 ,不过这段的代码真不好理解。</p>
-<h4 id="alias-method-chain"><a href="#alias-method-chain" class="headerlink" title="alias_method_chain"></a>alias_method_chain</h4><p>它的兴起是为了处理别名机制，你可以把它看成是环绕别名的构建器，而这也是它消亡的原因。颇有“成也萧何，败也萧何”的味道。</p>
-<p>既然它已经逐渐退出舞台，那么用什么来解决给原方法增加新功能的问题呢？</p>
-<p>在第五章中提到的prepend，成了它的替代品。</p>
-<h4 id="属性方法"><a href="#属性方法" class="headerlink" title="属性方法"></a>属性方法</h4><ul>
-<li><p>是什么？</p>
-<p>自动创建的访问器。比如你创建了一个类Student，它有name， age字段，可以通过Student.new创建对象，直接对其name， age读写。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">s = Student.new</span><br><span class="line">s.name = <span class="string">"Tom"</span></span><br><span class="line">s.age = <span class="number">18</span></span><br><span class="line">s.save</span><br><span class="line">s.name <span class="comment">#=&gt; Tom</span></span><br></pre></td></tr></table></figure>
-<p>这里<code>name =</code>， <code>name</code>， <code>age=</code>, <code>age</code>等方法，就是属性方法，都是ActiveRecord通过查看students表的字段进行创建的。</p>
-</li>
-<li><p>发展历史</p>
-<p>Rails1.0时，通过幽灵方法来实现属性方法，由于幽灵方法并不是真正的方法，调用时要先完整搜过一遍祖先链，所以Rails2.0时，对属性方法的实现进行了改进。大致的思路是：第一次访问属性时，这个属性是个幽灵方法，ActiveRecord::Base#method_missing会在这时把这个幽灵方法转化为真实的方法，同时method_missing还动态地为数据库中的其他字段创建读，写，查询访问器，下一次再访问时，就会有一个真实的方法器可供访问，不再进入method_missing方法。</p>
-</li>
-</ul>
-<h4 id="一点感触"><a href="#一点感触" class="headerlink" title="一点感触"></a>一点感触</h4><p>刚开始看元编程的时候，很激动，像是发现了宝似的，现在看完了，平静了很多。借用书中的一句话：元编程的目的不是为了让代码变得更聪明，而是让代码变得更灵活。</p>
-<p>Happy metaprogramming!</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2282,7 +2297,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">168</span>
+                <span class="site-state-item-count">169</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2415,7 +2430,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    177.9k
+    178.2k
   </span>
 
 </div>

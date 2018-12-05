@@ -273,6 +273,200 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/22/stub-any-instance-of-a-class/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/08/22/stub-any-instance-of-a-class/" itemprop="url">
+                  Stub on any instance of a class
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-22T07:46:04+08:00">
+                2018-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RSpec/" itemprop="url" rel="index">
+                    <span itemprop="name">RSpec</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/22/stub-any-instance-of-a-class/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/08/22/stub-any-instance-of-a-class/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>852 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>测试时遇到的一个问题:</p>
+<blockquote>
+<p>新建一个对象，该对象新建后会自动保存，现在需要测试其无法保存的情景，使得obj.save返回为false。</p>
+</blockquote>
+<p>踩坑：</p>
+<p>obj这个对象的创建中有一个属性attr设置了必填，同时该attr的值来自另一个对象a， 参考先前的代码，解决的思路是：</p>
+<p>通过<code>a.save(validate: false)</code>, 让a在attr为空时保存，然后obj创建时，会取a的attr作为自己的attr，这样obj保存时必然是false，因为atrr为空，它无法过检验，但是运行后发现，不管是<code>a.save(validate: false)</code>还是<code>a.save!(validate: false)</code>, 再次执行<code>a.save</code>，都会回滚，返回false。虽然它们跳过了validation，但是save时，并没有成功，Google了半天，没有找出好的解决方法。后来，看到同事用stub的方式完美解决了，由衷觉得真是太赞了。</p>
+<p>同一个问题，换个人解决，高下立判，只能说，知道和想到，隔了好几个山头啊。</p>
+<p>记录下allow_any_instance_of的用法。</p>
+<h4 id="allow-any-instance-of"><a href="#allow-any-instance-of" class="headerlink" title="allow_any_instance_of"></a>allow_any_instance_of</h4><p>允许一个class的任何实例stub任何一个method的，可设置返回值，也可以不设置，文档中说可以replace allow，但是allow接受的参数是对象，而allow_any_instance_of则是类。</p>
+<p>看一些老的版本，比如2.99，会发现allow_any_instance_of的”前身”，any_instance.stub，我以为是前身，但是在该版本的Rspec-mock的message exception部分，已经出现了allow_any_instance_of，有些奇怪，不过用起来倒是都好用的，这里一并下记录下两者的用法。</p>
+<ul>
+<li><p>stub 单个method无参</p>
+<p>单个method的stub，看官网的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">"allow_any_instance_of"</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"returns a specified value on any instance of a class"</span> <span class="keyword">do</span></span><br><span class="line">    allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).and_return(<span class="symbol">:return_value</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="symbol">:return_value</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>用any_instance.stub 可以这样写：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">"any_instance.stub"</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"returns a specified value on any instance of a class"</span> <span class="keyword">do</span></span><br><span class="line">    Object.any_instance.stub(<span class="symbol">:foo</span>).and_return(<span class="symbol">:return_value</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="symbol">:return_value</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>stub单个method有参</p>
+<p>带参数的单个method，这样写：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">"allow_any_instance_of"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"with arguments"</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">"returns the stub value when arugments match"</span> <span class="keyword">do</span></span><br><span class="line">      allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).with(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>).and_return(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).with(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>).and_return(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">      obj = Ojbect.new</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>)).to eq(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>)).to eq(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>换成any_instance.stub，可以这么来：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">"any_instance.stub"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"with arguments"</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">"returns the stub value when arugments match"</span> <span class="keyword">do</span></span><br><span class="line">      Object.any_instance.stub(<span class="symbol">:foo</span>).with(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>).and_return(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      Object.any_instance.stub(<span class="symbol">:foo</span>).with(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>).and_return(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">      obj = Ojbect.new</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>)).to eq(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>)).to eq(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>stub 多个method无参</p>
+<p>多个method：</p>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">"allow_any_instance_of"</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"stub multiple methods"</span> <span class="keyword">do</span></span><br><span class="line">    allow_any_instance_of(Object).to receive_messages(<span class="symbol">:foo</span> =&gt; <span class="string">"foo"</span>, <span class="symbol">:bar</span> =&gt; <span class="string">"bar"</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="string">"foo"</span>)</span><br><span class="line">    expect(obj.bar).to eq(<span class="string">"bar"</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>用any_instance.stub：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">"any_instance.stub"</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"stub multiple methods"</span> <span class="keyword">do</span></span><br><span class="line">    Object.any_instance.stub(<span class="symbol">:foo</span> =&gt; <span class="string">"foo"</span>, <span class="symbol">:bar</span> =&gt; <span class="string">"bar"</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="string">"foo"</span>)</span><br><span class="line">    expect(obj.bar).to eq(<span class="string">"bar"</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>any_instance.stub还有一些兄弟姐妹，比如any_instance.unstub，any_instance.stub_chain， 可以戳<a href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class" target="_blank" rel="noopener">这里</a>了解更多。</p>
+</li>
+</ul>
+<h4 id="warning"><a href="#warning" class="headerlink" title="warning"></a>warning</h4><p>官网上提到了慎用allow_any_instance_of,原因除了认为使用该方法<code>is often a design smell</code>，同时也是频频出bug的地方，be careful.</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class" target="_blank" rel="noopener">Stub on any instance of a class</a></p>
+<p><a href="https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/any-instance" target="_blank" rel="noopener">any instance</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/19/rspec-basic/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2118,175 +2312,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/27/bug-in-compact/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/07/27/bug-in-compact/" itemprop="url">
-                  踩坑之compact！
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-27T19:01:55+08:00">
-                2018-07-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Ruby/" itemprop="url" rel="index">
-                    <span itemprop="name">Ruby</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/27/bug-in-compact/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/07/27/bug-in-compact/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>247 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。</p>
-<p>出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。</p>
-<p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a = [ <span class="string">"a"</span>, <span class="literal">nil</span>, <span class="string">"b"</span>, <span class="literal">nil</span>, <span class="string">"c"</span> ]</span><br><span class="line"></span><br><span class="line">a.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", nil, "b", nil, "c"]</span></span><br><span class="line"></span><br><span class="line">a.compact!</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
-<p>But!!</p>
-<p>如果这个数组本身没有nil，两者的结果完全不同。调用compact或者compact！，数组都不变，但是compact！返回的却是nil。</p>
-<p>看例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">b = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]</span><br><span class="line"></span><br><span class="line">b.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line"></span><br><span class="line">b.compact!</span><br><span class="line"><span class="comment">#=&gt; nil</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
-<p>也就是说<strong>在数组中没有nil的情况下，使用compact！返回的值是nil，同时数组本身不会改变</strong>。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.0/Array.html#method-i-compact-21" target="_blank" rel="noopener">compact!</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2336,7 +2361,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">168</span>
+                <span class="site-state-item-count">169</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2469,7 +2494,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    177.9k
+    178.2k
   </span>
 
 </div>
