@@ -273,6 +273,186 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/03/rails5-requires-ruby-2-or-newer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/03/rails5-requires-ruby-2-or-newer/" itemprop="url">
+                  用rails new遇到的一个报错
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-03T07:52:05+08:00">
+                2018-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/03/rails5-requires-ruby-2-or-newer/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/03/rails5-requires-ruby-2-or-newer/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>283 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用<code>rails new</code>新开一个项目的时候，遇到的一个报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Rails 5 requires Ruby 2.2.2 or newer.</span><br><span class="line"></span><br><span class="line"> You&apos;re running</span><br><span class="line">   ruby 2.0.0p648 (2015-12-16 revision 53162) [universal.x86_64-darwin16]</span><br><span class="line"></span><br><span class="line"> Please upgrade to Ruby 2.2.2 or newer to continue.</span><br></pre></td></tr></table></figure>
+<p>输入：<code>ruby -v</code>，得到的版本：ruby 2.3.6p384，明明2.3.6啊！为什么说我的是ruby2.0.0？</p>
+<p>我以为是有旧的ruby版本存在，终端输入：<code>rvm list</code>， 得到如下结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">rvm rubies</span><br><span class="line"></span><br><span class="line">   ruby-2.3.1 [ x86_64 ]</span><br><span class="line">=* ruby-2.3.6 [ x86_64 ]</span><br><span class="line">   ruby-2.4.0 [ x86_64 ]</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> =&gt; - current</span><br><span class="line"><span class="meta">#</span> =* - current &amp;&amp; default</span><br><span class="line"><span class="meta">#</span>  * - default</span><br></pre></td></tr></table></figure>
+<p>这就很奇怪了，随后终端输入:<code>rails -v</code>， 报错，内容与rails new一样。</p>
+<p>怎么回事？！</p>
+<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>Google到了解答， 在这里<a href="https://github.com/rails/rails/issues/27569" target="_blank" rel="noopener"><code>rails new</code> fails to read my Ruby version and won’t create a new project </a></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1fpoa9x9455j30ja037js1.jpg" alt=""></p>
+<p>原来rails检查的是system的ruby，先check下：</p>
+<ul>
+<li><p>终端输入<code>rvm system</code> ，得到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ruby 2.0.0p648 (2015-12-16 revision 53162) [universal.x86_64-darwin16]</span><br></pre></td></tr></table></figure>
+<p>果然，是ruby2.0.0。</p>
+</li>
+<li><p>切换到之前的版本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rvm use ruby-2.3.6 --default</span><br></pre></td></tr></table></figure>
+<p>OK!!!  <code>rails new yourproject</code>， 继续开始新的征程～～</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4></li>
+</ul>
+<p><a href="https://github.com/rails/rails/issues/27569" target="_blank" rel="noopener"><code>rails new</code> fails to read my Ruby version and won’t create a new project </a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/02/publishing-your-gem/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2320,222 +2500,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/21/create-your-first-rubygem/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/21/create-your-first-rubygem/" itemprop="url">
-                  创建你的第一个gem
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-21T20:25:31+08:00">
-                2018-03-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Ruby/" itemprop="url" rel="index">
-                    <span itemprop="name">Ruby</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/21/create-your-first-rubygem/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/21/create-your-first-rubygem/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>780 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>用了很多前辈们造的轮子，没准你也想自己造个轮子，用实际行动来为open source添砖加瓦。</p>
-<p>即便刚开始做出来的不甚理想，甚至是破砖破瓦，不过能自己做一个gem，这本身就是一件很cool的事了：P</p>
-<p>那么一个简单的gem包括哪些文件呢？基本的框架是怎样的？如何快速创建一个gem？</p>
-<h4 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h4><ul>
-<li><p>准备工作：命名</p>
-<p>借用Phil Karlton的话：There are only two hard things in Computer Science: cache invalidation and <strong>naming things</strong>.</p>
-<p>So first of all, naming your gem. 记得去<a href="https://rubygems.org/" target="_blank" rel="noopener">rubygems</a>搜索下，确保你的gem名唯一。</p>
-<p>好，开始正式创建你的gem。</p>
-<p>如果你认真去看<a href="http://guides.rubygems.org/" target="_blank" rel="noopener">guides rubygems</a>， 会发现步骤其实还挺多，这里我们直接抄近道。</p>
-<p>一个gem的基本pattern长这样：【该gem名为ice_bear，呃，谁会不喜欢<a href="http://webarebears.wikia.com/wiki/Ice_Bear" target="_blank" rel="noopener">ice bear</a>？】</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpjbe4verpj30af09e0t2.jpg" alt=""></p>
-</li>
-</ul>
-<p>以下以ice_bear gem的创建为例，四步走：</p>
-<ul>
-<li><p>创建gem</p>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle gem ice_bear</span><br></pre></td></tr></table></figure>
-<p>如果是第一次创建gem，会问你要不要生成test文件(rspec/minitest)，是否想要添加license等，根据需要回复即可。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fpjawbg751j30rd059769.jpg" alt=""></p>
-<p>这里选择rspec,会生成如下文件：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpjaxcc7zcj30eo06ogm9.jpg" alt=""></p>
-<p>如果是第一次生成gem，是没有README.md的，需要自己手动添加。</p>
-</li>
-<li><p>放到GitHub上，open source</p>
-<p>默认添加了version control，所以cd 到ice_bear 目录后，不需要git init.</p>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cd ice_bear</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;my first gem ice_bear&quot;</span><br><span class="line">git remote add origin https://github.com/XXX/ice_bear</span><br><span class="line">git push -u origin master</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>修改文件：<code>ice_bear_gemspec</code>：</p>
-<p>三处需要修改：spec.summary，spec.description，spec.homepage</p>
-<p>其中在spec.homepage 列添加你的public repo URL, 也就是你push到GitHub的repos 地址：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Gem::Specification.new do |spec|</span><br><span class="line">  ......</span><br><span class="line">  spec.summary       = &apos;ice bear would have been less charming&apos;</span><br><span class="line">  spec.description   = &lt;&lt;-TEXT</span><br><span class="line">  Ice Bear is the youngest of the trio but is undoubtedly the strongest and, in some respects, the most mature.</span><br><span class="line">  TEXT</span><br><span class="line">  spec.homepage      = &quot;https://github.com/xxxx/ice_bear&quot;</span><br><span class="line">  ......</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-<p>这里description部分太长，故用<code>&lt;&lt;-TEXT TEXT</code>【类似<a href="https://en.wikipedia.org/wiki/Here_document" target="_blank" rel="noopener">heredoc</a>】包起来了。</p>
-<p>最近进度push到GitHub：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git commit -am &quot;update ice_bear_gemspec&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>运行测试文件，确保正常</p>
-<p>本地运行<code>bundle exec rspec</code>，得到如下结果：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">IceBear</span><br><span class="line">  has a version number</span><br><span class="line">  does something useful (FAILED - 1)</span><br><span class="line"></span><br><span class="line">Failures:</span><br><span class="line"></span><br><span class="line">  1) IceBear does something useful</span><br><span class="line">     Failure/Error: expect(false).to eq(true)</span><br><span class="line"></span><br><span class="line">       expected: true</span><br><span class="line">            got: false</span><br><span class="line"></span><br><span class="line">       (compared using ==)</span><br><span class="line">     # ./spec/ice_bear_spec.rb:7:in `block (2 levels) in &lt;top (required)&gt;'</span><br><span class="line"></span><br><span class="line">Finished in 0.08058 seconds (files took 0.55356 seconds to load)</span><br><span class="line">2 examples, 1 failure</span><br><span class="line"></span><br><span class="line">Failed examples:</span><br><span class="line"></span><br><span class="line">rspec ./spec/ice_bear_spec.rb:6 # IceBear does something useful</span><br></pre></td></tr></table></figure>
-<p>查看测试文件：<code>ice_bear_spec.rb</code> ：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe IceBear <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"has a version number"</span> <span class="keyword">do</span></span><br><span class="line">    expect(IceBear::VERSION).not_to be <span class="literal">nil</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  it <span class="string">"does something useful"</span> <span class="keyword">do</span></span><br><span class="line">    expect(<span class="literal">false</span>).to eq(<span class="literal">true</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>与预期相同，OK！gem 搭建成功，下一步，make your gem useful ：P</p>
-</li>
-</ul>
-<h4 id="关于发布"><a href="#关于发布" class="headerlink" title="关于发布"></a>关于发布</h4><p>gem 完成后，确保你有<a href="https://rubygems.org/" target="_blank" rel="noopener">RubyGems.org</a>的账号，终端运行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem push ice_bear_0.1.0.gem</span><br></pre></td></tr></table></figure></p>
-<p>其中0.1.0是你gem的版本号，输入账号和密码即可。当然你也可以修改一些其他设置，比如set up a private gem server，具体参见<a href="http://guides.rubygems.org/publishing/" target="_blank" rel="noopener">publishing your gem</a>。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9549450/how-to-setup-a-basic-ruby-project" target="_blank" rel="noopener">How to setup a basic ruby project?</a></p>
-<p><a href="https://github.com/codinguy/skeleton-ruby-project" target="_blank" rel="noopener">skeleton ruby project</a></p>
-<p><a href="http://guides.rubygems.org/" target="_blank" rel="noopener">guides rubygems</a></p>
-<p><a href="http://wsmoak.net/2015/02/22/ruby-project-structure.html" target="_blank" rel="noopener">Ruby Project Structure</a></p>
-<p><a href="http://guides.rubygems.org/publishing/" target="_blank" rel="noopener">publishing your gem</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/17/">17</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2580,7 +2549,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">170</span>
+                <span class="site-state-item-count">171</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2713,7 +2682,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    178.3k
+    178.7k
   </span>
 
 </div>
