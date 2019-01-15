@@ -273,6 +273,197 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/05/encode-uuid-as-base58/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/05/encode-uuid-as-base58/" itemprop="url">
+                  Rails：使用base58压缩uuid
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-05T19:08:13+08:00">
+                2018-01-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/05/encode-uuid-as-base58/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/05/encode-uuid-as-base58/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>469 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><strong>base58</strong> ,wikipedia上面的定义是这样的：</p>
+<blockquote>
+<p><strong>Base58</strong> is a group of binary-to-text encoding schemes used to represent large integers  as alphanumeric text.</p>
+</blockquote>
+<p>我的理解是它是一种将二进制转化为文本的编码方式，用于将大的整数表示成字母和数字的文本组合，其优势在于避免混淆。之前大热的bitcoin，它的address，钱包地址，用的就是base58编码方式。</p>
+<p>在Rails中，通常会给model加上uuid作为唯一标示，生成的uuid通常比较长，而且带有’-‘符号，使用base58进行编码会显得更好一些。下面实作一下，如何在Rails中将uuid编码成base58格式。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>以一个project的model为例，该model含有字段：uuid，title，description</p>
+<p><code>project.rb</code>的文件内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:title</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  before_validation <span class="symbol">:generate_uuid</span>, <span class="symbol">:on</span> =&gt; <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">to_param</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= SecureRandom.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，uuid是由SecureRandom.uuid来生成的。</p>
+<p>我们定义一下用base58压缩uuid的method，为了能在所有model中都使用这个method，我们用module来包起这个method。具体如下：</p>
+<ul>
+<li><p>在lib目录下新建<code>my_base.rb</code>文件：</p>
+</li>
+<li><p>在<code>my_base.rb</code>中添加如下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyBase</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Base</span></span></span><br><span class="line">    ALPHABET = <span class="string">"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"</span>.chars</span><br><span class="line">    BASE = ALPHABET.size</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uuid_as_base58</span><span class="params">(uuid)</span></span></span><br><span class="line">      int_val = uuid.gsub(<span class="string">'-'</span>,<span class="string">''</span>).to_i(<span class="number">16</span>)</span><br><span class="line">      <span class="string">''</span>.tap <span class="keyword">do</span> <span class="params">|base58_val|</span></span><br><span class="line">        <span class="keyword">while</span> int_val &gt; <span class="number">0</span></span><br><span class="line">          int_val, mod = int_val.divmod(BASE)</span><br><span class="line">          base58_val.prepend ALPHABET[mod]</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyBase::Base</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>config/application.rb</code>文件中，加入如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">config.autoload_paths += Dir[&quot;#&#123;config.root&#125;/lib/**&quot;]</span><br></pre></td></tr></table></figure>
+<p>运行时，会自动加载lib下的文件。</p>
+</li>
+<li><p>修改<code>project.rb</code>的文件中有关uuid的赋值：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'my_base'</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= uuid_as_base58(SecureRandom.uuid)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建一个project看看，会发现已经变成了base58的编码格式</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fn5xh10wkvj30hz01f0sr.jpg" alt=""></p>
+</li>
+</ul>
+<p>大功告成！</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://en.wikipedia.org/wiki/Base58" target="_blank" rel="noopener">base 58</a></p>
+<p><a href="https://gist.github.com/jrunning/62cf199822a25ce441d1" target="_blank" rel="noopener">uuid to base58 in ruby</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/04/how-to-get-step-name-in-cucumber/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2163,151 +2354,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/06/about-music/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/06/about-music/" itemprop="url">
-                  关于听歌这件事
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-06T19:55:29+08:00">
-                2017-12-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>296 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>送君一掬温柔</p>
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="//music.163.com/outchain/player?type=2&id=28921691&auto=1&height=66"></iframe>
-
-<p>一直觉得音乐是个特别神奇的东西。</p>
-<p>无形无色，却能有着撩拨人心的力量。</p>
-<p>开心了，听歌助兴，不开心了，听歌释怀。</p>
-<p>疲惫时，一首歌，仿佛能治愈，能满血复活。</p>
-<p>晴朗的日子里，踩着单车，塞上耳机，哼歌吹哨，真真是享受。</p>
-<p>记得《偷影子的人》中，男主有个嗜好，每天早上都要来一段大提琴曲，而他最终找到了那个有着大提琴音色般笑声的克蕾尔，彼时她已经是一名大提琴家。</p>
-<p>也许耳朵才是抵达心灵的窗口。</p>
-<p>嗯，深情不过陪伴，温柔最是得人心。</p>
-<p>愿你在音符中寻觅到那份温暖与温柔。</p>
-<p>好了，不矫情了，听歌吧。</p>
-<p>PS：</p>
-<p>为什么要写这么一篇小短文？</p>
-<p>其实，我只是想试试如何在hexo里面添加音乐文件……</p>
-<p>事实证明，可以边看文章边听歌了……</p>
-<p>嗯，其实，还是一心一意听歌的好，好音乐值得去专注。</p>
-<hr>
-<p>参考：</p>
-<p><a href="http://www.jianshu.com/p/a52b68794a6b" target="_blank" rel="noopener">hexo创建个人博客（附加插入音乐、分享、评论、标签页、搜索）</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2357,7 +2403,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">171</span>
+                <span class="site-state-item-count">172</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2490,7 +2536,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    178.7k
+    179.2k
   </span>
 
 </div>

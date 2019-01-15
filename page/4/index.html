@@ -273,6 +273,189 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" itemprop="url">
+                  报错记录：Postgresql the database system is starting up
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-07T18:12:53+08:00">
+                2018-08-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>300 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>执行<code>rake db: migrate</code>时，中断，再次执行<code>rake db: migrate</code>时，报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">psql: could not connect to server: Connection refused</span><br><span class="line">	Is the server running on host &quot;localhost&quot; (::1) and accepting</span><br><span class="line">	TCP/IP connections on port 5432?</span><br></pre></td></tr></table></figure>
+<h4 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h4><p>重启posgresql：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew services restart postgresql</span><br></pre></td></tr></table></figure>
+<p>显示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Stopping `postgresql`... (might take a while)</span><br><span class="line">==&gt; Successfully stopped `postgresql` (label: homebrew.mxcl.postgresql)</span><br><span class="line">==&gt; Successfully started `postgresql` (label: homebrew.mxcl.postgresql)</span><br></pre></td></tr></table></figure>
+<p>再次运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">psql: could not connect to server: Connection refused</span><br><span class="line">	Is the server running on host &quot;localhost&quot; (::1) and accepting</span><br><span class="line">	TCP/IP connections on port 5432?</span><br></pre></td></tr></table></figure>
+<p>改成手动启动：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">postges -D /usr/local/var/postgres/</span><br></pre></td></tr></table></figure>
+<p>报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FATAL:  pre-existing shared memory block (key 5432001, ID 65536) is still in use</span><br><span class="line">HINT:  If you&apos;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.</span><br></pre></td></tr></table></figure>
+<p>切换到/usr/local/var/postgres 下，删除postmaster.pid 文件，然后重启：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">postgres -D /usr/local/var/postgres/</span><br></pre></td></tr></table></figure>
+<p>重启后，再次运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the database system is starting up</span><br></pre></td></tr></table></figure>
+<p>Google后，尝试修改了postgresql.conf文件，将hot_standby 设置为on，重启Postgresql，继续执行<code>rake db:migrate</code>, 依然报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the database system is starting up</span><br></pre></td></tr></table></figure>
+<p><strong>最后的解决方法：</strong></p>
+<p>简单粗暴：删除文件夹 /usr/local/var/postgres，卸载并重装PostgreSQL，重新导入数据。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/04/query-in-rails/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2016,224 +2199,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/08/deploy-with-capistrano-nginx-and-puma-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/07/08/deploy-with-capistrano-nginx-and-puma-on-rails/" itemprop="url">
-                  Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T21:35:10+08:00">
-                2018-07-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/08/deploy-with-capistrano-nginx-and-puma-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/07/08/deploy-with-capistrano-nginx-and-puma-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,319 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>部署前的前提条件：</p>
-<ul>
-<li>一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上</li>
-<li>租云服务器，安装Ubuntu 16.04的操作系统</li>
-</ul>
-<p>假定现在有一个rails project ，名为demo，本地运行正常。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg" alt=""></p>
-<p>以下操作均以demo这个rails项目为例。</p>
-<h4 id="添加用户"><a href="#添加用户" class="headerlink" title="添加用户"></a>添加用户</h4><p>添加用户deploy。</p>
-<p>用root权限登录后，终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser deploy</span><br></pre></td></tr></table></figure>
-<p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deploy ALL=(ALL:ALL) ALL</span><br></pre></td></tr></table></figure>
-<p>免密码登录：</p>
-<p>新用户登录，在当前目录下，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ssh</span><br><span class="line">touch ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>回到本地，把公钥复制出来，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat ~/ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
-<p> 回到服务器，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>把公钥放进去。</p>
-<p>修改权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 ~/.ssh</span><br><span class="line">chmod 644 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>退出后，重新登录，会发现不需要输入密码 了。</p>
-<h4 id="更新和安装Liunx套件"><a href="#更新和安装Liunx套件" class="headerlink" title="更新和安装Liunx套件"></a>更新和安装Liunx套件</h4><p>先更新系统， 再升级。</p>
-<p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure>
-<h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
-<h4 id="安装Ruby"><a href="#安装Ruby" class="headerlink" title="安装Ruby"></a>安装Ruby</h4><p>安装 RVM:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev</span><br><span class="line">gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB</span><br><span class="line">curl -sSL https://get.rvm.io | bash -s stable</span><br></pre></td></tr></table></figure>
-<p>成功时，会弹出如下信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Upgrade of RVM in /home/deploy/.rvm/ is complete.</span><br></pre></td></tr></table></figure>
-<p>安装ruby，这里选2.4.0：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">source ~/.rvm/scripts/rvm</span><br><span class="line">rvm requirements</span><br><span class="line">rvm install 2.4.0</span><br><span class="line">rvm use 2.4.0 --default</span><br></pre></td></tr></table></figure>
-<p>安装bundler：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem install bundler --no-ri --no-rdoc</span><br></pre></td></tr></table></figure>
-<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
-<p>执行 <code>mysql -u root -p</code> 进入 mysql console 后，输入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE demo CHARACTER SET utf8mb4;</span><br></pre></td></tr></table></figure>
-<p>这里demo记得换成你的数据库名称。</p>
-<p>运行后，会弹出Query OK的信息，exit，退出。</p>
-<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nginx</span><br><span class="line">sudo service nginx start</span><br></pre></td></tr></table></figure>
-<h4 id="安装Capistrano"><a href="#安装Capistrano" class="headerlink" title="安装Capistrano"></a>安装Capistrano</h4><p>本地 gemfile中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'mysql2'</span></span><br><span class="line">gem <span class="string">'puma'</span>, <span class="string">'~&gt; 3.11'</span></span><br><span class="line">group <span class="symbol">:development</span> <span class="keyword">do</span> </span><br><span class="line">  gem <span class="string">'capistrano'</span>,<span class="string">'3.11.0'</span></span><br><span class="line">  gem <span class="string">'capistrano-rvm'</span>, <span class="string">'0.1.2'</span></span><br><span class="line">  gem <span class="string">'capistrano-rails'</span>,<span class="string">'1.4.0'</span></span><br><span class="line">  gem <span class="string">'capistrano3-puma'</span>, <span class="string">'3.1.1'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>保存后，<code>bundle install</code>.</p>
-<p>创建 capfile：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec cap install</span><br></pre></td></tr></table></figure>
-<p>配置Capfile:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">"capistrano/rvm"</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/rails'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma/nginx'</span></span><br><span class="line">install_plugin Capistrano::Puma</span><br><span class="line">install_plugin Capistrano::Puma::Nginx</span><br></pre></td></tr></table></figure>
-<p>配置<code>config/deploy.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set <span class="symbol">:application</span>, <span class="string">"demo"</span>  <span class="comment">## demo 换成你的项目名</span></span><br><span class="line">set <span class="symbol">:repo_url</span>, <span class="string">"https://github.com/xxxxx/demo"</span> <span class="comment">## 这里写上项目代码的托管地址</span></span><br><span class="line">append <span class="symbol">:linked_dirs</span>, <span class="string">"log"</span>, <span class="string">"tmp/pids"</span>, <span class="string">"tmp/cache"</span>, <span class="string">"tmp/sockets"</span>, <span class="string">"public/system"</span>, <span class="string">"public/uploads"</span>, <span class="string">"vendor/bundle"</span></span><br><span class="line">append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/master.key"</span></span><br><span class="line"></span><br><span class="line">set <span class="symbol">:rvm_type</span>, <span class="symbol">:user</span></span><br><span class="line">set <span class="symbol">:rvm_ruby_version</span>, <span class="string">'2.4.0'</span></span><br></pre></td></tr></table></figure>
-<p>配置 <code>config/deploy/staging.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">server <span class="string">'106.15.182.207'</span>, <span class="symbol">user:</span> <span class="string">'deploy'</span>, <span class="symbol">roles:</span> <span class="string">%w&#123;app db web&#125;</span></span><br><span class="line">set <span class="symbol">:deploy_to</span>, <span class="string">"/home/deploy/demo/<span class="subst">#&#123;fetch(<span class="symbol">:rails_env</span>)&#125;</span>"</span></span><br><span class="line">set <span class="symbol">:branch</span>, <span class="symbol">:master</span></span><br><span class="line">set <span class="symbol">:stage</span>, <span class="symbol">:staging</span></span><br><span class="line">set <span class="symbol">:ssh_options</span>, &#123;</span><br><span class="line">    <span class="symbol">keys:</span> <span class="string">%w(/home/deploy/.ssh/authorized_keys)</span>,</span><br><span class="line">    <span class="symbol">auth_methods:</span> <span class="string">%w(publickey)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>这里的key，就是你放在远端服务器上的SSH公钥，也是放在远端代码仓库上的公钥。</p>
-<p>在远端服务器上创建<code>/home/deploy/demo/shared/config/database.yml</code>:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">staging:</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8</span><br><span class="line">  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) &#123; 5 &#125; %&gt;</span><br><span class="line">  username: root</span><br><span class="line">  password: password</span><br><span class="line">  socket: /var/run/mysqld/mysqld.sock</span><br><span class="line">  database:  deploy_demo</span><br></pre></td></tr></table></figure>
-<p>password换成你之前设置的root密码。</p>
-<p>创建 <code>/home/deploy/demo/shared/config/master.key</code> , 把本机的master key贴进去，这里master.key取代了之前的secrets。</p>
-<p>修改demo目录下所有文件的权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /home/deploy/demo</span><br><span class="line">chown -R deploy:deploy .</span><br></pre></td></tr></table></figure>
-<p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
-<p>回到本地执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy:check</span><br><span class="line">cap staging puma:config</span><br><span class="line">cap staging puma:nginx_config</span><br><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
-<p>如果运行：<code>cap staging puma:nginx_config</code>时报错，显示如下出错信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">00:00 puma:nginx_config</span><br><span class="line">      Uploading /tmp/nginx_demo_staging 100.0%</span><br><span class="line">      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging</span><br><span class="line">      01 sudo</span><br><span class="line">      01 :</span><br><span class="line">      01 no tty present and no askpass program specified</span><br></pre></td></tr></table></figure>
-<p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
-<p><code>cap staging puma:nginx_config</code>这一步 本身要做的就是添加了一个nginx的config文件，我们可以自己手动添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd etc/nginx/sites-available</span><br><span class="line">touch demo_staging</span><br></pre></td></tr></table></figure>
-<p>在demo_staging中，填入如下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">upstream puma_deploy_demo_staging &#123;</span><br><span class="line">  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">  listen 80;</span><br><span class="line">  server_name 106.15.182.207;</span><br><span class="line">  root /home/deploy/demo/current/public;</span><br><span class="line">  try_files $uri/index.html $uri @puma_demo_staging;</span><br><span class="line"></span><br><span class="line">  client_max_body_size 4G;</span><br><span class="line">  keepalive_timeout 10;</span><br><span class="line"></span><br><span class="line">  error_page 500 502 504 /500.html;</span><br><span class="line">  error_page 503 @503;</span><br><span class="line"></span><br><span class="line">  location @puma_deploy_demo_staging &#123;</span><br><span class="line">    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header Host $host;</span><br><span class="line">    proxy_redirect off;</span><br><span class="line">    proxy_set_header Upgrade $http_upgrade;</span><br><span class="line">    proxy_set_header Connection &quot;Upgrade&quot;;</span><br><span class="line">    proxy_set_header X-Forwarded-Proto http;</span><br><span class="line">    proxy_pass http://puma_demo_staging;</span><br><span class="line">    # limit_req zone=one;</span><br><span class="line">    access_log /home/deploy/demo/shared/log/nginx.access.log;</span><br><span class="line">    error_log /home/deploy/demo/shared/log/nginx.error.log;</span><br><span class="line">  &#125;</span><br><span class="line">location ^~ /assets/ &#123;</span><br><span class="line">    gzip_static on;</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location = /50x.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line">    location = /404.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location @503 &#123;</span><br><span class="line">    error_page 405 = /system/maintenance.html;</span><br><span class="line">    if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">      rewrite ^(.*)$ /system/maintenance.html break;</span><br><span class="line">    &#125;</span><br><span class="line">    rewrite ^(.*)$ /503.html break;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ )&#123;</span><br><span class="line">    return 405;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">    return 503;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>保存后，退出， 建立link：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging</span><br></pre></td></tr></table></figure>
-<p>继续执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
-<p>完成后，重启nginx:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
-<p>打开浏览器：</p>
-<p>  <img src="https://ws2.sinaimg.cn/large/006tNc79ly1fszddggcj1j30cw05fmx9.jpg" alt=""></p>
-<p>OK！！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/deploying-a-rails-app-on-ubuntu-14-04-with-capistrano-nginx-and-puma" target="_blank" rel="noopener">Deploying a Rails App on Ubuntu 14.04 with Capistrano, Nginx, and Puma</a></p>
-<p><a href="https://gist.github.com/thanhtoan1196/3018539d62c55c77cc62942472981e16" target="_blank" rel="noopener">Deploy a Rails App with Puma and Nginx on Ubuntu 16.04</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2283,7 +2248,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">171</span>
+                <span class="site-state-item-count">172</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2416,7 +2381,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    178.7k
+    179.2k
   </span>
 
 </div>
