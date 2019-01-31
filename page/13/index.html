@@ -273,6 +273,200 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/" itemprop="url">
+                  cucumber does not go to afterstep when the step failed
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-10T20:41:54+08:00">
+                2018-01-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Cucumber/" itemprop="url" rel="index">
+                    <span itemprop="name">Cucumber</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>744 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>cucumber的AfterStep hook很好用，但是当一个step failed时，Cucumber这个黄瓜就不执行AfterStep了，而如果你需要在每一步后都截图或者每一步都输出日志信息，不管这一步的执行结果是passed还是failed， 那就麻烦了。</p>
+<p>不过问题总是有方法可以解决的，我们来看个例子。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Attention：本解答基于cucumber 3.0.0 +， 因为用到的Test Step Finished Event基于3.0.0版本 + 。</p>
+<p><strong>给定场景：</strong></p>
+<blockquote>
+<p> 每个step执行后都进行全屏截图操作 【No matter the result of the step is passed or failed or whatever】</p>
+</blockquote>
+<p><strong>前提：</strong></p>
+<blockquote>
+<ul>
+<li>cucumber 3.0.0 +</li>
+<li>假定你已经定义好了截取全屏的函数full_page_screenshot. 【不知道怎么定义？戳这里找找感觉：<a href="https://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">capture full page screenshot with capybara</a>】</li>
+</ul>
+</blockquote>
+<p><strong>解决思路：</strong></p>
+<p>在Cucumber中，AfterStep被当作是一个step，所以，如果你的step是failed，后续的step就会skipped，也就是说，AfterStep必然会skipped【弄清楚这一点很重要，就不会白白浪费时间在AfterStep上】，这样如果想要在step failed的情况下，继续运行该scenario后续的step，只能弃用AfterStep，改用<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby/Cucumber/Events/TestStepFinished" target="_blank" rel="noopener">Test Step Finished Event</a>。</p>
+<p><strong>具体步骤：</strong></p>
+<p>在<code>features/support</code>下，新建文件<code>event.rb</code>,  放入以下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">AfterConfiguration <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.on_event <span class="symbol">:test_step_finished</span> <span class="keyword">do</span> <span class="params">|event|</span></span><br><span class="line">    step = event.test_step.text</span><br><span class="line">    <span class="keyword">if</span> step != <span class="string">"AfterStep hook"</span> &amp;&amp; step != <span class="string">"Before hook"</span> &amp;&amp; step != <span class="string">"After hook"</span></span><br><span class="line">      file = full_page_screenshot</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，每一步是一个event，所以运行的时候，会按照Before hook ,step,  AfterStep hook, After hook来走，鉴于截图只是针对每个step，所以这里筛选掉了其他三类event。</p>
+<p>此处的 step取值是<code>event.test_step.text</code>， 这样获取的就是每一步的name，而<code>event.test_step</code>本身是一个step对象，输出的结果不是step的name。</p>
+<p>详情可以参考它的documentation<a href="https://app.cucumber.pro/projects/cucumber-ruby/documents/branch/master/features/docs/events/test_step_finished_event.feature" target="_blank" rel="noopener">Test Step Finished Event</a>，也可以用类似如下的代码在运行时输出其他信息：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fnbizyhm4yj30iu045wf2.jpg" alt=""></p>
+<p>这里多提一个：如果<strong>想要获取该step的执行结果</strong>怎么办？</p>
+<p>你一定会想到用<code>event.result</code>， 没错，但是它只输出两个值：✓ ，  ✗</p>
+<p>这就很不友好了，每个step运行后，其实有7种结果：</p>
+<p>[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]</p>
+<p>当<code>event.result</code>是✓ ，它是passed，但是当<code>event.result</code>是✗ ，无法判断到底是failed，还是pending，还是skipped……</p>
+<p>这里，你会想到 <strong>In Ruby,  Everything is an object except block</strong> .</p>
+<p>调用methods获取<code>event.result</code>的所有methods，然后找到<code>to_sym</code>。</p>
+<p>使用<code>event.result.to_sym</code> 得到的是符号类型的值， 比如:passed,  想要换成字符， 可以用<code>event.result.to_sym.to_s</code>，  按需择取。</p>
+<p>OK，大功告成！此外，你也可以自定义每个event中需要添加的操作，比如截图后上传图片，输出每一步的日志信息，创建实例等等。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://github.com/cucumber/cucumber-ruby/issues/1026" target="_blank" rel="noopener">Cucumber does not go to AfterStep if the step is failed!</a></p>
+<p>P.S.<br>AfterTestStep这个event的<a href="https://app.cucumber.pro/projects/cucumber-ruby/documents/branch/master/features/docs/events/test_step_finished_event.feature" target="_blank" rel="noopener">documents</a>在17年2月份的时候发出的，估计用的人不多，至少在stack overflow上是没看到，但是用起来没啥问题，感谢 Matt Wynne， 这个event真的很好用。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2097,208 +2291,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/17/use-simple-navigation-in-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/17/use-simple-navigation-in-rails/" itemprop="url">
-                  在rails中使用simple navigation
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-17T17:31:24+08:00">
-                2017-12-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/17/use-simple-navigation-in-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/17/use-simple-navigation-in-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>497 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple navigation</a>是一个ruby库，用来生成navigation的，它的优势是可以定制自己的导航菜单，特别是当你有多个菜单或者你的菜单相对比较复杂的时候。</p>
-<p>可是官方只是给出了一个<a href="http://simple-navigation-demo.codeplant.ch/" target="_blank" rel="noopener">online demo</a>，并没有给到具体的install  和 usage，这让初次接触simple navigation的小白有些被动，Google了一些文章，实做了一下，知道怎么玩啦，记录下以备用。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>安装gem</p>
-<p>在gemfile文件中，添加如下：【建议把bootstrap也安装了】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'bootstrap-sass'</span></span><br><span class="line">gem <span class="string">'simple-navigation'</span></span><br><span class="line">gem <span class="string">'simple-navigation-bootstrap'</span></span><br></pre></td></tr></table></figure>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle install</span><br></pre></td></tr></table></figure>
-<p>重启服务器：<code>rails s</code></p>
-<p>将<code>application.css</code>文件更名为<code>application.scss</code>，终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss</span><br></pre></td></tr></table></figure>
-<p>在<code>application.scss</code>文件中，添加如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@import &quot;bootstrap-sprockets&quot;;</span><br><span class="line">@import &quot;bootstrap&quot;;</span><br></pre></td></tr></table></figure>
-<p>生成menu 的configuration文件<code>navigation.rb</code>， 终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec rails g navigation_config</span><br></pre></td></tr></table></figure>
-<p>此时，config文件下会生成一个<code>navigation.rb</code>文件，长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fmjtnki6lbj30o007tmyr.jpg" alt=""></p>
-<p>在文件的下方，已经列出了一些用法，包括如何添加有sub navigation的item，添加指定条件的item，比如登陆，是否为管理员等等。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjtwnw2dzj30nv0gb42w.jpg" alt=""></p>
-</li>
-</ul>
-<ul>
-<li><p>设置menu</p>
-<p>我们来改改，定制一下，比如下面这样：【当然，请确保你写的path是有效的……】</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvdavg84j30le04n74t.jpg" alt=""></p>
-</li>
-<li><p>展示menu</p>
-<p>在需要展示的页面中，添加:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:expand_all =&gt; true)%&gt;</span><br></pre></td></tr></table></figure>
-<p>这里，expand_all 为true是指全部铺开，即子菜单未被激活也是展开的，效果类似这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fmjve7qr4oj305z04it8l.jpg" alt=""></p>
-<p>这里可以用参数level来控制层级的显示，上面菜单 + 子菜单，只有两级，所以用</p>
-<p><code>render_navigation(:level =&gt; 2)</code>也是可以的。如果改成：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:level =&gt; 1)%&gt;</span><br></pre></td></tr></table></figure>
-<p>则显示一级菜单，像这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvz5s8kej3063027q2r.jpg" alt=""></p>
-<p>另：</p>
-<p>看到GitHub 中提到使用<code>&lt;%= render_navigation(:expand_all =&gt; false)%&gt;</code> 来让未被激活的子菜单隐藏，没有设置的情况下，:expand_all是默认为false的, 我试了一下，没有成功，所有菜单还是全部铺开，有些奇怪。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple-navigation</a></p>
-<p><a href="https://github.com/pdf/simple-navigation-bootstrap" target="_blank" rel="noopener">simple-navigation-bootstrap</a></p>
-<p><a href="http://www.xoen.org/2012/05/bootstrap-menus-in-rails/" target="_blank" rel="noopener">bootstrap menu in rails</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2348,7 +2340,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">173</span>
+                <span class="site-state-item-count">174</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2481,7 +2473,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    179.6k
+    180.3k
   </span>
 
 </div>

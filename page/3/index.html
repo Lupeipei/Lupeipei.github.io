@@ -273,6 +273,176 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/09/04/migrate-on-sti/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/09/04/migrate-on-sti/" itemprop="url">
+                  STI数据迁移之self.inheritance_column
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-04T07:37:11+08:00">
+                2018-09-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/09/04/migrate-on-sti/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/09/04/migrate-on-sti/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>254 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>数据迁移中遇到的一个问题，看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### app/models/company.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  ……</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### app/models/firm.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Firm</span> &lt; Company</span></span><br><span class="line">  ……</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>在company中，有一个字段type，按照惯例，会开启单表继承STI功能，Firm不再只是Company的一个普通的子类subclass，它与Company共享着同一个表单。</p>
+<p>这时，需要给company添加了一个attribute，比如 creator，同时迁移数据，firm中的creator内容，需要单独调用form中的方法get_creator：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorToCompanies</span> &lt; ActiveRecord::Migration[5.2]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:companies</span>, <span class="symbol">:creator</span>, <span class="symbol">:string</span></span><br><span class="line"></span><br><span class="line">    Comany.where(<span class="symbol">type:</span> <span class="string">"Firm"</span>).find_each <span class="keyword">do</span> <span class="params">|firm|</span></span><br><span class="line">      firm.update(<span class="symbol">creator:</span> firm.get_creator)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>执行时，终端报错，显示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Invalid single-table inheritance type: Firm is not a subclass of AddCreatorToCompanies::Company.</span><br></pre></td></tr></table></figure>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在Company中添加  <strong>self.inheritance_column</strong>，触发单表继承STI。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorToComanies</span> &lt; ActiveRecord::Migration[5.2]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base</span></span><br><span class="line">    <span class="keyword">self</span>.inheritance_column = <span class="string">"_type"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:companies</span>, <span class="symbol">:creator</span>, <span class="symbol">:string</span></span><br><span class="line">    ……</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>再次执行即可。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://api.rubyonrails.org/classes/ActiveRecord/Inheritance.html" target="_blank" rel="noopener">Single table inheritance</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/09/01/ideas-sharing-003/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2159,198 +2329,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/11/explain-true-function-in-load/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/08/11/explain-true-function-in-load/" itemprop="url">
-                  有关load中的参数true
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-11T22:22:02+08:00">
-                2018-08-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Ruby/" itemprop="url" rel="index">
-                    <span itemprop="name">Ruby</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/08/11/explain-true-function-in-load/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/08/11/explain-true-function-in-load/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,009 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Ruby中的load method用来加载文件，也就是将另一个ruby文件中的代码加载进来了。</p>
-<p>《Ruby元编程》中提到，使用load时，可能会出现<strong>常量</strong>污染当前程序的命名空间的问题，添加了true这个参数后，Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的<strong>所有常量</strong>，从而避免污染的问题，但是书中并没有给出例子来详细说明。</p>
-<p>来看两个例子感受下：</p>
-<p>同一个目录下，存在两个文件，a.rb, b.rb，a中加载了b.rb文件。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="comment">## 只定义了一个普通的常量Y</span></span><br><span class="line">Y = <span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
-<p>a.rb中加载b.rb</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hi"</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; warning: already initialized constant Y</span></span><br></pre></td></tr></table></figure>
-<p>此时，执行a.rb，会报错，显示：warning: already initialized constant Y</p>
-<p>也就是加载进来的常量Y与a.rb中的常量Y重了，系统报错显示已经初始化了Y。</p>
-<p>如果添加了true，则输出”hi”。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hi"</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; hi</span></span><br></pre></td></tr></table></figure>
-<p>这里Y是一个常规的常量，ruby中类名，模块名也是常量，如果加载同名的类／模块会出现什么情况？</p>
-<p>修改下b.rb文件：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hi</span></span></span><br><span class="line">		p <span class="string">"method hi in b.rb"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>修改下a.rb文件：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">"hello"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; Mymodule is not a class</span></span><br></pre></td></tr></table></figure>
-<p>可以看到，加载后，执行a.rb时，报错，显示Mymodule is not a class，因为此时加载进来了一个同名的Mymodule，它是一个module，而a.rb文件中，定义了一个同名的Mymodule类，这个类其实并没有创建成功，这里稍微提一下，执行a.rb时，报错不是发生在执行Mymodule.new.hello时，而是在定义Mymodule这个类的地方报错。</p>
-<p>如果添加上true，就正常了。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">"hello"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
-<p>这里，你可能会疑惑，添加了true之后，原本来自b.rb中那个Y，module Mymodule去了哪里？书中提到，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>，也就是等同于他们根本就没有加载进来了？怎么知道它们真的没有加载进来？</p>
-<p>可以通过<strong>Module的类方法constants</strong>来判断，该方法返回当前顶层程序中的所有常量。</p>
-<p>修改下b.rb ，改回原来的样子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
-<p>修改下 a.rb:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line"><span class="comment"># 未加载b.rb</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
-<p>加载b.rb，无true：<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 118</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure></p>
-<p>此时<strong>Y</strong>加载进来了，常量总数加1。</p>
-<p>加载b.rb，有true：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
-<p>输出结果与未加载b.rb完全一致。</p>
-<p>也就是书中说的那样，添加true后，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>。</p>
-<p>等同于<strong>load添加true后，所有的常量都没有加载进来</strong>。当然这里的常量，包括类名，模块名。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">Ruby元编程(第2版)</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2400,7 +2378,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">173</span>
+                <span class="site-state-item-count">174</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2533,7 +2511,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    179.6k
+    180.3k
   </span>
 
 </div>
