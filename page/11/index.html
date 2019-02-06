@@ -273,6 +273,202 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/10/using-log4r-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/10/using-log4r-on-rails/" itemprop="url">
+                  Rails中使用log4r
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-10T07:32:10+08:00">
+                2018-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/10/using-log4r-on-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/10/using-log4r-on-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>655 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>日志的重要性自不用说，Rails中log的存放地址位于log目录下，有develogment.log， production.log等。开发的时候，我通常会单独开个terminal窗口，跑rails s， 出问题了，就在那个窗口看日志。现在看来，这还是挺低级的。</p>
+<p>近来看一些前辈写的Rails相关知识，有推荐<a href="https://github.com/colbygk/log4r" target="_blank" rel="noopener">log4r</a>，尝试了下， 还不错。日志按照日期分开存放，也很好查找。</p>
+<p>除了rails，其他的ruby项目也可以用log4r（log for ruby），这里只说一下如何在Rails中使用log4r。</p>
+<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>先吐槽下，看了不少轮子，没见过<a href="https://github.com/colbygk/log4r" target="_blank" rel="noopener">log4r</a>这种的，没有常规的installation，usage，Wiki里面也没有说明。所有的信息，需要自己去doc里面看manual，index， 手法别样，上图感受下：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fp5na0nzx8j30is07pgmm.jpg" alt=""></p>
+<p>好，不废话。看看如何在rails用它。</p>
+<p>四步走。</p>
+<ul>
+<li><p>在gemfile中添加</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gemfile <span class="string">'log4r'</span></span><br></pre></td></tr></table></figure>
+<p>终端bundle, 重启服务器。</p>
+</li>
+<li><p>修改<code>config/application.rb</code></p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rails/all'</span></span><br><span class="line"><span class="comment"># add these line for log4r</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r/yamlconfigurator'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r/outputter/datefileoutputter'</span></span><br><span class="line"></span><br><span class="line">Bundler.<span class="keyword">require</span>(<span class="symbol">:default</span>, Rails.env) <span class="keyword">if</span> <span class="keyword">defined</span>?(Bundler)</span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">my_app</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Application</span> &lt; Rails::Application</span></span><br><span class="line">    <span class="comment">#...</span></span><br><span class="line">    <span class="comment"># assign log4r's logger as rails' logger.</span></span><br><span class="line">    <span class="keyword">include</span> Log4r</span><br><span class="line">    log4r_config= YAML.load_file(File.join(File.dirname(__FILE_<span class="number">_</span>),<span class="string">"log4r.yml"</span>))</span><br><span class="line">    YamlConfigurator.decode_yaml( log4r_config[<span class="string">'log4r_config'</span>] )</span><br><span class="line">    config.logger = Log4r::Logger[Rails.env]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新增配置文件<code>config/log4r.yml</code>：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">log4r_config:</span></span><br><span class="line">  <span class="comment"># define all loggers ...</span></span><br><span class="line"><span class="attr">  loggers:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">name</span>      <span class="string">:</span> <span class="string">production</span></span><br><span class="line">      <span class="string">level</span>     <span class="string">:</span> <span class="string">WARN</span></span><br><span class="line">      <span class="string">trace</span>     <span class="string">:</span> <span class="string">'false'</span></span><br><span class="line">      <span class="string">outputters</span> <span class="string">:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">datefile</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">name</span>      <span class="string">:</span> <span class="string">development</span></span><br><span class="line">      <span class="string">level</span>     <span class="string">:</span> <span class="string">DEBUG</span></span><br><span class="line">      <span class="string">trace</span>     <span class="string">:</span> <span class="string">'true'</span></span><br><span class="line">      <span class="string">outputters</span> <span class="string">:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">datefile</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># define all outputters (incl. formatters)</span></span><br><span class="line"><span class="attr">  outputters:</span></span><br><span class="line"><span class="attr">  - type:</span> <span class="string">DateFileOutputte</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">datefile</span></span><br><span class="line"><span class="attr">    dirname:</span> <span class="string">"log"</span></span><br><span class="line"><span class="attr">    filename:</span> <span class="string">"my_app.log"</span> <span class="comment"># notice the file extension is needed!</span></span><br><span class="line"><span class="attr">    formatter:</span></span><br><span class="line"><span class="attr">      date_pattern:</span> <span class="string">'%H:%M:%S'</span></span><br><span class="line">      <span class="string">pattern</span>     <span class="string">:</span> <span class="string">'%d %l: %m '</span></span><br><span class="line">      <span class="string">type</span>        <span class="string">:</span> <span class="string">PatternFormatter</span></span><br></pre></td></tr></table></figure>
+<p>这时，如果重启rails，会发现报错:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">undefined method `formatter&apos; for #&lt;Log4r::Logger:0x007fd97a78e780&gt; (NoMethodError)</span><br></pre></td></tr></table></figure>
+<p>我当时也是懵逼，不知道怎么解决，后来Google到了解决方法。<strong>对于Rail4.0+ ，需要添加文件，声明formatter这个method</strong>。</p>
+</li>
+<li><p>新增文件<code>config/initializers/log4r_patch_for_rails4.rb</code>:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Log4r::Logger</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">formatter</span><span class="params">()</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>配置完成！重启下服务器，然后你会发现不管做了什么操作，terminal终端什么也没有输出，一直保持如下内容：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fp5nyadi35j30ig065aaz.jpg" alt=""></p>
+<p>而log文件夹下会出现按照日期分开的日志文件，类似：my_log_2018-03-08.log， my_log_2018-03-09.log</p>
+<p>日志文件内容类似这样：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fp5o42hotyj308z023aaa.jpg" alt=""></p>
+<p>因为outputters选择了DateFileOutputte，相比之前在rails s窗口查看，多了时间和logger类型。</p>
+<p>具体的输出格式也可以在<code>config/log4r.yml</code>进行更换，log4r的GitHub库列出来所有的格式：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fp5o82pf20j30a40a8q3q.jpg" alt=""></p>
+<p>OK，大功告成！！</p>
+<p>另：建了个gist，上述提到的log4r的配置文件代码，可见<a href="https://gist.github.com/Lupeipei/7297b1a784e7bb4da39eeb7d26c8d834" target="_blank" rel="noopener">using log4r on rails</a></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://web.siwei.me/web_components/log4r.html" target="_blank" rel="noopener">日志：log4r</a></p>
+<p><a href="https://www.ruby-forum.com/topic/61764" target="_blank" rel="noopener">using log4r and rails</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/08/rendering-layout-for-special-action/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1946,163 +2142,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/10/notes-of-waiting-for-godot/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/10/notes-of-waiting-for-godot/" itemprop="url">
-                  读《等待戈多》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-10T09:39:33+08:00">
-                2018-02-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,086 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>读的是施咸荣翻译的版本，感觉译得带点京片的味儿， 让我想起老舍《茶馆》中人物的对白。</p>
-<p>剧本很短，两幕，出场五人：戈戈，狄狄，幸运儿，波卓，送口信的小孩。情节也很简单，黄昏时分，戈戈和狄狄这两个流浪汉在一棵树下等待戈多，中间他们还商量着通过上吊来打发漫长的等待，后来遇到了波卓和他的奴隶幸运儿，四人，或者更准确地说是三人，一直有一句没一句地说着话， 没有任何重点，幸运儿只在被他们三个教唆着思考的时候，才开口吐出了一串串话，像是无序蹦出来的字眼，中间波卓还伪文艺了一把，然后波卓带着幸运儿离开，最后小孩过来告诉两个流浪汉，戈多今天不会来了，明天再来，两个流浪汉也各自回去了，这是第一幕。后一幕，人物不变，只是波卓瞎了，幸运儿哑了，他们摔倒了，被扶起后又离开了，小孩来了，同样的，告诉他们戈多今天不会来了，明天再来，两个流浪汉又开始商量着上吊了，嗯，没有绳子，裤带被拉扯断了，得，各自回吧，明个再来。</p>
-<p>整个看完，除偶有些句子会让人发笑，整个的氛围让人觉得很是沉闷，就如同他们自己所说的那样，我们总得做点什么来打发时间，至少不能那么的无聊？脱靴子，试靴子，脱帽子，换帽子，唱歌，蹦跳，吃萝卜，上吊，摔倒，起来，来回踱步……</p>
-<p>整个剧本无法用常规的逻辑去理解，为什么仅仅过了一天，波卓就瞎了？而且虚弱的站不起来需要人搀扶？幸运儿为什么成了哑巴？昨天还在那里被命令着思考说话的人，第二天竟然不能开口了，是在暗示着唯一一个思考的人都不能表达他的思考了吗？戈戈总是间歇性失忆，可又对某些事情记得格外清楚，还有为什么昨天来的小孩竟然已经不认识他们了？好吧，这是荒诞剧。</p>
-<p>看完不得不去看了下作者的简介，窃以为这样的剧本，应该多半与其人生经历有关。果然，贝克特本人长期过着颠沛流离的流浪和逃亡生活，还曾有过在街头散步时，被陌生人用刀刺穿肺部的经历，这样的遇刺经历不得不说是挺荒诞。</p>
-<p>大部分人看完这本书，应该会猜测作者想要表达的是什么，戈多代表着什么呢？希望，命运，还是一个能改写他们人生的契机？文中多次提到戈多来了，他们就得救了。戈多更多的算是他们的一个念想吧，也许他们在等待着改变，改变这无聊的日日消遣，打破这没事可做的状态，可我又暗暗觉得他们既渴望改变又害怕着改变。他们总是说着要怎样怎样，但是他们就是不动，与其被动等待，为什么不主动出击呢？</p>
-<p>《东邪西毒》里，几乎身无分文的孤女，找到欧阳锋，希望可以雇到杀手报仇，固执的她每日都来，但一直没人愿意帮她，她在等，等那个愿意出手的人，最终她等到了洪七，也许看似渺茫的等待也会有所收获。</p>
-<p>“每个人都会为一样东西坚持着，其他人看会觉得是浪费时间，但是她却觉得很重要。”</p>
-<p>换个角度，把戈戈和狄狄的这种等待看着是一种傻愣似的坚持，感觉美好多了。</p>
-<p>如果戈多真的来赴约了，这两个流浪汉应该很开心吧？或者这二位会琢磨着找个地儿狠狠地把戈多揍一顿，因为他老是放他们鸽子，然后再教唆着让戈多回去，他们要继续等待？额，有点太胡扯了。</p>
-<p>人生苦短，愿所等有所获。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2152,7 +2191,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">175</span>
+                <span class="site-state-item-count">176</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2285,7 +2324,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    181.4k
+    181.9k
   </span>
 
 </div>
