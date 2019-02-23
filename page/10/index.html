@@ -273,6 +273,234 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/" itemprop="url">
+                  读《Ruby元编程》之eval和hooks
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-30T19:08:14+08:00">
+                2018-03-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,587 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。</p>
+<h4 id="从需求说起"><a href="#从需求说起" class="headerlink" title="从需求说起"></a>从需求说起</h4><p>本章开始用一个boss提出的问题作为引子，我觉得这个例子很好。简述下问题：</p>
+<p>创建一个名为attr_checked的类宏，这个类宏要满足两个条件：</p>
+<ul>
+<li>接受属性名和代码块，代码块用于验证属性值的有效性</li>
+<li>只有当类包含某个模块，比如checkedAttributes时，才可以使用attr_checked</li>
+</ul>
+<p>解决思路可以转化成：</p>
+<ul>
+<li>如何定义一个类宏方法？【先用eval定义一个内核方法，然后再改造成类宏】</li>
+<li>如何给一个类宏方法添加代码块？【method添加&amp;block参数即可】</li>
+<li>定义模块checkedAttributes，通过钩子方法为指定的类添加attr_checked</li>
+</ul>
+<h4 id="认识下eval"><a href="#认识下eval" class="headerlink" title="认识下eval"></a>认识下eval</h4><p>定义自己的类宏方法前，先来认识下Kernel#eval。</p>
+<p>eval是内核方法，参数是一段ruby代码文本。相比instance_eval， class_eval，<strong>它只能执行代码字符串</strong>。那instance_eval， class_eval是否能执行代码字符串？可以。</p>
+<p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">my_array = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]</span><br><span class="line">my_array.instance_eval <span class="string">"self.reduce(&amp;:+)"</span> <span class="comment">#= &gt; 6</span></span><br><span class="line">eval(<span class="string">"my_array.inject &#123;|sum, x| sum + x&#125;"</span>) <span class="comment">#= &gt; 6</span></span><br></pre></td></tr></table></figure>
+<p>这类代码字符串可以携带一个binding对象，然后在该对象的作用域中执行代码。</p>
+<ul>
+<li><p>eval与binding</p>
+<p>Binding是一个用对象表示的作用域，可以通过Kernel#binding 来创建。ruby 还提供了TOPLEVEL_BINDING的预定义常量，表示顶级作用域的Binding对象。</p>
+<p>看代码理解下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    @x = <span class="number">1</span></span><br><span class="line">    binding</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">obj = MyClass.new.my_method</span><br><span class="line">eval(<span class="string">"@x"</span>,obj) <span class="comment">#= &gt; 1</span></span><br><span class="line">eval(<span class="string">"self"</span>, TOPLEVEL_BINDING) <span class="comment">#= &gt; main</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>eval的麻烦</p>
+<p>最大的问题是安全性，因为执行的是一段字符串，ruby是不会对字符串进行语法检查的，容易引发代码注入攻击。</p>
+<p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">explore_array</span><span class="params">(method)</span></span></span><br><span class="line">  code = <span class="string">"['a','b','c'].<span class="subst">#&#123;method&#125;</span>"</span></span><br><span class="line">  eval code</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">explore_array(<span class="string">"include?('a')"</span>) <span class="comment">#= &gt; true</span></span><br><span class="line">explore_array(<span class="string">"size"</span>) <span class="comment">#= &gt; 3</span></span><br><span class="line">explore_array(<span class="string">"object_id; Dir.glob('*')"</span>) <span class="comment">#= &gt; 列出了该文件所在目录下的所有文件</span></span><br></pre></td></tr></table></figure>
+<p>这里，运行类似<code>explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;)</code>这样的恶意代码可能会带来意想不到的后果。所以，能用代码块就用代码块。</p>
+<p>如何防止代码注入攻击？</p>
+<ul>
+<li><p>解析所有的代码字符串，不现实</p>
+</li>
+<li><p>改用动态方法和动态派发来替换eval</p>
+<p>比如上面的例子，explore_array可以这样写：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">explore_array</span><span class="params">(method, *arguments)</span></span></span><br><span class="line">  [<span class="string">'a'</span>,<span class="string">'b'</span>,<span class="string">'c'</span>].send(method, *arguments)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">explore_array(<span class="symbol">:include?</span>, <span class="string">'a'</span>) <span class="comment">#= &gt; true</span></span><br><span class="line">explore_array(<span class="symbol">:size</span>) <span class="comment">#= &gt; 3</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>污染对象和安全级别</p>
+<p>针对eval存在的安全问题，可以采用一些使它变得安全的方法。</p>
+<p>Ruby会自动把不安全的对象标记为污染对象，你可以通过给$SAFE赋值（[0,1, 2,3]）来设置安全级别，禁止某些潜在的危险操作，其中0最低，3最高。</p>
+<p>通过使用安全级别，可以为eval方法创造了一个可控的环境，像这样的环境称之为<a href="https://en.wikipedia.org/wiki/Sandbox_(software_development" target="_blank" rel="noopener">沙盒</a>。</p>
+</li>
+</ul>
+<h4 id="用eval来定义add-checked-attr"><a href="#用eval来定义add-checked-attr" class="headerlink" title="用eval来定义add_checked_attr"></a>用eval来定义add_checked_attr</h4><p>「其实，这里我并不是很理解，为什么要调用eval来定义这个method，然后又去掉它？为什么不直接用class_eval的方式来定义？难道这样绕一圈，仅仅是为了向读者介绍eval？」</p>
+<p>不吐糟，直接看解答：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_checked_attr</span><span class="params">(klass, attr)</span></span></span><br><span class="line">  eval <span class="string">"</span></span><br><span class="line"><span class="string">  class <span class="subst">#&#123;klass&#125;</span></span></span><br><span class="line"><span class="string">    def <span class="subst">#&#123;attr&#125;</span>=(value)</span></span><br><span class="line"><span class="string">      raise 'Invalid attribute' unless value</span></span><br><span class="line"><span class="string">      @<span class="subst">#&#123;attr&#125;</span> = value</span></span><br><span class="line"><span class="string">    end</span></span><br><span class="line"><span class="string">    def <span class="subst">#&#123;attr&#125;</span></span></span><br><span class="line"><span class="string">      @<span class="subst">#&#123;attr&#125;</span></span></span><br><span class="line"><span class="string">    end</span></span><br><span class="line"><span class="string">  end</span></span><br><span class="line"><span class="string">  "</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h4 id="去掉eval，加上block"><a href="#去掉eval，加上block" class="headerlink" title="去掉eval，加上block"></a>去掉eval，加上block</h4><p>鉴于eval的问题，改用class_eval来打开类，同时给方法添加一个block</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_checked_attr</span><span class="params">(klass, attr, &amp;validation)</span></span></span><br><span class="line">  klass.class_eval <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    define_method <span class="string">"<span class="subst">#&#123;attr&#125;</span>="</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">      raise <span class="string">'Invalid attribute'</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">      instance_variable_set(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>, value)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    define_method attr <span class="keyword">do</span></span><br><span class="line">      instance_variable_get(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h4 id="改造成类宏"><a href="#改造成类宏" class="headerlink" title="改造成类宏"></a>改造成类宏</h4><p>为了让add_checked_attr对所有类都可用，可以将它定义在class中，另修改方法名为attr_checked，去掉类参数。</p>
+<p>解答如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Class</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">attr_checked</span><span class="params">(attr, &amp;validation)</span></span></span><br><span class="line">    define_method <span class="string">"<span class="subst">#&#123;attr&#125;</span>="</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">      raise <span class="string">'Invalid attribute'</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">      instance_variable_set(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>, value)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    define_method attr <span class="keyword">do</span></span><br><span class="line">      instance_variable_get(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>最后请上我们的hooks。</p>
+<h4 id="钩子方法"><a href="#钩子方法" class="headerlink" title="钩子方法"></a>钩子方法</h4><p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">included</span><span class="params">(othermod)</span></span></span><br><span class="line">    puts <span class="string">"M was included into <span class="subst">#&#123;othermod&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="comment">#= &gt; M was included into C</span></span><br></pre></td></tr></table></figure>
+<p>Module#included在一个module被include时，被自动调用，这种方法称之为钩子方法，因为<strong>它们像钩子一样，钩住一个特定的事件</strong>。类似的方法还有Module#method_added, Module#extend_object等。</p>
+<p>想要捕获单件方法的钩子事件，需要使用BasicObject的singleton_xxx方法，比如singleton_method_added。</p>
+<p>针对上面的例子，可以覆写include方法得到一样的效果：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span>;</span><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">include</span><span class="params">(*modules)</span></span></span><br><span class="line">    puts <span class="string">"<span class="subst">#&#123;modules&#125;</span> was included into C"</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="comment">#= &gt; [M] was included into C</span></span><br></pre></td></tr></table></figure>
+<p>注意这里覆写include中，最后<strong>调用了super</strong>，不然这个module是不会被include的。这种通过覆写添加额外功能的效果，也可以通过环绕别名的方式实现。</p>
+<p>包含并扩展类的方式就用到了钩子，看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">included</span><span class="params">(klass)</span></span></span><br><span class="line">    klass.extend ClassMethods</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">ClassMethods</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">"it could be a class method"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">D.my_method <span class="comment">#= &gt; it could be a class method</span></span><br></pre></td></tr></table></figure>
+<p>类D包含了模块M，调用了M的钩子方法:included， 这个钩子方法接着用module ClassMethods扩展了类D，使得module ClassMethods的my_method 成为了类D的类方法。</p>
+<p>Rails中ActiveSupport有一个module Concern，就封装了包含并扩展的技巧。</p>
+<p>使用这种技巧，完成最后一步。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">CheckedAttributes</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">included</span><span class="params">(base)</span></span></span><br><span class="line">    base.extend ClassMethods</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">ClassMethods</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">attr_checked</span><span class="params">(attr, &amp;validation)</span></span></span><br><span class="line">      define_method <span class="string">"<span class="subst">#&#123;attr&#125;</span>="</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">        raise <span class="string">'Invalid attribute'</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">        instance_variable_set(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>, value)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      define_method attr <span class="keyword">do</span></span><br><span class="line">        instance_variable_get(<span class="string">"@<span class="subst">#&#123;attr&#125;</span>"</span>)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>OK ！</p>
+<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>整本书到这里，基本算是走完了大半了，后面第二部分是有关rails中的元编程，篇幅就相对而言少了些，作者挑了几个板块说一下。我的感觉是，如果前面的六章理解的七七八八了，可以看一些gem的源代码，有利于加深理解。你会在其中发现很多元编程的身影。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/29/ruby-metaprogramming-part4-class-defination/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2312,181 +2540,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/15/selenium-unknown-error-call-function-result-missing-value/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/15/selenium-unknown-error-call-function-result-missing-value/" itemprop="url">
-                  selenium unknown error - call function result missing 'value'
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-15T19:13:24+08:00">
-                2018-03-15
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Selenium/" itemprop="url" rel="index">
-                    <span itemprop="name">Selenium</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/15/selenium-unknown-error-call-function-result-missing-value/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/15/selenium-unknown-error-call-function-result-missing-value/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>320 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>在selenium web driver test 中，遇到的一个问题：进行fill form操作时，会抛出error：</p>
-<p><strong>unknown error: call function result missing ‘value’</strong></p>
-<p>其中：chrome  version 65，chromedriver version 2.34，  Mac OS Sierra 10.12</p>
-<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>Google后，很快看到解答：来自stack overflow的<a href="https://stackoverflow.com/questions/49175711/q-codeceptjs-unknown-error-call-function-result-missing-value" target="_blank" rel="noopener">Q: CodeceptJS “unknown error”: call function result missing ‘value’</a></p>
-<p> <img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdjohdpuxj30k306uzlp.jpg" alt=""></p>
-<p>chrome悄无声息地升级到了65，这个坑真的是让人无言以对……</p>
-<p>解决方法也就是升级chrome driver ，那就开始吧。</p>
-<h4 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h4><p>Mac下，使用brew:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew upgrade chromedriver</span><br></pre></td></tr></table></figure>
-<p>OK, 搞定！一步更新到最新版2.36。</p>
-<p>再次运行测试，passed。</p>
-<p>后记下：</p>
-<p>现在看升级方法，很简单，但是最开始的时候，我用<code>brew upgrade chromedriver</code>出错了，以为不能这么升级【现在想想，当时应该是翻墙的原因】，然后我竟然脑抽地改用了<code>npm install chromedriver --chromedriver_version=LATEST</code>！！ 报错 http request error, Google后看<a href="https://github.com/vuejs/vue-cli/issues/562" target="_blank" rel="noopener">ChromeDriver installation failed Error with http request: Error</a>，是翻墙的原因，还一本正经地采用了cdn的迂回方法，结果各种惨不忍睹 ……</p>
-<p>写下这个，主要是希望同我一般的小白，别再踩坑了，白白浪费了大好时光，Mac下，直接<code>brew upgrade chromedriver</code>即可。当然，Linux下，还是用npm ： P</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/49175711/q-codeceptjs-unknown-error-call-function-result-missing-value" target="_blank" rel="noopener">Q: CodeceptJS “unknown error”: call function result missing ‘value’</a></p>
-<p><a href="https://stackoverflow.com/questions/48609069/org-openqa-selenium-webdriverexception-unknown-error-call-function-result-miss" target="_blank" rel="noopener">org.openqa.selenium.WebDriverException: unknown error: call function result missing ‘value’</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2536,7 +2589,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">177</span>
+                <span class="site-state-item-count">178</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2547,7 +2600,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">27</span>
+                <span class="site-state-item-count">28</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2558,7 +2611,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">49</span>
+                <span class="site-state-item-count">50</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2669,7 +2722,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    182.5k
+    183.0k
   </span>
 
 </div>
