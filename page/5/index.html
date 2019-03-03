@@ -273,6 +273,264 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/04/query-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/08/04/query-in-rails/" itemprop="url">
+                  Rails中一些常用的数据查询命令
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-04T17:24:17+08:00">
+                2018-08-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/04/query-in-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/08/04/query-in-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,938 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>写一写Rails中一些常用的查询。</p>
+<h4 id="group"><a href="#group" class="headerlink" title="group"></a>group</h4><p>等同与SQL中的group_by，使用：</p>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Student.group(<span class="symbol">:gender</span>).count</span><br></pre></td></tr></table></figure>
+<p>即：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span> (*) <span class="keyword">AS</span> count_all, gender</span><br><span class="line"><span class="keyword">FROM</span> <span class="string">"students"</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span> gender</span><br></pre></td></tr></table></figure>
+<h4 id="join"><a href="#join" class="headerlink" title="join"></a>join</h4><p>School 与Clazz是一对多的关系。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:school</span>)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.*  <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span>  <span class="keyword">ON</span> <span class="string">"schools"</span>.<span class="string">"id"</span>=<span class="string">"clazzes"</span>.<span class="string">"school_id"</span></span><br></pre></td></tr></table></figure>
+<p>同样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">School.joins(<span class="symbol">:clazzes</span>)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.*  <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span>  <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"school_id"</span>=<span class="string">"schools"</span>.<span class="string">"id"</span></span><br></pre></td></tr></table></figure>
+<p>这里joins的参数的单复数很重要，School 与Clazz是一对多的关系，Clazz.joins(:school)，school必须是单数，School.joins(:clazzes)时，clazzes则是复数，即<strong>参数对应的不是表名，而是association names</strong>。</p>
+<p>多对多的joins, 比如找出hello老师所在的所有班级：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:teachers</span>).where(<span class="symbol">teachers:</span> &#123; <span class="symbol">name:</span> <span class="string">"hello"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> <span class="keyword">WHERE</span> <span class="string">"teachers"</span>.<span class="string">"name"</span>=<span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<p>多表连接查询，比如查找 1班 A组的老师：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span> </span><br><span class="line"><span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span></span><br></pre></td></tr></table></figure>
+<p>嵌套连接nested joins， 比如找出第一中学1班 A组的老师：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins( <span class="symbol">:groups</span>, <span class="symbol">clazzes:</span> [<span class="symbol">:school</span>]).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;,<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一中学"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.id = <span class="string">"groups"</span>.<span class="string">"teacher_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span> <span class="keyword">ON</span> <span class="string">"schools"</span>.<span class="string">"id"</span> = <span class="string">"clazzes"</span>.<span class="string">"school_id"</span> <span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span> <span class="keyword">AND</span> <span class="string">"schools"</span>.<span class="string">"name"</span> = <span class="string">"第一中学"</span></span><br></pre></td></tr></table></figure>
+<p>附上一份各种JOIN的差异对比，帮助我自己记忆：P</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg" alt=""></p>
+<p>图片来源: <a href="https://blog.jooq.org/2016/07/05/say-no-to-venn-diagrams-when-explaining-joins/" target="_blank" rel="noopener">say no to venn digrams when explaining joins</a></p>
+<h4 id="includes"><a href="#includes" class="headerlink" title="includes"></a>includes</h4><p>N+1效能查询的解决方法。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clazzes = Clazz.includes(<span class="symbol">:school</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span></span><br><span class="line">  <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br></pre></td></tr></table></figure>
+<p>这里先找到10个clazz，然后根据这10个clazz查找对应的school， 有重复的school_id则去重复查询。</p>
+<p>类似joins，includes也可以关联多表：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:orders</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>)</span><br></pre></td></tr></table></figure>
+<p>嵌套includes：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">orders:</span> [<span class="symbol">:product</span>]).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">2741</span>,<span class="number">2742</span>，<span class="number">2743</span>，<span class="number">2744</span>)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>) </span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"products"</span>.* <span class="keyword">FROM</span> <span class="string">"products"</span> <span class="keyword">WHERE</span> <span class="string">"products"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">7</span>,<span class="number">4</span>,<span class="number">16</span>)</span><br></pre></td></tr></table></figure>
+<p>nested部分，根据clazz的ID，找到对应的order，然后根据order的ID，再找到product，这里可以看成有一层Order.includes(:product)。</p>
+<p>通过explain方法可以很清楚看到SQL的查询步骤【后面会提到】</p>
+<p>上述nested includes，对应的SQL查询步骤：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN for: SELECT  "clazzes".* FROM "clazzes" LIMIT $1 [["LIMIT", 10]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost=0.00..0.42 rows=10 width=99)</span><br><span class="line">   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"id"</span>, <span class="number">617</span>], [<span class="string">"id"</span>, <span class="number">1604</span>], [<span class="string">"id"</span>, <span class="number">783</span>], [<span class="string">"id"</span>, <span class="number">2554</span>], [<span class="string">"id"</span>, <span class="number">1841</span>], [<span class="string">"id"</span>, <span class="number">1469</span>], [<span class="string">"id"</span>, <span class="number">446</span>], [<span class="string">"id"</span>, <span class="number">2820</span>], [<span class="string">"id"</span>, <span class="number">1566</span>], [<span class="string">"id"</span>, <span class="number">2741</span>]]</span><br><span class="line">                                      <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> schools  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span>=<span class="number">10</span> width=<span class="number">141</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"clazz_id"</span>, <span class="number">4732</span>], [<span class="string">"clazz_id"</span>, <span class="number">1648</span>], [<span class="string">"clazz_id"</span>, <span class="number">3715</span>], [<span class="string">"clazz_id"</span>, <span class="number">963</span>], [<span class="string">"clazz_id"</span>, <span class="number">278</span>], [<span class="string">"clazz_id"</span>, <span class="number">4525</span>], [<span class="string">"clazz_id"</span>, <span class="number">7096</span>], [<span class="string">"clazz_id"</span>, <span class="number">9064</span>], [<span class="string">"clazz_id"</span>, <span class="number">10299</span>], [<span class="string">"clazz_id"</span>, <span class="number">7980</span>]]</span><br><span class="line">                                               <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------------------------</span></span><br><span class="line"> <span class="keyword">Bitmap</span> <span class="keyword">Heap</span> <span class="keyword">Scan</span> <span class="keyword">on</span> orders  (<span class="keyword">cost</span>=<span class="number">47.22</span>.<span class="number">.1262</span><span class="number">.09</span> <span class="keyword">rows</span>=<span class="number">392</span> width=<span class="number">194</span>)</span><br><span class="line">   Recheck Cond: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">   -&gt;  <span class="keyword">Bitmap</span> <span class="keyword">Index</span> <span class="keyword">Scan</span> <span class="keyword">on</span> index_orders_on_clazz_id  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.47</span><span class="number">.12</span> <span class="keyword">rows</span>=<span class="number">392</span> width=<span class="number">0</span>)</span><br><span class="line">         <span class="keyword">Index</span> Cond: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">4</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"products"</span>.* <span class="keyword">FROM</span> <span class="string">"products"</span> <span class="keyword">WHERE</span> <span class="string">"products"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>) [[<span class="string">"id"</span>, <span class="number">7</span>], [<span class="string">"id"</span>, <span class="number">4</span>], [<span class="string">"id"</span>, <span class="number">16</span>]]</span><br><span class="line">                        <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> products  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.1</span><span class="number">.62</span> <span class="keyword">rows</span>=<span class="number">3</span> width=<span class="number">391</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;7,4,16&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<p>includes后，如果添加where条件，则需要传递一个hash给到where，如果不是hash，则需要使用references强制连接table。</p>
+<p>比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="string">"schools.name ='第一小学'"</span>).references(<span class="symbol">:schools</span>)</span><br><span class="line"><span class="comment">## 等同于</span></span><br><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一小学"</span>&#125;)</span><br></pre></td></tr></table></figure>
+<p>注意到includes接受的参数同joins，是association names，而references则是表名。</p>
+<h4 id="counter-cache"><a href="#counter-cache" class="headerlink" title="counter_cache"></a>counter_cache</h4><p>用来快速获取关联计数，假设school model中有teachers_count这个字段，那么：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Teacher</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:school</span>, <span class="symbol">:counter_cache</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这样<em>ActiveRecord</em>就会自动更新schools中的teachers_count的值。</p>
+<p>这里counter_cache对应的列名可以自定义，比如说老师和学生之间是一对多的关系，给老师这张表添加一个字段total_students_count ,则可以在student的model中这么设置：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:teacher</span>, <span class="symbol">counter_cache:</span> <span class="string">"total_students_count"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h4 id="find-each"><a href="#find-each" class="headerlink" title="find_each"></a>find_each</h4><p>find_each 分批查询， 默认每次捞出1000条记录。</p>
+<p>有三个参数可以设置：</p>
+<ul>
+<li>batch_size</li>
+<li>start</li>
+<li>finish</li>
+</ul>
+<p><strong>batch_size</strong></p>
+<p>指定每次捞出的数据量。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(batch_size: 200) do</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p>那么每次则捞出200条记录，对应到SQL中，则是limit的值变成了200。</p>
+<p>默认是按照primary key(id) 升序排序查询结果：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">200</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt; <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">200</span></span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<p><strong>start</strong></p>
+<p>从哪条记录开始查询， 默认参数是ID。</p>
+<p>比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt;= <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<p><strong>finish</strong></p>
+<p>指定到哪条记录截止， 默认参数是ID。</p>
+<p>比如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &lt;= <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<p>start搭配finish：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>, <span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>对应的SQL：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt;= <span class="number">200</span> <span class="keyword">AND</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &lt;= <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<h4 id="explain方法"><a href="#explain方法" class="headerlink" title="explain方法"></a>explain方法</h4><p>可以用来查看SQL的执行步骤。<br><code>rails c</code>进入console，执行：<code>User.where(id: 1).explain</code>， 会得到如下结果：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">"users"</span>.* FROM <span class="string">"users"</span> WHERE <span class="string">"users"</span>.<span class="string">"id"</span> = $1 [[<span class="string">"id"</span>, <span class="number">1</span>]]</span><br><span class="line">                                QUERY PLAN</span><br><span class="line">--------------------------------------------------------------------------</span><br><span class="line"> Index Scan using users_pkey on users  (cost=<span class="number">0</span>.<span class="number">42</span>..<span class="number">8.44</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   Index <span class="symbol">Cond:</span> (id = <span class="number">1</span>)</span><br><span class="line">(<span class="number">2</span> rows)</span><br></pre></td></tr></table></figure>
+<p>显示了数据查询的过程，扫描users的index，最后找到id为1的user。</p>
+<p>看一个joins的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).explain</span><br></pre></td></tr></table></figure>
+<p>对应的输出：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">"teachers"</span>.* FROM <span class="string">"teachers"</span> INNER JOIN <span class="string">"clazzes"</span> ON <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teachers"</span>.<span class="string">"clazz_id"</span> INNER JOIN <span class="string">"groups"</span> ON <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span> </span><br><span class="line">                                                   QUERY PLAN</span><br><span class="line">------------------------------------------------------------------------------------------</span><br><span class="line"> Nested Loop  (cost=<span class="number">0</span>.<span class="number">99</span>..<span class="number">2382.37</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   -&gt;  Nested Loop  (cost=<span class="number">0</span>.<span class="number">71</span>..<span class="number">2382.05</span> rows=<span class="number">1</span> width=<span class="number">391</span>)</span><br><span class="line">         -&gt;  Seq Scan on groups  (cost=<span class="number">0</span>.<span class="number">00</span>..<span class="number">6.02</span> rows=<span class="number">302</span> width=<span class="number">4</span>)</span><br><span class="line">         -&gt;  Index Scan using teachers_pkey on teachers  (cost=<span class="number">0</span>.<span class="number">42</span>..<span class="number">7.86</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">               Index <span class="symbol">Cond:</span> (id = groups.teacher_id)</span><br><span class="line">   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=<span class="number">0</span>.<span class="number">29</span>..<span class="number">0</span>.<span class="number">33</span> rows=<span class="number">1</span> width=<span class="number">4</span>)</span><br><span class="line">         Index <span class="symbol">Cond:</span> (id = teacherships.clazz_id)</span><br><span class="line">(<span class="number">7</span> rows)</span><br></pre></td></tr></table></figure>
+<p> 看一个includes的例子，多表includes:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:groups</span>).limit(<span class="number">10</span>).explain</span><br></pre></td></tr></table></figure>
+<p>对应的输出：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN for: SELECT  "clazzes".* FROM "clazzes" LIMIT $1 [["LIMIT", 10]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost=0.00..0.42 rows=10 width=99)</span><br><span class="line">   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"id"</span>, <span class="number">617</span>], [<span class="string">"id"</span>, <span class="number">1604</span>], [<span class="string">"id"</span>, <span class="number">783</span>], [<span class="string">"id"</span>, <span class="number">2554</span>], [<span class="string">"id"</span>, <span class="number">1841</span>], [<span class="string">"id"</span>, <span class="number">1469</span>], [<span class="string">"id"</span>, <span class="number">446</span>], [<span class="string">"id"</span>, <span class="number">2820</span>], [<span class="string">"id"</span>, <span class="number">1566</span>], [<span class="string">"id"</span>, <span class="number">2741</span>]]</span><br><span class="line">                                      <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> schools  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span>=<span class="number">10</span> width=<span class="number">141</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"groups"</span>.* <span class="keyword">FROM</span> <span class="string">"groups"</span> <span class="keyword">WHERE</span> <span class="string">"groups"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"clazz_id"</span>, <span class="number">4732</span>], [<span class="string">"clazz_id"</span>, <span class="number">1648</span>], [<span class="string">"clazz_id"</span>, <span class="number">3715</span>], [<span class="string">"clazz_id"</span>, <span class="number">963</span>], [<span class="string">"clazz_id"</span>, <span class="number">278</span>], [<span class="string">"clazz_id"</span>, <span class="number">4525</span>], [<span class="string">"clazz_id"</span>, <span class="number">7096</span>], [<span class="string">"clazz_id"</span>, <span class="number">9064</span>], [<span class="string">"clazz_id"</span>, <span class="number">10299</span>], [<span class="string">"clazz_id"</span>, <span class="number">7980</span>]]</span><br><span class="line">                                          <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> <span class="keyword">groups</span>  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.9</span><span class="number">.79</span> <span class="keyword">rows</span>=<span class="number">14</span> width=<span class="number">36</span>)</span><br><span class="line">   Filter: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<p>可以很清楚地看到分开两步，查询到clazz对应的ID后，分别查询了schools和groups，呃，不多说了，太明显了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://dev.to/eviedently/a-rubyists-guide-to-postgresqls-explain" target="_blank" rel="noopener">A Rubyist’s Guide to Postgresql’s Explain</a></p>
+<p><a href="https://guides.rubyonrails.org/active_record_querying.html" target="_blank" rel="noopener">Active Record Query Interface</a></p>
+<p><a href="https://api.rubyonrails.org/" target="_blank" rel="noopener">Ruby on Rails API</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/03/slice-before-after-when-in-ruby/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1976,198 +2234,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/02/error-recording-of-dangerous-query-method/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/07/02/error-recording-of-dangerous-query-method/" itemprop="url">
-                  报错纪录Dangerous query method called with non-attribute argument(s)
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-02T22:45:21+08:00">
-                2018-07-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/02/error-recording-of-dangerous-query-method/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/07/02/error-recording-of-dangerous-query-method/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>565 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
-<p>使用scope进行处理：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(order_by.join(<span class="string">' '</span>))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>在controller中调用了该scope。刷新页面后，发现服务器报出warning message：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DEPRECATION <span class="symbol">WARNING:</span> Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): <span class="string">"CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END"</span>. Non-attribute arguments will be disallowed <span class="keyword">in</span> Rails <span class="number">6.0</span>. This method should <span class="keyword">not</span> be called with user-provided values, such as request parameters <span class="keyword">or</span> model attributes. Known-safe values can be passed by wrapping them <span class="keyword">in</span> Arel.sql().</span><br></pre></td></tr></table></figure>
-<h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
-<p>很简单，就是使用warning message里面提到的Arel.sql()方法，将<code>CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END</code> 用Arel.sql() 包起来即可。</p>
-<p>修改scope：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(Arel.sql(order_by.join(<span class="string">' '</span>)))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>OK!</p>
-<p>但是，这个Arel.sql(raw_sql)是什么？</p>
-<p>先看看Arel是什么。</p>
-<p>官方文档的解释：</p>
-<blockquote>
-<p>Arel is a SQL AST manager for Ruby. It</p>
-<ul>
-<li>Simplifies the generation of complex SQL queries</li>
-<li>Adapts to various RDBMSes</li>
-</ul>
-</blockquote>
-<p>文档里面还列出了很多例子，从简单的select * from users 到复杂点的joins table，我猜是因为我接触Rails的时间不长，反正是从来没用过这东西。</p>
-<p>Arel.sql(raw_sql) 这个类方法的源代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">sql</span> <span class="title">raw_sql</span></span></span><br><span class="line">  Arel::Nodes::SqlLiteral.new raw_sql</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>也就是新建了一个Arel::Nodes::SqlLiteral实例，而Arel::Nodes::SqlLiteral为什么是安全的呢？用Arel::Nodes::SqlLiteral 把raw_sql包起来的用意是什么？估计也能猜到，防攻击啥的。果然，Google了下，发现说是可以防止<strong>SQL注入</strong>的情况。</p>
-<p>有些复杂了，脑子暂时消化不了。</p>
-<p>此外，文档中有关<a href="https://www.rubydoc.info/github/rails/rails/ActiveRecord%2FConnectionAdapters%2FDatabaseStatements:sanitize_limit" target="_blank" rel="noopener"><strong>sanitize_limit</strong></a> 部分也有提到SQL injection的问题。</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://www.rubydoc.info/github/rails/arel" target="_blank" rel="noopener">Arel</a></p>
-<p><a href="https://groups.google.com/forum/#!topic/rubyonrails-core/UGZmPT1nDX4" target="_blank" rel="noopener">A “strict Arel” mode for ActiveRecord to prevent SQL injection vulnerabilities</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/4/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/">4</a><span class="page-number current">5</span><a class="page-number" href="/page/6/">6</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/6/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2212,7 +2283,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">181</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2223,7 +2294,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">28</span>
+                <span class="site-state-item-count">29</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2234,7 +2305,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">51</span>
+                <span class="site-state-item-count">52</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2345,7 +2416,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    185.5k
+    185.9k
   </span>
 
 </div>
