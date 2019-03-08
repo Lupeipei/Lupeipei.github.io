@@ -273,6 +273,210 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/04/upload-images-to-rails-API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/04/upload-images-to-rails-API/" itemprop="url">
+                  Rails中实作图片上传API
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-04T10:26:09+08:00">
+                2018-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ROR/" itemprop="url" rel="index">
+                    <span itemprop="name">ROR</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/04/upload-images-to-rails-API/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/04/upload-images-to-rails-API/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>869 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>如标题所述，需要通过接口将图片上传到ROR项目中，如何实现？</p>
+<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>先说一个简单的。</p>
+<p>以一个model picture为例，看一下具体步骤：</p>
+<p>model picture的信息：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Table name pictures</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">file_name    <span class="symbol">:string</span></span><br><span class="line">image       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<p>这里，设置routes, 建model，建controller的过程省略，可参见：<a href="http://luciaca.cn/2017/12/31/web-api-practice/" target="_blank" rel="noopener">Rails：Web API接口实作</a>。</p>
+<p>分三步走：</p>
+<ul>
+<li><p>装<a href="https://github.com/carrierwaveuploader/carrierwave" target="_blank" rel="noopener">carrierwave</a></p>
+<p>编辑 Gemfile</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'carrierwave'</span></span><br><span class="line">gem <span class="string">'mini_magick'</span></span><br></pre></td></tr></table></figure>
+<p>终端执行<code>bundle</code>，重启服务器。</p>
+</li>
+<li><p>新增uploader</p>
+<p>执行：<code>rails g uploader PicImage</code></p>
+<p>编辑<code>app/uploaders/pic_image_uploader.rb</code></p>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PicImageUploader</span> &lt; CarrierWave::Uploader::<span class="title">Base</span></span></span><br><span class="line">  + <span class="keyword">include</span> CarrierWave::MiniMagick</span><br><span class="line">  ......  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>编辑 <code>app/models/picture.rb</code>，把 carrierwave 的 Uploader 挂上去。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Picture</span> &lt; ApplicationRecord</span></span><br><span class="line">  + mount_uploader <span class="symbol">:image</span>, PicImageUploader</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设定create</p>
+<p>编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># upload image through api</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @picture = Picture.new(picture_params)  </span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">file_name:</span> @picture.file_name, <span class="symbol">image:</span> @picture.image &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  .......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">picture_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:file_name</span>, <span class="symbol">:image</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>再来个复杂的。👇</p>
+<h4 id="如何通过JSON文件来上传？"><a href="#如何通过JSON文件来上传？" class="headerlink" title="如何通过JSON文件来上传？"></a>如何通过JSON文件来上传？</h4><p>在搜索解答的过程中，发现了另一种方式，假定你需要通过JSON文件的方式去上传图片，如何实现？<br>即接口调用是这样的：<code>/api/v1/pictures.json</code>，由于JSON不支持嵌入式文件，所以会有些波折。</p>
+<p>具体的实现方式是先将需要上传的图片file经base64编译后，调用接口创建一个实例， 然后在picture controller的create中，对传递过来的参数file_base64进行解析， 将解析后的文件写入temfile，并通过<code>ActionDispatch::Http::UploadedFile</code>来新建一个uploader file，如此，一个image从encoding到decoding的过程结束，再使用Picture.new创建即可。</p>
+<p>具体来说，前面的步骤都一样，只是create部分会有些不同。</p>
+<p>先给picture新增一个字段，file_base64, 它是图片经base64编译后得到的字符串。</p>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_file_base64_to_pictures file_base64:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>picture.json文件长这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">picture &#123;:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;&#125;</span><br></pre></td></tr></table></figure>
+<p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      <span class="comment"># create a new tempfile named file</span></span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      <span class="comment"># get the file ,decode it with base64, write it to the tempfile</span></span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      <span class="comment"># create a new uploaded file</span></span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      <span class="comment"># delete the tempfile</span></span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p> 这里，create部分显得很臃肿，我们skinny一下，改成这样：</p>
+  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line">  before_action <span class="symbol">:process_file</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">process_file</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>  呃，貌似process_file还是有点臃肿， 可以继续拆，这里就不实作了。</p>
+<p>  OK. 用postman测试一下，确认正常。</p>
+<p>  这里，你可能会问，编译后的文件在哪呢？在public/uploaders/picture/image下。</p>
+<p>此外，上传的文件不需要 git commit， 在 <code>.gitignore</code> 中添加 <code>public/uploads</code> 这个目录即可。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9758879/sending-files-to-a-rails-json-api" target="_blank" rel="noopener">Sending files to a Rails JSON API</a></p>
+<p><a href="https://stackoverflow.com/questions/9854916/base64-upload-from-android-java-to-ror-carrierwave" target="_blank" rel="noopener">Base64 upload from Android/Java to RoR Carrierwave</a></p>
+<p><a href="https://ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html" target="_blank" rel="noopener">Tempfile</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/03/implement-Rails-API-filtering/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1895,187 +2099,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/06/how-to-drop-a-table-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/06/how-to-drop-a-table-on-rails/" itemprop="url">
-                  Rails中如何删除数据表？
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-06T10:41:02+08:00">
-                2018-02-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/ROR/" itemprop="url" rel="index">
-                    <span itemprop="name">ROR</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/06/how-to-drop-a-table-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/06/how-to-drop-a-table-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>418 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>先看个场景：</p>
-<p>当你运行<code>rake db:migrate</code>时，终端报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SQLite3::SQLException: table &quot;XXXX&quot; already exists……</span><br></pre></td></tr></table></figure>
-<p>这种情况下，多半由于你重建了tableXXXX导致，针对这种情况，一般有两种方法可以解决：</p>
-<ul>
-<li>查看你需要migrate的代码，是否存在重建tableXXXX的情况，如果有，注释掉，然后再run <code>rake db:migrate</code>；</li>
-<li>删除掉数据库中已经存在的table XXXX，再run <code>rake db:migrate</code>， 重建新的table XXXX。 「特别是当你对先前建的table并不满意时」</li>
-</ul>
-<p>第一种很好办，没啥可说的，看第二种具体怎么做。</p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>以table projects为例，含字段title，description。</p>
-<p>两种方法：</p>
-<p>一个简单粗暴的方式是<code>rails c</code>，打开rails console，运行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ActiveRecord::Migration.drop_table(:projects) #将projects换成你要删除的表名</span><br></pre></td></tr></table></figure>
-<p>另一个方式先注释掉需要migration的代码，然后新建一个migration：<code>rails g migration Dropprojects</code></p>
-<p>在生成的<code>xxxxxx_Dropprojects.rb</code>中填入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dropprojects</span> &lt; ActiveRecord::Migration</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    drop_table <span class="symbol">:projects</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:title</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.text <span class="symbol">:description</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.timestamps <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>终端run <code>rake db:migrate</code>， 成功删除， 这应该算是比较 “officials” 的做法了。</p>
-<p>删除后，再取消你先前注释的需要migration的代码，运行<code>rake db:migrate</code>， 重建新的table。</p>
-<p>此外，当你在Rails中添加了一个table XXXX，发现后续并不需要这个table了，也可以通过上诉的方式删除它。</p>
-<p>当然，大部分情况下，不建议动数据库的，因为多个table之间可能存在关联，删除可能引发潜在的问题。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/classes/ActiveRecord/Migration.html" target="_blank" rel="noopener">Active Record Migrations</a></p>
-<p><a href="https://stackoverflow.com/questions/4020131/rails-db-migration-how-to-drop-a-table" target="_blank" rel="noopener">Rails DB Migration - How To Drop a Table?</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2125,7 +2148,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">182</span>
+                <span class="site-state-item-count">183</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2258,7 +2281,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.4k
+    189.0k
   </span>
 
 </div>
