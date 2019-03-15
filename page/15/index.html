@@ -273,6 +273,882 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/17/use-simple-navigation-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/17/use-simple-navigation-in-rails/" itemprop="url">
+                  在rails中使用simple navigation
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-17T17:31:24+08:00">
+                2017-12-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/17/use-simple-navigation-in-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/17/use-simple-navigation-in-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>497 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple navigation</a>是一个ruby库，用来生成navigation的，它的优势是可以定制自己的导航菜单，特别是当你有多个菜单或者你的菜单相对比较复杂的时候。</p>
+<p>可是官方只是给出了一个<a href="http://simple-navigation-demo.codeplant.ch/" target="_blank" rel="noopener">online demo</a>，并没有给到具体的install  和 usage，这让初次接触simple navigation的小白有些被动，Google了一些文章，实做了一下，知道怎么玩啦，记录下以备用。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>安装gem</p>
+<p>在gemfile文件中，添加如下：【建议把bootstrap也安装了】</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'bootstrap-sass'</span></span><br><span class="line">gem <span class="string">'simple-navigation'</span></span><br><span class="line">gem <span class="string">'simple-navigation-bootstrap'</span></span><br></pre></td></tr></table></figure>
+<p>终端运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle install</span><br></pre></td></tr></table></figure>
+<p>重启服务器：<code>rails s</code></p>
+<p>将<code>application.css</code>文件更名为<code>application.scss</code>，终端输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss</span><br></pre></td></tr></table></figure>
+<p>在<code>application.scss</code>文件中，添加如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@import &quot;bootstrap-sprockets&quot;;</span><br><span class="line">@import &quot;bootstrap&quot;;</span><br></pre></td></tr></table></figure>
+<p>生成menu 的configuration文件<code>navigation.rb</code>， 终端输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec rails g navigation_config</span><br></pre></td></tr></table></figure>
+<p>此时，config文件下会生成一个<code>navigation.rb</code>文件，长这样：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fmjtnki6lbj30o007tmyr.jpg" alt=""></p>
+<p>在文件的下方，已经列出了一些用法，包括如何添加有sub navigation的item，添加指定条件的item，比如登陆，是否为管理员等等。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjtwnw2dzj30nv0gb42w.jpg" alt=""></p>
+</li>
+</ul>
+<ul>
+<li><p>设置menu</p>
+<p>我们来改改，定制一下，比如下面这样：【当然，请确保你写的path是有效的……】</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvdavg84j30le04n74t.jpg" alt=""></p>
+</li>
+<li><p>展示menu</p>
+<p>在需要展示的页面中，添加:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:expand_all =&gt; true)%&gt;</span><br></pre></td></tr></table></figure>
+<p>这里，expand_all 为true是指全部铺开，即子菜单未被激活也是展开的，效果类似这样：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fmjve7qr4oj305z04it8l.jpg" alt=""></p>
+<p>这里可以用参数level来控制层级的显示，上面菜单 + 子菜单，只有两级，所以用</p>
+<p><code>render_navigation(:level =&gt; 2)</code>也是可以的。如果改成：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:level =&gt; 1)%&gt;</span><br></pre></td></tr></table></figure>
+<p>则显示一级菜单，像这样：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvz5s8kej3063027q2r.jpg" alt=""></p>
+<p>另：</p>
+<p>看到GitHub 中提到使用<code>&lt;%= render_navigation(:expand_all =&gt; false)%&gt;</code> 来让未被激活的子菜单隐藏，没有设置的情况下，:expand_all是默认为false的, 我试了一下，没有成功，所有菜单还是全部铺开，有些奇怪。</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple-navigation</a></p>
+<p><a href="https://github.com/pdf/simple-navigation-bootstrap" target="_blank" rel="noopener">simple-navigation-bootstrap</a></p>
+<p><a href="http://www.xoen.org/2012/05/bootstrap-menus-in-rails/" target="_blank" rel="noopener">bootstrap menu in rails</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/13/methods-of-Array-in-Ruby/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/13/methods-of-Array-in-Ruby/" itemprop="url">
+                  Ruby中Array 的一些常用方法
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-13T17:11:08+08:00">
+                2017-12-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/13/methods-of-Array-in-Ruby/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/13/methods-of-Array-in-Ruby/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,393 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>工作中常常要处理Array，索性把ruby 中Array的一些常用方法小结一下，加深印象。</p>
+<p>先来看看Array中除去继承自Object之外的，有多少public methods</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(Array.instance_methods - Object.instance_methods).count</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">120</span></span><br><span class="line"><span class="comment"># ruby版本为 2.3.1</span></span><br></pre></td></tr></table></figure>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>建立空数组：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[]</span><br><span class="line">Array.new</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用%w, %i 创建非空数组</p>
+<p><strong>创建不包含空白的字符串数组，可用%w</strong></p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">%w(Ruby Python Scheme)</span></span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"Ruby"</span>, <span class="string">"Python"</span>, <span class="string">"Scheme"</span>]</span><br></pre></td></tr></table></figure>
+<p><strong>创建元素为符号的数组，可用%i</strong></p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">%i(Ruby Python Scheme)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="symbol">:Ruby</span>, <span class="symbol">:Python</span>, <span class="symbol">:Scheme</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数组的大小</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].count</span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].size</span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].length</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="number">6</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将string转化为array</p>
+<p> split</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"a, b, c, d"</span>.split(<span class="string">", "</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将array转化为string</p>
+<p>join</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>].join(<span class="string">", "</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="string">"a, b, c, d"</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将hash 转化为array</p>
+<p>to_a</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">table = &#123;<span class="symbol">:<span class="string">"color1"</span></span> =&gt; <span class="string">"blue"</span>, <span class="symbol">:<span class="string">"color2"</span></span> =&gt; <span class="string">"red"</span>&#125;</span><br><span class="line">table.to_a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[[<span class="symbol">:color1</span>, <span class="string">"blue"</span>], [<span class="symbol">:color2</span>, <span class="string">"red"</span>]]</span><br><span class="line"></span><br><span class="line">table.to_a.flatten</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="symbol">:color1</span>, <span class="string">"blue"</span>, <span class="symbol">:color2</span>, <span class="string">"red"</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在数组中提取元素</p>
+<p>index从0开始，index为正时，从array的第一个元素开始，index为负时，从最后一个元素开始</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>][<span class="number">2</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>][-<span class="number">1</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">5</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>给数组添加元素</p>
+<p>在尾部添加&lt;&lt;  or push</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] &lt;&lt; <span class="string">"woot"</span></span><br><span class="line"><span class="comment"># 输出: [1, 2, 3, 4, 5, "woot"]</span></span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].push(<span class="string">"woot"</span>)</span><br><span class="line"><span class="comment"># 输出: [1, 2, 3, 4, 5, "woot"]</span></span><br></pre></td></tr></table></figure>
+<p>在开头添加 unshift</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].unshift(<span class="number">0</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>连接数组concat ／ +</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].concat([<span class="number">6</span>, <span class="number">7</span>])</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] + [<span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>数组转换map, collect</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].map &#123;<span class="params">|x|</span> x * <span class="number">3</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">12</span>, <span class="number">15</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].collect &#123;<span class="params">|x|</span> x + <span class="number">2</span> &#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>获取分散的数组values_at</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>].values_at(<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>筛选特定的元素 select</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>].select &#123;<span class="params">|number|</span> number % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>删除元素 delete</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.delete(<span class="number">5</span>) <span class="comment"># 注意这里delete的参数是元素，不是index</span></span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">5</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+<p>删除指定index的元素delete_at 【破坏性修改】</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.delete_at(<span class="number">5</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">7</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>]</span><br></pre></td></tr></table></figure>
+<p>删除符合要求的delete_if【破坏性修改】, reject</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>].delete_if&#123;<span class="params">|x|</span> x % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>].reject&#123;<span class="params">|x|</span> x % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>]</span><br></pre></td></tr></table></figure>
+<p>删除所有nil元素compact</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="literal">nil</span>, <span class="number">4</span>, <span class="literal">nil</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="literal">nil</span>, <span class="number">23</span>, <span class="number">42</span>, <span class="literal">nil</span>]</span><br><span class="line">a.compact</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>]</span><br></pre></td></tr></table></figure>
+<p>删除指定部分slice</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.slice(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">a.slice!(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+<p>删除第X个元素shift, 默认是第一个【破坏性修改】</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.shift</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">1</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</span><br><span class="line"></span><br><span class="line">a.shift(<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[ <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</span><br></pre></td></tr></table></figure>
+<p>删除最后X个元素pop ，默认是最后一个【破坏性修改】</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.pop</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">9</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>]</span><br><span class="line"></span><br><span class="line">a.pop(<span class="number">3</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>]</span><br></pre></td></tr></table></figure>
+<p>ruby中method后面带有！符号的都是具有破坏性的修改, 但是那些没有带！尾巴的也不是那么友好，比如上面的shift， pop。 那么可有办法保护我们的array？有滴，上freeze</p>
+<p>freeze可以禁止具有破坏性的方法来修改对象。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.freeze</span><br><span class="line">a.pop</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="comment"># can't modify frozen Array</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>去除重复元素uniq</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">1</span>,<span class="number">3</span>,<span class="number">7</span>]</span><br><span class="line">a.uniq</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>平坦化数组flatten</p>
+<p>前面出现过，再多看些例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, <span class="number">42</span>]]].flatten</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>]</span><br></pre></td></tr></table></figure>
+<p>不传递参数时，默认是完全平坦化，传递参数，则平坦化层级X，例如：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">1</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]</span><br><span class="line"></span><br><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]</span><br><span class="line"></span><br><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">3</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"> [<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>, <span class="number">43</span>]</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>获取某个元素的出现次数count</p>
+<p>count前面已经出现过，用于计算数组的长度，不带参数，如果传递参数给到count，则返回该元素在数组中出现的次数。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">42</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].count(<span class="number">42</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>排序sort</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line">a.sort</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"> [<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
+<p>使用块来指定排序规则：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="string">"ruby"</span>, <span class="string">"python"</span>, <span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"java"</span>]</span><br><span class="line">a.sort</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"java"</span>, <span class="string">"python"</span>, <span class="string">"ruby"</span>]    <span class="comment"># 默认按照首字母排序</span></span><br><span class="line"></span><br><span class="line">a.sort &#123;<span class="params">|a, b|</span> a.length &lt;=&gt; b.length&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"ruby"</span>, <span class="string">"java"</span>, <span class="string">"python"</span>]   <span class="comment"># 按照字符长度来排序</span></span><br></pre></td></tr></table></figure>
+<p>同样的，sort！方法具有破坏性。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>先整这么多，用到新的再补上，嘿哈</p>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/06/about-music/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/06/about-music/" itemprop="url">
+                  关于听歌这件事
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-06T19:55:29+08:00">
+                2017-12-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Music/" itemprop="url" rel="index">
+                    <span itemprop="name">Music</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>296 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>送君一掬温柔</p>
+<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="//music.163.com/outchain/player?type=2&id=28921691&auto=1&height=66"></iframe>
+
+<p>一直觉得音乐是个特别神奇的东西。</p>
+<p>无形无色，却能有着撩拨人心的力量。</p>
+<p>开心了，听歌助兴，不开心了，听歌释怀。</p>
+<p>疲惫时，一首歌，仿佛能治愈，能满血复活。</p>
+<p>晴朗的日子里，踩着单车，塞上耳机，哼歌吹哨，真真是享受。</p>
+<p>记得《偷影子的人》中，男主有个嗜好，每天早上都要来一段大提琴曲，而他最终找到了那个有着大提琴音色般笑声的克蕾尔，彼时她已经是一名大提琴家。</p>
+<p>也许耳朵才是抵达心灵的窗口。</p>
+<p>嗯，深情不过陪伴，温柔最是得人心。</p>
+<p>愿你在音符中寻觅到那份温暖与温柔。</p>
+<p>好了，不矫情了，听歌吧。</p>
+<p>PS：</p>
+<p>为什么要写这么一篇小短文？</p>
+<p>其实，我只是想试试如何在hexo里面添加音乐文件……</p>
+<p>事实证明，可以边看文章边听歌了……</p>
+<p>嗯，其实，还是一心一意听歌的好，好音乐值得去专注。</p>
+<hr>
+<p>参考：</p>
+<p><a href="http://www.jianshu.com/p/a52b68794a6b" target="_blank" rel="noopener">hexo创建个人博客（附加插入音乐、分享、评论、标签页、搜索）</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/01/deal-with-special-character-when-using-restclient-url/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="url">
+                  RestClient：URL中特殊字符的处理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-01T19:49:13+08:00">
+                2017-12-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/01/deal-with-special-character-when-using-restclient-url/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>559 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>URL中通常会遇到特殊字符的处理，比如某一个参数中含有中文 或者”#$ ^ &amp; * + =”等特殊符号。</p>
+<p>如何处理才能正确传递参数？</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><strong>处理之前，先来点小知识。</strong></p>
+<p>URL中一些特殊字符及对应的Url编码如下：</p>
+<table>
+<thead>
+<tr>
+<th>Character</th>
+<th>From UTF-8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>space</td>
+<td>%20</td>
+</tr>
+<tr>
+<td>!</td>
+<td>%21</td>
+</tr>
+<tr>
+<td>“</td>
+<td>%22</td>
+</tr>
+<tr>
+<td>#</td>
+<td>%23</td>
+</tr>
+<tr>
+<td>$</td>
+<td>%24</td>
+</tr>
+<tr>
+<td>%</td>
+<td>%25</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td>%26</td>
+</tr>
+<tr>
+<td>‘</td>
+<td>%27</td>
+</tr>
+<tr>
+<td>(</td>
+<td>%28</td>
+</tr>
+<tr>
+<td>)</td>
+<td>%29</td>
+</tr>
+<tr>
+<td>*</td>
+<td>%2A</td>
+</tr>
+<tr>
+<td>+</td>
+<td>%2B</td>
+</tr>
+<tr>
+<td>,</td>
+<td>%2C</td>
+</tr>
+<tr>
+<td>-</td>
+<td>%2D</td>
+</tr>
+<tr>
+<td>.</td>
+<td>%2E</td>
+</tr>
+<tr>
+<td>/</td>
+<td>%2F</td>
+</tr>
+</tbody>
+</table>
+<p><strong>小案例：从一个中文字符的处理开始</strong></p>
+<p>restclient中，如果URL含有中文等非英文的特殊字符， 只需要使用<strong>URI::encode</strong>即可。比如下面这个例子：</p>
+<p>网址是 <a href="http://example.com，" target="_blank" rel="noopener">http://example.com，</a> 用户输入关键字“伊丽莎白好乖滴 ”查询：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(url)</span><br></pre></td></tr></table></figure>
+<p>这里，使用restclient发出get请求，会出现URI::InvalidURIError 的错误.</p>
+<p>正确的打开方式可以像这样：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">require &apos;addressable/uri&apos;</span><br><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(URI::encode(url))</span><br></pre></td></tr></table></figure>
+<p>这样，url中的中文字符会转化为下面这样的ascii码。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=%E4%BC%8A%E4%B8%BD%E8%8E%8E%E7%99%BD%E5%A5%BD%E4%B9%96%E6%BB%B4</span><br></pre></td></tr></table></figure>
+<p><strong>特别加餐：传递给参数的值中，含有&amp;等特殊字符</strong></p>
+<p>需要特别提一句的是，如果你的URL是这样的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&apos;</span><br></pre></td></tr></table></figure>
+<p>而你希望将<code>&amp;s</code>传递给keyword， 使用URI::encode时，会是这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=&amp;s&amp;city=shanghai&amp;type=food</span><br></pre></td></tr></table></figure>
+<p>这里，因为URL中传递参数时，是用”&amp;”符号隔开的，所以rest client识别的时候，会认为keyword这个参数并没有赋值， 而<code>&amp;s</code>中，s表示另一个参数, 且没有赋值，这样，发出请求后会报错，这种情况如何解决？做这样的处理:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">URI::encode(url).sub(&quot;&amp;&quot;, &quot;%26&quot;)</span><br></pre></td></tr></table></figure>
+<p>encode后，将第一个&amp;, 也就是<code>&amp;s</code>转变为”%26s”, 再传递给RestClient。</p>
+<p>这里你可能想要问，为什么不直接传递”%26s”？</p>
+<p>问得好！如果直接将”%26s”传递给keyword，经过URI::encode之后，keyword接收到的就会是：“%2526s”， why？Cause it will encode “%” to “%25”。</p>
+<p>当然，不只是rest client，其他需要针对URL进行encoding的，也可以进行类似的处理。</p>
+<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://github.com/rest-client/rest-client/issues/476" target="_blank" rel="noopener">URL with square brackets: URI::InvalidURIError</a></p>
+<p><a href="https://www.w3schools.com/tags/ref_urlencode.asp" target="_blank" rel="noopener">HTML URL Encoding Reference</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/11/22/custom-exceptions-in-ruby/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1399,765 +2275,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/11/02/cucumber-intro-1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/11/02/cucumber-intro-1/" itemprop="url">
-                  对Cucumber的一点理解
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-02T18:28:12+08:00">
-                2017-11-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/11/02/cucumber-intro-1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/11/02/cucumber-intro-1/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>932 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p><a href="https://cucumber.io/" target="_blank" rel="noopener">Cucumber</a>是BDD测试中的明星。</p>
-<h4 id="关键字"><a href="#关键字" class="headerlink" title="关键字"></a>关键字</h4><p>Csucumber中的几个关键字：</p>
-<p><strong>feature, scenario, given, when, then,  and,  but</strong></p>
-<p>简单说说这些关键字的含义。</p>
-<p>Feature：你可以把它看作是一个user story</p>
-<p>scenario用于描述一个简单的场景。</p>
-<p>一个feature可以有1个或者多个scenario。</p>
-<p>一个scenario可以有3～8个steps。</p>
-<p>其中，steps的定义类似于Ruby中method的定义。</p>
-<p>step中的5个关键字：</p>
-<ul>
-<li>Given : 表示事件发生之前的状态， preconditions。</li>
-<li>When： 表示事件本身，比如用户push 了一个button</li>
-<li>Then：表示事件发生后的预期结果，比如push了一个button，要跳转到某个特定的页面</li>
-<li>And &amp; But：用来延续之前的steps</li>
-</ul>
-<h4 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h4><p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> user can manually add movie</span><br><span class="line"></span><br><span class="line"><span class="symbol">Scenario:</span> Add a movie</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	When I follow <span class="string">"Add new movie"</span></span><br><span class="line">	Then I should be on the Create New Movie page</span><br><span class="line">	<span class="keyword">when</span> I fill <span class="keyword">in</span> <span class="string">"Title"</span> with <span class="string">"Men In Black"</span></span><br><span class="line">	And I select <span class="string">"PG-13"</span> from <span class="string">"Rating"</span></span><br><span class="line">	And I press <span class="string">"Save changes"</span></span><br><span class="line">	Then I shoud be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Men in Black"</span></span><br></pre></td></tr></table></figure>
-<p>这里测试一个feature，用户可以手动添加电影，添加的电影会在首页显示，表明添加成功。</p>
-<p>具体的steps是这样的：</p>
-<p>Given：用户在烂番茄主页，<strong>这是precondition</strong></p>
-<p>When：用户点击新增电影，<strong>这是事件本身</strong></p>
-<p>Then：用户应该会跳转到新建电影的页面，<strong>这是事件发生后的预期结果</strong></p>
-<p>When：电影有title字段，用户将“Men in Black” 填入到title中，<strong>这是事件本身</strong></p>
-<p>And：用户在星级中选择了“PG-13”，<strong>这是上一步的延续</strong></p>
-<p>And：用户按下“保存”，<strong>继续延续上一步</strong></p>
-<p>Then：用户应该跳转回烂番茄首页，<strong>这是事件发生后的预期结果</strong></p>
-<p>And：用户应该看到“Men in Black”，<strong>这是上一步结果的延续</strong></p>
-<p>此外，用cucumber去测试的一个好处是，它会提示你如何做可以让测试通过。</p>
-<p>再看一个实例，看看如何DRY：P。</p>
-<p>用户在TMDb首页搜索movie，可能出现的两种结果: 搜索到该影片(happy path)，没有搜索到(bad path)</p>
-<p>测试文件长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Movie that Does Not Exist"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Movie That Does Not Exist"</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Inception"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Inception"</span></span><br></pre></td></tr></table></figure>
-<p>其中，sad path ，happy path都有6个 steps，两者的前两个steps是一样的，how to DRY it?</p>
-<p>这里用到<strong>background</strong>，我的理解是background类似于RSpec中的before。</p>
-<p>我们重构一下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Background:</span> Start from the Search form on the home page</span><br><span class="line">			Given I am on the RottenPotatoes home page</span><br><span class="line">			Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Movie that Does Not Exist"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Movie That Does Not Exist"</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Inception"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Inception"</span></span><br></pre></td></tr></table></figure>
-<p>OK，大功告成。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/25/test-concept-about-mock/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/25/test-concept-about-mock/" itemprop="url">
-                  测试概念之mock篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-25T19:42:15+08:00">
-                2017-10-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/25/test-concept-about-mock/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/25/test-concept-about-mock/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>455 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>接上一篇，这篇说说mock是啥。</p>
-<p>呃，看了一些别人写的文章，似乎对于mocks，stubs，doubles没什么特别的限制，随便用的感觉。新手对此表示很懵逼。</p>
-<p>以下内容属于小白对mock的理解，如有误人子弟的嫌疑，非常欢迎拍砖：P</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>说mock前，先来说说double。</p>
-<p>Double在英文中有替身的含义。当你double一个真实的对象时，相当于给这个对象创建了一个替身。</p>
-<p>mocks 和stubs有时候也被称之为doubles。</p>
-<p>那mocks 和stub有什么区别？</p>
-<p>看到一篇文章<a href="http://www.jianshu.com/p/c5aca7d672c5" target="_blank" rel="noopener">RSpec, Test Double, Mock, and Stub</a>， 上面提到<strong>Mock是对象层面的</strong>，<strong>Stub是方法层面</strong>，个人觉得挺在理的。</p>
-<p>用实例来说说mock的使用。</p>
-<p>接<a href="https://lupeipei.github.io/2017/10/24/test-concepts-about-stub/">上一篇</a>，测试了两个行为，验证search_tmbd是否调用了find_in_tmdb， 验证最后的结果是否render到了<code>search_tmbd.html.erb</code>这个template。但是还有一个我们没有测试的，就是find_in_tmdb返回的结果是否可用于这个template。</p>
-<p>在<code>movies_controller.rb</code>中，修改search_tmbd这个method，将搜索结果赋值给到@movies：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fkup1kdwg1j30e902pglq.jpg" alt=""></p>
-<p>然后我们的测试代码是这样子的：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkup4vrh3zj30f309bwg9.jpg" alt=""></p>
-<p>这里用mock(‘Moive’)，创建了一个假的movie对象，并赋值给@fake_results。用stub来调用find_in_tmdb后，返回值是@fake_results。最后<code>except assigns(:movies).to eq(@fake_results)</code> 显示我们预期实例变量movies的赋值结果是等于@fake_results的。</p>
-<p>运行测试，pass。</p>
-<p>说了这么多，我的理解是mock创建了对象的替身，来模拟对象的行为。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>附上一份RSpec的烹饪教程，来自Edx：</p>
-<p><strong>RSpec Cookery</strong></p>
-<ul>
-<li>Each spec should test just one behavior</li>
-<li>Use seams(stub,mock, double) as needed to isolate that behavior</li>
-<li>Determine what type of expectation will check the behavior</li>
-<li>Write the test and make sure it fails for the right reason</li>
-<li>Add code until test is green</li>
-<li>Look for opportunities to refactor/beautify</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/24/test-concepts-about-stub/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/24/test-concepts-about-stub/" itemprop="url">
-                  测试概念之stub篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-24T21:47:23+08:00">
-                2017-10-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/24/test-concepts-about-stub/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/24/test-concepts-about-stub/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>773 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>学习测试的时候，一直不大懂stub，后来刷多了课程，感觉好像不那么懵逼了。</p>
-<p>决定结合自己的学习与思考，说说stub到底是个啥。</p>
-<p>BTW，if  you want to be a rocking unit tester, you must know stub and mock.：P</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先来看一个问题：</p>
-<p>你准备测试method A，method A 依赖于method B，比如method A要调用远端的API，而你只想测试method A有没有被正确调用，method B 存在与否，是不是返回了预期的结果，你并不care， 那么要怎么做才能保证测试的独立性？</p>
-<p>这样的测试，就要用到stub。</p>
-<p>下面以一个movie model来说明一下如何使用stub。</p>
-<p>设想一个简单的movie影片查询情景：</p>
-<p>用户在TMDb页面中输入影片名称，点击查询按钮，这时MoviesController 中对应的 search_tmdb method会去调用movie model里面真正执行search行为的method，这个method在数据库中进行搜索匹配，最后返回搜索结果，随后controller的 search_tmdb会render到搜索结果的页面，用户看到搜索结果，这样整个的搜索动作才算完成。</p>
-<p>现在的情况是，movie model里面没有定义任何执行search 行为的method，而我们只想要验证controller的search_tmdb 调用了model里面执行search的method，不管这个method的存不存在，有没有返回预期结果，我们不care, 我们只想确定controller的search_tmdb做了正确的事，怎么破？</p>
-<p>用stub来打破依赖。用一个伪造的method去替代，确保这个伪造的method被调用即可。</p>
-<p>你的<code>movies_controller.rb</code>中定义了一个search_tmdb,但是里面啥也没有：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>你的test文件长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fktni1u9gaj30df05o3z5.jpg" alt=""></p>
-<p>这时运行测试文件，会报错，因为你的search_tmdb并没有说让Movie去调用这个find_in_tmdb，如何让测试通过？</p>
-<p>在<code>movies_controller.rb</code>中修改search_tmdb method，使它长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line">+ Movie.find_in_tmdb(params[<span class="symbol">:search_terms</span>])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>再次运行测试文件，通过！！</p>
-<p>这里值得注意的是，你的movie model中，<strong>根本就没有find_in_tmdb这个method</strong>，很神奇是不是？</p>
-<p>事实上，为了打破method之间的依赖，保证测试的独立性，这里伪造了一个针对find_in_tmdb的调用，<strong>即使这个find_in_tmdb本身存在model中，也会被忽视，overriding it</strong>。</p>
-<p>这就是Stub了，很特别是不是？我第一次接触的时候，觉得很special。</p>
-<p>看第二个测试： <strong>selects the Search Results template for rendering</strong></p>
-<p>这里我们要确认controller的search_tmdb在调用find_in_tmdb后，是否render到了特定的template，即<code>search_tmdb.html.erb</code>。由于find_in_tmdb并没有定义，故这里也要用stub。怎么写呢？</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fkuj2c03kjj30h606qgmv.jpg" alt=""></p>
-<p>[这里用了matchers: render_template, response.]</p>
-<p><code>Movie.stub(:find_in_tmbd)</code>： 假定执行了find_in_tmdb</p>
-<p><code>expect(response).to render_template</code>:  验证最后的结果，是否render到了search_tmbd.html.erb这个template</p>
-<p>运行测试文件，pass。</p>
-<p>这里要注意，如果测试失败了，请检查一下你的app/views/movies/下是否存在search_tmbd.html.erb，如果不存在，新建，不然这个测试是无法通过的。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>记住一句话，有助于理解stub： The code you wish you had。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/passenger-deploy-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/23/passenger-deploy-rails/" itemprop="url">
-                  Rails部署报错记录Passenger + Nginx
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-23T19:16:24+08:00">
-                2017-10-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/23/passenger-deploy-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/23/passenger-deploy-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>483 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在部署网站后遇到的一个大坑，长这样：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fks5pqyvghj30no09u0ti.jpg" alt=""></p>
-<p>看到这一行熟悉的we’re sorry, but something went wrong，默默跟这位老朋友打个招呼【捂脸】。</p>
-<p>Google后，发现其他用passenger来部署Rails的，也遇到过这种页面无法显示的问题，但是没看到有人提供解决方法或者思路的，决定记录下我的整个解决步骤，给同样入坑的伙伴们作个参考。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Google，看了stack overflow上的一些相关内容后，猜测是passenger的问题，于是终端输入<code>sudo passenger-status</code>, 发现passenger根本就没有开这个Rails的进程。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fks5pqt1ywj30l108xt9z.jpg" alt=""></p>
-<p>没开那就手动来开，在app的current目录下，运行<code>bundle exec passenger start</code>, 报错：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks5pqia5ej30tc0ka46y.jpg" alt=""></p>
-<p>怎么办？按照指示去tmp下找文件，看error log。</p>
-<p>以root身份登录，去tmp目录下，查看出错的log,这里是passenger-error-pxhJuZ.html。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">nano passenger-error-pxhJuZ.html</span><br></pre></td></tr></table></figure>
-<p>打开显示如下：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fksdg0z54rj30wv0dftdo.jpg" alt=""></p>
-<p>OK，那就动动listen 这个gem, google 后，参考stackoverflow上的解答<a href="https://stackoverflow.com/questions/38663706/loaderror-could-not-load-the-listen-gem-rails-5" target="_blank" rel="noopener">LoadError: Could not load the ‘listen’ gem (Rails 5)</a>， 把listen从development中移除，放在了global中</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksdhtg52aj30et0azdhc.jpg" alt=""></p>
-<p>本地运行<code>bundle</code>，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面，发现还是老样子。怎么回事？突然想到stack overflow上提到可以登录rails console看看，好，试试。</p>
-<p>用deploy身份登录远端后，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/Together/current #Together 是你的APP名称</span><br><span class="line">RAILS_ENV=production bundle exec rake db:seed</span><br></pre></td></tr></table></figure>
-<p>果然，报错，显示网站有bug，立马回去修bug……</p>
-<p>在本地修复好，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面， OK！！</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>这段爬坑的日子，遇到了不少Google了也不一定能解决的坑，甚至会让你在懵逼的情况下，被别人的解答带得越来越远。只想说解决问题的思路真的太重要了，同时多点耐心，相信坑坑皆有解。</p>
-<p>Be more patient.</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/16/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/14/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/14/">14</a><span class="page-number current">15</span><a class="page-number" href="/page/16/">16</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/16/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2202,7 +2324,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2213,7 +2335,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2335,7 +2457,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>

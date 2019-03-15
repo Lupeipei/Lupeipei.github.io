@@ -273,6 +273,829 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/29/web-together-build-3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/29/web-together-build-3/" itemprop="url">
+                  Together网站搭建之踩坑系列3
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-29T06:34:34+08:00">
+                2017-09-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/29/web-together-build-3/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/09/29/web-together-build-3/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>475 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是功能实现的第二篇，扯一扯<strong>如何添加分类筛选功能</strong>。</p>
+<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
+<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
+<li><a href="https://lupeipei.github.io/2017/09/28/web-together-build-2/">给活动添加收藏功能，并使用Ajax进行优化</a></li>
+<li>给活动Events添加分类筛选</li>
+<li><a href="https://lupeipei.github.io/2017/09/30/web-together-build-4/">添加省市自治区地址, 并实现热门城市筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/01/web-together-build-5/">添加时间筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/03/web-together-build-7/">实作活动申请</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
+</ul>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先上效果图：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fjqcf5bajjg30x40i0k2j.gif" alt=""></p>
+<p><strong>如何实现？</strong></p>
+<ul>
+<li><p>新建model category</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g model category name:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event中新增category的栏位</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_category_id_to_event category_id:integer</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立category和event的关系，在<code>event.rb</code>中添加</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">belongs_to <span class="symbol">:categroy</span></span><br></pre></td></tr></table></figure>
+<p><code>category.rb</code>中添加：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">has_many <span class="symbol">:events</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event的new ，edit中添加如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= select_tag(:category_id, options_for_select(@categories), :prompt =&gt; &quot;类别&quot;) %&gt;</span><br></pre></td></tr></table></figure>
+<p>如果是simple_form格式，可添加如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-group"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.association</span> <span class="attr">:category</span> %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>events_controller.rb</code>中，将category_id添加到params白名单中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">event_params</span></span></span><br><span class="line">  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:title</span>, ......, <span class="symbol">:category_id</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>为方便后续部署到heroku,可在seeds文档中新建category。在seeds.rb中添加如下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Category部分</span></span><br><span class="line">Category.delete_all</span><br><span class="line"></span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">1</span>, <span class="symbol">name:</span> <span class="string">"音乐"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">2</span>, <span class="symbol">name:</span> <span class="string">"户外"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">3</span>, <span class="symbol">name:</span> <span class="string">"约厨"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">4</span>, <span class="symbol">name:</span> <span class="string">"交友"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">5</span>, <span class="symbol">name:</span> <span class="string">"读书"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">6</span>, <span class="symbol">name:</span> <span class="string">"游戏"</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在event 的index页面显示分类列表，在event的<code>index.html.erb</code>中添加如下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="btn-group"&gt;</span><br><span class="line">	&lt;%= link_to <span class="string">"全部"</span>, events_path, <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>].blank?)? <span class="string">"active"</span> : <span class="string">""</span>&#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% Category.all.each <span class="keyword">do</span> <span class="params">|c|</span> %&gt;</span><br><span class="line">  	&lt;%= link_to c.name, events_path(<span class="symbol">category:</span> c), <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>] == c)? <span class="string">"active"</span> : <span class="string">""</span> &#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>用上scope，在<code>event.rb</code>中加入以下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope <span class="symbol">:by_category</span>, -&gt;(c)&#123;where( <span class="symbol">:category_id</span> =&gt; c )&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改<code>events_controller.rb</code>，修改index部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  @events = Event.order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:category</span>].present?</span><br><span class="line">    @events = @events.by_category(params[<span class="symbol">:category</span>]).order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>大功告成！</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/28/web-together-build-2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/28/web-together-build-2/" itemprop="url">
+                  Together网站搭建之踩坑系列2
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-28T06:59:16+08:00">
+                2017-09-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/28/web-together-build-2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/09/28/web-together-build-2/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,131 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>打算后面写一些功能实现方面的小文章，详见目录。</p>
+<p>完整作品源码及效果，看这里<a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a>,   <a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a>。</p>
+<p>今天先来一个收藏功能+Ajax优化.</p>
+<h4 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h4><ul>
+<li>给活动添加收藏功能，并使用Ajax进行优化</li>
+<li><a href="https://lupeipei.github.io/2017/09/29/web-together-build-3/">给活动Events添加分类筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/09/30/web-together-build-4/">添加省市自治区地址, 并实现热门城市筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/01/web-together-build-5/">添加时间筛选</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/02/web-together-build-6/">添加评论区，并使用ajax优化</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/03/web-together-build-7/">实作活动申请</a></li>
+<li><a href="https://lupeipei.github.io/2017/10/04/web-together-build-8/">在个人中心实作密码修改</a></li>
+</ul>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先上效果图：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fjw79s6kufg30zv0j74qp.gif" alt=""></p>
+<p>咱分两步走：</p>
+<h5 id="Step1、制作收藏功能"><a href="#Step1、制作收藏功能" class="headerlink" title="Step1、制作收藏功能"></a>Step1、制作收藏功能</h5><ul>
+<li><p>新建一个favorite model，终端运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g model favorite user_id:integer event_id:integer</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>建立favorite与user，event的关系</p>
+<ul>
+<li><p>在app/models/favorite.rb中，加入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">belongs_to :user</span><br><span class="line">belongs_to :event</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/models/event.rb</code>中，加入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">has_many :favorites</span><br><span class="line">has_many :fans, through: :favorites, source: :user</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/models/user.rb</code>中，加入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">has_many :favorites</span><br><span class="line">has_many :favorite_events, through: :favorites, source: :event</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/models/user.rb</code>中，加入是否已收藏活动的判断，及收藏与取消收藏的method：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_favorite_of?</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events.<span class="keyword">include</span>?(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">favorite!</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events &lt;&lt; event</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">unfavorite!</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events.delete(event)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+<li><p>修改<code>config/routes.rb</code>中events 部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">  put <span class="symbol">:favorite</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在需要添加收藏的页面，比如event的show或者index，加上收藏及取消收藏，代码以index页面为例：</p>
+<p>【这里，建议你安装<code>font-awesome-rails</code>这个gem，如果没有，也没关系，用button代替即可】</p>
+<p>装了<code>font-awesome-rails</code>，可以这么来：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;% @events.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"unfavorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i class="fa fa-star"&gt; 已收藏 &lt;/i&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"favorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i class="fa fa-star-o"&gt; 收藏&lt;/i&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+<p>没有装，咱可以这么来：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;% @events.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">'已收藏'</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"unfavorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>") %&gt;</span></span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">'收藏'</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"favorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>") %&gt;</span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编辑<code>app/controller/events_controller.rb</code>，加上favorite方法，同时在before_action中加上favorite</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:favorite</span>, .....]</span><br><span class="line"></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">favorite</span></span></span><br><span class="line">    @event = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">"favorite"</span></span><br><span class="line">      current_user.favorite!(@event)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">"unfavorite"</span></span><br><span class="line">      current_user.unfavorite!(@event)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+<p>到这里，功能基本OK了，下面我们请上Ajax.</p>
+</li>
+</ul>
+<h5 id="Step2、Ajax优化"><a href="#Step2、Ajax优化" class="headerlink" title="Step2、Ajax优化"></a>Step2、Ajax优化</h5><p>目标：实现快速收藏，同时显示收藏人数</p>
+<ul>
+<li><p>编辑<code>app/views/events/index.html.erb</code>,把原来用作收藏的html部分删除，放入partial中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&lt;% @events.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">-  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">-     &lt;%= link_to(<span class="string">'已收藏'</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"unfavorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>") %&gt;</span></span><br><span class="line">-  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-     &lt;%= link_to(<span class="string">'收藏'</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"favorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>") %&gt;</span></span><br><span class="line">- &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line"></span><br><span class="line">+    &lt;div id=<span class="string">"favorite-&lt;%= event.id %&gt;"</span>&gt;</span><br><span class="line">+     &lt;%= render <span class="symbol">:partial</span> =&gt; <span class="string">"favorite"</span>, <span class="symbol">:locals</span> =&gt; &#123;<span class="symbol">:event</span> =&gt; event &#125;%&gt;</span><br><span class="line">+   &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">.......</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建<code>app/views/events/_favorite.html.erb</code>， 添加如下代码到<code>_favorite.html.erb</code>中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event) %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"unfavorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i class="fa fa-star"&gt; 已收藏 (&lt;span id="favorite-counts-&lt;%= event.id %&gt;"&gt;&lt;%= event.favorites.count%&gt;&lt;/span&gt;)&lt;/i&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">"favorite"</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i class="fa fa-star-o"&gt; 收藏 (&lt;span id="favorite-counts-&lt;%= event.id %&gt;"&gt;&lt;%= event.favorites.count%&gt;&lt;/span&gt;)&lt;/i&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
+<p>【这里默认已安装了<code>font-awesome-rails</code>这个gem】</p>
+</li>
+<li><p>编辑<code>app/controllers/events_controller.rb</code>, 去掉favorite中的redirect_to:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">.....</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">favorite</span></span></span><br><span class="line">    @event = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">"favorite"</span></span><br><span class="line">      current_user.favorite!(@event)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">"unfavorite"</span></span><br><span class="line">      current_user.unfavorite!(@event)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  - redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建<code>app/views/events/favorite.js.erb</code>，添加如下代码到<code>favorite.js.erb</code>中：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">str = <span class="string">"&lt;%=j render :partial =&gt; "</span>favorite<span class="string">", :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;"</span>;</span><br><span class="line">$(<span class="string">"#favorite-&lt;%= @event.id %&gt;"</span>).html(str);</span><br><span class="line">$(<span class="string">"#favorite-counts-&lt;%= @event.id %&gt;"</span>).html(<span class="string">"&lt;%= @event.favorites.count %&gt;"</span>);</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>啦啦啦，大功告成！！</p>
+<p>参考文章：<a href="https://forum.qzy.camp/t/topic/1432" target="_blank" rel="noopener">如何做出收藏工作的功能？</a></p>
+<p><strong>稍稍加个餐：</strong></p>
+<p>BTW，简单提一个在用 Ajax 优化时，遇到的bug。</p>
+<p>在未登录的情况，用户进行点赞及收藏，应该跳出登录界面，但网站没有任何反应，而你的controller里面已经有了<code>before_action :authenticate_user!</code>， 貌似没起效果，怎么破？</p>
+<p>上图：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fjw6juewvrg30zv0j7wji.gif" alt=""></p>
+<p>附上服务器报错信息：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fjw73e80pgj30mv05pt9u.jpg" alt=""></p>
+<p>Google后，会发现一堆相关的，包括在<code>config/initializers/devise</code>设置<code>config.http_authenticatable_on_xhr = false</code>， 修改<code>routes.rb</code>的，设置CSRF token的……试了好些个，没能解决。比较好笑的是，最后找到的解决办法，有些过于简单，哈哈。<br>附上:</p>
+<p>在<code>app/controllers/events_controller.rb</code>中，添加如下代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EventsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:check_user</span>, <span class="symbol">only:</span> [<span class="symbol">:favorite</span>, <span class="symbol">:like</span>]</span><br><span class="line"></span><br><span class="line">  ......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">check_user</span></span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">if</span> user_signed_in?</span><br><span class="line">  redirect_to new_user_session_path, <span class="symbol">error:</span> <span class="string">'请先登录'</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>现在点击收藏或点赞，会跳转到登录页面，OK!</p>
+<p>参考：<a href="https://stackoverflow.com/questions/45168122/rails-4-401-unauthorized-error-handling" target="_blank" rel="noopener">rails 4- 401 Unauthorized error handling</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/27/web-together-build-1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/27/web-together-build-1/" itemprop="url">
+                  Together网站搭建之踩坑系列1
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-27T21:53:03+08:00">
+                2017-09-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/09/27/web-together-build-1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/09/27/web-together-build-1/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>938 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h4><p>听闻：光说不练都是扯淡。所以决定做一个类似线下meetup召集令的网站来练练手，起名暂时叫做together，做的过程中，难免踩坑不断，不过也对ROR越来越有感觉了。</p>
+<p>不多说，上成品：</p>
+<p><a href="https://togetherisbetter.cn/" target="_blank" rel="noopener">作品网站</a></p>
+<p><a href="https://github.com/Lupeipei/Together" target="_blank" rel="noopener">作品源码</a></p>
+<p>非常欢迎拍砖。</p>
+<p>有种路，叫做一步一坑，所幸坑坑有解，越踩越稳健。</p>
+<p>决定列出遇到的那些坑及相关解法，给踏上踩坑之旅的小伙伴做个参考。</p>
+<p>先来一波小坑。</p>
+<h4 id="如何给rails项目重命名？"><a href="#如何给rails项目重命名？" class="headerlink" title="如何给rails项目重命名？"></a>如何给rails项目重命名？</h4><p>Google下，以下方法针对：rails4.0+</p>
+<p>两步走：</p>
+<p>1、装gem，在<code>gemfile</code>中添加：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;rename`</span><br></pre></td></tr></table></figure>
+<p>终端执行：<code>bundle install</code></p>
+<p>2、终端输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g rename:app_to new_name</span><br></pre></td></tr></table></figure>
+<p>搞定。</p>
+<p>stackoverflow上有不少方法，详见<a href="https://stackoverflow.com/questions/20988813/how-to-rename-rails-4-app" target="_blank" rel="noopener">how to rename rails4 app</a>, 不过个人觉得这个最简单易用，亲测有效。</p>
+<h4 id="设置时间格式"><a href="#设置时间格式" class="headerlink" title="设置时间格式"></a>设置时间格式</h4><p>基于DRY原则，这里直接跳过strftime, 使用to_s统一进行设置：</p>
+<p>1、在<code>config/application.rb</code>中，添加时区和显示格式设置，这里设置成北京时间：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">config.time_zone = <span class="string">"Beijing"</span></span><br><span class="line">Time::DATE_FORMATS.merge!(<span class="symbol">:default</span> =&gt; <span class="string">'%Y/%m/%d %I:%M %p'</span>, <span class="symbol">:ymd</span> =&gt; <span class="string">'%Y/%m/%d'</span>)</span><br></pre></td></tr></table></figure>
+<p>说明：</p>
+<blockquote>
+<p>default是指默认的时间显示格式，根据你的需要进行设置即可，后面时间的显示就会自动采用这个默认格式了。</p>
+<p>此外，这里新建了一个ymd, 只显示日期年月日，如果要用ymd, 如何引用呢？以event的created_at为例，</p>
+<p>写成<code>&lt;%= event.created_at.to_s(:ymd) %&gt;</code>即可。</p>
+</blockquote>
+<p>2、 重启rails s服务器，大功告成。</p>
+<h4 id="footer置底"><a href="#footer置底" class="headerlink" title="footer置底"></a>footer置底</h4><p>被footer置底也是折腾了不少时间的，找到了最简单的一个，附上：</p>
+<p>比如说，你的<code>_footer.html.erb</code>长这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="footer"&gt;</span><br><span class="line">  &lt;p class="text-center"&gt;@2017 Together All rights reserved</span><br><span class="line">  &lt;<span class="regexp">/p&gt;</span></span><br><span class="line"><span class="regexp">&lt;/div</span>&gt;</span><br></pre></td></tr></table></figure>
+<p>如何设置成置底形式？</p>
+<p>在<code>application.scss</code>中，添加如下代码：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">html</span> &#123;</span><br><span class="line">    <span class="attribute">min-height</span>: <span class="number">100%</span>;</span><br><span class="line">    <span class="attribute">position</span>: relative;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">margin-bottom</span>: <span class="number">80px</span>;</span><br><span class="line">&#125;</span><br><span class="line">// footer</span><br><span class="line"><span class="selector-class">.footer</span> &#123;</span><br><span class="line">  <span class="attribute">position</span>: absolute;</span><br><span class="line">  <span class="attribute">bottom</span>: <span class="number">0</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100%</span>;</span><br><span class="line">  height: 80px; //这里，height要 &lt;= body中的margin-bottom</span><br><span class="line">  <span class="selector-tag">text-align</span>: <span class="selector-tag">center</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ok.</p>
+<h4 id="部署到heroku-登录heroku，重命名了app，那么在本地如何修改？"><a href="#部署到heroku-登录heroku，重命名了app，那么在本地如何修改？" class="headerlink" title="部署到heroku,登录heroku，重命名了app，那么在本地如何修改？"></a>部署到heroku,登录heroku，重命名了app，那么在本地如何修改？</h4><p>终端输入以下代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">heroku login #登录heroku</span><br><span class="line">git remote -v</span><br><span class="line">git remote rm heroku</span><br><span class="line">git remote -v</span><br><span class="line">git remote add heroku https://git.heroku.com/new-name.git #new-name指的是你app的新名字</span><br><span class="line">git push heroku  #最新分支:master</span><br></pre></td></tr></table></figure>
+<p>还有多个方案可解决，参考资料：</p>
+<p><a href="http://xyy601-blog.logdown.com/posts/1387963-the-basics-how-to-rename-your-heroku-app-name" target="_blank" rel="noopener">怎样重新命名你的heroku app的名称</a></p>
+<h4 id="heroku-qiniu报错"><a href="#heroku-qiniu报错" class="headerlink" title="heroku + qiniu报错"></a>heroku + qiniu报错</h4><p>如果你的seeds文档中，有图片URL，且你的项目中使用了七牛云来存储图片，那么在部署到heroku后，</p>
+<p>运行seeds文档时，终端可能会出现这样的问题：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fjp9k7eibjj30qf02fdgk.jpg" alt=""></p>
+<p>这时，莫慌，莫急，不是你的问题，heroku服务器的问题，建议再次运行2～3次，如果还是报错，，第二天起个早，运行2～3次，基本就OK了。</p>
+<h4 id="格式在本地显示正常，但是部署到heroku后，显示不正常，怎么破？"><a href="#格式在本地显示正常，但是部署到heroku后，显示不正常，怎么破？" class="headerlink" title="格式在本地显示正常，但是部署到heroku后，显示不正常，怎么破？"></a>格式在本地显示正常，但是部署到heroku后，显示不正常，怎么破？</h4><p>比如你安装了 ckeditor, 本地和heroku显示不一致。</p>
+<p>上图：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fjp9fxghmrj30vs0id762.jpg" alt=""></p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fjp9g0moh3j30u30ev0ug.jpg" alt=""></p>
+<p>先是Google，没找到相关的，然后在GitHub上，找到ckeditor的repos，看完README ,有提到deploy部分，如下：</p>
+<blockquote>
+<p>For Rails 4 and 5, add the following to <code>config/initializers/assets.rb</code>:</p>
+</blockquote>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Rails.application.config.assets.precompile += <span class="string">%w( ckeditor/* )</span></span><br></pre></td></tr></table></figure>
+<p>这一步我已经做了，可是并没有解决问题，不是我要找的答案，在slack上发出求助，找到了解答：</p>
+<p>终端运行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">bundle exec rake assets:precompile</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;XXXX&quot;</span><br><span class="line">git push heroku master #这里你的最新分支在master</span><br><span class="line">heroku run rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>Ok ！</p>
+<p>后续在添加<code>bootstrap-datepicker-rails</code>这个gem的时候，也遇到了一样的问题，再一次运行了一次<code>bundle exec rake assets:precompile</code>, so easy！</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/20/living-by-changjiang-river/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/09/20/living-by-changjiang-river/" itemprop="url">
+                  家住长江边
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-09-20T21:58:53+08:00">
+                2017-09-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Life/" itemprop="url" rel="index">
+                    <span itemprop="name">Life</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>525 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>这里是长江边的一个小镇。</p>
+<p>跟所有的小镇一样，平淡而宁静。</p>
+<p>小镇的夜晚，一抬头，满天星，一闪一闪，干干净净，真好看。</p>
+<p>傍晚的时候，夕阳很美，你若有兴致，塞上耳机，出门，上大坝，大坝两边是青草地，风一吹，阵阵青草味扑来，真真是好闻。</p>
+<p>大坝下面有家电影院，应该是这附近唯一的一家影院，环境不错，看的人也多，记得提前买票。</p>
+<p>如果想要扔扔篮球，可以去附近的中学，那里有个篮球场，操场挺大，还可以跑跑步。</p>
+<p>楼下有家饼店，一对夫妻开的，见人总是笑呵呵的，他们家的雪菜饼卖得很好。</p>
+<p>偷懒不想做早饭的时候，可以下楼买两个解解馋，很近，骑单车过去不到5分钟，不过要起早，7点以后估计饼就卖完了。</p>
+<p>离那家饼店不远，有一家蛋糕店，很传统，各式各样的糕点排在门店前面，没什么装饰，像小作坊，可是生意很好。</p>
+<p>有一次踩单车路过，瞥见店长穿了件23号球衣，上面写着James，瞬间对这家蛋糕店很有好感。</p>
+<p>还是那条街，有家面馆叫友达，老板忒实在，很大碗面，加一些鱼豆腐，味道很好，不过因为分量特别足，从来没有吃完过。</p>
+<p>旁边也有一些快餐店，卖汉堡可乐，不过不推荐，你会失望的。</p>
+<p>如果你的单车出了问题，去街角的那家，修车的是个白发爷爷，人很亲切，技术很赞，服务很贴心。</p>
+<p>早上醒来的时候，你除了听到鸟鸣声，偶尔还会伴有篮球入筐的声音，那是楼下的消防队开始练球了，不要气他们扰了你的好梦，原谅他们，相信我，他们打的很铁。</p>
+<p>放晴的日子，天很蓝，有云，抬头，尼玛，这天真好看。</p>
+<p>我的废话说完了，去敲代码。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/09/15/add-backgroup-music/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1688,985 +2511,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/07/31/notes-of-together-is-better/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/07/31/notes-of-together-is-better/" itemprop="url">
-                  读《together is better》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-31T10:02:08+08:00">
-                2017-07-31
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>996 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="缘起："><a href="#缘起：" class="headerlink" title="缘起："></a>缘起：</h4><p>在一个暴雨后的夜晚，读一本带着香气的书，真的是一件顶幸福的事儿。</p>
-<p>不仅仅是书香沁脾，更重要的是内容很有营养，推荐这本《together is better》.</p>
-<h4 id="正文："><a href="#正文：" class="headerlink" title="正文："></a>正文：</h4><p>本书作者Simon  Sinek，在他著名的Ted演讲：<a href="https://www.ted.com/talks/simon_sinek_how_great_leaders_inspire_action" target="_blank" rel="noopener">how great leaders inspire action</a> 中提到了黄金圈法则：What，How,Why. 去年第一次看了他的演讲时，便觉得观点独特，但是看完后，我的想法是：“嗯，这很对，很cool，可是离我很遥远，leadership这种东西我应该是用不上的。” 现在想来，当时的想法真的是够愚蠢的。狭隘地理解了领导力，错以为领导力只是在职场中运用，更错到离谱地以为领导力代表着强权与控制欲。呃，貌似跑题了，言归正传。</p>
-<p>Simon Sinek的这本《together is better》主要也是以阐述领导力为主，但是全书通篇以简短的文字加配图相结合的方式，还创造性地为书添加上了香气，读来让人感觉特别舒服。通过三位主角从逃离原有环境，一起去寻找愿景，历经磨难，抵达目的地，成功后选择回到原地，回报他人，最后成长为被他人追随的领导者的过程，将那些简单却深刻的道理娓娓道来，真是个很欢畅的洗脑过程。</p>
-<p>下面就从领导力，领导者属性，团队这三个方面，摘录文中的几个要点，顺便附上个人的一些见解。</p>
-<h5 id="什么是领导力？"><a href="#什么是领导力？" class="headerlink" title="什么是领导力？"></a>什么是领导力？</h5><ul>
-<li><p>It is not about being in charge, it is about taking care of those in your charge.</p>
-</li>
-<li><p>It is not a rank or position to be attained, it is a service to be given.</p>
-</li>
-<li><p>Leadership is an education. And the best leaders think of themselves as the students, not the teachers.</p>
-<blockquote>
-<p>书中提到领导力是可以通过日常的练习习得的一种能力，如何练习？方法是通过考量他人的生活（consider the lives of others），即使损及自身的利益。 个人的理解是和他人一起共同成长，创造双赢的局面，嗯，together is better。</p>
-</blockquote>
-</li>
-</ul>
-<h5 id="好的领导具有哪些属性？"><a href="#好的领导具有哪些属性？" class="headerlink" title="好的领导具有哪些属性？"></a>好的领导具有哪些属性？</h5><ul>
-<li><p>With good leader, we feel like we work for each other.</p>
-</li>
-<li><p>Leaders give us the chance to try and fail, then give us another chance to try and succeed.</p>
-</li>
-<li><p>Bad leaders care about who’s right, good leaders care about what’s right.</p>
-</li>
-<li><p>A good leader doesn’t only inspire us to have confidence in what they can do, A great leader inspires us to have confidence in what we can do.</p>
-</li>
-<li><p>The true value of a leader is not measured by the work they do, the true value of a leader is measured by the work they inspire others to do.</p>
-</li>
-<li><p>A leader must be inspired by the people before a leader can inspire the people</p>
-<blockquote>
-<p>一句话小结就是：好的领导是给你提供成长的机会，鼓励你突破你的玻璃顶的人。可是问题来了，一是现实中这样的领导实在是太少，二是对于绝大多数的普通人，比如我，遇到这样的领导的概率几乎等于零。那怎么破？我能想到的是，不断提高自身的能力，特别是专业水平，这样才有可能遇到。</p>
-</blockquote>
-</li>
-</ul>
-<h5 id="什么是团队？"><a href="#什么是团队？" class="headerlink" title="什么是团队？"></a>什么是团队？</h5><ul>
-<li>A team is not a group of people who work together, a team is a group of people who trust each other.</li>
-</ul>
-<blockquote>
-<p>单单从相互信任这一点看，大部分的团队其实都是不合格的，现实中更多的是找一群人来做一件事，重要的是把这件事情完成了，至于是否能做到相互信任倒是其次了.</p>
-</blockquote>
-<p>当然文中还有很多金句，不过我个人特别喜欢亚里士多德的这句：</p>
-<blockquote>
-<p>There is only one way to avoid criticism: do nothing, say nothing , and be nothing.</p>
-</blockquote>
-<p>P.S. 这本由台湾远流出版社发行的书，里面的一些翻译用语可能与大陆读者平时的用词不大一样，读来有些别扭，但如果你对繁体字有偏爱，那么读这本书会是个很享受的过程，Enjoy！</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fi32kel7ifj30zk0qotcx.jpg" alt=""></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/07/29/build-blog-with-hexo/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/07/29/build-blog-with-hexo/" itemprop="url">
-                  使用Hexo在GitHub上为自己搭建一个静态Blog站点
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-29T16:35:57+08:00">
-                2017-07-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/07/29/build-blog-with-hexo/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/07/29/build-blog-with-hexo/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>954 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>不废话，直接上货。</p>
-<h3 id="初步搭建"><a href="#初步搭建" class="headerlink" title="初步搭建"></a>初步搭建</h3><h4 id="Step1-在GitHub上创建一个Repo"><a href="#Step1-在GitHub上创建一个Repo" class="headerlink" title="Step1. 在GitHub上创建一个Repo"></a>Step1. 在GitHub上创建一个Repo</h4><p>登陆GitHub，当然没有账号的话，注册个。</p>
-<p>创建一个Repo，名称格式为<code>yourname.github.io</code>, 这里要注意，yourname 不是你随随便便起一个的，要和你GitHub的账户名保持一致，不然后面你会发现无法部署。</p>
-<h4 id="Step2-本地安装git-npm"><a href="#Step2-本地安装git-npm" class="headerlink" title="Step2. 本地安装git , npm"></a>Step2. 本地安装git , npm</h4><p>这里以homebrew为例来说明安装git, npm的方法，你也可以通过其他方式来安装。</p>
-<p>安装Xcode和Homebrew：</p>
-<ul>
-<li><p>Xcode：在App Store中下载，建议关闭VPN，以免下载速度过慢</p>
-</li>
-<li><p>Homebrew：在终端输入</p>
-<p><code>/usr/bin/ruby -e &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)&quot;</code></p>
-<p>回车, 安装过程中，会被问到系统密码，此时只管输入密码，回车即可。</p>
-<p>了解更多，参见：<a href="https://brew.sh/index_zh-tw.html" target="_blank" rel="noopener">Homebrew 的官方网址</a></p>
-</li>
-</ul>
-<p>安装git , npm 并确认安装成功：</p>
-<ul>
-<li>安装 npm<ul>
-<li>终端输入：<code>brew install node</code>，休息下，等它安装完毕；</li>
-<li>输入：<code>node -v</code> , <code>npm -v</code>会显示版本号，表示已经安装成功；</li>
-</ul>
-</li>
-<li>安装 git<ul>
-<li>终端输入：<code>brew install git</code>， 同样的，等安装完成；</li>
-<li>输入：<code>git --version</code>，显示git的版本，安装完成。</li>
-</ul>
-</li>
-</ul>
-<h4 id="Step3-安装hexo"><a href="#Step3-安装hexo" class="headerlink" title="Step3. 安装hexo"></a>Step3. 安装hexo</h4><p>终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo -g</span><br><span class="line">npm install hexo-cli -g</span><br></pre></td></tr></table></figure>
-<h4 id="Step4-创建本地目录"><a href="#Step4-创建本地目录" class="headerlink" title="Step4. 创建本地目录"></a>Step4. 创建本地目录</h4><p>去GitHub复制你Repo的git地址，然后在终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/yourname/yourname.github.io.git</span><br></pre></td></tr></table></figure>
-<h4 id="Step5-初始化本地站点"><a href="#Step5-初始化本地站点" class="headerlink" title="Step5. 初始化本地站点"></a>Step5. 初始化本地站点</h4><p>终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">hexo init yourname.github.io</span><br><span class="line">cd yourname.github.io</span><br><span class="line">npm install hexo-deployer-git --save</span><br><span class="line">git init</span><br><span class="line">hexo generate</span><br><span class="line">hexo server</span><br></pre></td></tr></table></figure>
-<p>此时，可以打开浏览器，输入：<code>localhost:4000</code>, 可以在本地看到网站的样子。</p>
-<h4 id="Step6-部署到GitHub"><a href="#Step6-部署到GitHub" class="headerlink" title="Step6. 部署到GitHub"></a>Step6. 部署到GitHub</h4><p>终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">atom .</span><br></pre></td></tr></table></figure>
-<p>Atom打开后，按快捷键command+P，搜索<code>_config.yml</code>文件，在文件的下面，会看到<code>deploy</code>部分，修改如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">	type: git</span><br><span class="line">	repo: https://github.com/yourname/yourname.github.io</span><br></pre></td></tr></table></figure>
-<p>command+S 保存。</p>
-<p>最后，在终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hexo deploy</span><br><span class="line">open yourname.github.io</span><br></pre></td></tr></table></figure>
-<p>稍等一下，就可以看到你的个人网站了！给自己点个赞吧：P</p>
-<p>好，大功告成！下面我们来装饰一下，让它变美美哒。</p>
-<h3 id="更换主题"><a href="#更换主题" class="headerlink" title="更换主题"></a>更换主题</h3><h4 id="Step1-选择你喜欢的主题"><a href="#Step1-选择你喜欢的主题" class="headerlink" title="Step1. 选择你喜欢的主题"></a>Step1. 选择你喜欢的主题</h4><p>hexo默认的主题是landscape，其实界面也还可以，不过就好比Mac自带了safari，但我们总想用用chrome啥的，所以，点击<a href="https://hexo.io/themes/" target="_blank" rel="noopener">Themes</a>， you may find something cool. 找到你钟意的那一款吧。</p>
-<h4 id="Step2-安装主题"><a href="#Step2-安装主题" class="headerlink" title="Step2. 安装主题"></a>Step2. 安装主题</h4><p>选中主题后，点击目标主题，会跳到相应的GitHub repo 中，可以按照GitHub 上的指示进行安装，或者在终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git  submodule add &#123;theme-github-url&#125; themes/&#123;theme-name&#125;</span><br></pre></td></tr></table></figure>
-<p>复制主题下的<code>_config.yml.example</code>，命名为<code>_config.yml</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp themes/&#123;theme-name&#125;/_config.yml.example themes/&#123;theme-name&#125;/_config.yml</span><br></pre></td></tr></table></figure>
-<p>修改文档的<code>_config.yml</code>（注意，不是theme下的<code>_config.yml</code>文件），启用新主题</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">theme: &#123;theme-name&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="发表文章"><a href="#发表文章" class="headerlink" title="发表文章"></a>发表文章</h3><ul>
-<li><p>新建文章</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new &#123;postname&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>编辑文章,使用markdown格式</p>
-</li>
-<li><p>生成文件并部署</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo generate -d</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h3 id="添加评论功能"><a href="#添加评论功能" class="headerlink" title="添加评论功能"></a>添加评论功能</h3><p>这里我们用Disqus。</p>
-<h4 id="注册Disqus"><a href="#注册Disqus" class="headerlink" title="注册Disqus"></a>注册<a href="https://disqus.com/" target="_blank" rel="noopener">Disqus</a></h4><ul>
-<li>登录后，点击首页的 GET STARTED 按钮，然后选择 I want to install Disqus on my site</li>
-<li>在弹出的Create a new site窗口中，填写你的Website Name， 也就是你的short name，后面会用到，点击create Site</li>
-<li>创建完成后，在新页面点击Install Disqus， Platform选择Universal Code，拉到最下面点击按钮即可</li>
-<li>点击Configure Disqus，将Website Name改为你想要的名称，URL设置为你的Github page地址<code>https://yourname.github.io</code></li>
-</ul>
-<h4 id="配置Hexo"><a href="#配置Hexo" class="headerlink" title="配置Hexo"></a>配置Hexo</h4><ul>
-<li>修改theme下的<code>_config.yml</code>，找到 disqus部分，修改如下：</li>
-</ul>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">disqus:</span><br><span class="line">  enable: true</span><br><span class="line">  shortname: &#123;your_website_short_name&#125;</span><br><span class="line">  count: true</span><br></pre></td></tr></table></figure>
-<p>short name就是之前你在Disqus中生成的short name</p>
-<ul>
-<li>终端输入：<code>hexo g -d</code></li>
-<li>刷新你的网站，Disqus可见</li>
-</ul>
-<p>Happy posting!</p>
-<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
-<li><a href="http://lixiaolai.com/2016/06/22/makecs-build-a-blog-with-hexo-on-github/#more" target="_blank" rel="noopener">使用 Hexo 为自己在 Github 上建一个静态 Blog 站点</a></li>
-<li><a href="https://zirho.github.io/2016/06/04/hexo/" target="_blank" rel="noopener">How to setup a blog on github with Hexo</a></li>
-<li><a href="https://www.ctolib.com/topics-119380.html" target="_blank" rel="noopener">GithubPages + Hexo + Disqus博客教程</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/07/16/Introduction-to-Ruby/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/07/16/Introduction-to-Ruby/" itemprop="url">
-                  Ruby学习笔记
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-07-16T22:46:45+08:00">
-                2017-07-16
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/07/16/Introduction-to-Ruby/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/07/16/Introduction-to-Ruby/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,811 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h4><p>刷了codecademy的ruby基础，简单做了笔记。</p>
-<p>记住两句话：</p>
-<p><strong>Almost Everything in Ruby is an Object. </strong>[except block]</p>
-<p><strong>Every operation in Ruby is  a method call.</strong></p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><h5 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h5><ul>
-<li>data Types: Numbers, Strings, Booleans</li>
-<li>Puts and print:<ul>
-<li>Print 输出不换行</li>
-<li>puts 输出换行</li>
-</ul>
-</li>
-<li>Comments in Ruby<ul>
-<li>Single-line : use # sign for comment in Ruby</li>
-<li>Multi-line :<pre><code>=begin
-略
-=end
-</code></pre></li>
-</ul>
-</li>
-</ul>
-<ul>
-<li>getting input<ul>
-<li><code>gets.chomp</code>:<pre><code>variable_name = gets.chomp
-</code></pre><code>gets</code> is the ruby method that gets input from the user. When getting input, Ruby automatically adds a blank line (or newline) after each bit of input.<code>chomp</code> removes that extra line.</li>
-</ul>
-</li>
-</ul>
-<h5 id="Control-Flow-in-Ruby"><a href="#Control-Flow-in-Ruby" class="headerlink" title="Control Flow in Ruby"></a>Control Flow in Ruby</h5><ul>
-<li>If … elsif…else…end</li>
-<li>Unless : use control flow to check if something is false.</li>
-<li>Comparators operators, like ==,!=,&lt;, &gt;and so on.</li>
-<li>Logical operators: and(&amp;&amp;), or(||) , not(!)</li>
-<li>As a general rule, Ruby methods that end with ? evaluate to the boolean values true or false. For example , .include?method</li>
-</ul>
-<p>​       字符替换方法：<code>.gsub!</code>,（global substitution） 通常method后面加上！的表示对这个变量本身做修改，如果没有！，则是复制了该变量，在复制的变量上做了更改。</p>
-<h5 id="Loops-amp-Iterators"><a href="#Loops-amp-Iterators" class="headerlink" title="Loops &amp; Iterators"></a>Loops &amp; Iterators</h5><ul>
-<li>while ,until, for</li>
-<li>for中，当有三个.时，比如for num in 1…10， 循环9次，不包括10，当有两个.时，比如for num in 1..10，循环10次，包括10</li>
-<li><p>break退出循环，例如：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">i = <span class="number">20</span></span><br><span class="line">loop <span class="keyword">do</span></span><br><span class="line">  i -= <span class="number">1</span></span><br><span class="line">  print <span class="string">"<span class="subst">#&#123;i&#125;</span>"</span></span><br><span class="line">  <span class="keyword">break</span> <span class="keyword">if</span> i &lt;= <span class="number">0</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Next! 用于跳过一些步骤，例如：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..<span class="number">5</span></span><br><span class="line">	<span class="keyword">next</span> <span class="keyword">if</span> i % <span class="number">2</span> == <span class="number">0</span></span><br><span class="line">	print i</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>.each iterator</p>
-</li>
-<li>.times iterator</li>
-</ul>
-<h5 id="Data-Structure-Array-and-Hashes"><a href="#Data-Structure-Array-and-Hashes" class="headerlink" title="Data Structure: Array and Hashes"></a>Data Structure: Array and Hashes</h5><ul>
-<li>Array: index from 0</li>
-<li><p>Hashes: sort of like JavaScript objects or Python dictionaries, is a collection of key-value pairs</p>
-<pre><code>hash = {
-  key1 =&gt; value1,
-  key2 =&gt; value2,
-  key3 =&gt; value3
-}
-</code></pre><ul>
-<li><p>Hash.new 会新建一个空的hash，类似于生成了一个空的{}</p>
-</li>
-<li><p>可以给一个hash附上默认值，但是hash仍是空的表,当你访问一个不存在的key时，会返回这个默认值。例如：</p>
-<pre><code>h = hash.new(&quot;nothing&quot;)
-puts h
-# {}
-puts h[&quot;kitty&quot;]
-# nothing
-</code></pre></li>
-<li><p>遍历hash，使用.each：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">pets = &#123;</span><br><span class="line"></span><br><span class="line">  <span class="string">"dog"</span> =&gt; <span class="number">12</span></span><br><span class="line"></span><br><span class="line">  <span class="string">"cat"</span> =&gt; <span class="number">12</span></span><br><span class="line"></span><br><span class="line">  <span class="string">"mouse"</span> =&gt; <span class="number">3</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">pets.each &#123;<span class="params">|pet, age|</span> puts <span class="string">"<span class="subst">#&#123;pet&#125;</span> : <span class="subst">#&#123;age&#125;</span>"</span>&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-</ul>
-<h5 id="Methods-and-Sorting"><a href="#Methods-and-Sorting" class="headerlink" title="Methods and Sorting"></a>Methods and Sorting</h5><ul>
-<li><p>method</p>
-<ul>
-<li>当不清楚需要传递的参数有多少个的时候，用*， 即splat arguments。如: name可以是一个string，也可以是一组字符串数组<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">friend</span><span class="params">(*name)</span></span></span><br><span class="line">	puts <span class="string">"my friend(s) "</span> + name</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-</ul>
-</li>
-<li><p>sort</p>
-<ul>
-<li><p>.sort!, 也可以自定义排序,默认是升序，例如：</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">books.sort! <span class="keyword">do</span> <span class="params">|firstbook, secondbook|</span></span><br><span class="line">	firstbook &lt;=&gt; secondbook</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</code></pre><p>&lt;=&gt;是比较符号，例如：a&lt;=&gt;b，如果a &gt; b, 1 ; a == b ,0 ; a &lt; b, -1.</p>
-</li>
-</ul>
-</li>
-</ul>
-<h5 id="hashes-and-Symbols"><a href="#hashes-and-Symbols" class="headerlink" title="hashes and Symbols"></a>hashes and Symbols</h5><ul>
-<li>symbol : a ruby symbol is like a sort of name,but it is not a string.</li>
-<li>Symbol vs string : while there can be multiple different strings that all have the same value, there’s only one copy of any particular symbol at a given time.</li>
-<li>Symbol 总是以:开始，以字母或_为首字符。</li>
-<li>Symbol 大量出现在hash keys 或者referencing method names中, symbol作为hash keys的优势：<ul>
-<li>不可更改：They’re immutable, meaning they can’t be changed once they’re created;</li>
-<li>节省内存：Only one copy of any symbol exists at a given time, so they save memory;</li>
-<li>快于字符：Symbol-as-keys are faster than strings-as-keys because of the above two reasons.</li>
-</ul>
-</li>
-<li>symbol 与string可以相互转化：<code>.to_s</code> and <code>.to_sym</code> or <code>.intern</code></li>
-<li><p>用<code>.select</code>来对hash进行筛选。如：</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">grades = &#123;</span><br><span class="line">  <span class="symbol">alice:</span> <span class="number">100</span>,</span><br><span class="line">  <span class="symbol">bob:</span> <span class="number">92</span>,</span><br><span class="line">  <span class="symbol">chris:</span> <span class="number">95</span>,</span><br><span class="line">  <span class="symbol">dave:</span> <span class="number">97</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">grades.select &#123;<span class="params">|name, grade|</span> grade &gt; <span class="number">97</span>&#125;</span><br><span class="line"><span class="comment"># ==&gt; &#123;:alice =&gt; 100&#125;</span></span><br><span class="line"></span><br><span class="line">grades.select &#123;<span class="params">|k,v|</span> k == <span class="symbol">:chris</span>&#125;</span><br><span class="line"><span class="comment"># ==&gt; &#123;:chris =&gt; 95&#125;</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p><code>.each_key</code> ,<code>.each_value</code> , 可以单独访问hash的key 和value</p>
-</li>
-</ul>
-<h5 id="The-Zen-of-Ruby"><a href="#The-Zen-of-Ruby" class="headerlink" title="The Zen of Ruby"></a>The Zen of Ruby</h5><ul>
-<li>simple, productive</li>
-<li>a simpler ‘if’ :  such as expression if boolean</li>
-<li>One-line Unless :  such as expression unless boolean</li>
-<li>Ternary : boolean ? Do this if true: do this if false. For example: puts 3&lt;4?”3 is smaller than 4”: “3 is bigger than 4”</li>
-<li>the case statement:<pre><code>case language
-  when &quot;JS&quot; then puts &quot;Websites&quot;
-  when &quot;Python&quot; then puts &quot;Science&quot;
-  when &quot;Ruby&quot; then puts &quot;Web apps&quot;
-  else puts &quot;I don&apos;t know&quot;
-end
-</code></pre></li>
-<li>conditional assignment: ||=</li>
-<li>return in ruby: 在ruby中，如果没有指明return，它的methods会默认return最后一个有值的表达式。</li>
-<li><strong>only false and nil are false value in Ruby</strong>.</li>
-<li><p><code>.upto</code>,<code>.downto</code> methods. for example:</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"L"</span>.upto(<span class="string">"P"</span>) &#123;<span class="params">|word|</span> puts word&#125;</span><br><span class="line"><span class="comment"># L</span></span><br><span class="line"><span class="comment"># M</span></span><br><span class="line"><span class="comment"># N</span></span><br><span class="line"><span class="comment"># O</span></span><br><span class="line"><span class="comment"># P</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p><code>.respond_to? : takes a symbol</code> and return true if an object can receive that method and false otherwise.</p>
-<pre><code>[1,2,3].respond_to?(:push)
-# true 这里因为数组是有push这个method的，所以是true
-
-[1,2,3].respond_to?(:to_sym)
-# false to_sym不能针对整个数组进行操作，所以是false
-</code></pre></li>
-<li><code>.push</code> or <code>&lt;&lt; :</code> add an element to the end of a array / string</li>
-</ul>
-<h5 id="Blocks-Procs-and-Lambdas"><a href="#Blocks-Procs-and-Lambdas" class="headerlink" title="Blocks, Procs, and Lambdas"></a>Blocks, Procs, and Lambdas</h5><ul>
-<li><p>Blocks : it is not a object. this is one of the very few exceptions to the “everything is an object” rule in Ruby.</p>
-<ul>
-<li><p>block can be combined with methods like <code>.each</code> and <code>.times</code> to execute an instruction for each element in a collection (like a hash or array).</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">5</span>.times &#123;puts <span class="string">"I'm a block!"</span>&#125;</span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>.collect</code> can also use to take a block:<br><code>.collect</code> returns a copy of my_nums, but doesn’t change (or mutate) the original my_numsarray. use <code>.collect!</code>  to change the array.</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">my_nums = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]</span><br><span class="line">my_nums.collect &#123; <span class="params">|num|</span> num**<span class="number">2</span> &#125;</span><br><span class="line">my_nums</span><br><span class="line"><span class="comment"># ==&gt; [1,2,3]</span></span><br><span class="line">my_nums.collect! &#123; <span class="params">|num|</span> num**<span class="number">2</span> &#125;</span><br><span class="line">my_nums</span><br><span class="line"><span class="comment"># ==&gt; [1,4,9]</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p><code>yield</code> , methods accept blocks using the yieldkeyword.  for example:</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">yield_name</span><span class="params">(name)</span></span></span><br><span class="line">  puts <span class="string">"In the method! Let's yield."</span></span><br><span class="line">  <span class="keyword">yield</span>(<span class="string">"Kim"</span>)</span><br><span class="line">  puts <span class="string">"In between the yields!"</span></span><br><span class="line">  <span class="keyword">yield</span>(name)</span><br><span class="line">  puts <span class="string">"Block complete! Back in the method."</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">yield_name(<span class="string">"Eric"</span>) &#123; <span class="params">|n|</span> puts <span class="string">"My name is <span class="subst">#&#123;n&#125;</span>."</span> &#125;</span><br></pre></td></tr></table></figure>
-
-输出结果：
-In the method! Let&apos;s yield.
-My name is Kim.
-In between the yields!
-My name is Eric.
-Block complete! Back in the method.
-</code></pre></li>
-<li>定义一个double函数，使用yield + block 的方式(不在函数里面定义，而是用block的方式去定义)<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">double</span><span class="params">(number)</span></span></span><br><span class="line">    <span class="keyword">yield</span>(number)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">double(<span class="number">2</span>)&#123;<span class="params">|n|</span> n*<span class="number">2</span>&#125;</span><br></pre></td></tr></table></figure>
-</code></pre></li>
-</ul>
-</li>
-<li><p>Proc : “saved” block. Procs are great for keeping your code DRY, which stands for Don’t Repeat Yourself.  </p>
-<ul>
-<li>just call <code>Proc.new</code> and pass in the block you want to save. e.x.<pre><code>cube = Proc.new {|x| x**3}
-</code></pre></li>
-<li>Usage:<pre><code>[1,2,3].collect!(&amp;cube)
-[4,5,6].map!(&amp;cube)
-</code></pre><strong>The &amp; is used to convert the cubeproc into a block.</strong></li>
-<li>why Procs?<ul>
-<li>是个对象：Procs are full-fledged objects, so they have all the powers and abilities of objects. (Blocks do not.)</li>
-<li>反复使用：Unlike blocks, procs can be called over and over without rewriting them.</li>
-</ul>
-</li>
-<li><p><code>.call</code>可以直接call procs .</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">test = Proc.new &#123;puts <span class="string">"hello"</span>&#125;</span><br><span class="line">test.call</span><br><span class="line"><span class="comment"># ==&gt; hello</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p>Symbol, meet proc</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">string = [<span class="string">"1"</span>,<span class="string">"2"</span>,<span class="string">"3"</span>]</span><br><span class="line">nums = strings.map(&amp;<span class="symbol">:to_i</span>)</span><br><span class="line"><span class="comment"># ==&gt; [1,2,3]</span></span><br><span class="line"><span class="comment"># By mapping &amp;:to_i over every element of strings, we turned each string into an integer</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-</ul>
-</li>
-<li><p>Lambda</p>
-<ul>
-<li>Syntax :<pre><code>lambda {|param| block }
-</code></pre></li>
-<li>Lambda VS Proc (super similar)<ul>
-<li><strong>a lambda checks the number of arguments passed to it, while a proc does no</strong>t. This means that a lambda will throw an error if you pass it the wrong number of arguments, whereas a proc will ignore unexpected arguments and assign nil to any that are missing.</li>
-<li>when a lambda returns, it passes control back to the calling method; when a proc returns, it does so immediately, without going back to the calling method.**</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h5 id="Object-Oriented-Programming"><a href="#Object-Oriented-Programming" class="headerlink" title="Object-Oriented Programming"></a>Object-Oriented Programming</h5><ul>
-<li><p>class : a way of organizing and producing objects with similar attributes and methods.</p>
-<ul>
-<li>@var : an instance variable, means the var is attached to the instance of the  class.</li>
-<li>Scope : The scope of a variable is the context in which it’s visible to the program.</li>
-<li>@@var : an class variable, belongs to the class itself.</li>
-<li>$var : global variable</li>
-<li><p>Inheritance Syntax :</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DerivedClass</span> &lt; BaseClass</span></span><br><span class="line">	<span class="comment"># some stuff</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p>Override: 在子对象中定义了与父对象一样的方法时，会自动覆盖掉父对象的方法</p>
-</li>
-<li><p>super， 当需要在子对象调用被覆盖的父对象方法时，用super，例如：</p>
-<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Creature</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">fight</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">"Punch to the chops!"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dragon</span> &lt; Creature</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">fight</span></span></span><br><span class="line">        puts  <span class="string">"Instead of breathing fire..."</span></span><br><span class="line">        <span class="keyword">super</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-<li><p><strong>只能继承一个父类 ：Only One！</strong></p>
-</li>
-<li>attr_reader, attr_writer: you can read and update a particular variable. or just use attr_accessor to make a variable readable and writeable in one fell swoop.<pre><code><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Person</span></span></span><br><span class="line">  <span class="keyword">attr_reader</span> <span class="symbol">:name</span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:job</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(name, job)</span></span></span><br><span class="line">    @name = name</span><br><span class="line">    @job = job</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</code></pre></li>
-</ul>
-</li>
-<li><p>Module: being very much like classes, but modules can’t create instances and can’t have subclasses. <strong>They’re just used to store things!</strong></p>
-<ul>
-<li>Ruby constants are written in ALL_CAPS and are separated with underscores if there’s more than one word.</li>
-<li>One of the main purposes of modules is to separate methods and constants into named spaces. This is called (conveniently enough) namespacing</li>
-<li>include mixes a module’s methods in at the instance level (allowing instances of a particular class to use the methods)</li>
-<li>extend  mixes a module’s methods at the class level.</li>
-</ul>
-</li>
-</ul>
-<p> 不论class还是module，命名都是以大写字母开头，纯字母构成，没有数字和下横线_</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/04/04/welcome-back/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/04/04/welcome-back/" itemprop="url">
-                  Welcome Back
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-04-04T18:32:03+08:00">
-                2017-04-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Life/" itemprop="url" rel="index">
-                    <span itemprop="name">Life</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>436 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>半个月前搭起这个网站的时候，我在想，我的第一篇要写什么？第一篇应该写点特别的吧？至少不能是煽情地发泄个人情绪，写点对他人有用的。嗯，那应该写什么呢？我在纠结与所谓的准备中迟迟不愿开始，大概给自己找借口是所有拖延症患者的通病吧？</p>
-<p>后来，实在是受不了这首页，我想，管他呢，与其在纠结中虚耗生命，不如走出第一步，take baby step。嗯，反正这是自己的领地，随便瞎搞都可以。 ：P</p>
-<p>翻出五年前的文字，换成现在，是写不出来的，不禁感叹这些年退步得真是快。</p>
-<p>以此文鼓励自己再度踏入文字的世界。</p>
-<h3 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h3><p>在门外犹豫了很久，还是推开了，迎面而来的是阵风，里面有久违的味道。</p>
-<p>“还是来了？”</p>
-<p>“终究逃不过这一劫……”</p>
-<p>“呵……”轻笑，嘴角上扬，顿顿，静了一会，“长途而来，喝杯水，昨日刚汲的。”</p>
-<p>“甚好。”</p>
-<p>井水进入快要干枯的躯体，骨子里每个血管似在喊着畅快，多么久违的重逢，别来无恙？</p>
-<p>“别急，慢慢来，绝对够你喝。”末了，加一句“不会是担心等会它从眼中流走？”</p>
-<p>“哈哈……”止杯，笑笑，见窗外，很久，吐出一句“你是好，美景伴余生，羡煞。”环视一周，“倒是勤快，屋里干净。”</p>
-<p>“尘不到，时时自有春风扫。”</p>
-<p>良久，无声，有风，缓缓的风，空中有秋末收获的清香。</p>
-<p>日暮，残阳如血，二人在山边静坐。</p>
-<p>“等月上柳枝？”</p>
-<p>“不，等霜染青丝。”</p>
-<p>“哈哈……”</p>
-<p>黄粱一梦。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/17/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/17/">17</a><span class="page-number current">18</span>
+    <a class="extend prev" rel="prev" href="/page/17/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/17/">17</a><span class="page-number current">18</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/19/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2711,7 +2560,7 @@ Block complete! Back in the method.
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2722,7 +2571,7 @@ Block complete! Back in the method.
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2844,7 +2693,7 @@ Block complete! Back in the method.
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>

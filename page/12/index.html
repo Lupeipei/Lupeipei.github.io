@@ -273,6 +273,811 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/06/using-layer-photos-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/06/using-layer-photos-in-rails/" itemprop="url">
+                  Rails中使用layer.photos来预览图片
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-06T09:00:28+08:00">
+                2018-03-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/06/using-layer-photos-in-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/06/using-layer-photos-in-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>856 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写了篇学习笔记<a href="http://luciaca.cn/2018/02/24/using-layer-on-Rails/" target="_blank" rel="noopener">Rails中使用layer弹窗组件</a>， 这篇写写如何在Rails中使用layer的photos来实作图片预览。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>在其文档的<a href="http://www.layui.com/doc/modules/layer.html#layer.photos" target="_blank" rel="noopener">layer.photos</a>中，有用法的详细说明。两种方式：</p>
+<ul>
+<li>直接读取页面图片</li>
+<li>传入json</li>
+</ul>
+<p>来看一下每种方式的具体使用。</p>
+<h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"layer-photos-demo"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript"><span class="comment">//调用示例</span></span></span><br><span class="line"><span class="undefined">layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">  photos: <span class="string">'#layer-photos-demo'</span></span></span><br><span class="line"><span class="javascript">  ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span></span><br><span class="line"><span class="undefined">&#125;);</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
+<p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg" alt=""></p>
+<p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
+<p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">%</span> <span class="attr">product.images.each</span> <span class="attr">do</span> |<span class="attr">image</span> |%&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">img</span>  <span class="attr">onclick</span>= <span class="string">"getImage('&lt;%= product.id %&gt;');"</span> <span class="attr">layer-src</span>=<span class="string">"&lt;%= image.src %&gt;"</span> <span class="attr">src</span>=<span class="string">"&lt;%= image.thumb %&gt;"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span>   </span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImage</span>(<span class="params">productId</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">        layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">            photos: <span class="string">'#product-'</span> + productId,</span></span><br><span class="line"><span class="undefined">            anim:5</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$.getJSON(<span class="string">'/jquery/layer/test/photos.json'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span><br><span class="line">  layer.photos(&#123;</span><br><span class="line">    photos: json</span><br><span class="line">    ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>返回的JSON需严格按照如下格式：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  "title": "", //相册标题</span><br><span class="line">  "id": 123, //相册id</span><br><span class="line">  "start": 0, //初始显示的图片序号，默认0</span><br><span class="line">  "data": [   //相册包含的图片，数组格式</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"alt"</span>: <span class="string">"图片名"</span>,</span><br><span class="line">      "pid": 666, //图片id</span><br><span class="line">      "src": "", //原图地址</span><br><span class="line">      "thumb": "" //缩略图地址</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
+<p>还是以product为例， 三步走：</p>
+<ul>
+<li><p>给它添加一个preview的action， 在routes中声明</p>
+<p>在<code>routes.rb</code>中添加：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:products</span> <span class="keyword">do</span></span><br><span class="line">  member <span class="keyword">do</span></span><br><span class="line">    get <span class="symbol">:preview</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preview</span></span></span><br><span class="line">  @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @images = @product.images.all</span><br><span class="line">  @photo = &#123;</span><br><span class="line">      <span class="symbol">title:</span> @product.title,</span><br><span class="line">      <span class="symbol">id:</span> @product.id,</span><br><span class="line">      <span class="symbol">start:</span> <span class="number">0</span>,</span><br><span class="line">      <span class="symbol">data:</span> @images.map <span class="keyword">do</span> <span class="params">|image|</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="symbol">alt:</span> image.title,</span><br><span class="line">            <span class="symbol">pid:</span> image.id,</span><br><span class="line">            <span class="symbol">src:</span> image.src,</span><br><span class="line">            <span class="symbol">thumb:</span> image.thumb</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">  &#125;</span><br><span class="line">  render <span class="symbol">json:</span> @photo</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
+</li>
+<li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:getImageJson('&lt;%= product.id %&gt;');"</span>&gt;</span></span><br><span class="line">      查看产品图片<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImageJson</span>(<span class="params">productId</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">        $.getJSON(<span class="string">'/products/'</span> + productId + <span class="string">'/preview'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">            layer.photos(&#123;</span></span><br><span class="line"><span class="undefined">                photos: json,</span></span><br><span class="line"><span class="undefined">                anim: 5</span></span><br><span class="line"><span class="undefined">            &#125;);</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>刷新页面确认是否正常。</p>
+<p>OK， 大功告成。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹层组件文档 - layui.layer</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/04/upload-images-to-rails-API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/04/upload-images-to-rails-API/" itemprop="url">
+                  Rails中实作图片上传API
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-04T10:26:09+08:00">
+                2018-03-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/04/upload-images-to-rails-API/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/04/upload-images-to-rails-API/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>869 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>如标题所述，需要通过接口将图片上传到ROR项目中，如何实现？</p>
+<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>先说一个简单的。</p>
+<p>以一个model picture为例，看一下具体步骤：</p>
+<p>model picture的信息：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Table name pictures</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">file_name    <span class="symbol">:string</span></span><br><span class="line">image       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<p>这里，设置routes, 建model，建controller的过程省略，可参见：<a href="http://luciaca.cn/2017/12/31/web-api-practice/" target="_blank" rel="noopener">Rails：Web API接口实作</a>。</p>
+<p>分三步走：</p>
+<ul>
+<li><p>装<a href="https://github.com/carrierwaveuploader/carrierwave" target="_blank" rel="noopener">carrierwave</a></p>
+<p>编辑 Gemfile</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'carrierwave'</span></span><br><span class="line">gem <span class="string">'mini_magick'</span></span><br></pre></td></tr></table></figure>
+<p>终端执行<code>bundle</code>，重启服务器。</p>
+</li>
+<li><p>新增uploader</p>
+<p>执行：<code>rails g uploader PicImage</code></p>
+<p>编辑<code>app/uploaders/pic_image_uploader.rb</code></p>
+ <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PicImageUploader</span> &lt; CarrierWave::Uploader::<span class="title">Base</span></span></span><br><span class="line">  + <span class="keyword">include</span> CarrierWave::MiniMagick</span><br><span class="line">  ......  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>编辑 <code>app/models/picture.rb</code>，把 carrierwave 的 Uploader 挂上去。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Picture</span> &lt; ApplicationRecord</span></span><br><span class="line">  + mount_uploader <span class="symbol">:image</span>, PicImageUploader</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设定create</p>
+<p>编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># upload image through api</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @picture = Picture.new(picture_params)  </span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">file_name:</span> @picture.file_name, <span class="symbol">image:</span> @picture.image &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  .......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">picture_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:file_name</span>, <span class="symbol">:image</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>再来个复杂的。👇</p>
+<h4 id="如何通过JSON文件来上传？"><a href="#如何通过JSON文件来上传？" class="headerlink" title="如何通过JSON文件来上传？"></a>如何通过JSON文件来上传？</h4><p>在搜索解答的过程中，发现了另一种方式，假定你需要通过JSON文件的方式去上传图片，如何实现？<br>即接口调用是这样的：<code>/api/v1/pictures.json</code>，由于JSON不支持嵌入式文件，所以会有些波折。</p>
+<p>具体的实现方式是先将需要上传的图片file经base64编译后，调用接口创建一个实例， 然后在picture controller的create中，对传递过来的参数file_base64进行解析， 将解析后的文件写入temfile，并通过<code>ActionDispatch::Http::UploadedFile</code>来新建一个uploader file，如此，一个image从encoding到decoding的过程结束，再使用Picture.new创建即可。</p>
+<p>具体来说，前面的步骤都一样，只是create部分会有些不同。</p>
+<p>先给picture新增一个字段，file_base64, 它是图片经base64编译后得到的字符串。</p>
+<p>执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_file_base64_to_pictures file_base64:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<p>picture.json文件长这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">picture &#123;:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;&#125;</span><br></pre></td></tr></table></figure>
+<p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      <span class="comment"># create a new tempfile named file</span></span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      <span class="comment"># get the file ,decode it with base64, write it to the tempfile</span></span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      <span class="comment"># create a new uploaded file</span></span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      <span class="comment"># delete the tempfile</span></span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p> 这里，create部分显得很臃肿，我们skinny一下，改成这样：</p>
+  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line">  before_action <span class="symbol">:process_file</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">process_file</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>  呃，貌似process_file还是有点臃肿， 可以继续拆，这里就不实作了。</p>
+<p>  OK. 用postman测试一下，确认正常。</p>
+<p>  这里，你可能会问，编译后的文件在哪呢？在public/uploaders/picture/image下。</p>
+<p>此外，上传的文件不需要 git commit， 在 <code>.gitignore</code> 中添加 <code>public/uploads</code> 这个目录即可。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9758879/sending-files-to-a-rails-json-api" target="_blank" rel="noopener">Sending files to a Rails JSON API</a></p>
+<p><a href="https://stackoverflow.com/questions/9854916/base64-upload-from-android-java-to-ror-carrierwave" target="_blank" rel="noopener">Base64 upload from Android/Java to RoR Carrierwave</a></p>
+<p><a href="https://ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html" target="_blank" rel="noopener">Tempfile</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/03/implement-Rails-API-filtering/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/03/implement-Rails-API-filtering/" itemprop="url">
+                  用has_scope实现Rails API筛选
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-03T11:16:45+08:00">
+                2018-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/03/implement-Rails-API-filtering/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/03/implement-Rails-API-filtering/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>373 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
+<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Table name products</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br><span class="line">description <span class="symbol">:string</span></span><br><span class="line">price       <span class="symbol">:float</span></span><br><span class="line">category_id <span class="symbol">:integer</span></span><br><span class="line"></span><br><span class="line">Table name  categories</span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<p><code>app/models/product.rb</code>中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p><code>app/models/category.rb</code>中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Category</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  has_many <span class="symbol">:products</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> @products</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
+<p>如何实现？</p>
+<p>试试<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
+<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>三步走</p>
+<ul>
+<li><p>安装<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a> gem</p>
+<p>gemfile中添加：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'has_scope'</span></span><br></pre></td></tr></table></figure>
+<p>终端bundle，服务器重启。</p>
+</li>
+<li><p>在model中添加scope</p>
+<p>修改<code>app/models/product.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line"></span><br><span class="line"> + scope <span class="symbol">:category</span>, -&gt; (category_id) &#123; where(<span class="symbol">category_id:</span> category_id) &#125;</span><br><span class="line"> + scope <span class="symbol">:price</span>, -&gt; (from, to) &#123; where(<span class="string">"price &gt;= ? AND price &lt;= ?"</span>, from, to) &#125;</span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在controller中添加has_scope</p>
+<p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line">  + has_scope <span class="symbol">:category</span>, <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line">  + has_scope <span class="symbol">:price</span>, <span class="symbol">using:</span> [<span class="symbol">:from</span>, <span class="symbol">:to</span>], <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  -  @products = Product.all</span><br><span class="line">  +  @products = apply_scopes(Product).includes(<span class="symbol">:category</span>).all</span><br><span class="line">      <span class="comment"># using includes(:category), fix N+1 query problem</span></span><br><span class="line">    render <span class="symbol">json:</span> @products</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>好，大功告成，用postman测试下，确认正常，cool！</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://gist.github.com/mamantoha/9c0aec7958c7636cebef" target="_blank" rel="noopener">Rails API Filtering and Sorting</a></p>
+<p><a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/01/skinny-controller-with-jbuilder/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/01/skinny-controller-with-jbuilder/" itemprop="url">
+                  Web API中，使用Jbuilder来给你的controller瘦个身
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-01T07:46:05+08:00">
+                2018-03-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/01/skinny-controller-with-jbuilder/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/01/skinny-controller-with-jbuilder/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,258 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>MVC 框架中的一个设计原则：fat model, skinny controller。且不说这原则是不是绝对的正确，不过面对臃肿的controller，IDE也会发出提醒表示抗议。</p>
+<p>比如在Web API中，一般用get获取资料的时候，返回的JSON中，字段会比较多，相应地，你在controller里面写的index或者show 也相对有些臃肿。那么如何简化？</p>
+<p>试试<a href="https://github.com/rails/jbuilder" target="_blank" rel="noopener">Jbuilder</a>。</p>
+<p>下面用个简单的例子来说明下怎么给controller瘦身。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>假定你完成了一个products的API接口，对应的<code>app/controllers/api/v1/products_controller.rb</code>文件内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">data:</span> @products.map <span class="keyword">do</span> <span class="params">|product|</span></span><br><span class="line">          &#123;</span><br><span class="line">              <span class="symbol">id:</span> product.id,</span><br><span class="line">              <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">              <span class="symbol">name:</span> product.name,</span><br><span class="line">              <span class="symbol">description:</span> product.description,</span><br><span class="line">              <span class="symbol">price:</span> product.price</span><br><span class="line">          &#125;</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(</span><br><span class="line">        <span class="symbol">name:</span> params[<span class="symbol">:name</span>],</span><br><span class="line">        <span class="symbol">description:</span> params[<span class="symbol">:description</span>],</span><br><span class="line">        <span class="symbol">price:</span> params[<span class="symbol">:price</span>]</span><br><span class="line">    )</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">id:</span> product.id,</span><br><span class="line">        <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">        <span class="symbol">name:</span> product.name,</span><br><span class="line">        <span class="symbol">description:</span> product.description,</span><br><span class="line">        <span class="symbol">price:</span> product.price</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(<span class="symbol">name:</span> params[<span class="symbol">:name</span>], <span class="symbol">description:</span> params[<span class="symbol">:description</span>],<span class="symbol">price:</span> params[<span class="symbol">:price</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>看着很冗长啊，怎么瘦？</p>
+<p>分三步走：</p>
+<ul>
+<li>对index, show部分，用Jbuilder，</li>
+<li>对create，update部分，用 strong params</li>
+<li>对show, update, destory部分共有的@product，抽出来，用before_action</li>
+</ul>
+<p>第一步：简化index，show</p>
+<p>这里可以看到show和index中重复代码较多，用上partial</p>
+<ul>
+<li><p>新建文件：<br><code>app/views/api/v1/products/_item.json.jbuilder</code>, <code>app/views/api/v1/products/show.json.jbuilder</code>,<br><code>app/views/api/v1/products/index.json.jbuilder</code>,</p>
+</li>
+<li><p>在<code>app/views/api/v1/products/_item.json.jbuilder</code>，添加如下内容：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">json.id  product.id</span><br><span class="line">json.creator product.user.user_name</span><br><span class="line">json.name product.name</span><br><span class="line">json.description product.description</span><br><span class="line">json.price product.price</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/views/api/v1/products/show.json.jbuilder</code>，添加如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.partial! &apos;item&apos;, product: @product</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>app/views/api/v1/products/index.json.jbuilder</code>， 添加如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.array! @products, partial: &apos;item&apos;, as: :product</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的index和show部分, 删除render：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>可以用postman测试一下，确保接口仍正常。</p>
+</li>
+</ul>
+<p>第二步：简化create，update， 用params.require</p>
+<ul>
+<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的create和update部分，如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  .....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span>         </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>注意，这里<strong>不能使用params.requrie(:product).permit(:name, :description, :price)</strong>，因为你是调用接口来新建或者修改的。</p>
+<p>可参见这个：<a href="https://stackoverflow.com/questions/38701746/when-json-data-posted-in-rails-throws-param-is-missing-or-the-value-is-empty-st" target="_blank" rel="noopener">When JSON data posted in rails throws param is missing or the value is empty: stall</a></p>
+</li>
+</ul>
+<p>第三步：简化show，update， destroy</p>
+<ul>
+<li><p>把show，update， destroy相同的部分： <code>@product = Product.find(params[:id])</code>抽出来：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line">.....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">.......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>最后瘦身的controller长这样：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'update product successfully'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'product deleted'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    param.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>是不是清爽了很多？看着舒服多了，大功告成！</p>
+<p>这里多一句，如果你的某个method部分代码较多，也可以使用拆分的方式， 比如下面这个show：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @categories = Category.all</span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>可以换成：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">before_action <span class="symbol">:fetch_current_category</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_categories</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_search_results</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_current_category</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_categories</span></span></span><br><span class="line">  @categories = Category.all</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_search_results</span></span></span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/30932732/what-is-meant-by-assignment-branch-condition-size-too-high-and-how-to-fix-it" target="_blank" rel="noopener">What is meant by ‘Assignment Branch Condition Size too high’ and how to fix it?</a></p>
+<p>对于”<strong>fat model, skinny controller</strong>“这个原则，也有人反对，提出<strong>“skinny everything”</strong>， 戳链接了解：</p>
+<p><a href="http://blog.joncairns.com/2013/04/fat-model-skinny-controller-is-a-load-of-rubbish/" target="_blank" rel="noopener">“Fat model, skinny controller” is a load of rubbish</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/27/how-to-call-javascript-through-href-or-onclick/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1352,833 +2157,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/08/render-different-show-pages-in-ruby-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/08/render-different-show-pages-in-ruby-on-rails/" itemprop="url">
-                  如何在Rails中切换不同主题的show页面？
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-08T08:11:55+08:00">
-                2018-02-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/08/render-different-show-pages-in-ruby-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/08/render-different-show-pages-in-ruby-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>547 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>场景是这样的：</p>
-<p>有model project，要求project的show页面可以切换不同的主题，比如主题1，主题2。</p>
-<p>类似这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fo70rntbj5g30sa07wt9s.gif" alt=""></p>
-<p>貌似很简单，切换页面而已。不过rails中，project 的show页面只有一个<code>show.html.erb</code>， 你可能想到替换部分的页面，加上ajax特效来实现，如果你这么想，那先恭喜你！你已成功入坑！你要给按钮的点击行为添加method，点击时，将需要切换的主题参数传递给controller，然后controller根据这个来决定替换哪个主题页面。</p>
-<p>为了不刷新页面就完成切换，你需要用上ajax，而对于保存页面主题这块， 你可能会想到给project添加个字段theme啥的，用来判断该切换到哪一部分……好吧，其实不用这么复杂。「这些我踩过的坑就不要再踩了， 整个过程会让你想多灌自己两听可乐……」</p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>其实，仔细想想，就是render到不同的show页面，动两处就好了。</p>
-<p>我们假定在app/views/projects下， 两个主题对应的页面分别是<code>theme1.html.erb</code>，  <code>theme2.html.erb</code>。</p>
-<p>两步走。</p>
-<p>一、project 的controller中show部分：</p>
-<p>在<code>projects_controller.rb</code>文件中，在show部分，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProjectsController</span> &lt; ApplicationController</span></span><br><span class="line">  .......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    .......</span><br><span class="line">    theme = params[<span class="symbol">:theme</span>]</span><br><span class="line">    <span class="keyword">if</span> theme == <span class="string">"theme2"</span></span><br><span class="line">      render <span class="string">'theme2'</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="string">'theme1'</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">....</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>二、 <strong>所有跳转到project show页面的按钮，都添加一个参数：theme</strong>。比如在<code>theme1.html.erb</code>中的button部分：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.....</span><br><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"btn btn-info pull-right"</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">%=</span> <span class="attr">link_to</span>("切换到主题<span class="attr">2</span>", <span class="attr">project_path</span>(@<span class="attr">project</span>, <span class="attr">theme:</span> "<span class="attr">theme2</span>")) %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-<p> <code>theme2.html.erb</code>的button部分与之类似：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">.....</span><br><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"btn btn-info pull-right"</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">%=</span> <span class="attr">link_to</span>("切换到主题<span class="attr">1</span>", <span class="attr">project_path</span>(@<span class="attr">project</span>, <span class="attr">theme:</span> "<span class="attr">theme1</span>")) %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-<p>其他需要跳转到show 页面的link都做这样的处理，至于theme的值，如果你的默认主题是theme1， 则取默认主题即可。</p>
-<p>超级简单有没有？！</p>
-<p>你可能会问，为什么会想到这个解决方法？</p>
-<p>启发来自这里：👇</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fo70blzaw1j30kq0aswfp.jpg" alt=""></p>
-<p>虽然只有一个vote，但是不妨碍它好用啊！点赞Ankit Pandey.</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/43558477/render-different-show-pages-with-category-in-ruby-on-rails" target="_blank" rel="noopener">render different show pages with category in ruby on rails</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/06/how-to-drop-a-table-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/06/how-to-drop-a-table-on-rails/" itemprop="url">
-                  Rails中如何删除数据表？
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-06T10:41:02+08:00">
-                2018-02-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/06/how-to-drop-a-table-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/06/how-to-drop-a-table-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>418 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>先看个场景：</p>
-<p>当你运行<code>rake db:migrate</code>时，终端报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SQLite3::SQLException: table &quot;XXXX&quot; already exists……</span><br></pre></td></tr></table></figure>
-<p>这种情况下，多半由于你重建了tableXXXX导致，针对这种情况，一般有两种方法可以解决：</p>
-<ul>
-<li>查看你需要migrate的代码，是否存在重建tableXXXX的情况，如果有，注释掉，然后再run <code>rake db:migrate</code>；</li>
-<li>删除掉数据库中已经存在的table XXXX，再run <code>rake db:migrate</code>， 重建新的table XXXX。 「特别是当你对先前建的table并不满意时」</li>
-</ul>
-<p>第一种很好办，没啥可说的，看第二种具体怎么做。</p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>以table projects为例，含字段title，description。</p>
-<p>两种方法：</p>
-<p>一个简单粗暴的方式是<code>rails c</code>，打开rails console，运行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ActiveRecord::Migration.drop_table(:projects) #将projects换成你要删除的表名</span><br></pre></td></tr></table></figure>
-<p>另一个方式先注释掉需要migration的代码，然后新建一个migration：<code>rails g migration Dropprojects</code></p>
-<p>在生成的<code>xxxxxx_Dropprojects.rb</code>中填入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Dropprojects</span> &lt; ActiveRecord::Migration</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    drop_table <span class="symbol">:projects</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:title</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.text <span class="symbol">:description</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.timestamps <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>终端run <code>rake db:migrate</code>， 成功删除， 这应该算是比较 “officials” 的做法了。</p>
-<p>删除后，再取消你先前注释的需要migration的代码，运行<code>rake db:migrate</code>， 重建新的table。</p>
-<p>此外，当你在Rails中添加了一个table XXXX，发现后续并不需要这个table了，也可以通过上诉的方式删除它。</p>
-<p>当然，大部分情况下，不建议动数据库的，因为多个table之间可能存在关联，删除可能引发潜在的问题。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/classes/ActiveRecord/Migration.html" target="_blank" rel="noopener">Active Record Migrations</a></p>
-<p><a href="https://stackoverflow.com/questions/4020131/rails-db-migration-how-to-drop-a-table" target="_blank" rel="noopener">Rails DB Migration - How To Drop a Table?</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/01/footer-always-on-the-buttom-with-flex/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/01/footer-always-on-the-buttom-with-flex/" itemprop="url">
-                  用flex置底footer
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-01T15:23:19+08:00">
-                2018-02-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/01/footer-always-on-the-buttom-with-flex/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/01/footer-always-on-the-buttom-with-flex/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>224 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>看过别人写的一些footer置底的文章，试了一些，发现了一个特别简单的置底方式，不用考虑footer的高度，也不用设置padding-bottom啥的，用flex，两步即可。</p>
-<p>以下以Rails为例：</p>
-<h5 id="一、设置html部分"><a href="#一、设置html部分" class="headerlink" title="一、设置html部分"></a>一、设置html部分</h5><p><code>application.html.erb</code>中的内容：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">	.....</span><br><span class="line">  <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"content"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container-fluid"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"row"</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">%=</span> <span class="attr">render</span> "<span class="attr">common</span>/<span class="attr">navbar</span>"%&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">%=</span> <span class="attr">yield</span> %&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%=</span> <span class="attr">render</span> "<span class="attr">common</span>/<span class="attr">footer</span>"%&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<h4 id="二、设置CSS部分"><a href="#二、设置CSS部分" class="headerlink" title="二、设置CSS部分"></a>二、设置CSS部分</h4><p><code>application.scss</code>中填入：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">html</span> &#123;</span><br><span class="line">    <span class="attribute">height</span>: <span class="number">100%</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-tag">body</span> &#123;</span><br><span class="line">  min-height: 100%;                                   // footer固定底部</span><br><span class="line">  display: flex;                                      // footer固定底部</span><br><span class="line">  flex-direction: column;                             // footer固定底部                       </span><br><span class="line">&#125;</span><br><span class="line"><span class="selector-class">.content</span> &#123;</span><br><span class="line"> <span class="attribute">flex</span>: <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>OK！不管你的footer样式如何，高度几许，都可以完美实现置底。</p>
-<p>另，推荐<a href="https://segmentfault.com/" target="_blank" rel="noopener">segmentfault</a>上很实用的一篇置底文章：</p>
-<p><a href="https://segmentfault.com/a/1190000004453249" target="_blank" rel="noopener">将footer固定在页面底部的实现方法</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="url">
-                  Ubuntu16.04下, 使用Nginx和Unicorn部署Rails App
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-27T18:30:42+08:00">
-                2018-01-27
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>2,463 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前用过Nginx  + Passengers来部署Rails 应用， 这次换Nginx  + Unicorn部署了Rails App，过程虽有些波折，但结果还是蛮赞的。【其实折腾了大半天，最后终于重新从坑里爬出来了，还多亏老大帮忙看了下……】</p>
-<p>下面以一个简单的rails项目的部署为例，来感受下Nginx + Unicorn。</p>
-<p>【如果你也和我一样是枚小白，补充下，这里，Unicorn是一个HTTP server，类似Passenger或者puma。由于Unicorn不能直接被用户访问，使用Nginx作为反向代理，来缓冲用户与Rails应用之间的请求与响应。】</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><h5 id="1、准备Rails-App"><a href="#1、准备Rails-App" class="headerlink" title="1、准备Rails App"></a>1、准备Rails App</h5><ul>
-<li><p>本地新建一个rails项目recipes</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">rails new recipes</span><br><span class="line">cd recipes</span><br><span class="line">git init</span><br><span class="line">git add .</span><br><span class="line">git commit -m "new project recipes"</span><br><span class="line"><span class="meta">#</span> 将recipes托管到第三方代码库，这里选GitHub</span><br><span class="line">git remote add origin https://github.com/XXXXX/recipes.git</span><br><span class="line">git push -u origin master</span><br><span class="line">rails g scaffold topic title:string description:text</span><br><span class="line">rake db:migrate</span><br><span class="line">git add .</span><br><span class="line">git commit -m "create topic model"</span><br><span class="line">rails s</span><br></pre></td></tr></table></figure>
-<p>修改<code>config/routes.rb</code>,把主页设定成topic的index, 添加<code>root &quot;topics#index&quot;</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  resources <span class="symbol">:topics</span></span><br><span class="line"> + root <span class="string">"topics#index"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这时，在浏览器打开<a href="http://localhost:3000/，画风是这样的：" target="_blank" rel="noopener">http://localhost:3000/，画风是这样的：</a></p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fnv0kthg2xj30og06874g.jpg" alt=""></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m "update routes"</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>添加gem： unicorn, foreman, dotenv-rails</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fnv3oaphuhj30k50g9abf.jpg" alt=""></p>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundler install</span><br></pre></td></tr></table></figure>
-<p>添加<code>config/deploy.rb</code>， 内容如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4da7cvhj30m50k040q.jpg" alt=""></p>
-<p>【repo_url 换成你自己的URL】</p>
-<p>根目录下添加Procfile 文件，内容如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4nzvr2mj30mw095t9v.jpg" alt=""></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m "add unicorn to project"</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
-<p>将所有进度push至remote， 好，我们开始部署！</p>
-</li>
-</ul>
-<h5 id="2、安装套件"><a href="#2、安装套件" class="headerlink" title="2、安装套件"></a>2、安装套件</h5><p>这里以Ubuntu16.04为例，假定你已经添加一个免密登陆的用户deploy，我们将项目部署在home/deploy下。</p>
-<ul>
-<li><p>登陆服务器，更新，升级：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝套件，这些是Ruby on Rails 需要的：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
-<p>如果安装的nodejs版本低，尝试这样：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>nodejs v9</span><br><span class="line">curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -</span><br><span class="line">sudo apt-get install -y nodejs</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝Ruby</p>
-<p>检查版本：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ruby --version</span><br></pre></td></tr></table></figure>
-<p>如果有旧的版本，比如1.8/1.9， 卸载掉:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get remove -y ruby1.8 ruby1.9</span><br></pre></td></tr></table></figure>
-<p>下载，解压，编译，安装：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby</span><br><span class="line">wget https://cache.ruby-lang.org/pub/ruby/ruby-2.4.0.tar.gz</span><br><span class="line">tar -xzvf ruby-2.4.0.tar.gz</span><br><span class="line">cd ruby-2.4.0/</span><br><span class="line">./configure --prefix=/usr</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br><span class="line"></span><br><span class="line">ruby -v</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 处理SSL问题，加入国内gems镜像</span><br><span class="line">gem sources --add http://gems.ruby-china.org/ --remove https://rubygems.org/</span><br><span class="line"><span class="meta">#</span> 如果报错：uninitialized constant Gem::RemoteFetcher::Zlib， 则执行：sudo apt-get install zlib1g-dev</span><br><span class="line"></span><br><span class="line">gem sources -l</span><br><span class="line"></span><br><span class="line">sudo gem install bundler --no-ri --no-rdoc --source https://gems.ruby-china.org</span><br></pre></td></tr></table></figure>
-<p>戳这里<a href="http://cache.ruby-lang.org/pub/ruby/" target="_blank" rel="noopener">pub ruby</a> 查看ruby最新版本。</p>
-</li>
-<li><p>装 foreman gems:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo gem install rake bundler foreman --no-ri --no-rdoc</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>装runit：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install runit</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>裝SQL：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
-<p>执行过程中会让你配置一个数据库的 root 密码， 记下来，设定rails的数据库时会用到。</p>
-<p>建新的数据库：</p>
-<p>执行<code>mysql -u root -p</code> 进入console, 输入：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">DATABASE</span> recipes <span class="built_in">CHARACTER</span> <span class="keyword">SET</span> utf8mb4;</span><br></pre></td></tr></table></figure>
-<p>创建user deploy，并给user分配数据库 recipes的权限, 把$password 替换成你自己设置的密码：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">'deploy'</span>@<span class="string">'localhost'</span> <span class="keyword">IDENTIFIED</span> <span class="keyword">BY</span> <span class="string">'$password'</span>;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">SELECT</span>, <span class="keyword">INSERT</span>, <span class="keyword">UPDATE</span>, <span class="keyword">DELETE</span>, <span class="keyword">CREATE</span>, <span class="keyword">DROP</span>, <span class="keyword">INDEX</span>, <span class="keyword">ALTER</span>, <span class="keyword">LOCK</span> <span class="keyword">TABLES</span> <span class="keyword">ON</span> <span class="string">`recipes`</span>.* <span class="keyword">TO</span> <span class="string">'deploy'</span>@<span class="string">'localhost'</span>;</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
-<p>退出SQL的session后，尝试连接一下数据库：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo mysql -u deploy -p -D recipes</span><br></pre></td></tr></table></figure>
-<p>这时会让你输入密码，输入刚刚替换$password的密码即可。</p>
-</li>
-</ul>
-<h5 id="3、部署项目"><a href="#3、部署项目" class="headerlink" title="3、部署项目"></a>3、部署项目</h5><ul>
-<li><p>clone项目到服务器</p>
-<p>deploy身份登陆，执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo git clone //github.com/XXXXX/recipes.git recipes</span><br><span class="line">cd recipes</span><br><span class="line">ls -la</span><br></pre></td></tr></table></figure>
-<p>如果recipes下面文件的owner不是deploy，执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chown deploy:deploy . -R</span><br></pre></td></tr></table></figure>
-<p><strong>确保deploy对recipes下的文件拥有读写权限，不然后面部署时会失败</strong>。</p>
-<p>配置文件：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">sudo mkdir -p log tmp/pids tmp/sockets</span><br><span class="line">sudo chown -R deploy log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/</span><br><span class="line">sudo chmod -R u+rwX tmp/</span><br><span class="line">touch .env</span><br><span class="line">touch config/unicorn.rb</span><br></pre></td></tr></table></figure>
-<p>配置.env:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> ==== Required configuration settings  ====</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Replace the following with the output from "rake secret"</span><br><span class="line">APP_SECRET_TOKEN=REPLACE_ME_NOW!</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span>###########################</span><br><span class="line"><span class="meta">#</span>      Database Setup      #</span><br><span class="line"><span class="meta">#</span>###########################</span><br><span class="line"></span><br><span class="line">DATABASE_ADAPTER=mysql2</span><br><span class="line">DATABASE_ENCODING=utf8</span><br><span class="line">DATABASE_RECONNECT=true</span><br><span class="line">DATABASE_NAME=recipes</span><br><span class="line">DATABASE_POOL=20</span><br><span class="line">DATABASE_USERNAME=deploy</span><br><span class="line">DATABASE_PASSWORD="your_password"</span><br><span class="line"><span class="meta">#</span>DATABASE_HOST=your-domain-here.com</span><br><span class="line"><span class="meta">#</span>DATABASE_PORT=3306</span><br><span class="line"><span class="meta">#</span>DATABASE_SOCKET=/tmp/mysql.sock</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> MySQL only: If you are running a MySQL server &gt;=5.5.3, you should</span><br><span class="line"><span class="meta">#</span> set DATABASE_ENCODING to utf8mb4 instead of utf8 so that the</span><br><span class="line"><span class="meta">#</span> database can hold 4-byte UTF-8 characters like emoji.</span><br><span class="line"><span class="meta">#</span>DATABASE_ENCODING=utf8mb4</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> ==== Additional required production settings ====</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Configure Rails environment.  This should only be needed in production and may cause errors in development.</span><br><span class="line">RAILS_ENV=production</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> Should Rails force all requests to use SSL?</span><br><span class="line">FORCE_SSL=false</span><br><span class="line"><span class="meta">#</span> 设置SECRET_KEY_BASE，config/secrets.yml中有用到，用development的secret_key_base即可</span><br><span class="line">SECRET_KEY_BASE= your_devlopment_secret_key_base</span><br></pre></td></tr></table></figure>
-<p>配置<code>config/unicorn.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">wd = File.expand_path(File.join(File.dirname(__FILE_<span class="number">_</span>), <span class="string">'..'</span>))</span><br><span class="line"></span><br><span class="line">app_path = wd</span><br><span class="line"></span><br><span class="line">worker_processes <span class="number">2</span></span><br><span class="line">preload_app <span class="literal">true</span></span><br><span class="line">timeout <span class="number">180</span></span><br><span class="line">listen <span class="string">"<span class="subst">#&#123;wd&#125;</span>/tmp/sockets/unicorn.socket"</span></span><br><span class="line"></span><br><span class="line">working_directory app_path</span><br><span class="line"></span><br><span class="line">rails_env = ENV[<span class="string">'RAILS_ENV'</span>] <span class="params">||</span> <span class="string">'production'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Log everything to one file</span></span><br><span class="line">stderr_path <span class="string">"log/unicorn.log"</span></span><br><span class="line">stdout_path <span class="string">"log/unicorn.log"</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Set master PID location</span></span><br><span class="line">pid <span class="string">"<span class="subst">#&#123;wd&#125;</span>/tmp/pids/unicorn.pid"</span></span><br><span class="line"></span><br><span class="line">before_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.connection.disconnect!</span><br><span class="line">  old_pid = <span class="string">"<span class="subst">#&#123;server.config[<span class="symbol">:pid</span>]&#125;</span>.oldbin"</span></span><br><span class="line">  <span class="keyword">if</span> File.exist?(old_pid) &amp;&amp; server.pid != old_pid</span><br><span class="line">    <span class="keyword">begin</span></span><br><span class="line">      Process.kill(<span class="string">"QUIT"</span>, File.read(old_pid).to_i)</span><br><span class="line">    <span class="keyword">rescue</span> Errno::ENOENT, Errno::ESRCH</span><br><span class="line">      <span class="comment"># someone else did our job for us</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">after_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.establish_connection</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>安装gems：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle install --deployment --without development test</span><br></pre></td></tr></table></figure>
-<p>migrate 数据库：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle exec rake db:migrate RAILS_ENV=production</span><br></pre></td></tr></table></figure>
-<p>编译assets：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo bundle exec rake assets:precompile RAILS_ENV=production</span><br></pre></td></tr></table></figure>
-<p>修改Procfile：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi Procfile</span><br></pre></td></tr></table></figure>
-<p>注释掉Procfile这两行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">web: bundle exec rails server -p $&#123;PORT-3000&#125; -b $&#123;IP-0.0.0.0&#125;</span><br><span class="line">jobs: bundle exec rails runner bin/threaded.rb</span><br></pre></td></tr></table></figure>
-<p>同时取消对Procfile这两行的注释：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># web: bundle exec unicorn -c config/unicorn.rb</span><br><span class="line"># jobs: bundle exec rails runner bin/threaded.rb</span><br></pre></td></tr></table></figure>
-<p>创建Unicorn的初始脚本：</p>
-<p>终端输入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/init.d/unicorn_recipes</span><br></pre></td></tr></table></figure>
-<p>然后在文件中放入以下内容：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>!/bin/sh</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span>## BEGIN INIT INFO</span><br><span class="line"><span class="meta">#</span> Provides:          unicorn</span><br><span class="line"><span class="meta">#</span> Required-Start:    $all</span><br><span class="line"><span class="meta">#</span> Required-Stop:     $all</span><br><span class="line"><span class="meta">#</span> Default-Start:     2 3 4 5</span><br><span class="line"><span class="meta">#</span> Default-Stop:      0 1 6</span><br><span class="line"><span class="meta">#</span> Short-Description: starts the unicorn app server</span><br><span class="line"><span class="meta">#</span> Description:       starts unicorn using start-stop-daemon</span><br><span class="line"><span class="meta">#</span>## END INIT INFO</span><br><span class="line"></span><br><span class="line">set -e</span><br><span class="line"></span><br><span class="line">USAGE="Usage: $0 &lt;start|stop|restart|upgrade|rotate|force-stop&gt;"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> app settings</span><br><span class="line">USER="deploy"</span><br><span class="line">APP_NAME="recipes"</span><br><span class="line">APP_ROOT="/home/$USER/$APP_NAME"</span><br><span class="line">ENV="production"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> environment settings</span><br><span class="line">PATH="/home/$USER/.rbenv/shims:/home/$USER/.rbenv/bin:$PATH"</span><br><span class="line">CMD="cd $APP_ROOT &amp;&amp; bundle exec unicorn -c config/unicorn.rb -E $ENV -D"</span><br><span class="line">PID="$APP_ROOT/tmp/pids/unicorn.pid"</span><br><span class="line">OLD_PID="$PID.oldbin"</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> make sure the app exists</span><br><span class="line">cd $APP_ROOT || exit 1</span><br><span class="line"></span><br><span class="line">sig () &#123;</span><br><span class="line">  test -s "$PID" &amp;&amp; kill -$1 `cat $PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">oldsig () &#123;</span><br><span class="line">  test -s $OLD_PID &amp;&amp; kill -$1 `cat $OLD_PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">case $1 in</span><br><span class="line">  start)</span><br><span class="line">    sig 0 &amp;&amp; echo &gt;&amp;2 "Already running" &amp;&amp; exit 0</span><br><span class="line">    echo "Starting $APP_NAME"</span><br><span class="line">    su - $USER -c "$CMD"</span><br><span class="line">    ;;</span><br><span class="line">  stop)</span><br><span class="line">    echo "Stopping $APP_NAME"</span><br><span class="line">    sig QUIT &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Not running"</span><br><span class="line">    ;;</span><br><span class="line">  force-stop)</span><br><span class="line">    echo "Force stopping $APP_NAME"</span><br><span class="line">    sig TERM &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Not running"</span><br><span class="line">    ;;</span><br><span class="line">  restart|reload|upgrade)</span><br><span class="line">    sig USR2 &amp;&amp; echo "reloaded $APP_NAME" &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Couldn't reload, starting '$CMD' instead"</span><br><span class="line">    $CMD</span><br><span class="line">    ;;</span><br><span class="line">  rotate)</span><br><span class="line">    sig USR1 &amp;&amp; echo rotated logs OK &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 "Couldn't rotate logs" &amp;&amp; exit 1</span><br><span class="line">    ;;</span><br><span class="line">  *)</span><br><span class="line">    echo &gt;&amp;2 $USAGE</span><br><span class="line">    exit 1</span><br><span class="line">    ;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
-<p>更改权限，并设置可以在boot上启动：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo chmod 755 /etc/init.d/unicorn_recipes</span><br><span class="line">sudo update-rc.d unicorn_recipes defaults</span><br></pre></td></tr></table></figure>
-<p>开启：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo /etc/init.d/unicorn_recipes start</span><br></pre></td></tr></table></figure>
-<p>检查unicorn的状态：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service unicorn status</span><br></pre></td></tr></table></figure>
-<p>设置logrotate：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/logrotate.d/recipes</span><br></pre></td></tr></table></figure>
-<p>内容如下：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">/home/deploy/recipes/log/*.log &#123;</span><br><span class="line">  daily</span><br><span class="line">  missingok</span><br><span class="line">  rotate 180</span><br><span class="line"><span class="meta">  #</span> must use with delaycompress below</span><br><span class="line">  compress</span><br><span class="line">  dateext</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span> this is important if using "compress" since we need to call</span><br><span class="line"><span class="meta">  #</span> the "lastaction" script below before compressing:</span><br><span class="line">  delaycompress</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span> note the lack of the evil "copytruncate" option in this</span><br><span class="line"><span class="meta">  #</span> config.  Unicorn supports the USR1 signal and we send it</span><br><span class="line"><span class="meta">  #</span> as our "lastaction" action:</span><br><span class="line">  lastaction</span><br><span class="line">    pid=/home/deploy/recipes/tmp/pids/unicorn.pid</span><br><span class="line">    test -s $pid &amp;&amp; kill -USR1 "$(cat $pid)"</span><br><span class="line">  endscript</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>如果提示readonly, 无法写入，使用chmod或者chown来获取读写权限。</p>
-</li>
-<li><p>安装Ngnix</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y nginx</span><br></pre></td></tr></table></figure>
-<p>查看版本：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -v</span><br></pre></td></tr></table></figure>
-<p>在/etc/nginx/sites-available下，新增recipes文件：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vi /etc/nginx/sites-available/recipes</span><br></pre></td></tr></table></figure>
-<p>内容如下：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>##################################</span><br><span class="line"><span class="meta">#</span>#         configuration         ##</span><br><span class="line"><span class="meta">#</span>##################################</span><br><span class="line"><span class="meta">#</span>#</span><br><span class="line"><span class="meta">#</span># See installation.md#using-https for additional HTTPS configuration details.</span><br><span class="line"></span><br><span class="line">upstream recipes &#123;</span><br><span class="line">  server unix:/home/deploy/recipes/tmp/sockets/unicorn.socket fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span># Normal HTTP host</span><br><span class="line">server &#123;</span><br><span class="line">  listen 0.0.0.0:80 default_server;</span><br><span class="line">  listen [::]:80 ipv6only=on default_server;</span><br><span class="line">  server_name 101.132.151.71; ## 这里填域名，如果没有，填服务器 IP 位置</span><br><span class="line">  server_tokens off; ## Don't show the nginx version number, a security best practice</span><br><span class="line">  root /home/deploy/recipes/public;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Increase this if you want to upload large attachments</span><br><span class="line">  client_max_body_size 20m;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Individual nginx logs for vhost</span><br><span class="line">  access_log  /var/log/nginx/recipes_access.log;</span><br><span class="line">  error_log   /var/log/nginx/recipes_error.log;</span><br><span class="line"></span><br><span class="line">  location / &#123;</span><br><span class="line">    ## Serve static files from defined root folder.</span><br><span class="line">    ## @huginn is a named location for the upstream fallback, see below.</span><br><span class="line">    try_files $uri $uri/index.html $uri.html @recipes;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># If a file, which is not found in the root folder is requested,</span><br><span class="line"><span class="meta">  #</span># then the proxy passes the request to the upsteam (huginn unicorn).</span><br><span class="line">  location @recipes &#123;</span><br><span class="line">    ## If you use HTTPS make sure you disable gzip compression</span><br><span class="line">    ## to be safe against BREACH attack.</span><br><span class="line">    # gzip off;</span><br><span class="line"></span><br><span class="line">    proxy_read_timeout      300;</span><br><span class="line">    proxy_connect_timeout   300;</span><br><span class="line">    proxy_redirect          off;</span><br><span class="line"></span><br><span class="line">    proxy_set_header    Host                $http_host;</span><br><span class="line">    proxy_set_header    X-Real-IP           $remote_addr;</span><br><span class="line">    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header    X-Forwarded-Proto   $scheme;</span><br><span class="line">    proxy_set_header    X-Frame-Options     SAMEORIGIN;</span><br><span class="line"></span><br><span class="line">    proxy_pass http://recipes;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">  #</span># Enable gzip compression as per rails guide:</span><br><span class="line"><span class="meta">  #</span># http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression</span><br><span class="line"><span class="meta">  #</span># WARNING: If you are using relative urls remove the block below</span><br><span class="line"><span class="meta">  #</span># See config/application.rb under "Relative url support" for the list of</span><br><span class="line"><span class="meta">  #</span># other files that need to be changed for relative url support</span><br><span class="line">  location ~ ^/(assets)/ &#123;</span><br><span class="line">    root /home/deploy/recipes/public;</span><br><span class="line">    gzip_static on; # to serve pre-gzipped version</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  error_page 502 /502.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>建立links:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/recipes /etc/nginx/sites-enabled/recipes</span><br></pre></td></tr></table></figure>
-<p>删除default：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm /etc/nginx/sites-enabled/default</span><br></pre></td></tr></table></figure>
-<p>测试设置：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo nginx -t</span><br></pre></td></tr></table></figure>
-<p>会弹出syntax is ok 和test is successful的信息，终端运行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>最后的效果：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnvasde46qj30o809rjrn.jpg" alt=""></p>
-<p>「终于出来了，太不容易了……」</p>
-<p>P.S</p>
-<p>如果<code>sudo service nginx restart</code>没有任何反应，可以检查以下路径的log：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /var/log/nginx</span><br><span class="line">cd recipes/log</span><br></pre></td></tr></table></figure>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/how-to-deploy-a-rails-app-with-unicorn-and-nginx-on-ubuntu-14-04" target="_blank" rel="noopener">How To Deploy a Rails App with Unicorn and Nginx on Ubuntu 14.04</a></p>
-<p><a href="https://linode.com/docs/development/ror/use-unicorn-and-nginx-on-ubuntu-14-04/" target="_blank" rel="noopener">Use Unicorn and Nginx to Configure Ruby on Rails Applications on Ubuntu 14.04</a></p>
-<p><a href="https://github.com/huginn/huginn/blob/master/doc/manual/installation.md" target="_blank" rel="noopener">Huginn install guide for Ubuntu/Debian</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2223,7 +2206,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2234,7 +2217,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2356,7 +2339,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>

@@ -273,6 +273,580 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/09/visit-github-through-terminal-using-https-proxy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/09/visit-github-through-terminal-using-https-proxy/" itemprop="url">
+                  Mac OSX终端访问GitHub走shadowsocks代理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-09T21:10:38+08:00">
+                2018-05-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/09/visit-github-through-terminal-using-https-proxy/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/09/visit-github-through-terminal-using-https-proxy/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>250 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>本地代码push到远端repos，终端执行<code>git push branch xxx</code>时，遇到了一个报错：</p>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Server aborted the SSL handshake</span><br></pre></td></tr></table></figure>
+<p>SSL 握手失败？</p>
+<p>老大扫了一眼，说终端访问GitHub要走代理，并告知了如何实现，666！</p>
+<p>记录下整个实现步骤以备忘。</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在使用shadowsocks的情况下，通过shadowsocks 获取HTTP Proxy Shell Export Line, 查看端口是1087.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;</span><br></pre></td></tr></table></figure>
+<p>下载<a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a>, 终端执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install corkscrew</span><br></pre></td></tr></table></figure>
+<p>在根目录下，执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi .ssh/config</span><br></pre></td></tr></table></figure></p>
+<p>将文件内容修改为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Host github.com</span><br><span class="line">    ProxyCommand corkscrew 127.0.0.1 xxxx %h %p</span><br></pre></td></tr></table></figure></p>
+<p>此处xxxx改成你走代理的端口号：比如上面的1087.</p>
+<p>保存，切换到项目对应的目录下，重新执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push branch xxx</span><br></pre></td></tr></table></figure>
+<p>OK !！</p>
+<p>看到有人提到了<a href="https://www.proxifier.com/" target="_blank" rel="noopener">proxifier</a>， 也是个神器，鉴于自己没有用过，这里就不详述了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a></p>
+<p><a href="https://www.zybuluo.com/yiranphp/note/611721" target="_blank" rel="noopener">解决 mac （windows）终端上代理的难题</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="url">
+                  Ruby盲点梳理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-08T21:29:49+08:00">
+                2018-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,662 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
+<p>说三个：benchmark，new &amp; allocate， delegator。</p>
+<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h4><p>Benchmark是一个module，提供了诸多方法，用于获取ruby代码的执行时间。</p>
+<p>比较常用的三个方法：</p>
+<ul>
+<li>benchmark(caption = “”, label_width = nil, format = nil, *labels) { |report| … }</li>
+<li>bm(label_width = 0, *labels) { |report| … }</li>
+<li>bmbm(width = 0) { |job| … }</li>
+</ul>
+<p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
+<p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
+<p>看例子感受下三者：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'benchmark'</span></span><br><span class="line"><span class="keyword">include</span> Benchmark</span><br><span class="line"></span><br><span class="line">n = <span class="number">500000</span></span><br><span class="line"></span><br><span class="line">Benchmark.benchmark(CAPTION, <span class="number">6</span>, FORMAT) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Benchmark.bm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Benchmark.bmbm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>输出的结果：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fr438e3d72j30fv09ewg0.jpg" alt=""></p>
+<p>这么看，感觉times也没有特别比for快多少……</p>
+<h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
+<p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
+<p>new对应的sourcecode如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> VALUE</span><br><span class="line">rb_class_s_new(<span class="keyword">int</span> argc, <span class="keyword">const</span> VALUE *argv, VALUE klass)</span><br><span class="line">&#123;</span><br><span class="line">    VALUE obj;</span><br><span class="line"></span><br><span class="line">    obj = rb_class_alloc(klass);</span><br><span class="line">    rb_obj_call_init(obj, argc, argv);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
+<p>看个例子感受下两者的差异：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### 根据官方文档稍稍改编了下</span></span><br><span class="line">klass = Class.new <span class="keyword">do</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(*args)</span></span></span><br><span class="line">    @initialized = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialized?</span></span></span><br><span class="line">    @initialized <span class="params">||</span> <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">klass.allocate <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;</span></span><br><span class="line">klass.allocate.initialized? <span class="comment">#=&gt; false</span></span><br><span class="line">klass.new <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 <span class="doctag">@initialized</span>=true&gt;</span></span><br><span class="line">klass.new.initialized? <span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure>
+<h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
+<p>先来看看SimpleDelegator。</p>
+<p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
+<p>看个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Stats</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span></span></span><br><span class="line">    @source = SimpleDelegator.new([])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stats</span><span class="params">(records)</span></span></span><br><span class="line">    p <span class="string">"before setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">    @source.__setobj_<span class="number">_</span>(records)</span><br><span class="line">    p <span class="string">"after setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">s = Stats.new</span><br><span class="line"></span><br><span class="line">s.stats(<span class="string">%w&#123;Hello ruby world&#125;</span>)</span><br><span class="line"><span class="comment">#=&gt; "before setobj: 0"</span></span><br><span class="line"><span class="comment">#=&gt; "after setobj: 3"</span></span><br></pre></td></tr></table></figure>
+<p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
+<p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
+<p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
+<p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
+<p>先看个Forwardable的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'forwardable'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecordCollection</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:records</span></span><br><span class="line">  extend Forwardable</span><br><span class="line">  def_delegator <span class="symbol">:</span>@records, <span class="symbol">:[]</span>, <span class="symbol">:record_number</span></span><br><span class="line">  def_delegators <span class="symbol">:</span>@records, <span class="symbol">:size</span>, <span class="symbol">:&lt;&lt;</span>, <span class="symbol">:map</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = RecordCollection.new</span><br><span class="line">obj.records = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>]</span><br><span class="line">obj.record_number(<span class="number">0</span>) <span class="comment">#=&gt; 1， 相当于执行[1,2,4](0)</span></span><br><span class="line">obj.size <span class="comment">#=&gt; 3 ， 相当于执行[1,2,4].size</span></span><br><span class="line">obj &lt;&lt; <span class="number">5</span> <span class="comment">#=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5</span></span><br><span class="line">obj.map &#123; <span class="params">|x|</span> x + <span class="number">1</span>&#125; <span class="comment">#=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;</span></span><br></pre></td></tr></table></figure>
+<p>这里 <code>def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:size</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:&lt;&lt;</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:map</span></span><br></pre></td></tr></table></figure>
+<p>再来看一个SingleForwardable的例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
+<p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
+<p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
+<p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
+<p>以上面的例子为例：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"world"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; world</span></span><br></pre></td></tr></table></figure>
+<h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fr43phbujxj308e034t8q.jpg" alt=""></p>
+<p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a>年，是这么说的：</p>
+<blockquote>
+<p>However, this year saw the <strong>beginning of the Gregorian Calendar switch</strong>, when the Papal bull known as Inter gravissimas introduced the Gregorian calendar, adopted by Spain, Portugal, the Polish–Lithuanian Commonwealth and most of present-day Italy from the start. In these countries, <strong>the year continued as normal until Thursday, October 4. However, the next day became Friday, October 15</strong> (like a common year starting on Friday), in those countries (France followed two months later, letting Sunday, December 9 be followed by Monday, December 20).</p>
+</blockquote>
+<p>这种操作真6，老祖宗们会玩。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://devdocs.io/ruby~2.5/" target="_blank" rel="noopener">ruby 2.5</a></p>
+<p><a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a></p>
+<p>谢谢D推荐的<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>， 用来阅读文档真的是超赞！推荐使用<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>：P</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/04/upgrade-wget-on-ubuntu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/04/upgrade-wget-on-ubuntu/" itemprop="url">
+                  漏洞处理-GNU Wget缓冲区错误漏洞on Ubuntu
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-04T22:15:20+08:00">
+                2018-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/04/upgrade-wget-on-ubuntu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/04/upgrade-wget-on-ubuntu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>421 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>登录阿里云，看到醒目的红色警报，点开是主机上存在漏洞： <strong>GNU Wget缓冲区错误漏洞</strong>，给到的参考链接: <a href="https://securitytracker.com/id/1039661?spm=5176.2020520154.sas.66.528f79d6yN4eC4" target="_blank" rel="noopener">securitytracker.com</a>显示要升级到版本1.19.2。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqzfuo5h2mj30cw01cdfu.jpg" alt=""></p>
+<p>升级过程中，遇到了点问题，Google后解决，记录下整个升级步骤。</p>
+<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>查看版本</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -V</span><br></pre></td></tr></table></figure>
+<p>显示是<code>GNU Wget 1.17.1 built on linux-gnu.</code></p>
+<p>删掉旧版本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get remove wget</span><br></pre></td></tr></table></figure>
+<p>安装1.19.2或者更高版本，见<a href="http://ftp.gnu.org/gnu/wget/，" target="_blank" rel="noopener">http://ftp.gnu.org/gnu/wget/，</a> 目前最新版本是1.19.4</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget http://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.gz</span><br><span class="line">tar -zxvf wget-1.19.4.tar.gz</span><br><span class="line">cd wget-1.19.4</span><br><span class="line">./configure --with-ssl=openssl</span><br></pre></td></tr></table></figure>
+<p>执行完<code>./configure</code> 后报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">configure: error: The pkg-config script could not be found or is too old.  Make sure it</span><br><span class="line">is in your PATH or set the PKG_CONFIG environment variable to the full</span><br><span class="line">path to pkg-config.</span><br><span class="line"></span><br><span class="line">Alternatively, you may set the environment variables XMEDCON_GLIB_CFLAGS</span><br><span class="line">and XMEDCON_GLIB_LIBS to avoid the need to call pkg-config.</span><br><span class="line">See the pkg-config man page for more details.</span><br></pre></td></tr></table></figure>
+<p>装pkg-config:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y pkg-config</span><br></pre></td></tr></table></figure>
+<p>再次执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./configure --with-ssl=openssl</span><br></pre></td></tr></table></figure>
+<p>成功的话，会发现最后生成了Makefile：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">config.status: creating Makefile</span><br><span class="line">config.status: creating src/Makefile</span><br><span class="line">config.status: creating doc/Makefile</span><br><span class="line">config.status: creating util/Makefile</span><br><span class="line">config.status: creating po/Makefile.in</span><br><span class="line">config.status: creating tests/Makefile</span><br><span class="line">config.status: creating lib/Makefile</span><br><span class="line">config.status: creating testenv/Makefile</span><br><span class="line">config.status: creating tests/certs/interca.conf</span><br><span class="line">config.status: creating tests/certs/rootca.conf</span><br><span class="line">config.status: creating src/config.h</span><br><span class="line">config.status: executing depfiles commands</span><br><span class="line">config.status: executing po-directories commands</span><br><span class="line">config.status: creating po/POTFILES</span><br><span class="line">config.status: creating po/Makefile</span><br></pre></td></tr></table></figure>
+<p>此时，执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
+<p>查看版本：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -V</span><br></pre></td></tr></table></figure>
+<p>显示：<br>GNU Wget 1.19.4 built on linux-gnu.</p>
+<p>OK!</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://blog.csdn.net/baidu_38083619/article/details/79948272" target="_blank" rel="noopener">GNU Wget缓冲区溢出漏洞</a></p>
+<p><a href="https://stackoverflow.com/questions/23202146/cannot-find-pkg-config-error" target="_blank" rel="noopener">cannot find pkg-config-error</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/01/travels-of-huihang-ancient-road/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1656,631 +2230,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/14/phone-verification-in-wechat-on-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/14/phone-verification-in-wechat-on-rails/" itemprop="url">
-                  Rails微信网页开发之手机验证
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-14T18:31:24+08:00">
-                2018-04-14
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/14/phone-verification-in-wechat-on-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/14/phone-verification-in-wechat-on-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>2,291 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>这周在做微信公众号那块，手机验证是比较难啃的一块，Google后也没找到合适的指导，趁着周末，写下来，供日后参考。</p>
-<p>以下以一个测试公众号虫虫宠物生活馆的手机认证为例。</p>
-<h4 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h4><p>用户登录公众号后，需要绑定会员，会员数据库中含有用户的手机号等信息，需要用户先输入手机进行验证。</p>
-<p>然后根据手机号来判定用户是否是会员。</p>
-<p>类似下面这种：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fqbzr7ii8rj30a90g6755.jpg" alt=""></p>
-<h4 id="实现效果"><a href="#实现效果" class="headerlink" title="实现效果"></a>实现效果</h4><p>用户输入手机后，点击获取验证码，第三方短信服务平台发送验证码信息，用户收到信息，输入验证码，完成绑定。</p>
-<p>最后大致如下，这里没有用手机录屏了，在微信开发者工具上简单做个了动图，<strong>中间的白屏有些奇怪，手机上没有出现这种情况</strong>：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fqbzim2z67g30ab0gwdje.gif" alt=""></p>
-<h4 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h4><p>分解下任务：</p>
-<ul>
-<li>点击获取验证码，验证手机号的有效性，并发送验证码到用户的手机上</li>
-<li>输入验证码后，用户点击确认，验证手机号与验证码的有效性，无误后，跳转至主页</li>
-</ul>
-<p>下面的代码示例，还是在<a href="https://github.com/goofansu/wechat-starter" target="_blank" rel="noopener">wechat-starter</a>的基础上进行功能添加 ，有关微信网页授权部分，可参见<a href="https://luciaca.cn/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/" target="_blank" rel="noopener">Rails对接微信公众号简易指南</a>，这里只说手机验证。</p>
-<p>不得不说，好的轮子真的可以节省很多时间，Thanks for OpenSource , Thanks for sharing ：P</p>
-<p>好，一步步来。</p>
-<p><strong>Step1、建手机验证的model phone_tokens</strong></p>
-<p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g model phone_token</span><br></pre></td></tr></table></figure>
-<p>在生成的migration文档中，修改成这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">lass CreatePhoneTokens &lt; ActiveRecord::Migration[<span class="number">5.1</span>]</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:phone_tokens</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:phone</span></span><br><span class="line">      t.string <span class="symbol">:token</span></span><br><span class="line">      t.datetime <span class="symbol">:expired_at</span></span><br><span class="line">      t.timestamps</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    add_index <span class="symbol">:phone_tokens</span>, [<span class="symbol">:phone</span>, <span class="symbol">:token</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/models/phone_tokenk.rb</code>, 要求token ，phone 必填：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>修改<code>config/route.rb</code> ， 添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:phone_tokens</span>, <span class="symbol">only:</span> [<span class="symbol">:create</span>]</span><br></pre></td></tr></table></figure>
-<p><strong>Step2、建controller phone_tokens，实现手机验证码发送</strong></p>
-<p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller phone_tokens</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/controllers/phone_tokens_controller.rb</code></p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneTokensController</span> &lt; ApplicationController</span></span><br><span class="line"></span><br><span class="line">  before_action <span class="symbol">:verify_phone_unrepeated</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">unless</span> params[<span class="symbol">:phone</span>] =~ User::CELLPHONE_RE</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'手机号格式不正确！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> session[<span class="symbol">:token_created_at</span>] &amp;&amp; session[<span class="symbol">:token_created_at</span>] + <span class="number">60</span> &gt; Time.now.to_i</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'您已经申请过验证码，请60s后再试！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">     <span class="comment">## 生成验证码</span></span><br><span class="line">    token = sms_send(params[<span class="symbol">:phone</span>])</span><br><span class="line">    <span class="comment">## 初次生成验证码，新增record，验证码过期二次生成token，则更新record</span></span><br><span class="line">    PhoneToken.add_or_update params[<span class="symbol">:phone</span>], token</span><br><span class="line">    render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'ok'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">verify_phone_unrepeated</span></span></span><br><span class="line">    phone = User.find_by(<span class="symbol">phone:</span> params[<span class="symbol">:phone</span>])</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123; <span class="symbol">status:</span> <span class="string">'repeated'</span>&#125; <span class="keyword">if</span> phone.present?</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这里添加了手机重复绑定的检查。其中，User::CELLPHONE_RE是定义在<code>user.rb</code>, 用正则验证手机号码有效，稍后会加上。</p>
-<p>另外，生成验证码的method sms_send 我们在下一步调用第三方短信服务来实现。</p>
-<p>而对于add_or_update 类方法，我们在<code>app/models/phone_token.rb</code>中定义，实现新增和更新：</p>
-<p>修改<code>app/models/phone_token.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">add_or_update</span><span class="params">(phone, token)</span></span></span><br><span class="line">    record = find_by(<span class="symbol">phone:</span> phone)</span><br><span class="line">    <span class="keyword">if</span> record</span><br><span class="line">      record.update_attributes <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      create <span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p><strong>Step3、调用第三方短信服务</strong></p>
-<p>这里，以阿里云的短信服务为例，官方文档的接口调用代码示例是Java，也没找到ruby的，google了下，有一个现成的gem <a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a>，用这个。</p>
-<p>购买服务后，进行设置，你会得到四个参数值：</p>
-<ol>
-<li>ACCESS_KEY_SECRET</li>
-<li>ACCESS_KEY_ID</li>
-<li>SIGN_NAME</li>
-<li>TEMPLATE_CODE</li>
-</ol>
-<p>开始调用吧！</p>
-<p>修改gemfile：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;aliyun-sms&apos;</span><br></pre></td></tr></table></figure>
-<p>执行<code>bundle</code>，服务器重启.</p>
-<p>修改<code>config/applicaton.yml</code>，将重要的参数值放进去，供调用：</p>
-<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">access_key_secret:</span> <span class="string">"ACCESS_KEY_SECRET"</span></span><br><span class="line"><span class="attr">access_key_id:</span> <span class="string">"ACCESS_KEY_ID"</span></span><br><span class="line"><span class="attr">sign_name:</span> <span class="string">"SIGN_NAME"</span></span><br><span class="line"><span class="attr">template_code:</span> <span class="string">"TEMPLATE_CODE"</span></span><br></pre></td></tr></table></figure>
-<p>新增文件<code>config/initializers/aliyun-sms.rb</code>, 内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Aliyun::Sms.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.access_key_secret = Figaro.env.access_key_secret</span><br><span class="line">  config.access_key_id = Figaro.env.access_key_id</span><br><span class="line">  config.action = <span class="string">'SendSms'</span>                       <span class="comment"># default value</span></span><br><span class="line">  config.format = <span class="string">'XML'</span>                           <span class="comment"># http return format, value is 'JSON' or 'XML'</span></span><br><span class="line">  config.region_id = <span class="string">'cn-hangzhou'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.sign_name = Figaro.env.sign_name</span><br><span class="line">  config.signature_method = <span class="string">'HMAC-SHA1'</span>           <span class="comment"># default value</span></span><br><span class="line">  config.signature_version = <span class="string">'1.0'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.version = <span class="string">'2017-05-25'</span>                   <span class="comment"># default value</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p><a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a> 提供了调用方法Aliyun::Sms.send，我稍微进行了封装，封装后的method只有一个参数phone number。</p>
-<p>新增<code>lib/sms.rb</code>, 内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Send</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Sms</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">sms_send</span><span class="params">(phone)</span></span></span><br><span class="line">      template_code = Figaro.env.template_code</span><br><span class="line">      code = rand(<span class="number">100000</span>..<span class="number">999999</span>)</span><br><span class="line">      template_param = &#123;<span class="string">"code"</span> =&gt; code.to_s&#125;.to_json</span><br><span class="line">      Aliyun::Sms.send(phone, template_code, template_param)</span><br><span class="line">      code</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> Send::Sms</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>修改<code>app/controllers/phone_tokens_controller.rb</code>, 添加上relative_require, 加载下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">require_relative <span class="string">'../../lib/sms'</span></span><br></pre></td></tr></table></figure>
-<p>OK，短信发送完成！</p>
-<p>下面给授权页面添加上手机验证的表单。</p>
-<p><strong>Step4、在授权页面添加手机验证</strong></p>
-<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 添加上手机验证：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">form_for</span>(<span class="attr">resource</span>, <span class="attr">as:</span> <span class="attr">resource_name</span>, <span class="attr">url:</span> <span class="attr">registration_path</span>(<span class="attr">resource_name</span>)) <span class="attr">do</span> |<span class="attr">f</span>| %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells_title"</span>&gt;</span>请输入您的手机号，绑定会员<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells weui-cells_form"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>手机号, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:phone</span>, <span class="attr">class:</span> '<span class="attr">weui-input</span>',<span class="attr">id:</span> '<span class="attr">user_cellphone</span>',<span class="attr">type:</span> "<span class="attr">tel</span>", <span class="attr">placeholder:</span> '请输入手机号' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__ft"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">style</span>=<span class="string">"background: none; border: none "</span> <span class="attr">value</span>=<span class="string">"获取验证码"</span> <span class="attr">class</span>=<span class="string">"weui-vcode-btn"</span> <span class="attr">id</span>=<span class="string">"token_btn"</span>&gt;</span>获取验证码<span class="tag">&lt;/<span class="name">input</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>验证码, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:token</span>, <span class="attr">class:</span>"<span class="attr">weui-input</span>", <span class="attr">type:</span> "<span class="attr">number</span>", <span class="attr">placeholder:</span> "请输入验证码" %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"weuiAgree"</span> <span class="attr">class</span>=<span class="string">"weui-agree"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"weuiAgree"</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">checked</span>=<span class="string">"checked"</span> <span class="attr">class</span>=<span class="string">"weui-agree__checkbox"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"weui-agree__text"</span>&gt;</span></span><br><span class="line">        获得您的公开信息（昵称，头像等）</span><br><span class="line">    <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-btn-area"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.submit</span> "确认", <span class="attr">class:</span> '<span class="attr">weui-btn</span> <span class="attr">weui-btn_primary</span>' %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:wx.closeWindow();"</span> <span class="attr">class</span>=<span class="string">"weui-btn weui-btn_plain-default"</span>&gt;</span>关闭<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br></pre></td></tr></table></figure>
-<p>点击获取验证码的按钮，调用phone_tokens的create 方法，发送验证码，同时phone_token插入或更新一个record。</p>
-<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 在最下面添加如下代码：「这里也一并加上手机验证码的60秒倒计时特效和手机号的验证」</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">        (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="comment">// 手机验证码</span></span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span>;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> token_wait = <span class="number">60</span>, token_interval;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> $token_btn = $(<span class="string">'#token_btn'</span>);</span></span><br><span class="line"><span class="javascript">            $token_btn.click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                <span class="keyword">var</span> $<span class="keyword">this</span> = $(<span class="keyword">this</span>), cellphone = $(<span class="string">'#user_cellphone'</span>).val();</span></span><br><span class="line"><span class="javascript">                $.ajax(&#123;</span></span><br><span class="line"><span class="javascript">                    url: <span class="string">"/phone_tokens?phone="</span> + cellphone,</span></span><br><span class="line"><span class="javascript">                    method: <span class="string">'post'</span>,</span></span><br><span class="line"><span class="javascript">                    beforeSend: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (!CELLPHONE_RE.test(cellphone)) &#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"手机号码格式错误,请重填!"</span>);</span></span><br><span class="line"><span class="javascript">                            $(<span class="string">'#user_cellphone'</span>).val(<span class="string">""</span>);</span></span><br><span class="line"><span class="javascript">                            <span class="keyword">return</span> <span class="literal">false</span>;</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="javascript">                        $<span class="keyword">this</span>.attr(<span class="string">'value'</span>,<span class="string">"已发送"</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;,</span></span><br><span class="line"><span class="javascript">                    success: <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (data.status == <span class="string">'error'</span>) &#123;</span></span><br><span class="line"><span class="undefined">                            alert(data.message);</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span> <span class="keyword">if</span>(data.status == <span class="string">'repeated'</span>)&#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"您的手机号已经验证过，无需验证"</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span></span></span><br><span class="line"><span class="undefined">                        &#123;</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'已发送'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="javascript">                            $<span class="keyword">this</span>.trigger(<span class="string">'start_token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">            &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'start_token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                    token_interval = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.trigger(<span class="string">'token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;, 1000);</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="undefined">                    token_wait--;</span></span><br><span class="line"><span class="javascript">                    <span class="keyword">if</span> (token_wait &lt;= <span class="number">0</span>) &#123;</span></span><br><span class="line"><span class="undefined">                        clearInterval(token_interval);</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="undefined">                        token_wait = 60;</span></span><br><span class="line"><span class="javascript">                    &#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'重新发送 '</span> + token_wait + <span class="string">' 秒'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">        &#125;)()</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>以上，手机验证码的发送基本完成，下面来完成验证码的验证，即用户填写的验证码就是发送给他的验证码。</p>
-<p><strong>Step5、给User添加字段phone，并验证token填写正确</strong></p>
-<p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_phone_to_users</span><br></pre></td></tr></table></figure>
-<p>在生成的migration文档中，修改成这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddPhoneToUsers</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:users</span>, <span class="symbol">:phone</span>, <span class="symbol">:string</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/controllers/users/registrations_controller.rb</code>的configure_sign_up_params method：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">configure_sign_up_params</span></span></span><br><span class="line">  devise_parameter_sanitizer.permit(<span class="symbol">:sign_up</span>, <span class="symbol">keys:</span> %i[phone token])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这样在授权页面用户必须输入手机和验证码才能通过。</p>
-<p>修改<code>app/models/user.rb</code>，添加验证码的检验，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  <span class="comment"># Include default devise modules. Others available are:</span></span><br><span class="line">  <span class="comment"># :confirmable, :lockable, :timeoutable and :omniauthable</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:registerable</span>,</span><br><span class="line">         <span class="symbol">:recoverable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:trackable</span>, <span class="symbol">:validatable</span>, <span class="symbol">:omniauthable</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:token</span></span><br><span class="line">  CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span></span><br><span class="line"></span><br><span class="line">  before_validation <span class="symbol">:set_password</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line">  validate <span class="symbol">:validate_phone</span>, <span class="symbol">on:</span> <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">from_omniauth</span><span class="params">(auth)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">new_with_session</span><span class="params">(params, session)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">email_required?</span></span></span><br><span class="line">    <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">set_password</span></span></span><br><span class="line">    <span class="keyword">self</span>.password <span class="params">||</span>= Devise.friendly_token[<span class="number">0</span>, <span class="number">20</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">validate_phone</span></span></span><br><span class="line">    <span class="keyword">if</span> phone.<span class="literal">nil</span>?</span><br><span class="line">      errors.add <span class="symbol">:base</span>, <span class="string">'手机号不能为空'</span></span><br><span class="line">    <span class="keyword">elsif</span> !PhoneToken.find_by(<span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token)</span><br><span class="line">      errors.add <span class="symbol">:phone</span>, <span class="string">'手机验证码不正确或已过期,请重填'</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>通过validate_phone 这个method，来检验用户输入的token是否正确。</p>
-<p>OK，基本功能已经完成！</p>
-<p>最后，简单的美化一下弹窗。</p>
-<p><strong>Step6、美化报错的弹窗</strong></p>
-<p>上面<code>new.html.erb</code>中的alert是自带的弹窗，无法定制，很是难看，此外，当用户输入错误的验证码后，<code>user.rb</code>中error message也会弹出，置于页面顶层，很难看：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fqccjt2h6sj30b90fl750.jpg" alt=""></p>
-<p><a href="https://github.com/Tencent/weui" target="_blank" rel="noopener">weui</a>提供了<a href="https://github.com/Tencent/weui/wiki/Dialog" target="_blank" rel="noopener">Dialog</a>组件，我们用这个。</p>
-<p>鉴于这里涉及的代码较多，就不放了，参看这个<a href="https://gist.github.com/Lupeipei/d8fcb48b588c2c0fb217052baa482eed" target="_blank" rel="noopener">gist</a>，修改<code>app/views/devise/registrations/new.html.erb</code>, 最后的效果长这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fqcc4szg58j30a50hfmxp.jpg" alt=""></p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p>因为没有搜到合适的教程，所以参考的是付费课程<a href="https://fullstackhelper.herokuapp.com/lessons/3" target="_blank" rel="noopener">手机短信验证码注册、短信通知</a>，跟着修修改改做的，该课程的最终参考来源：<a href="https://eggman.tv/" target="_blank" rel="noopener">蛋人网</a>。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/" itemprop="url">
-                  给你的GitHub page blog自定义域名配上HTTPS
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-13T12:07:03+08:00">
-                2018-04-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/13/set-up-https-on-github-pages-with-custom-domains-for-free/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>389 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>发现自己的个人blog被贴上了广告，上图感受下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqastm6cmnj30yv0kldii.jpg" alt=""></p>
-<p>无法忍受，立马Google，按<a href="https://jaeger.itscoder.com/web/2017/08/30/github-page-https" target="_blank" rel="noopener">GitHub Page 博客自定义域名添加 HTTPS 支持</a>这篇的指引，注册了<a href="https://www.netlify.com/" target="_blank" rel="noopener">Netlify</a> ，可惜卡在了Domain management - custom domain这，检查了步骤，没遗漏，不解，道不行，乘桴浮於海，此路不通咱换一个，改用了 <a href="https://www.cloudflare.com/" target="_blank" rel="noopener">Cloudflare</a>，简单有效！</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><ul>
-<li><p>注册 <a href="https://www.cloudflare.com/" target="_blank" rel="noopener">Cloudflare</a> ；</p>
-</li>
-<li><p>注册后，它会让你输入你的网站域名，比如我的是luciaca.cn， 随后它会进行检测，输出结果，按照指示走即可；</p>
-</li>
-<li><p>随后会给到你新的DNS，要求你修改原DNS，直接去你的域名提供商那里「比如我的域名是在阿里云买的，直接登录阿里云修改DNS即可」，将你的DNS修改成Cloudflare给到的DNS；</p>
-</li>
-<li><p>修改好后，你的网站状态显示是not active，稍等几分钟，会发现ative了。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqatcjex1xj30r90840t9.jpg" alt=""></p>
-</li>
-<li><p>可是我发现网站竟然不能访问了，心慌慌，检查发现DNS records部分弹出了提醒信息：我的A, MX records都没有写，让我添加。</p>
-<p>然后修改成这样：👇</p>
-<p>「MX的那个 mail server 我写的是mail.luciaca.cn，这个是瞎蒙的。」</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqaw2rhjexj30r20g40ux.jpg" alt=""></p>
-</li>
-<li><p>设置always use HTTPS</p>
-<p>在Crypto部分，找到Always use HTTPS，选择on，这样就可以了。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqavtj5jxvj30qh04emxh.jpg" alt=""></p>
-<p>​</p>
-</li>
-</ul>
-<p>访问http时，会自动跳转到https。</p>
-<p>最后的效果：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqavbab5uzj30ng08dmxh.jpg" alt=""></p>
-<p>哈哈，加上了小绿锁，效果很满意！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://windard.com/project/2016/09/23/Add-HTTPS-To-Jekyll" target="_blank" rel="noopener">给 Jekyll 配置 HTTPS</a></p>
-<p><a href="https://jaeger.itscoder.com/web/2017/08/30/github-page-https" target="_blank" rel="noopener">GitHub Page 博客自定义域名添加 HTTPS 支持</a></p>
-<p><a href="https://sheharyar.me/blog/free-ssl-for-github-pages-with-custom-domains/" target="_blank" rel="noopener">Set Up SSL on Github Pages With Custom Domains for Free</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/12/import-sql-file-to-rails-database/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/12/import-sql-file-to-rails-database/" itemprop="url">
-                  将sql文件导入rails数据库中
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-12T07:51:54+08:00">
-                2018-04-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/12/import-sql-file-to-rails-database/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/12/import-sql-file-to-rails-database/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>349 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>虽然这是个很小白的问题，但还是决定写下来，毕竟还是在坑里折腾了些时间。</p>
-<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>如题所诉，现有一份sql文件，需要导入了rails中，比如你新建好了model user ,但是对应的数据表是空的，</p>
-<p>数据库用的是mysql， 要求导入sql文件后，进入rails console，查询User.all， 会出现导入的数据。</p>
-<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>拿到数据库的时候，直接Google，很快就可以看到各种解答，有些走rails console， 或者使用task来执行。</p>
-<p>类似这样，运行sql文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ActiveRecord::Base.connection.execute(IO.read(&quot;your_sql_file.sql&quot;))</span><br></pre></td></tr></table></figure>
-<p>我便沿着这个坑开始走，不过奇怪的是，运行时没报错，但进入rails console，执行 User.count, 得到的结果却是0，根本没有导入数据。</p>
-<p>最后发现其实很简单，不走rails console的路线，直接通过mysql导入即可。</p>
-<p>进入mysql:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -u user_name -p</span><br></pre></td></tr></table></figure>
-<p>user_name是你的用户名，然后它会让你输入密码。如果想要免密码，比如你忘记了密码，可以这样：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql.server stop</span><br><span class="line">mysql.server start --skip-grant-tables</span><br></pre></td></tr></table></figure>
-<p>然后进入mysql:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql</span><br></pre></td></tr></table></figure>
-<p>选择你的数据库：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">use your_database_name;</span><br></pre></td></tr></table></figure>
-<p>导入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source /path/to/your_sql_file.sql</span><br></pre></td></tr></table></figure>
-<p>OK!!</p>
-<p>可以进入rails console检查一下你的数据是否已经导入到指定的数据库中。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/48211032/import-sql-file-into-rails-database" target="_blank" rel="noopener">Import SQL file into Rails database</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/7/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/9/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/7/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/7/">7</a><span class="page-number current">8</span><a class="page-number" href="/page/9/">9</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/9/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2325,7 +2279,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2336,7 +2290,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2458,7 +2412,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>

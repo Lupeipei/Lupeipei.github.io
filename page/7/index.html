@@ -273,6 +273,398 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/16/error-record-of-activesupport-messageverifier-invalidsignature/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/06/16/error-record-of-activesupport-messageverifier-invalidsignature/" itemprop="url">
+                  Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-16T14:45:13+08:00">
+                2018-06-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/16/error-record-of-activesupport-messageverifier-invalidsignature/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/16/error-record-of-activesupport-messageverifier-invalidsignature/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>551 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查<a href="http://api.rubyonrails.org/v5.2/classes/ActiveSupport/MessageVerifier.html" target="_blank" rel="noopener">ActiveSupport::MessageVerifier::InvalidSignature</a>， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。</p>
+<h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>现有model attachment，含有字段file，title，另有一个model issue，issue与attachment是一对多的关系。</p>
+<p> 在<code>app/models/attachment.rb</code>中，添加了：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Attachment</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:issue</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line">  has_one_attached <span class="symbol">:file</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>在<code>app/models/issue.rb</code>中，添加了：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:attachments</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:attachments</span>, <span class="symbol">allow_destroy:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>使用Rspec做测试时，用factorybot给Attachment建立测试数据，把测试使用的图片存放在<code>spec/resources</code>下，其中<code>spec/factories/attachments.rb</code>中的内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    file &#123; Rack::Test::UploadedFile.new(Rails.root.join(<span class="string">"spec"</span>, <span class="string">"resources"</span>, <span class="string">"image.jpg"</span>) &#125;</span><br><span class="line">    title <span class="string">"this is a title"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里通过<a href="https://www.rubydoc.info/github/brynary/rack-test/Rack/Test/UploadedFile" target="_blank" rel="noopener">Rack ::Test::UploadedFile</a>构建了file，这样在controller的spec中，传递给params的file就会被视为一个上传的文件。</p>
+<p>现在需要测试issue中添加了attachment的场景。<br>在<code>spec/controllers/issues_controller_spec.rb</code>中，有这样一段：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe IssuesController, <span class="symbol">type:</span> <span class="symbol">:controller</span> <span class="keyword">do</span></span><br><span class="line">  let!(<span class="symbol">:issue</span>) &#123; create <span class="symbol">:issue</span> &#125;</span><br><span class="line">  let(<span class="symbol">:issue_attributes</span>) &#123; &#123;&#125; &#125;</span><br><span class="line">  .....  </span><br><span class="line">    describe <span class="string">"PUT update issue"</span> <span class="keyword">do</span></span><br><span class="line">      action &#123; put <span class="symbol">:update</span>, <span class="symbol">params:</span> &#123; <span class="symbol">id:</span> issue, <span class="symbol">issue:</span> issue_attributes &#125; &#125;</span><br><span class="line"></span><br><span class="line">      context <span class="string">"with attachment"</span> <span class="keyword">do</span></span><br><span class="line">       let!(<span class="symbol">:attachment</span>) &#123; create <span class="symbol">:attachment</span>, <span class="symbol">issue:</span> issue &#125;</span><br><span class="line">       it expect(issue.attachments.count).to eq <span class="number">1</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">      ......</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>此时运行，会报错，显示：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Failures:</span></span><br><span class="line"></span><br><span class="line">  <span class="number">1</span>) IssuesController PUT update issue with attachment should <span class="keyword">not</span> be <span class="literal">nil</span></span><br><span class="line">     Failure/<span class="symbol">Error:</span> @issue.update(issue_params)</span><br><span class="line"></span><br><span class="line">     ActiveSupport::MessageVerifier::<span class="symbol">InvalidSignature:</span></span><br><span class="line">       ActiveSupport::MessageVerifier::InvalidSignature</span><br></pre></td></tr></table></figure>
+<p>如果你在<code>issues_controller.rb</code>的issue_params中设置断点，会发现attachment虽然创建成功，但是attachment的file为空，也就是active storage并没有创建对应的blob， file并没有成功attached，可以通过<code>attachment.file.attached?</code>来判断file是否已经attached。</p>
+<h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>最后找到的解决的方法其实很简单，来自stack overflow上<a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a>， 只要修改一下attachment测试数据的生成方式即可，修改<code>spec/factories/attachments.rb</code>：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    title <span class="string">"this is a title"</span></span><br><span class="line">    after(<span class="symbol">:build</span>) <span class="keyword">do</span> <span class="params">|attachment|</span></span><br><span class="line">      attachment.file.attach(<span class="symbol">io:</span> File.open(Rails.root.join(<span class="string">"spec"</span>, <span class="string">"resources"</span>, <span class="string">"image.jpg"</span>)), <span class="symbol">filename:</span> <span class="string">'image.jpg'</span>, <span class="symbol">content_type:</span> <span class="string">"image/jpg"</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>再次跑测试，会发现通过了。</p>
+<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://stackoverflow.com/questions/48162667/active-storage-raises-activesupportmessageverifierinvalidsignature" target="_blank" rel="noopener">Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature</a></p>
+<p><a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a></p>
+<p><a href="http://edgeapi.rubyonrails.org/classes/ActiveStorage/Attached/One.html#method-i-attach" target="_blank" rel="noopener">Active Storage attached one</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/11/differences-between-references-and-foreign-keys-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/06/11/differences-between-references-and-foreign-keys-in-rails/" itemprop="url">
+                  Rails中reference与foreign key的区别
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-11T20:38:57+08:00">
+                2018-06-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/11/differences-between-references-and-foreign-keys-in-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/11/differences-between-references-and-foreign-keys-in-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>752 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>对add_reference, remove_reference, add_foreign_key, remove_foreign_key这四个有点拎不清，查了官方的API，记录下。</p>
+<p>部分实例取自官网。</p>
+<h4 id="add-reference-VS-add-foreign-key"><a href="#add-reference-VS-add-foreign-key" class="headerlink" title="add_reference VS add_foreign_key"></a>add_reference VS add_foreign_key</h4><ul>
+<li><p><strong>add_reference</strong>(table_name, ref_name, **options)</p>
+<p>用来给表添加一个参考列，使用时，options可以有如下的设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">:type</span><br><span class="line">参考列的类型. 默认是 :bigint.</span><br><span class="line"></span><br><span class="line">:index</span><br><span class="line">添加一个键. 默认是 true.</span><br><span class="line"></span><br><span class="line">:foreign_key</span><br><span class="line">添加一个合适的外键约束. 默认是 false.</span><br><span class="line"></span><br><span class="line">:polymorphic</span><br><span class="line">多态关联，也就是是否需要添加额外的_type. 默认是 false， 即不添加， 设置为true时，则添加上_type</span><br><span class="line"></span><br><span class="line">:null</span><br><span class="line">该列是否允许为 nulls. 默认是 true.</span><br></pre></td></tr></table></figure>
+<p>以articles，authors为例，这里我们主要看添加外键：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_reference <span class="symbol">:articles</span>, <span class="symbol">:author</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<p>上面的这种用法，使用add_foreign_key可以这样写：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span></span><br></pre></td></tr></table></figure>
+<p>默认添加的列名为author_id。</p>
+<p>或者指定列名：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span>, <span class="symbol">column:</span> <span class="symbol">:custom_author_id</span>, <span class="symbol">primary_key:</span> <span class="string">'id'</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>add_foreign_key</strong>(from_table, to_table, options = {})</p>
+<p>用来给表添加一个外键，使用时，options可以有如下的设置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">:column</span><br><span class="line">外键列的名字. 默认是to_table的单数形式 + &quot;_id&quot;</span><br><span class="line"></span><br><span class="line">:primary_key</span><br><span class="line">to_table的主键. 默认是 id.</span><br><span class="line"></span><br><span class="line">:name</span><br><span class="line">约束名或者说是外键的名称 默认是 fk_rails_&lt;identifier&gt; 样式，identifier是一个根据from_table和column来生成的总长为10的字符串，比如fk_rails_e74ce85cbc.</span><br><span class="line"></span><br><span class="line">:on_delete</span><br><span class="line">发生删除时的行为，可设置为nullify，cascade， restrict</span><br><span class="line"></span><br><span class="line">:on_update</span><br><span class="line">发生更新时的行为，同delete</span><br><span class="line"></span><br><span class="line">:validate</span><br><span class="line">只用于Postgres， 指定是否应该验证约束. 默认是 true.</span><br></pre></td></tr></table></figure>
+<p>add_foreign_key还可以指定to_table主表delete或者update时，from_table从表的行为约束。</p>
+<p>nullify：删除／更新主表时，自动更新从表值为NULL。删除／更新从表，主表不变</p>
+<p>cascade：删除／更新主表时，自动删除／更新从表。删除／更新从表，主表不变</p>
+<p>restrict：从表记录不存在时，主表才可以删除／更新。删除／更新从表，主表不变</p>
+</li>
+<li><p><strong>两者的区别</strong></p>
+<p>add_foreign_key是用来添加外键的method，但是add_reference却不一定添加的就是外键，如果在options中，添加了<code>foreign_key: true</code>， 那么其效果就同add_foreign_key的基本用法。</p>
+</li>
+</ul>
+<h4 id="remove-reference-VS-remove-foreign-key"><a href="#remove-reference-VS-remove-foreign-key" class="headerlink" title="remove_reference VS remove_foreign_key"></a>remove_reference VS remove_foreign_key</h4><ul>
+<li><p><strong>remove_reference</strong>(table_name, ref_name, foreign_key: false, polymorphic: false, **options)</p>
+<p>顾名思义，移除reference。</p>
+<p>移除单个reference，同时移除index：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<p>移除设置为多态关联的reference：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:supplier</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<p>移除外键：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>remove_foreign_key</strong>(from_table, options_or_to_table = {})</p>
+<p>移除外键约束。</p>
+<p>移除一个外键， 这里移除了accounts的branch_id 这个外键：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">:branches</span></span><br></pre></td></tr></table></figure>
+<p>指定移除的外键列：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">column:</span> <span class="symbol">:owner_id</span></span><br></pre></td></tr></table></figure>
+<p>指定移除的外键名称，这里移除了accounts表中名为special_fk_name的外键。「前面add_foreign_key中，可以通过name来设定添加的外键名称。」</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">name:</span> <span class="symbol">:special_fk_name</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>两者的区别</strong></p>
+<p>基本同添加外键一样，remove_reference当指定了<code>foreign_key: true</code> 时，等同与remove_foreign_key。比如下面这个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">remove_reference <span class="symbol">:groups</span>, <span class="symbol">:order</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment">## 等同于下面这两种写法</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:orders</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">column:</span> <span class="symbol">:order_id</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://edgeapi.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-add_reference" target="_blank" rel="noopener">add_reference</a></p>
+<p><a href="http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-add_foreign_key" target="_blank" rel="noopener">add foreign key</a></p>
+<p><a href="http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-remove_reference" target="_blank" rel="noopener">remove_reference</a></p>
+<p><a href="http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-remove_foreign_key" target="_blank" rel="noopener">remove foreign key</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/09/reference-the-same-model-twice/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -649,6 +1041,185 @@
 <p>OK!  基本功能实现。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/plataformatec/devise" target="_blank" rel="noopener">devise</a></p>
 <p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/30/error-recording-can-not-find-migration-rb-file/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/30/error-recording-can-not-find-migration-rb-file/" itemprop="url">
+                  ErrorTracking - Could not find migration.rb
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-30T20:56:25+08:00">
+                2018-05-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/30/error-recording-can-not-find-migration-rb-file/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/30/error-recording-can-not-find-migration-rb-file/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>591 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在运行<code>rails g migration xxxx</code>时弹出如下的报错：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Running via Spring preloader in process 16933</span><br><span class="line">      invoke  active_record</span><br><span class="line">Could not find &quot;migration.rb&quot; in any of your source paths. Your current source paths are:</span><br><span class="line">/Users/username/path/to/project/lib/templates/active_record/migration</span><br><span class="line">/Users/username/.rvm/gems/ruby-2.4.0/gems/activerecord-5.2.0/lib/rails/generators/active_record/migration/templates</span><br></pre></td></tr></table></figure>
+<p>其中：</p>
+<p>ruby v2.4.0</p>
+<p>rails v5.2.0</p>
+<p>同样，运行<code>rails g controller xxx</code> , <code>rails g model xxx</code>时，同样显示无法找到controller.rb， model.rb文件。</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>google了下，一直没有看到类似的问题，于是按照提示，去终端提示的：Your current source paths中去搜索，查看目录下的文件，发现有一个migration.rb.tt的文件，直接复制了一份，命名为migration.rb， 终端再次执行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration xxxx</span><br></pre></td></tr></table></figure>
+<p>OK!</p>
+<p>对于controller以及model部分做同样的处理即可。</p>
+<p>不过疑惑的是，为什么会有这些文件，它们是什么，应该存放的文件放在了哪里呢？</p>
+<p>Google后，在<a href="https://github.com/bundler/bundler/blob/master/lib/bundler/cli/gem.rb" target="_blank" rel="noopener">gem bundle</a>里面可以发现，这些带有tt后缀的文件应该是临时文件。</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">templates = &#123;</span><br><span class="line">  <span class="string">"Gemfile.tt"</span> =&gt; <span class="string">"Gemfile"</span>,</span><br><span class="line">  <span class="string">"lib/newgem.rb.tt"</span> =&gt; <span class="string">"lib/<span class="subst">#&#123;namespaced_path&#125;</span>.rb"</span>,</span><br><span class="line">  <span class="string">"lib/newgem/version.rb.tt"</span> =&gt; <span class="string">"lib/<span class="subst">#&#123;namespaced_path&#125;</span>/version.rb"</span>,</span><br><span class="line">  <span class="string">"newgem.gemspec.tt"</span> =&gt; <span class="string">"<span class="subst">#&#123;name&#125;</span>.gemspec"</span>,</span><br><span class="line">  <span class="string">"Rakefile.tt"</span> =&gt; <span class="string">"Rakefile"</span>,</span><br><span class="line">  <span class="string">"README.md.tt"</span> =&gt; <span class="string">"README.md"</span>,</span><br><span class="line">  <span class="string">"bin/console.tt"</span> =&gt; <span class="string">"bin/console"</span>,</span><br><span class="line">  <span class="string">"bin/setup.tt"</span> =&gt; <span class="string">"bin/setup"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>顺藤摸瓜，发现本机上ruby-2.4.0下的那些ruby文件，很多都是带有了tt扩展名的，比如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">model.rb.tt</span><br><span class="line">module.rb.tt</span><br><span class="line">application_record.rb.tt</span><br></pre></td></tr></table></figure>
+<p>至于为什么会出现这种情况，Google了也没找到，我回顾自己的操作，因为之前用的ruby是2.3.6，rails5.2， 后面将ruby升级了到2.4.0，随即重新在ruby2.4.0下裝rails，2.4.0 ruby on 5.2.0 rails，安装的过程中出现报错:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ruby-2.4.0/lib/ruby/site_ruby/2.4.0/rubygems/core_ext/kernel_require.rb:55:in `require&apos;: cannot load such file -- bundler (LoadError)</span><br></pre></td></tr></table></figure>
+<p>于是按照指示，执行了<code>gem install bundler</code>。看了下，这些带有tt扩展名的文件生成时间差不多也是这个指令执行的时间，也许是在这一步导致的。至于到底为什么会这样，我也是很疑惑，也许是bundle很强大，连这些rails的源文件也能备份？</p>
+<p>先记录下，在脑子里留个印象，下次再遇到，也许可以解惑。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/23401612/what-is-tt-file-in-ruby?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa" target="_blank" rel="noopener">what is .tt file in ruby</a></p>
 
           
         
@@ -1785,585 +2356,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/09/visit-github-through-terminal-using-https-proxy/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/09/visit-github-through-terminal-using-https-proxy/" itemprop="url">
-                  Mac OSX终端访问GitHub走shadowsocks代理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-09T21:10:38+08:00">
-                2018-05-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/09/visit-github-through-terminal-using-https-proxy/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/09/visit-github-through-terminal-using-https-proxy/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>250 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>本地代码push到远端repos，终端执行<code>git push branch xxx</code>时，遇到了一个报错：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Server aborted the SSL handshake</span><br></pre></td></tr></table></figure>
-<p>SSL 握手失败？</p>
-<p>老大扫了一眼，说终端访问GitHub要走代理，并告知了如何实现，666！</p>
-<p>记录下整个实现步骤以备忘。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在使用shadowsocks的情况下，通过shadowsocks 获取HTTP Proxy Shell Export Line, 查看端口是1087.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;</span><br></pre></td></tr></table></figure>
-<p>下载<a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a>, 终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install corkscrew</span><br></pre></td></tr></table></figure>
-<p>在根目录下，执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi .ssh/config</span><br></pre></td></tr></table></figure></p>
-<p>将文件内容修改为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Host github.com</span><br><span class="line">    ProxyCommand corkscrew 127.0.0.1 xxxx %h %p</span><br></pre></td></tr></table></figure></p>
-<p>此处xxxx改成你走代理的端口号：比如上面的1087.</p>
-<p>保存，切换到项目对应的目录下，重新执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git push branch xxx</span><br></pre></td></tr></table></figure>
-<p>OK !！</p>
-<p>看到有人提到了<a href="https://www.proxifier.com/" target="_blank" rel="noopener">proxifier</a>， 也是个神器，鉴于自己没有用过，这里就不详述了。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a></p>
-<p><a href="https://www.zybuluo.com/yiranphp/note/611721" target="_blank" rel="noopener">解决 mac （windows）终端上代理的难题</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="url">
-                  Ruby盲点梳理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-08T21:29:49+08:00">
-                2018-05-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,662 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
-<p>说三个：benchmark，new &amp; allocate， delegator。</p>
-<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h4><p>Benchmark是一个module，提供了诸多方法，用于获取ruby代码的执行时间。</p>
-<p>比较常用的三个方法：</p>
-<ul>
-<li>benchmark(caption = “”, label_width = nil, format = nil, *labels) { |report| … }</li>
-<li>bm(label_width = 0, *labels) { |report| … }</li>
-<li>bmbm(width = 0) { |job| … }</li>
-</ul>
-<p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
-<p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
-<p>看例子感受下三者：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'benchmark'</span></span><br><span class="line"><span class="keyword">include</span> Benchmark</span><br><span class="line"></span><br><span class="line">n = <span class="number">500000</span></span><br><span class="line"></span><br><span class="line">Benchmark.benchmark(CAPTION, <span class="number">6</span>, FORMAT) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Benchmark.bm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Benchmark.bmbm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">"for: "</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">"times: "</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">"1"</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">"upto: "</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">"1"</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>输出的结果：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fr438e3d72j30fv09ewg0.jpg" alt=""></p>
-<p>这么看，感觉times也没有特别比for快多少……</p>
-<h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
-<p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
-<p>new对应的sourcecode如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> VALUE</span><br><span class="line">rb_class_s_new(<span class="keyword">int</span> argc, <span class="keyword">const</span> VALUE *argv, VALUE klass)</span><br><span class="line">&#123;</span><br><span class="line">    VALUE obj;</span><br><span class="line"></span><br><span class="line">    obj = rb_class_alloc(klass);</span><br><span class="line">    rb_obj_call_init(obj, argc, argv);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
-<p>看个例子感受下两者的差异：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### 根据官方文档稍稍改编了下</span></span><br><span class="line">klass = Class.new <span class="keyword">do</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(*args)</span></span></span><br><span class="line">    @initialized = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialized?</span></span></span><br><span class="line">    @initialized <span class="params">||</span> <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">klass.allocate <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;</span></span><br><span class="line">klass.allocate.initialized? <span class="comment">#=&gt; false</span></span><br><span class="line">klass.new <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 <span class="doctag">@initialized</span>=true&gt;</span></span><br><span class="line">klass.new.initialized? <span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure>
-<h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
-<p>先来看看SimpleDelegator。</p>
-<p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
-<p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Stats</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span></span></span><br><span class="line">    @source = SimpleDelegator.new([])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stats</span><span class="params">(records)</span></span></span><br><span class="line">    p <span class="string">"before setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">    @source.__setobj_<span class="number">_</span>(records)</span><br><span class="line">    p <span class="string">"after setobj: <span class="subst">#&#123;@source.size&#125;</span>"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">s = Stats.new</span><br><span class="line"></span><br><span class="line">s.stats(<span class="string">%w&#123;Hello ruby world&#125;</span>)</span><br><span class="line"><span class="comment">#=&gt; "before setobj: 0"</span></span><br><span class="line"><span class="comment">#=&gt; "after setobj: 3"</span></span><br></pre></td></tr></table></figure>
-<p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
-<p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
-<p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
-<p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
-<p>先看个Forwardable的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'forwardable'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecordCollection</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:records</span></span><br><span class="line">  extend Forwardable</span><br><span class="line">  def_delegator <span class="symbol">:</span>@records, <span class="symbol">:[]</span>, <span class="symbol">:record_number</span></span><br><span class="line">  def_delegators <span class="symbol">:</span>@records, <span class="symbol">:size</span>, <span class="symbol">:&lt;&lt;</span>, <span class="symbol">:map</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = RecordCollection.new</span><br><span class="line">obj.records = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>]</span><br><span class="line">obj.record_number(<span class="number">0</span>) <span class="comment">#=&gt; 1， 相当于执行[1,2,4](0)</span></span><br><span class="line">obj.size <span class="comment">#=&gt; 3 ， 相当于执行[1,2,4].size</span></span><br><span class="line">obj &lt;&lt; <span class="number">5</span> <span class="comment">#=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5</span></span><br><span class="line">obj.map &#123; <span class="params">|x|</span> x + <span class="number">1</span>&#125; <span class="comment">#=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;</span></span><br></pre></td></tr></table></figure>
-<p>这里 <code>def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:size</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:&lt;&lt;</span></span><br><span class="line">def_delegator <span class="symbol">:</span>@records, <span class="symbol">:map</span></span><br></pre></td></tr></table></figure>
-<p>再来看一个SingleForwardable的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
-<p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
-<p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
-<p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
-<p>以上面的例子为例：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">hi</span></span></span><br><span class="line">    puts <span class="string">"world"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; world</span></span><br></pre></td></tr></table></figure>
-<h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fr43phbujxj308e034t8q.jpg" alt=""></p>
-<p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a>年，是这么说的：</p>
-<blockquote>
-<p>However, this year saw the <strong>beginning of the Gregorian Calendar switch</strong>, when the Papal bull known as Inter gravissimas introduced the Gregorian calendar, adopted by Spain, Portugal, the Polish–Lithuanian Commonwealth and most of present-day Italy from the start. In these countries, <strong>the year continued as normal until Thursday, October 4. However, the next day became Friday, October 15</strong> (like a common year starting on Friday), in those countries (France followed two months later, letting Sunday, December 9 be followed by Monday, December 20).</p>
-</blockquote>
-<p>这种操作真6，老祖宗们会玩。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://devdocs.io/ruby~2.5/" target="_blank" rel="noopener">ruby 2.5</a></p>
-<p><a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a></p>
-<p>谢谢D推荐的<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>， 用来阅读文档真的是超赞！推荐使用<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>：P</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/04/upgrade-wget-on-ubuntu/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/04/upgrade-wget-on-ubuntu/" itemprop="url">
-                  漏洞处理-GNU Wget缓冲区错误漏洞on Ubuntu
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-04T22:15:20+08:00">
-                2018-05-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/04/upgrade-wget-on-ubuntu/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/04/upgrade-wget-on-ubuntu/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>421 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>登录阿里云，看到醒目的红色警报，点开是主机上存在漏洞： <strong>GNU Wget缓冲区错误漏洞</strong>，给到的参考链接: <a href="https://securitytracker.com/id/1039661?spm=5176.2020520154.sas.66.528f79d6yN4eC4" target="_blank" rel="noopener">securitytracker.com</a>显示要升级到版本1.19.2。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqzfuo5h2mj30cw01cdfu.jpg" alt=""></p>
-<p>升级过程中，遇到了点问题，Google后解决，记录下整个升级步骤。</p>
-<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>查看版本</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -V</span><br></pre></td></tr></table></figure>
-<p>显示是<code>GNU Wget 1.17.1 built on linux-gnu.</code></p>
-<p>删掉旧版本：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get remove wget</span><br></pre></td></tr></table></figure>
-<p>安装1.19.2或者更高版本，见<a href="http://ftp.gnu.org/gnu/wget/，" target="_blank" rel="noopener">http://ftp.gnu.org/gnu/wget/，</a> 目前最新版本是1.19.4</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">wget http://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.gz</span><br><span class="line">tar -zxvf wget-1.19.4.tar.gz</span><br><span class="line">cd wget-1.19.4</span><br><span class="line">./configure --with-ssl=openssl</span><br></pre></td></tr></table></figure>
-<p>执行完<code>./configure</code> 后报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">configure: error: The pkg-config script could not be found or is too old.  Make sure it</span><br><span class="line">is in your PATH or set the PKG_CONFIG environment variable to the full</span><br><span class="line">path to pkg-config.</span><br><span class="line"></span><br><span class="line">Alternatively, you may set the environment variables XMEDCON_GLIB_CFLAGS</span><br><span class="line">and XMEDCON_GLIB_LIBS to avoid the need to call pkg-config.</span><br><span class="line">See the pkg-config man page for more details.</span><br></pre></td></tr></table></figure>
-<p>装pkg-config:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y pkg-config</span><br></pre></td></tr></table></figure>
-<p>再次执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./configure --with-ssl=openssl</span><br></pre></td></tr></table></figure>
-<p>成功的话，会发现最后生成了Makefile：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">config.status: creating Makefile</span><br><span class="line">config.status: creating src/Makefile</span><br><span class="line">config.status: creating doc/Makefile</span><br><span class="line">config.status: creating util/Makefile</span><br><span class="line">config.status: creating po/Makefile.in</span><br><span class="line">config.status: creating tests/Makefile</span><br><span class="line">config.status: creating lib/Makefile</span><br><span class="line">config.status: creating testenv/Makefile</span><br><span class="line">config.status: creating tests/certs/interca.conf</span><br><span class="line">config.status: creating tests/certs/rootca.conf</span><br><span class="line">config.status: creating src/config.h</span><br><span class="line">config.status: executing depfiles commands</span><br><span class="line">config.status: executing po-directories commands</span><br><span class="line">config.status: creating po/POTFILES</span><br><span class="line">config.status: creating po/Makefile</span><br></pre></td></tr></table></figure>
-<p>此时，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make &amp;&amp; make install</span><br></pre></td></tr></table></figure>
-<p>查看版本：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget -V</span><br></pre></td></tr></table></figure>
-<p>显示：<br>GNU Wget 1.19.4 built on linux-gnu.</p>
-<p>OK!</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://blog.csdn.net/baidu_38083619/article/details/79948272" target="_blank" rel="noopener">GNU Wget缓冲区溢出漏洞</a></p>
-<p><a href="https://stackoverflow.com/questions/23202146/cannot-find-pkg-config-error" target="_blank" rel="noopener">cannot find pkg-config-error</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2408,7 +2405,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2419,7 +2416,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2541,7 +2538,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>

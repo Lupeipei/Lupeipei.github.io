@@ -273,6 +273,789 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/" itemprop="url">
+                  cucumber does not go to afterstep when the step failed
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-10T20:41:54+08:00">
+                2018-01-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>744 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>cucumber的AfterStep hook很好用，但是当一个step failed时，Cucumber这个黄瓜就不执行AfterStep了，而如果你需要在每一步后都截图或者每一步都输出日志信息，不管这一步的执行结果是passed还是failed， 那就麻烦了。</p>
+<p>不过问题总是有方法可以解决的，我们来看个例子。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Attention：本解答基于cucumber 3.0.0 +， 因为用到的Test Step Finished Event基于3.0.0版本 + 。</p>
+<p><strong>给定场景：</strong></p>
+<blockquote>
+<p> 每个step执行后都进行全屏截图操作 【No matter the result of the step is passed or failed or whatever】</p>
+</blockquote>
+<p><strong>前提：</strong></p>
+<blockquote>
+<ul>
+<li>cucumber 3.0.0 +</li>
+<li>假定你已经定义好了截取全屏的函数full_page_screenshot. 【不知道怎么定义？戳这里找找感觉：<a href="https://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">capture full page screenshot with capybara</a>】</li>
+</ul>
+</blockquote>
+<p><strong>解决思路：</strong></p>
+<p>在Cucumber中，AfterStep被当作是一个step，所以，如果你的step是failed，后续的step就会skipped，也就是说，AfterStep必然会skipped【弄清楚这一点很重要，就不会白白浪费时间在AfterStep上】，这样如果想要在step failed的情况下，继续运行该scenario后续的step，只能弃用AfterStep，改用<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby/Cucumber/Events/TestStepFinished" target="_blank" rel="noopener">Test Step Finished Event</a>。</p>
+<p><strong>具体步骤：</strong></p>
+<p>在<code>features/support</code>下，新建文件<code>event.rb</code>,  放入以下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">AfterConfiguration <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.on_event <span class="symbol">:test_step_finished</span> <span class="keyword">do</span> <span class="params">|event|</span></span><br><span class="line">    step = event.test_step.text</span><br><span class="line">    <span class="keyword">if</span> step != <span class="string">"AfterStep hook"</span> &amp;&amp; step != <span class="string">"Before hook"</span> &amp;&amp; step != <span class="string">"After hook"</span></span><br><span class="line">      file = full_page_screenshot</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，每一步是一个event，所以运行的时候，会按照Before hook ,step,  AfterStep hook, After hook来走，鉴于截图只是针对每个step，所以这里筛选掉了其他三类event。</p>
+<p>此处的 step取值是<code>event.test_step.text</code>， 这样获取的就是每一步的name，而<code>event.test_step</code>本身是一个step对象，输出的结果不是step的name。</p>
+<p>详情可以参考它的documentation<a href="https://app.cucumber.pro/projects/cucumber-ruby/documents/branch/master/features/docs/events/test_step_finished_event.feature" target="_blank" rel="noopener">Test Step Finished Event</a>，也可以用类似如下的代码在运行时输出其他信息：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fnbizyhm4yj30iu045wf2.jpg" alt=""></p>
+<p>这里多提一个：如果<strong>想要获取该step的执行结果</strong>怎么办？</p>
+<p>你一定会想到用<code>event.result</code>， 没错，但是它只输出两个值：✓ ，  ✗</p>
+<p>这就很不友好了，每个step运行后，其实有7种结果：</p>
+<p>[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]</p>
+<p>当<code>event.result</code>是✓ ，它是passed，但是当<code>event.result</code>是✗ ，无法判断到底是failed，还是pending，还是skipped……</p>
+<p>这里，你会想到 <strong>In Ruby,  Everything is an object except block</strong> .</p>
+<p>调用methods获取<code>event.result</code>的所有methods，然后找到<code>to_sym</code>。</p>
+<p>使用<code>event.result.to_sym</code> 得到的是符号类型的值， 比如:passed,  想要换成字符， 可以用<code>event.result.to_sym.to_s</code>，  按需择取。</p>
+<p>OK，大功告成！此外，你也可以自定义每个event中需要添加的操作，比如截图后上传图片，输出每一步的日志信息，创建实例等等。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://github.com/cucumber/cucumber-ruby/issues/1026" target="_blank" rel="noopener">Cucumber does not go to AfterStep if the step is failed!</a></p>
+<p>P.S.<br>AfterTestStep这个event的<a href="https://app.cucumber.pro/projects/cucumber-ruby/documents/branch/master/features/docs/events/test_step_finished_event.feature" target="_blank" rel="noopener">documents</a>在17年2月份的时候发出的，估计用的人不多，至少在stack overflow上是没看到，但是用起来没啥问题，感谢 Matt Wynne， 这个event真的很好用。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/08/capture-full-page-with-capybara/" itemprop="url">
+                  headless_chrome下，使用capybara截取整个网页
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-08T21:22:40+08:00">
+                2018-01-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/08/capture-full-page-with-capybara/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/08/capture-full-page-with-capybara/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>636 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做cucumber测试时，使用capybara来截取整个网页，掉进了一个坑，记录下，也附上最终的解决方法。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>默认情况下，capybara截取的图片大小尺寸是由自己设置的window.size来决定的，如果你想截取全屏怎么办？</p>
+<p>这样的需求肯定不是你第一个提出来，所以Google下， how to get full page screenshot with capybara ，会得到一些相关的链接，比如这条：</p>
+<p><a href="https://stackoverflow.com/questions/16695075/is-it-possible-to-take-a-screenshot-of-the-whole-page-with-selenium-capybara" target="_blank" rel="noopener">Is it possible to take a screenshot of the whole page with Selenium/Capybara?</a></p>
+<p>看解答，很简单，窃喜，这么快就解决了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">page.save_screenshot(&apos;screen.png&apos;, full: true)</span><br></pre></td></tr></table></figure>
+<p>连提问者本人都对这个解答很满意，亲测有效，立马试试。</p>
+<p>然后你会发现，根本没有任何效果，截取的仍然不是整个网页，只是一部分页面，这时候，可以去看源码<a href="http://www.rubydoc.info/github/jnicklas/capybara/Capybara%2FSession:save_screenshot" target="_blank" rel="noopener">Capybara::Session#save_screenshot</a>, 发现确实有option的选项：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fn9bsxoifmj30n00drgo3.jpg" alt=""></p>
+<p>这样看，应该没错啊，然后你会怀疑是不是自己代码敲错了，符号敲的不对，还是哪里没有设置好……</p>
+<p>这个地方真的是个坑。</p>
+<p>为什么坑？因为你没注意看这个解答中提到的driver是Selenium，而它通常的搭档browser是Firefox, 不是chrome，所以只能说是你的粗心给自个挖了个坑……</p>
+<p>这里，你会想问，为什么是headerless_chrome时就不行了呢？</p>
+<p>还是stack overflow：【强大的stack！】</p>
+<p>看这个<a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
+<p>这里，Thomas Walpole的解答非常清楚，忍不住想点赞。【可惜我的reputations还不到15……】</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9c9khgxbj30im09c41f.jpg" alt=""></p>
+<p>查看selenium的<a href="https://github.com/SeleniumHQ/selenium/blob/master/rb/lib/selenium/webdriver/common/driver_extensions/takes_screenshot.rb#L34" target="_blank" rel="noopener">takes_screenshot</a>， save_screenshot的定义中，参数只有一个path：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9fzei9h1j30mo058dge.jpg" alt=""></p>
+<p>所以，剩下的就简单了，去resize window即可。</p>
+<p>好，不废话了，直接上货：</p>
+<p>在<code>features/support</code>下新建文件<code>screenshot.rb</code>, 放入以下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">full_page_screenshot</span><span class="params">(file_name = <span class="literal">nil</span>)</span></span></span><br><span class="line">  width  = Capybara.page.execute_script(<span class="string">"return Math.max(document.body.scrollWidth, document.body.offsetWidth);"</span>)</span><br><span class="line">  height = Capybara.page.execute_script(<span class="string">"return Math.max(document.body.scrollHeight, document.body.offsetHeight);"</span>)</span><br><span class="line">  window = Capybara.current_session.driver.browser.manage.window</span><br><span class="line">  window.resize_to(width, height)</span><br><span class="line">  file = Capybara.page.save_screenshot(file_name)</span><br><span class="line">  <span class="keyword">return</span> file</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>上图看清楚点：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fnack5oeqyj30o303l74z.jpg" alt=""></p>
+<p>这里，width，height是调用脚本来运行得到的，也就是借助JS获取了当前打开页面的长宽值。</p>
+<p>参数方面，file_name我用了nil作为默认值，这样更灵活，既可以用capybara默认生成的文件名，也可以自定义。</p>
+<p>调用的时候，直接调用full_page_screenshot就好了。</p>
+<p>上个效果图：【截取了codepen主页】</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fn9gikub5fj31ig2xze7f.jpg" alt=""></p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://testingrepository.com/full-page-screenshot-with-selenium/" target="_blank" rel="noopener">Full page screenshot with selenium</a></p>
+<p><a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
+<p><a href="http://yizeng.me/2014/02/23/how-to-get-window-size-resize-or-maximize-window-using-selenium-webdriver/" target="_blank" rel="noopener">How to get window size, resize or maximize window using Selenium WebDriver</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/05/encode-uuid-as-base58/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/05/encode-uuid-as-base58/" itemprop="url">
+                  Rails：使用base58压缩uuid
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-05T19:08:13+08:00">
+                2018-01-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/05/encode-uuid-as-base58/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/05/encode-uuid-as-base58/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>469 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><strong>base58</strong> ,wikipedia上面的定义是这样的：</p>
+<blockquote>
+<p><strong>Base58</strong> is a group of binary-to-text encoding schemes used to represent large integers  as alphanumeric text.</p>
+</blockquote>
+<p>我的理解是它是一种将二进制转化为文本的编码方式，用于将大的整数表示成字母和数字的文本组合，其优势在于避免混淆。之前大热的bitcoin，它的address，钱包地址，用的就是base58编码方式。</p>
+<p>在Rails中，通常会给model加上uuid作为唯一标示，生成的uuid通常比较长，而且带有’-‘符号，使用base58进行编码会显得更好一些。下面实作一下，如何在Rails中将uuid编码成base58格式。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>以一个project的model为例，该model含有字段：uuid，title，description</p>
+<p><code>project.rb</code>的文件内容如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:title</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  before_validation <span class="symbol">:generate_uuid</span>, <span class="symbol">:on</span> =&gt; <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">to_param</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= SecureRandom.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这里，uuid是由SecureRandom.uuid来生成的。</p>
+<p>我们定义一下用base58压缩uuid的method，为了能在所有model中都使用这个method，我们用module来包起这个method。具体如下：</p>
+<ul>
+<li><p>在lib目录下新建<code>my_base.rb</code>文件：</p>
+</li>
+<li><p>在<code>my_base.rb</code>中添加如下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyBase</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Base</span></span></span><br><span class="line">    ALPHABET = <span class="string">"123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"</span>.chars</span><br><span class="line">    BASE = ALPHABET.size</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uuid_as_base58</span><span class="params">(uuid)</span></span></span><br><span class="line">      int_val = uuid.gsub(<span class="string">'-'</span>,<span class="string">''</span>).to_i(<span class="number">16</span>)</span><br><span class="line">      <span class="string">''</span>.tap <span class="keyword">do</span> <span class="params">|base58_val|</span></span><br><span class="line">        <span class="keyword">while</span> int_val &gt; <span class="number">0</span></span><br><span class="line">          int_val, mod = int_val.divmod(BASE)</span><br><span class="line">          base58_val.prepend ALPHABET[mod]</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyBase::Base</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在<code>config/application.rb</code>文件中，加入如下内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">config.autoload_paths += Dir[&quot;#&#123;config.root&#125;/lib/**&quot;]</span><br></pre></td></tr></table></figure>
+<p>运行时，会自动加载lib下的文件。</p>
+</li>
+<li><p>修改<code>project.rb</code>的文件中有关uuid的赋值：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'my_base'</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= uuid_as_base58(SecureRandom.uuid)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>新建一个project看看，会发现已经变成了base58的编码格式</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fn5xh10wkvj30hz01f0sr.jpg" alt=""></p>
+</li>
+</ul>
+<p>大功告成！</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://en.wikipedia.org/wiki/Base58" target="_blank" rel="noopener">base 58</a></p>
+<p><a href="https://gist.github.com/jrunning/62cf199822a25ce441d1" target="_blank" rel="noopener">uuid to base58 in ruby</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/04/how-to-get-step-name-in-cucumber/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/04/how-to-get-step-name-in-cucumber/" itemprop="url">
+                  如何获取cucumber中step的name？
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-04T16:26:32+08:00">
+                2018-01-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/04/how-to-get-step-name-in-cucumber/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/04/how-to-get-step-name-in-cucumber/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>830 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>用cucumber测试时，有一个需求，就是提取每个step的name，以及对应的scenario和feature的name。</p>
+<p>Google了不少，也试过几个前人提供的方法， 屡屡败北，在坑里挣扎了两天， 发现这方面的资料其实还是挺少的，特别是ruby这块，记录下这趟比较揪心的求解过程，给需要的提供个参考。「我揪心就好了，大伙就别再揪心了。」</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><a href="https://github.com/cucumber/cucumber/wiki/Hooks" target="_blank" rel="noopener">cucumber hooks</a> 中提到了多个hook，包括before，after，但是对于step hooks，只有一个AfterStep， 看AfterStep 的用法：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>官方文档是这么写的，可是你会发现根本不是那么回事。「吐槽下：文档没有及时更新让人很是心塞啊」</p>
+<p>在你的<code>feature/support</code>目录下，新建一个文件<code>hooks.rb</code>,  添加如下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># do something before scenario</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">	puts scenario.methods</span><br><span class="line">	puts scenario.<span class="keyword">class</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>终端运行<code>cucumber</code>的时候，你会发现AfterStep中根本不是scenario，得到的是这样的结果：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fn4lejzw3uj30pt06un03.jpg" alt=""></p>
+<p>这里可以看到它的class是<code>Cucumber::Core::Test::Result::Passed</code>， method里面也没有任何name,text之类。那么，每次afterstep后，返回的<code>Cucumber::Core::Test::Result::Passed</code>是个什么鬼？是个step？</p>
+<p>看源码：<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Result/Passed" target="_blank" rel="noopener">Class: Cucumber::Core::Test::Result::Passed</a>,  cucumber中每个step运行后，其实有7种情况：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]</span><br></pre></td></tr></table></figure>
+<p>而passed只是其中的一个type，它不是一个step。看cucumber的doc，可以找到<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Step" target="_blank" rel="noopener">step</a>， 里面的text字段，这正是我们想要的：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4lu77docj30qx0hzack.jpg" alt=""></p>
+<p>可是如何获取到step呢？</p>
+<p>你Google后会发现有一些可能”有用”的解决方法，列出几个我觉得特别的：</p>
+<ul>
+<li>最奇葩的解答：<a href="https://stackoverflow.com/questions/29952911/how-can-i-access-a-cucumber-step-name-in-the-step-definition" target="_blank" rel="noopener">How can I access a Cucumber step name in the step definition?</a></li>
+</ul>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fn4mmez9oej30j008jjsl.jpg" alt=""></p>
+<p>​    「竟然直接在step definition里面添加argument，然后在每个step里面添加一行代码 ‘puts step_name ‘, 且            不说这种方法能不能正常运行，你这样每个step都加，成千上万的steps，手都要断吧？」</p>
+<ul>
+<li><p>有坑的解答：<a href="https://groups.google.com/forum/#!topic/cukes/TQLcKQqLsjw" target="_blank" rel="noopener">Get current step within step</a></p>
+<p><a href="https://groups.google.com/forum/#!topic/cukes/TQLcKQqLsjw" target="_blank" rel="noopener">Cukes</a> 上，一个叫Marc Divins的人也遇到这个问题，未解决，身为cucumber backers之一的Matt Wynneg给出了custom formatter的解决建议,  这方法已试过，failed。</p>
+</li>
+<li><p>版本问题的坑：<a href="https://asyoulook.com/computers%20&amp;%20internet/ruby-get-current-step-form-scenario-outline/1394372" target="_blank" rel="noopener">get current step from scenario outline</a></p>
+<p>这里面用到了Cucumber::Ast::Scenario， 这个在cucumber3.0下运行会报错，无法识别，这是其一，其二是在AfterStep中调用的scenario并没有定义，会报错。</p>
+</li>
+</ul>
+<p>OK，不废话了，直接上解答：</p>
+<p>在新建好的<code>features/support/hooks.rb</code> 中，添加如下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  $step_index = <span class="number">0</span></span><br><span class="line">  $stop_count = scenario.test_steps.count</span><br><span class="line">  @scenario = scenario</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|step|</span></span><br><span class="line">  <span class="keyword">if</span> $step_index &lt; $stop_count</span><br><span class="line">    puts <span class="string">"steps: <span class="subst">#&#123;@scenario.test_steps[$step_index].text&#125;</span>\n"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  $step_index += <span class="number">2</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>运行一个feature试试：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber features/xxxx.feature</span><br></pre></td></tr></table></figure>
+<p>每个step之后，都会输出了AfterStep中定义的<code>&quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;</code></p>
+<p>类似这样：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4n9a82sbj30ey044aaj.jpg" alt=""></p>
+<p>说明：</p>
+<p>代码上的<code>$step_index += 2</code>， 给step_index累加了2，而不是1， 是因为每输出一个step，后面会跟一个<code>aferstep hook</code>，为了不输出<code>aferstep hook</code>字段，所以累加2。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考阅读：</p>
+<p><a href="https://github.com/cucumber/cucumber-ruby/issues/450" target="_blank" rel="noopener">add step to AfterStep</a></p>
+<p><a href="https://zsoltfabok.com/blog/2012/09/cucumber-jvm-hooks/" target="_blank" rel="noopener">cucumber JVM:Hooks</a></p>
+<p>P.S.</p>
+<p>这次的求解过程，更深刻地感受到一句话的正确性：<strong>不要盯着锁找答案，钥匙在别处</strong>。</p>
+<p>P.P.S</p>
+<p>Happy coding  and bye bug  : )</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/02/upload-capybara-screenshot-to-aliyun-oss/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1530,887 +2313,11 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/17/use-simple-navigation-in-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/17/use-simple-navigation-in-rails/" itemprop="url">
-                  在rails中使用simple navigation
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-17T17:31:24+08:00">
-                2017-12-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/17/use-simple-navigation-in-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/17/use-simple-navigation-in-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>497 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple navigation</a>是一个ruby库，用来生成navigation的，它的优势是可以定制自己的导航菜单，特别是当你有多个菜单或者你的菜单相对比较复杂的时候。</p>
-<p>可是官方只是给出了一个<a href="http://simple-navigation-demo.codeplant.ch/" target="_blank" rel="noopener">online demo</a>，并没有给到具体的install  和 usage，这让初次接触simple navigation的小白有些被动，Google了一些文章，实做了一下，知道怎么玩啦，记录下以备用。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>安装gem</p>
-<p>在gemfile文件中，添加如下：【建议把bootstrap也安装了】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'bootstrap-sass'</span></span><br><span class="line">gem <span class="string">'simple-navigation'</span></span><br><span class="line">gem <span class="string">'simple-navigation-bootstrap'</span></span><br></pre></td></tr></table></figure>
-<p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle install</span><br></pre></td></tr></table></figure>
-<p>重启服务器：<code>rails s</code></p>
-<p>将<code>application.css</code>文件更名为<code>application.scss</code>，终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss</span><br></pre></td></tr></table></figure>
-<p>在<code>application.scss</code>文件中，添加如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">@import &quot;bootstrap-sprockets&quot;;</span><br><span class="line">@import &quot;bootstrap&quot;;</span><br></pre></td></tr></table></figure>
-<p>生成menu 的configuration文件<code>navigation.rb</code>， 终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec rails g navigation_config</span><br></pre></td></tr></table></figure>
-<p>此时，config文件下会生成一个<code>navigation.rb</code>文件，长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fmjtnki6lbj30o007tmyr.jpg" alt=""></p>
-<p>在文件的下方，已经列出了一些用法，包括如何添加有sub navigation的item，添加指定条件的item，比如登陆，是否为管理员等等。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjtwnw2dzj30nv0gb42w.jpg" alt=""></p>
-</li>
-</ul>
-<ul>
-<li><p>设置menu</p>
-<p>我们来改改，定制一下，比如下面这样：【当然，请确保你写的path是有效的……】</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvdavg84j30le04n74t.jpg" alt=""></p>
-</li>
-<li><p>展示menu</p>
-<p>在需要展示的页面中，添加:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:expand_all =&gt; true)%&gt;</span><br></pre></td></tr></table></figure>
-<p>这里，expand_all 为true是指全部铺开，即子菜单未被激活也是展开的，效果类似这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fmjve7qr4oj305z04it8l.jpg" alt=""></p>
-<p>这里可以用参数level来控制层级的显示，上面菜单 + 子菜单，只有两级，所以用</p>
-<p><code>render_navigation(:level =&gt; 2)</code>也是可以的。如果改成：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= render_navigation(:level =&gt; 1)%&gt;</span><br></pre></td></tr></table></figure>
-<p>则显示一级菜单，像这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvz5s8kej3063027q2r.jpg" alt=""></p>
-<p>另：</p>
-<p>看到GitHub 中提到使用<code>&lt;%= render_navigation(:expand_all =&gt; false)%&gt;</code> 来让未被激活的子菜单隐藏，没有设置的情况下，:expand_all是默认为false的, 我试了一下，没有成功，所有菜单还是全部铺开，有些奇怪。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple-navigation</a></p>
-<p><a href="https://github.com/pdf/simple-navigation-bootstrap" target="_blank" rel="noopener">simple-navigation-bootstrap</a></p>
-<p><a href="http://www.xoen.org/2012/05/bootstrap-menus-in-rails/" target="_blank" rel="noopener">bootstrap menu in rails</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/13/methods-of-Array-in-Ruby/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/13/methods-of-Array-in-Ruby/" itemprop="url">
-                  Ruby中Array 的一些常用方法
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-13T17:11:08+08:00">
-                2017-12-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/13/methods-of-Array-in-Ruby/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/13/methods-of-Array-in-Ruby/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,393 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>工作中常常要处理Array，索性把ruby 中Array的一些常用方法小结一下，加深印象。</p>
-<p>先来看看Array中除去继承自Object之外的，有多少public methods</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(Array.instance_methods - Object.instance_methods).count</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">120</span></span><br><span class="line"><span class="comment"># ruby版本为 2.3.1</span></span><br></pre></td></tr></table></figure>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>建立空数组：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[]</span><br><span class="line">Array.new</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>使用%w, %i 创建非空数组</p>
-<p><strong>创建不包含空白的字符串数组，可用%w</strong></p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">%w(Ruby Python Scheme)</span></span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"Ruby"</span>, <span class="string">"Python"</span>, <span class="string">"Scheme"</span>]</span><br></pre></td></tr></table></figure>
-<p><strong>创建元素为符号的数组，可用%i</strong></p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">%i(Ruby Python Scheme)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="symbol">:Ruby</span>, <span class="symbol">:Python</span>, <span class="symbol">:Scheme</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>数组的大小</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].count</span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].size</span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].length</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="number">6</span></span><br><span class="line"><span class="number">6</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>将string转化为array</p>
-<p> split</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">"a, b, c, d"</span>.split(<span class="string">", "</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>将array转化为string</p>
-<p>join</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>, <span class="string">"d"</span>].join(<span class="string">", "</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="string">"a, b, c, d"</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>将hash 转化为array</p>
-<p>to_a</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">table = &#123;<span class="symbol">:<span class="string">"color1"</span></span> =&gt; <span class="string">"blue"</span>, <span class="symbol">:<span class="string">"color2"</span></span> =&gt; <span class="string">"red"</span>&#125;</span><br><span class="line">table.to_a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[[<span class="symbol">:color1</span>, <span class="string">"blue"</span>], [<span class="symbol">:color2</span>, <span class="string">"red"</span>]]</span><br><span class="line"></span><br><span class="line">table.to_a.flatten</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="symbol">:color1</span>, <span class="string">"blue"</span>, <span class="symbol">:color2</span>, <span class="string">"red"</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>在数组中提取元素</p>
-<p>index从0开始，index为正时，从array的第一个元素开始，index为负时，从最后一个元素开始</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>][<span class="number">2</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">3</span></span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>][-<span class="number">1</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">5</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>给数组添加元素</p>
-<p>在尾部添加&lt;&lt;  or push</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] &lt;&lt; <span class="string">"woot"</span></span><br><span class="line"><span class="comment"># 输出: [1, 2, 3, 4, 5, "woot"]</span></span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].push(<span class="string">"woot"</span>)</span><br><span class="line"><span class="comment"># 输出: [1, 2, 3, 4, 5, "woot"]</span></span><br></pre></td></tr></table></figure>
-<p>在开头添加 unshift</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].unshift(<span class="number">0</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>连接数组concat ／ +</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].concat([<span class="number">6</span>, <span class="number">7</span>])</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] + [<span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>数组转换map, collect</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].map &#123;<span class="params">|x|</span> x * <span class="number">3</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">6</span>, <span class="number">9</span>, <span class="number">12</span>, <span class="number">15</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>].collect &#123;<span class="params">|x|</span> x + <span class="number">2</span> &#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>获取分散的数组values_at</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>].values_at(<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>筛选特定的元素 select</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>].select &#123;<span class="params">|number|</span> number % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">4</span>, <span class="number">6</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>删除元素 delete</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.delete(<span class="number">5</span>) <span class="comment"># 注意这里delete的参数是元素，不是index</span></span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">5</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-<p>删除指定index的元素delete_at 【破坏性修改】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.delete_at(<span class="number">5</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">7</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>]</span><br></pre></td></tr></table></figure>
-<p>删除符合要求的delete_if【破坏性修改】, reject</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>].delete_if&#123;<span class="params">|x|</span> x % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>]</span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>].reject&#123;<span class="params">|x|</span> x % <span class="number">2</span> == <span class="number">0</span>&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">9</span>]</span><br></pre></td></tr></table></figure>
-<p>删除所有nil元素compact</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="literal">nil</span>, <span class="number">4</span>, <span class="literal">nil</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="literal">nil</span>, <span class="number">23</span>, <span class="number">42</span>, <span class="literal">nil</span>]</span><br><span class="line">a.compact</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>]</span><br></pre></td></tr></table></figure>
-<p>删除指定部分slice</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>]</span><br><span class="line">a.slice(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">a.slice!(<span class="number">1</span>,<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">3</span>, <span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-<p>删除第X个元素shift, 默认是第一个【破坏性修改】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.shift</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">1</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</span><br><span class="line"></span><br><span class="line">a.shift(<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[ <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</span><br></pre></td></tr></table></figure>
-<p>删除最后X个元素pop ，默认是最后一个【破坏性修改】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.pop</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">9</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>]</span><br><span class="line"></span><br><span class="line">a.pop(<span class="number">3</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>]</span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>]</span><br></pre></td></tr></table></figure>
-<p>ruby中method后面带有！符号的都是具有破坏性的修改, 但是那些没有带！尾巴的也不是那么友好，比如上面的shift， pop。 那么可有办法保护我们的array？有滴，上freeze</p>
-<p>freeze可以禁止具有破坏性的方法来修改对象。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br><span class="line">a.freeze</span><br><span class="line">a.pop</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="comment"># can't modify frozen Array</span></span><br><span class="line"></span><br><span class="line">a</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>去除重复元素uniq</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">3</span>,<span class="number">5</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">1</span>,<span class="number">3</span>,<span class="number">7</span>]</span><br><span class="line">a.uniq</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>平坦化数组flatten</p>
-<p>前面出现过，再多看些例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, <span class="number">42</span>]]].flatten</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>]</span><br></pre></td></tr></table></figure>
-<p>不传递参数时，默认是完全平坦化，传递参数，则平坦化层级X，例如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">1</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]</span><br><span class="line"></span><br><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">2</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]</span><br><span class="line"></span><br><span class="line">[<span class="number">4</span>, [<span class="number">8</span>], [<span class="number">15</span>], [<span class="number">16</span>, [<span class="number">23</span>, [<span class="number">42</span>, <span class="number">43</span>]]]].flatten(<span class="number">3</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"> [<span class="number">4</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>, <span class="number">43</span>]</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>获取某个元素的出现次数count</p>
-<p>count前面已经出现过，用于计算数组的长度，不带参数，如果传递参数给到count，则返回该元素在数组中出现的次数。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">42</span>, <span class="number">8</span>, <span class="number">15</span>, <span class="number">16</span>, <span class="number">23</span>, <span class="number">42</span>].count(<span class="number">42</span>)</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>排序sort</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">1</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br><span class="line">a.sort</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line"> [<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>]</span><br></pre></td></tr></table></figure>
-<p>使用块来指定排序规则：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="string">"ruby"</span>, <span class="string">"python"</span>, <span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"java"</span>]</span><br><span class="line">a.sort</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"java"</span>, <span class="string">"python"</span>, <span class="string">"ruby"</span>]    <span class="comment"># 默认按照首字母排序</span></span><br><span class="line"></span><br><span class="line">a.sort &#123;<span class="params">|a, b|</span> a.length &lt;=&gt; b.length&#125;</span><br><span class="line"><span class="comment"># 输出:</span></span><br><span class="line">[<span class="string">"C"</span>, <span class="string">"C++"</span>, <span class="string">"ruby"</span>, <span class="string">"java"</span>, <span class="string">"python"</span>]   <span class="comment"># 按照字符长度来排序</span></span><br></pre></td></tr></table></figure>
-<p>同样的，sort！方法具有破坏性。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>先整这么多，用到新的再补上，嘿哈</p>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/06/about-music/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/06/about-music/" itemprop="url">
-                  关于听歌这件事
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-06T19:55:29+08:00">
-                2017-12-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Music/" itemprop="url" rel="index">
-                    <span itemprop="name">Music</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>296 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>送君一掬温柔</p>
-<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="//music.163.com/outchain/player?type=2&id=28921691&auto=1&height=66"></iframe>
-
-<p>一直觉得音乐是个特别神奇的东西。</p>
-<p>无形无色，却能有着撩拨人心的力量。</p>
-<p>开心了，听歌助兴，不开心了，听歌释怀。</p>
-<p>疲惫时，一首歌，仿佛能治愈，能满血复活。</p>
-<p>晴朗的日子里，踩着单车，塞上耳机，哼歌吹哨，真真是享受。</p>
-<p>记得《偷影子的人》中，男主有个嗜好，每天早上都要来一段大提琴曲，而他最终找到了那个有着大提琴音色般笑声的克蕾尔，彼时她已经是一名大提琴家。</p>
-<p>也许耳朵才是抵达心灵的窗口。</p>
-<p>嗯，深情不过陪伴，温柔最是得人心。</p>
-<p>愿你在音符中寻觅到那份温暖与温柔。</p>
-<p>好了，不矫情了，听歌吧。</p>
-<p>PS：</p>
-<p>为什么要写这么一篇小短文？</p>
-<p>其实，我只是想试试如何在hexo里面添加音乐文件……</p>
-<p>事实证明，可以边看文章边听歌了……</p>
-<p>嗯，其实，还是一心一意听歌的好，好音乐值得去专注。</p>
-<hr>
-<p>参考：</p>
-<p><a href="http://www.jianshu.com/p/a52b68794a6b" target="_blank" rel="noopener">hexo创建个人博客（附加插入音乐、分享、评论、标签页、搜索）</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/01/deal-with-special-character-when-using-restclient-url/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="url">
-                  RestClient：URL中特殊字符的处理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-01T19:49:13+08:00">
-                2017-12-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/01/deal-with-special-character-when-using-restclient-url/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/01/deal-with-special-character-when-using-restclient-url/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>559 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>URL中通常会遇到特殊字符的处理，比如某一个参数中含有中文 或者”#$ ^ &amp; * + =”等特殊符号。</p>
-<p>如何处理才能正确传递参数？</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><strong>处理之前，先来点小知识。</strong></p>
-<p>URL中一些特殊字符及对应的Url编码如下：</p>
-<table>
-<thead>
-<tr>
-<th>Character</th>
-<th>From UTF-8</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>space</td>
-<td>%20</td>
-</tr>
-<tr>
-<td>!</td>
-<td>%21</td>
-</tr>
-<tr>
-<td>“</td>
-<td>%22</td>
-</tr>
-<tr>
-<td>#</td>
-<td>%23</td>
-</tr>
-<tr>
-<td>$</td>
-<td>%24</td>
-</tr>
-<tr>
-<td>%</td>
-<td>%25</td>
-</tr>
-<tr>
-<td>&amp;</td>
-<td>%26</td>
-</tr>
-<tr>
-<td>‘</td>
-<td>%27</td>
-</tr>
-<tr>
-<td>(</td>
-<td>%28</td>
-</tr>
-<tr>
-<td>)</td>
-<td>%29</td>
-</tr>
-<tr>
-<td>*</td>
-<td>%2A</td>
-</tr>
-<tr>
-<td>+</td>
-<td>%2B</td>
-</tr>
-<tr>
-<td>,</td>
-<td>%2C</td>
-</tr>
-<tr>
-<td>-</td>
-<td>%2D</td>
-</tr>
-<tr>
-<td>.</td>
-<td>%2E</td>
-</tr>
-<tr>
-<td>/</td>
-<td>%2F</td>
-</tr>
-</tbody>
-</table>
-<p><strong>小案例：从一个中文字符的处理开始</strong></p>
-<p>restclient中，如果URL含有中文等非英文的特殊字符， 只需要使用<strong>URI::encode</strong>即可。比如下面这个例子：</p>
-<p>网址是 <a href="http://example.com，" target="_blank" rel="noopener">http://example.com，</a> 用户输入关键字“伊丽莎白好乖滴 ”查询：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(url)</span><br></pre></td></tr></table></figure>
-<p>这里，使用restclient发出get请求，会出现URI::InvalidURIError 的错误.</p>
-<p>正确的打开方式可以像这样：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">require &apos;addressable/uri&apos;</span><br><span class="line">url = &apos;http://example.com/search?keyword=伊丽莎白好乖滴&apos;</span><br><span class="line">RestClient.get(URI::encode(url))</span><br></pre></td></tr></table></figure>
-<p>这样，url中的中文字符会转化为下面这样的ascii码。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=%E4%BC%8A%E4%B8%BD%E8%8E%8E%E7%99%BD%E5%A5%BD%E4%B9%96%E6%BB%B4</span><br></pre></td></tr></table></figure>
-<p><strong>特别加餐：传递给参数的值中，含有&amp;等特殊字符</strong></p>
-<p>需要特别提一句的是，如果你的URL是这样的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">url = &apos;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&apos;</span><br></pre></td></tr></table></figure>
-<p>而你希望将<code>&amp;s</code>传递给keyword， 使用URI::encode时，会是这样：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://example.com/search?keyword=&amp;s&amp;city=shanghai&amp;type=food</span><br></pre></td></tr></table></figure>
-<p>这里，因为URL中传递参数时，是用”&amp;”符号隔开的，所以rest client识别的时候，会认为keyword这个参数并没有赋值， 而<code>&amp;s</code>中，s表示另一个参数, 且没有赋值，这样，发出请求后会报错，这种情况如何解决？做这样的处理:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">URI::encode(url).sub(&quot;&amp;&quot;, &quot;%26&quot;)</span><br></pre></td></tr></table></figure>
-<p>encode后，将第一个&amp;, 也就是<code>&amp;s</code>转变为”%26s”, 再传递给RestClient。</p>
-<p>这里你可能想要问，为什么不直接传递”%26s”？</p>
-<p>问得好！如果直接将”%26s”传递给keyword，经过URI::encode之后，keyword接收到的就会是：“%2526s”， why？Cause it will encode “%” to “%25”。</p>
-<p>当然，不只是rest client，其他需要针对URL进行encoding的，也可以进行类似的处理。</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://github.com/rest-client/rest-client/issues/476" target="_blank" rel="noopener">URL with square brackets: URI::InvalidURIError</a></p>
-<p><a href="https://www.w3schools.com/tags/ref_urlencode.asp" target="_blank" rel="noopener">HTML URL Encoding Reference</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/18/">18</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2455,7 +2362,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">180</span>
+                <span class="site-state-item-count">184</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2466,7 +2373,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">6</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -2588,7 +2495,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.1k
+    189.4k
   </span>
 
 </div>
