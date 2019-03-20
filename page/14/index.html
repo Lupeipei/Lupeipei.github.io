@@ -273,6 +273,196 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/" itemprop="url">
+                  获取cucumber中每一个step的logger信息
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-12T15:08:48+08:00">
+                2018-01-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>723 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>此文承接上一个<a href="https://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">cucumber does not go to afterstep when the step failed</a>中提到的，不管step的result是什么，都执行某个操作，那么，如果想要输出每个step的logger信息，怎么办？</p>
+<blockquote>
+<p>你可能会问，cucumber执行时，会输出每一步的执行情况，为什么还要获取这些logger？应用的场景其实还是有的，比如你需要将每一步的logger保存到指定文件然后进行汇总统计，又或者调用这些logger信息新建实例等等。</p>
+</blockquote>
+<p>具体实现方面，我用了一个比较笨的方法，拼接了各种信息，最终的效果是这样子的：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fncl1wcxojj30q706qtah.jpg" alt=""></p>
+<blockquote>
+<ul>
+<li><p>当step通过时，输出step的name，含关键字：Given/When/Then；</p>
+</li>
+<li><p>当step未通过时，输出提示信息；</p>
+<p>你可以看到我输出的logger info，与cucumber自带的输出内容是一样的。</p>
+</li>
+</ul>
+</blockquote>
+<p>当然，我相信这个问题一定有更好的解决方法，但目前全网搜索，没找到特别惊喜的解答。</p>
+<p>先附上我小白式的破解方法。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>依然采用了test step finished event。</p>
+<p>在<code>features/support</code>下新建<code>event.rb</code>文件，放入以下内容：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'logger'</span></span><br><span class="line">$logger = Logger.new(STDOUT)</span><br><span class="line"></span><br><span class="line">AfterConfiguration <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.on_event <span class="symbol">:test_step_finished</span> <span class="keyword">do</span> <span class="params">|event|</span></span><br><span class="line">    name = event.test_step.text</span><br><span class="line">    <span class="keyword">if</span> name != <span class="string">"AfterStep hook"</span> &amp;&amp; name != <span class="string">"Before hook"</span> &amp;&amp; name != <span class="string">"After hook"</span></span><br><span class="line">      keyword = event.test_step.source.last.keyword</span><br><span class="line">      status = event.result.to_sym.to_s</span><br><span class="line">      step = keyword + name</span><br><span class="line"></span><br><span class="line">      <span class="comment"># logger info</span></span><br><span class="line">      <span class="keyword">if</span> status == <span class="string">"passed"</span></span><br><span class="line">        $logger.info(<span class="string">"\n"</span> +  step + <span class="string">"\n"</span>)</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">        exception_message = event.attributes.last.exception.message</span><br><span class="line">        exception_class =  event.attributes.last.exception.<span class="keyword">class</span></span><br><span class="line">        file_line = event.attributes.last.exception.backtrace[-<span class="number">2</span>]</span><br><span class="line">        <span class="comment"># 用sub将出错的文件地址转化为相对地址</span></span><br><span class="line">        file_line.sub! Dir.pwd, <span class="string">"."</span></span><br><span class="line">        step_line = event.attributes.last.exception.backtrace.last</span><br><span class="line">        message =  step + <span class="string">"\n"</span> + exception_message + <span class="string">"("</span> + exception_class.to_s + <span class="string">")\n"</span> +  file_line + <span class="string">"\n"</span> + step_line</span><br><span class="line">        $logger.info(<span class="string">"\n"</span> + message + <span class="string">"\n"</span> )</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fnclx8jwzaj30ni0bymyp.jpg" alt=""></p>
+<p>这里，分步走。</p>
+<ul>
+<li>先获取step的name，根据name筛选出我们需要的step，比如点击登陆选项，输入邮箱密码等，然后获取关键字keyword【Given/When/Then】，组成完整的一个step描述。同时获取step的状态，也就是result。</li>
+<li>根据step的status来确定logger的内容，passed则输出keyword + name即可，不是passed，则获取出错的信息message，出错的类型class，出错的文件地址，出错的step 地址，然后输出信息即可。</li>
+</ul>
+<p>【这里，我给$logger.info传递了换行符”\n”，仅仅是为了输出的时候好看点而已，可以忽略。】</p>
+<p>OK,很简单是不是？但是整个的求解过程还是比较纠结的，主要这方面的资料并不多，戳这里可以了解下cucumber 的<a href="http://www.rubydoc.info/gems/cucumber/1.3.19/Cucumber/Ast/Step#exception-instance_method" target="_blank" rel="noopener">step exception</a>。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>stack overflow上只找到了<a href="https://stackoverflow.com/questions/29146107/how-can-i-have-ruby-logger-log-for-each-line-of-execution" target="_blank" rel="noopener">How can I have ruby logger log for each line of execution?</a></p>
+<p>提问者接受了这个答案，抱歉，我是真的没看懂通过这个答案要怎么去解决那个问题。</p>
+<p>如果有看懂解答的，请吱个声，下方留言或<a href="https://stackoverflow.com/questions/29146107/how-can-i-have-ruby-logger-log-for-each-line-of-execution" target="_blank" rel="noopener">这里走一走</a>。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2082,237 +2272,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/25/concepts-in-howitzer/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/25/concepts-in-howitzer/" itemprop="url">
-                  有关Howitzer中的几个概念
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-25T20:03:42+08:00">
-                2017-12-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/25/concepts-in-howitzer/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/25/concepts-in-howitzer/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,510 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="http://howitzer-framework.io/" target="_blank" rel="noopener">howitzer</a>是一个基于ruby脚本的web验收测试框架， 初学时，对这个新伙伴是不甚了解，按照老规矩，看doc，看API。看完后，结合自己的理解，简单过一下里面几个重要的概念。</p>
-<p>基本思路：</p>
-<blockquote>
-<ul>
-<li>是什么？</li>
-<li>怎么用？</li>
-<li>用的时候要注意什么？</li>
-</ul>
-</blockquote>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>Driver</p>
-<blockquote>
-<p>是一个针对多个浏览器进行测试的通用界面，所有的Driver可以分成两类：</p>
-<ul>
-<li>Headless testing: 没有用户操作界面的模拟浏览器</li>
-<li>real browser testing: 通过扩展程序或者插件来与真实的浏览器进行集成</li>
-</ul>
-</blockquote>
-<p>Howitzer使用Capybara来对driver进行管理和设置，可以在<code>config/default.yml</code>中进行设置</p>
-</li>
-<li><p>Pages</p>
-<p>介绍pages之前，介绍一下Page Object Model。</p>
-<p>Page Object Model是一个自动化测试模版，创建用于测试的用户界面的抽象实体。可以将网站的每个page看作是一个类，然后通过调用这些类的实例来进行测试，而每个页面的元素可以看作是一个page的method，通过调用这些method来对该页面的元素进行调用。</p>
-<p>这样，page就很好理解了。</p>
-<p>Page是用于描述真实页面的类，比如在<code>web/pages</code>目录下，建立主页的文件，可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Homepage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">path <span class="string">'/'</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">HomePage.open <span class="comment">#打开主页</span></span><br></pre></td></tr></table></figure>
-<p>当然，这里的前提是你在<code>config/default.yml</code>中已经设置好了app_host</p>
-<p>再比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProductPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">'/products&#123;/id&#125;'</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">ProductPage.open(<span class="symbol">id:</span> <span class="number">1</span>) <span class="comment">#=&gt; 访问 /products/1</span></span><br></pre></td></tr></table></figure>
-<p>如果要指定特定的host，可以这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AuthPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">	site <span class="string">'https://example.com'</span></span><br><span class="line">	path <span class="string">'/auth'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p><strong>Pages的验证：</strong></p>
-<p>其实就是用于区分每个page的anchor，有三种不同的类型：</p>
-<p><strong>URL，title，element</strong></p>
-<p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">'/'</span></span><br><span class="line">  validate <span class="symbol">:url</span>, <span class="regexp">/\A(?:.*?:\/\/)?[^\/]*\/?\z/</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>使用<code>.displayed?</code>可以去判断一个页面的所有验证是否都通过。</p>
-<p>用这个可以检查特定的页面成功打开，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AccountPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">'/accounts/&#123;id&#125;'</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> AccountPage.open(<span class="symbol">id:</span> <span class="number">22</span>)</span><br><span class="line"> expect(AccountPage).to be_displayed</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Elements</p>
-<p>页面的元素，可以是单个元素，比如搜索栏，也可以是元素集合，比如菜单中的选项集。</p>
-<p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:test_name1</span>, <span class="string">'.foo'</span>                         <span class="comment">#css locator, default</span></span><br><span class="line">  element <span class="symbol">:test_name2</span>, <span class="symbol">:css</span>, <span class="string">'.foo'</span>                   <span class="comment">#css locator</span></span><br><span class="line">  element <span class="symbol">:test_name3</span>, <span class="symbol">:xpath</span>, <span class="string">'//div[@value="bar"]'</span>  <span class="comment">#xpath locator</span></span><br><span class="line"></span><br><span class="line">  element <span class="symbol">:test_link1</span>, <span class="symbol">:link</span>, <span class="string">'Foo'</span>                   <span class="comment">#link locator by 'Foo' text</span></span><br><span class="line">  element <span class="symbol">:test_link2</span>, <span class="symbol">:link</span>, <span class="string">'bar'</span>                   <span class="comment">#link locator by 'bar' id</span></span><br><span class="line"></span><br><span class="line">  element <span class="symbol">:test_field1</span>, <span class="symbol">:fillable_field</span>, <span class="string">'Foo'</span>        <span class="comment">#field locator by 'Foo' text</span></span><br><span class="line">  element <span class="symbol">:test_field2</span>, <span class="symbol">:fillable_field</span>, <span class="string">'bar'</span>        <span class="comment">#field locator by 'bar' id</span></span><br><span class="line">  element <span class="symbol">:test_field3</span>, <span class="symbol">:fillable_field</span>, <span class="string">'baz'</span>        <span class="comment">#field locator by 'baz' name</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>这里要注意，不能通过page类直接调用element，需要在page类中定义一个method来调用element。</p>
-<p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:new_button</span>, <span class="symbol">:xpath</span>, <span class="string">".//*[@name='New']"</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">start_new_project</span></span></span><br><span class="line">    new_button_element.click</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; new_button_element.click &#125; <span class="comment"># 不正确的用法</span></span><br><span class="line">HomePage.on &#123; start_new_project &#125; <span class="comment"># 正确的打开方式</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>Sections</p>
-<p>在howitzer中，有一个Howitzer::Web::Section类。</p>
-<p>section的使用场景：当多个页面中出现相同的部分时，或者某部分在一个页面中频繁出现，类似rails中的公用表单。</p>
-<p>使用<code>&lt;section_name&gt;_section</code>来生成一个section的实例,  这里使用一个特别的me方法，通过参数指定section，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">"#gbx3"</span> <span class="comment">#section的父元素</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>使用的时候，这么用：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义section:</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">"#gbx3"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 包含menusection的页面:</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 页面调用section:</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; menu_section &#125;</span><br></pre></td></tr></table></figure>
-<p>当两个页面有相同的section，但是跟节点不同时，可以这么用：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义section</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">'#gbx3'</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义两个page类，都包含有menu这个section</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span> <span class="comment"># 使用默认的selector</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SearchResultsPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span>, <span class="string">"#gbx48"</span> <span class="comment"># 覆盖了默认的selector</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-<p>测试section是否存在某个页面：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">'#gbx3'</span></span><br><span class="line">  element <span class="symbol">:search</span>, <span class="string">"a.search"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; has_menu_section? &#125; <span class="comment">#=&gt; returns true or false</span></span><br></pre></td></tr></table></figure>
-<p>多层级section的使用，看一个登陆的例子，结合了cucumber 的step定义：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># define a page that contains an area that contains a section for both logging in and registration, then modeling each of the sub sections separately</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">"div.login-area"</span></span><br><span class="line">  element <span class="symbol">:username</span>, <span class="string">"#username"</span></span><br><span class="line">  element <span class="symbol">:password</span>, <span class="string">"#password"</span></span><br><span class="line">  element <span class="symbol">:sign_in</span>, <span class="string">"button"</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">login</span><span class="params">(username, password)</span></span></span><br><span class="line">    username_element.set username</span><br><span class="line">    password_element.set password</span><br><span class="line">    sign_in_element.click</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RegistrationSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">"div.reg-area"</span></span><br><span class="line">  element <span class="symbol">:first_name</span>, <span class="string">"#first_name"</span></span><br><span class="line">  element <span class="symbol">:last_name</span>, <span class="string">"#last_name"</span></span><br><span class="line">  element <span class="symbol">:next_step</span>, <span class="string">"button.next-reg-step"</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sign_up</span><span class="params">(first_name, last_name)</span></span></span><br><span class="line">    first_name_element.set first_name</span><br><span class="line">    first_name_element.set last_name</span><br><span class="line">    next_step_element.click</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginRegistrationFormSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">"div.login-registration"</span></span><br><span class="line">  section <span class="symbol">:login</span></span><br><span class="line">  section <span class="symbol">:registration</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:login_and_registration</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how to login (fatuous, but demonstrates the point):</span></span><br><span class="line">Then /^I sign <span class="keyword">in</span>$/ <span class="keyword">do</span></span><br><span class="line">  HomePage.open</span><br><span class="line">  HomePage.on <span class="keyword">do</span></span><br><span class="line">    is_expected.to have_login_and_registration_section</span><br><span class="line">    login_and_registration_section.login_section.login(<span class="string">'bob'</span>, <span class="string">'p4ssw0rd'</span>)</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how to sign up:</span></span><br><span class="line"></span><br><span class="line">When /^I enter my name into the home page<span class="string">'s registration form$/ do</span></span><br><span class="line"><span class="string">  HomePage.open</span></span><br><span class="line"><span class="string">  HomePage.on do</span></span><br><span class="line"><span class="string">    expect(login_and_registration_section.registration_section).to have_first_name</span></span><br><span class="line"><span class="string">    expect(login_and_registration_section.registration_section).to have_last_name</span></span><br><span class="line"><span class="string">    login_and_registration_section.registration_section.signup('</span>Bob<span class="string">', '</span>Arum<span class="string">')</span></span><br><span class="line"><span class="string">  end  </span></span><br><span class="line"><span class="string">end</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>IFrames</p>
-<p>IFrames 在howitzer中被声明为一个 <code>Howitzer::Web::Page</code>类，通过包含该frame 的section或者page来引用，比如：</p>
-<p>创建一个frame实例，在DashboardPage中引用它，测试该frame是否在DashboardPage中存在。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FbPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:some_text_field</span>, <span class="string">"input.username"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DashboardPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  iframe <span class="symbol">:fb</span>, <span class="string">"#fb"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">DashboardPage.open</span><br><span class="line">DashboardPage.on &#123; is_expected.to have_fb_iframe &#125;</span><br></pre></td></tr></table></figure>
-<p>与iframe中的元素进行交互, 这里用了cucumber login的step definition来说明：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Howitzer::Web::Page representing the iframe</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:username</span>, <span class="string">"input.username"</span></span><br><span class="line">  element <span class="symbol">:password</span>, <span class="string">"input.password"</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">login</span><span class="params">(username, password)</span></span></span><br><span class="line">    username_element.set username</span><br><span class="line">    password_element.set password</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Howitzer::Web::Page representing the page that contains the iframe</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  iframe <span class="symbol">:login</span>, <span class="string">"#login_and_registration"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># cucumber step that performs login</span></span><br><span class="line">When /^I log <span class="keyword">in</span>$/ <span class="keyword">do</span></span><br><span class="line">  HomePage.open</span><br><span class="line">  HomePage.on <span class="keyword">do</span></span><br><span class="line">    login_iframe <span class="keyword">do</span> <span class="params">|frame|</span></span><br><span class="line">      <span class="comment">#`frame` is an instance of the `LoginPage` class</span></span><br><span class="line">      frame.login(<span class="string">'admin'</span>, <span class="string">'p4ssword'</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
-<p><a href="http://docs.howitzer-framework.io/" target="_blank" rel="noopener">howitzer doc</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2362,7 +2321,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">184</span>
+                <span class="site-state-item-count">185</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2495,7 +2454,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    189.4k
+    190.8k
   </span>
 
 </div>

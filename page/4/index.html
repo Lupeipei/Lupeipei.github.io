@@ -273,6 +273,186 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/09/05/when-using-undef-method-with-rails-attribute-methods/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/09/05/when-using-undef-method-with-rails-attribute-methods/" itemprop="url">
+                  当undef_method遇上method_missing
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-05T20:28:55+08:00">
+                2018-09-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/09/05/when-using-undef-method-with-rails-attribute-methods/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/09/05/when-using-undef-method-with-rails-attribute-methods/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>778 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用undef_method， 遇到的一个问题，想不明白rails是如何处理的。最后在rubyChina上<a href="https://ruby-china.org/topics/37438" target="_blank" rel="noopener">发帖</a>求助，没成想得到了很耐心的解答，贴上，以期可飨同惑者。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先看一段调用undef_method的代码：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_value</span></span></span><br><span class="line">    <span class="string">"my_value in MyModule"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:my_value</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(value)</span></span></span><br><span class="line">    @my_value = value</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MySubClass</span> &lt; MyClass</span></span><br><span class="line">  <span class="keyword">include</span> MyModule</span><br><span class="line">  undef_method <span class="symbol">:my_value</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">object = MySubClass.new(<span class="number">20</span>)</span><br><span class="line">puts object.my_value</span><br></pre></td></tr></table></figure>
+<p>执行，很明显，会报错，抛出<strong>NoMethodError</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">undefined method `my_value&apos; for #&lt;MySubClass:0x007fbdc4065818 @my_value=20&gt;</span><br></pre></td></tr></table></figure>
+<p> 没毛病，正常，ruby 2.5中对<a href="https://ruby-doc.org/core-2.5.0/Module.html#method-i-undef_method" target="_blank" rel="noopener">undef_method</a> 的定义就是这样的，prevents the current class from responding to calls to the named methods。</p>
+<p>But，你会发现rails中有一个神奇的地方，以一个简单的user model为例：</p>
+<p>user model含有字段name， 同时include了一个module UserAddon，使用undef_method来禁止调用引入的name方法，按照undef_method的定义， 此时User的对象调用name时，应该会报错，但是进入终端后，发现没有，反而返回了正确的结果。</p>
+<p>代码如下：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## app/models/user.rb</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># == Schema Information</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                          :integer          not null, primary key</span></span><br><span class="line"><span class="comment">#  email                       :string(254)</span></span><br><span class="line"><span class="comment">#  name                        :string(254)</span></span><br><span class="line"><span class="comment">#  password_digest             :string(254)</span></span><br><span class="line"><span class="comment">#  created_at                  :datetime         not null</span></span><br><span class="line"><span class="comment">#  updated_at                  :datetime         not null</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ActiveRecord</span></span><br><span class="line">  <span class="keyword">include</span> UserAddon</span><br><span class="line">  undef_method <span class="symbol">:name</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## app/models/users_addon.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">UserAddon</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">name</span></span></span><br><span class="line">    <span class="string">"hello"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<p>这时，rails c 进入console：</p>
+<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">user = User.first</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; #&lt;User id: 1, name: "admin", email: "test<span class="doctag">@gmail</span>.com", created_at:……&gt;</span></span><br><span class="line"></span><br><span class="line">user.methods.<span class="keyword">include</span>?(<span class="symbol">:name</span>)</span><br><span class="line"><span class="comment"># =&gt; false</span></span><br><span class="line"></span><br><span class="line">user.name</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; "admin"</span></span><br><span class="line"></span><br><span class="line">$ user.name</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; Couldn't locate a definition for user.name</span></span><br><span class="line"></span><br><span class="line">user.respond_to?(<span class="symbol">:name</span>)</span><br><span class="line"><span class="comment"># =&gt; true</span></span><br></pre></td></tr></table></figure>
+<p>使用pry的$ ，找不到user.name的定义，但是执行user.name却返回了正确的结果，此时一定调用了method_missing。但是，如何查看rails是如何实现的呢？</p>
+<p>ruby元编程中在有关 rails的属性方法中曾经提到，当第一次访问一个属性时，这个属性是一个幽灵方法，ActiveRecord::Base # method_missing() 会把它转换成一个真实的方法，同时创建出读，写，查询方法，比如上面的name，会创建name, name=, name?，这样下次就可以直接调用。</p>
+<p>但是，这里很显然，user.methods.include?(:name)返回了false，这里并没有创建name这个方法，那么rails是如何让user.name 返回了”admin”的呢？</p>
+<p>这里附上来自<a href="https://ruby-china.org/IChou" target="_blank" rel="noopener">IChou</a> 大神的解答：</p>
+<p>使用undef_method :name后，调用user.name, 它会落入下面的 method_missing 方法中:</p>
+  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># lib/active_model/attribute_methods.rb:425</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(method, *args, &amp;block)</span></span></span><br><span class="line">  <span class="keyword">if</span> respond_to_without_attributes?(method, <span class="literal">true</span>) <span class="comment"># =&gt;  这里是 false</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    match = matched_attribute_method(method.to_s)</span><br><span class="line">    <span class="comment">#&lt;struct ActiveModel::AttributeMethods::ClassMethods::AttributeMethodMatcher::AttributeMethodMatch target="attribute", attr_name="name", method_name="name"&gt;</span></span><br><span class="line">    match ? attribute_missing(match, *args, &amp;block) : <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">attribute_missing</span><span class="params">(match, *args, &amp;block)</span></span></span><br><span class="line">  __send_<span class="number">_</span>(match.target, match.attr_name, *args, &amp;block)</span><br><span class="line">  <span class="comment"># match.target =&gt; "attribute"， 这里调用了自身的 attribute 方法</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># lib/active_record/attribute_methods/read.rb:76</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_read_attribute</span><span class="params">(attr_name)</span></span> <span class="comment"># :nodoc:</span></span><br><span class="line">  @attributes.fetch_value(attr_name.to_s) &#123; <span class="params">|n|</span> <span class="keyword">yield</span> n <span class="keyword">if</span> block_given? &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">alias</span> <span class="symbol">:attribute</span> <span class="symbol">:_read_attribute</span></span><br><span class="line">private <span class="symbol">:attribute</span></span><br></pre></td></tr></table></figure>
+<p>「也就是最后调用@attributes.fetch_value(attr_name.to_s) ，user.name的返回了正确的结果，而不是如预期所想的那样抛出NoMethodError。」</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/rails/rails/blob/master/activemodel/lib/active_model/attribute_methods.rb" target="_blank" rel="noopener">rails attribute methods</a></p>
+<p><a href="https://apidock.com/ruby/Module/undef_method" target="_blank" rel="noopener">undef method</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/09/04/migrate-on-sti/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2170,187 +2350,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/12/film-yiyi/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/08/12/film-yiyi/" itemprop="url">
-                  观《一一》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-12T23:31:32+08:00">
-                2018-08-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Film/" itemprop="url" rel="index">
-                    <span itemprop="name">Film</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>882 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>杨德昌导演的最后一部长篇电影。</p>
-<p>第一次知道这个导演还是看《牯岭街少年杀人事件》，当时其实是冲着张震去看的，看完后，便去搜了这部片子的导演，随后知道了《一一》，刷完，被圈粉。</p>
-<p>这周末下暴雨，脑子里莫名想起片子里的一个镜头，八岁的洋洋在打雷的雨天，摘下帽子，放下书包，脱了鞋，小小的人儿，一头扎进了泳池。当然，还有结尾处，那段经典。他照着本子写的话，一句句读给婆婆听，大多数人看到这里，大抵都会泪目吧。</p>
-<p>趁着雨夜，索性再刷了一次，电影时长近3个小时，像是一个人跟你慢慢说了个故事，等到故事说完了，你才意识到原来已经过了近三个小时。</p>
-<p>即使是三刷，也依然是一部一点也不枯燥的电影。</p>
-<p>故事很简单，但是内容却一点都不简单，就不剧透了。有人说，看完这部片子好像走完了一生，我没有那么深刻的体会，我只是单纯觉得，像是有人拉开了幕布，你花三个小时完全沉浸在另一个世界里，等到闭幕时，心下舒坦，别无其他，这就够了。</p>
-<p>杨导已不再，真希望有更多这样类似的好电影，让人心甘情愿花上三个小时，四个小时，安安静静听故事。</p>
-<p>电影中不少对白很有意思，摘录下：</p>
-<blockquote>
-<p>他书好像读得多了点，对钱没那么在乎。</p>
-</blockquote>
-<blockquote>
-<p>其实这样自言自吾对我来说蛮难的，我这样讲你不要生气，我觉得好像在拜拜。除了不知道对方是不是能够听得到之外，对我自己所讲的话是不是真心的好像也没什么把握。不过讲实话原本自己很有把握的一些事，现在看一看好像觉得少的可怜。</p>
-</blockquote>
-<blockquote>
-<p>爸比，你看到的我看不到，你看到的我也看不到啊，我怎么知道你在看什么呢？爸比，我们是不是只能知道一半的事情啊？我们只能看到前面，看不到后面，这样不就有一半的事情看不到了吗？</p>
-</blockquote>
-<blockquote>
-<p>人是不可能让另外一个人去教他怎么活下去，怎么过日子。</p>
-</blockquote>
-<blockquote>
-<p>你不在的时候，我有个机会去过了一段年轻时候的日子。本来以为，我再活一次的话，也许会有什么不一样。结果……还是差不多，没什么不同。只是突然觉得，再活一次的话，好像……真的没那个必要，真的没那个必要。</p>
-</blockquote>
-<blockquote>
-<p>突然之间，所有那些音乐我都听懂了。</p>
-</blockquote>
-<blockquote>
-<p>你看这么些年，我这么辛苦，我这么努力，嘿，我从早忙到晚，你知道不知道，我一点都不快乐。<br>做的都不是自己喜欢做的事，怎么会快乐呢？</p>
-</blockquote>
-<blockquote>
-<p>婆婆，我不知道的事情太多了，所以，你知道我以后想做什么吗？我要去告诉别人他们不知道的事情，给别人看他们看不到的东西。我想，这样一定天天都很好玩。</p>
-</blockquote>
-<blockquote>
-<p>婆婆，我好想你，尤其是我看到那个还没有名字的小表弟，就会想起你常跟我说：你老了。我很想跟他说：我也觉得……我也老了。</p>
-</blockquote>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2400,7 +2399,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">184</span>
+                <span class="site-state-item-count">185</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2533,7 +2532,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    189.4k
+    190.8k
   </span>
 
 </div>
