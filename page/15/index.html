@@ -273,6 +273,192 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/26/git-clone-repos-with-submodules/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/26/git-clone-repos-with-submodules/" itemprop="url">
+                  clone git repos with submodules
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-26T20:01:49+08:00">
+                2017-12-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/26/git-clone-repos-with-submodules/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/26/git-clone-repos-with-submodules/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>483 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>当你需要clone的repos中，含有submodules时，我们会用到<code>git clone —recursive</code>这个命令，我今个也遇到了，然后很不幸地掉坑了，一直无法成功clone，Google后，搞定！现附上解答细节。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先来认识下git中的子模块submodule。</p>
+<p>A <strong>submodule</strong> in a git repository is like a sub-directory which is really a separate git repository in its own right. This is a useful feature when you have a project in git which depends on a particular versions of other projects。</p>
+<p>我的理解是当你的repos需要依赖于第三方的repos时，可以用submodule的方式，把这些repos作为你的子模块引入进来使用，而这些repos本身仍是独立的。</p>
+<p>「添加submodule可以使用命令：<code>git submodule add</code> 后面加上URL即可。」</p>
+<p>以clone<a href="https://github.com/strongqa/howitzer_example_cucumber" target="_blank" rel="noopener">howitzer_example_cucumber</a>为例。可以看到有四个文件长得不大一样，这些其实就是submodule。</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fmue1wst1nj306i0dat95.jpg" alt=""></p>
+<p>如果你直接clone, 使用命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone git@github.com:strongqa/howitzer_example_cucumber.git</span><br></pre></td></tr></table></figure>
+<p>你会发现clone到本地后，那些submodule的文件存在，但里面没有任何文件。</p>
+<p>这时就需要添加<code></code>–recursive<code></code>这个选项，<a href="https://github.com/strongqa/howitzer_example_cucumber" target="_blank" rel="noopener">howitzer_example_cucumber</a>文档下也列出了命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone --recursive git@github.com:strongqa/howitzer_example_cucumber.git</span><br></pre></td></tr></table></figure>
+<p>终端输入后，报错：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fmuf22enbcj30s303s74w.jpg" alt=""></p>
+<p>没有clone成功，显示<code>Permission denied (publickey)</code></p>
+<p>google了一下，大部分人都是说修改你的ssh, 可我发现clone其他的repos没问题啊，说明我的ssh没毛病，clone带有submodule的却出问题，被拒绝，肯定跟submodule有关， 应该有其他方法。在stack overflow: <a href="https://stackoverflow.com/questions/39286354/git-clone-recursive-fails/47977557#47977557" target="_blank" rel="noopener">git clone –recursive fails</a>上找到了最方便的解答。</p>
+<p><strong>非常直接：使用https格式</strong></p>
+<p>终端输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone --recursive https://github.com/strongqa/howitzer_example_cucumber</span><br></pre></td></tr></table></figure>
+<p>搞定！</p>
+<p>PS. 看了其他文档，发现<strong>还有个方法</strong>，使用<code>git submodule init</code> , <code>git submodule update</code>.</p>
+<p> 亲测有效，一并附上：</p>
+<p>还是clone上面的repos，终端输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/strongqa/howitzer_example_cucumber</span><br><span class="line">cd howitzer_example_cucumber</span><br><span class="line">git submodule init</span><br><span class="line">git submodule update</span><br></pre></td></tr></table></figure>
+<p>OK  !!</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://git-scm.com/book/zh/v2/Git-%E5%B7%A5%E5%85%B7-%E5%AD%90%E6%A8%A1%E5%9D%97" target="_blank" rel="noopener">Git 工具 - 子模块</a></p>
+<p><a href="https://stackoverflow.com/questions/39286354/git-clone-recursive-fails/47977557#47977557" target="_blank" rel="noopener">git clone –recursive fails</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/25/concepts-in-howitzer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2107,181 +2293,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/11/07/how-to-run-the-feature-you-want/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/11/07/how-to-run-the-feature-you-want/" itemprop="url">
-                  如何在cucumber中运行指定的feature？
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-07T22:56:29+08:00">
-                2017-11-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/11/07/how-to-run-the-feature-you-want/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/11/07/how-to-run-the-feature-you-want/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>169 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>只运行指定的feature时，有两种方法。</p>
-<ul>
-<li>可以类似RSpec那样，指定文件位置 ，比如 <code>cucumber features/your_feature.feature</code></li>
-<li>可以添加tag</li>
-</ul>
-<p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@approved @car_buy</span><br><span class="line"></span><br><span class="line">　　<span class="symbol">Feature:</span> Car Buy</span><br><span class="line"></span><br><span class="line">        　　@wip</span><br><span class="line"></span><br><span class="line">        　　<span class="symbol">Scenario:</span> Buy a car <span class="keyword">in</span> store</span><br></pre></td></tr></table></figure>
-<p>　　一个Scenario会继承指定给Feature的tags，所以在上面的例子中，Scenario有三个tags：@approved @car_buy @wip.  </p>
-<p>调用时，使用<code>cucumber  --tags tag_name</code>。</p>
-<p>比如运行feature，终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber  --tags @car_buy</span><br></pre></td></tr></table></figure>
-<p>使用tag的好处是可以细化到scenario。比如上例， 就可以使用命令：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber –tags @wip</span><br></pre></td></tr></table></figure>
-<p>来运行你想要的那部分Scenario.</p>
-<p>插一句：cucumber默认加载<code>features/support/.</code>. 即support下的所有文件。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.cnblogs.com/puresoul/archive/2011/12/28/2305160.html" target="_blank" rel="noopener">cucumber 入门之Gherkin</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2331,7 +2342,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">185</span>
+                <span class="site-state-item-count">186</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2353,7 +2364,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">51</span>
+                <span class="site-state-item-count">52</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2464,7 +2475,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.8k
+    191.0k
   </span>
 
 </div>
