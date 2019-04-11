@@ -273,6 +273,212 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/11/understanding-collector-in-scheme/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/04/11/understanding-collector-in-scheme/" itemprop="url">
+                  对scheme中collector的一点理解
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-11T13:58:28+08:00">
+                2019-04-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/04/11/understanding-collector-in-scheme/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2019/04/11/understanding-collector-in-scheme/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>894 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>collector出现在《 the little schemer》chapter 08中，刷了两遍才算勉强理解，记录下。</p>
+<p>collector 的运用，对应着《 the little schemer》中提到了第10戒：<strong>Build functions to collect more than one value at a time.</strong> 简单理解为创建函数，一次收集多个值，然后对这些值进行再处理。</p>
+<p>看个例子，加深对collector的理解。</p>
+<h4 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h4><p>根据《the little schemer》chapter 08 中给出的奇偶数例子稍稍加以改编。</p>
+<p>定义函数 <code>number-only*&amp;co</code>，给到一个list， 要求：找出这个list中的所有数字，并求出数字的总和。将总和和新的数字集一并输出。</p>
+<p>比如：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">; 输出结果的格式（sum newlist), list的第一个元素是求和的结果，第二个元素为所取到数字集。</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples <span class="number">2</span> oranges <span class="number">10</span> peaches <span class="number">11</span> pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 2 10 11))</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 (2) (10) ((11))))</span></span><br></pre></td></tr></table></figure>
+<p>这里<code>cal-number</code> 就是一个collector。</p>
+<p>来看<code>number-only*&amp;co</code> 和 <code>cal-number</code>的定义：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">; define number-only*&amp;co</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-only*&amp;co</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l col)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) (<span class="name">col</span> (<span class="name"><span class="builtin-name">quote</span></span> ()) <span class="number">0</span>))</span><br><span class="line">      ((<span class="name">atom?</span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">number?</span></span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">         (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">            (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l) col))))</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">car</span></span> l)</span><br><span class="line">                           (<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">                            (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">                              (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">                                (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds))))))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; define cal-number</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> cal-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cons</span></span> s (<span class="name"><span class="builtin-name">cons</span></span> l (<span class="name"><span class="builtin-name">quote</span></span> ())))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<p>  简单解释下：</p>
+<p>  number-only*&amp;co 接受两个参数，一个是list，一个是collector。</p>
+<p>  collector接受两个参数，一个是newlist,  一个是 s (s is short for sum)， newlist用来存 l 中的数字，s用来存数字求和的结果。</p>
+<p>  collector的初始值是<code>col((quote ()) 0)</code>，也就是newlist 为空，s为0，理解这一点很重要。</p>
+<ul>
+<li><p>当 l 是空的 list 时，<code>number-only*&amp;co</code>的结果就是 <code>(col (quote ()) 0)</code>.</p>
+</li>
+<li><p>当 l 不为空时，判断 l 的第一个元素是不是一个atom:</p>
+<ul>
+<li><p><code>(atom? (car l))</code> 为 #t, 判断第一个元素是不是number：</p>
+<ul>
+<li><p>第一个元素是number，添加到newlist里面，同时s = s + (car l)。此时新的collector长这样:</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">   (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>第一个元素不是number，那就什么也不做，collector不变，仍然为col。</p>
+</li>
+</ul>
+</li>
+<li><p><code>(atom? (car l))</code> 为 #f:</p>
+<p>这里就要定义 <code>(car l)</code> 后的collector了。这个collector需要使用<code>number-only*&amp;co</code> 来遍历 <code>(cdr l)</code>，挑出<code>(cdr l)</code>中的所有数字，并算出这些数字的和。所以，它应该长成这样：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">     (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">  		......)))</span><br></pre></td></tr></table></figure>
+<p>「这里al, as 是 <code>number-only*&amp;co</code>  处理<code>(car l)</code> 时得到的结果，而dl, ds 是 <code>number-only*&amp;co</code> 处理 <code>(cdr l)</code> 时得到的结果。」</p>
+<p>有了al, dl, as, ds， 后面只需要将两者得到的结果整合起来即可。</p>
+<p>所以，else语句中，最后的collector长这样：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">	  (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds)))))</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+<p>至此， <code>number-only*&amp;co</code>  的定义完成。</p>
+<p>而<code>cal-number</code> 仅仅是一个collector，返回(sum newlist)， 没什么特别的。</p>
+<p>也可以定义新的collector，比如只返回sum，或者只返回newlist。</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> sum-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    s))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-list</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    l))</span><br></pre></td></tr></table></figure>
+<p>然后调用的时候，使用新的collector：</p>
+<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) sum-number)</span><br><span class="line"><span class="comment">;Value: 32</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) number-list)</span><br><span class="line"><span class="comment">;Value : (9 (2) (10) ((11)))</span></span><br></pre></td></tr></table></figure>
+<p>OK。算是又刷了一遍，可以开启下一章的旅途了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://mitpress.mit.edu/books/little-scheme-fourth-edition" target="_blank" rel="noopener">《The little schemer》</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/03/27/error-tracking-nuxt-document-is-not-defined/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1931,188 +2137,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/02/23/custom-directive-in-nuxt/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/02/23/custom-directive-in-nuxt/" itemprop="url">
-                  Nuxt中自定义全选指令
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-23T10:27:31+08:00">
-                2019-02-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2019/02/23/custom-directive-in-nuxt/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2019/02/23/custom-directive-in-nuxt/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>505 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="nuxt中自定义全选指令"><a href="#nuxt中自定义全选指令" class="headerlink" title="nuxt中自定义全选指令"></a>nuxt中自定义全选指令</h2><p>看两个例子来熟悉熟悉nuxt中如何自定义指令，一个简单的focus指令，一个是比较常用的全选功能。</p>
-<h4 id="一个简单的focus指令"><a href="#一个简单的focus指令" class="headerlink" title="一个简单的focus指令"></a>一个简单的focus指令</h4><p>在plugins文件夹下，新建文件<code>directives.js</code>，放入如下内容：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// focus指令的定义参考vuejs官方文档</span></span><br><span class="line"><span class="keyword">import</span> Vue <span class="keyword">from</span> <span class="string">'vue'</span></span><br><span class="line">Vue.directive(<span class="string">'focus'</span>, &#123;</span><br><span class="line">  inserted: <span class="function"><span class="keyword">function</span> (<span class="params">el</span>) </span>&#123;</span><br><span class="line">    el.focus()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>修改<code>nuxt.config.js</code>文件，添加自定义指令声明：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">plugins: [</span><br><span class="line">  <span class="string">'~/plugins/directives'</span></span><br><span class="line">],</span><br></pre></td></tr></table></figure>
-<p>重启nuxt,  好了，可以开始使用了。</p>
-<p>任意页面中添加:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">v-focus</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>效果：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g0bwp3to18j318y0isaag.jpg" alt=""></p>
-<h4 id="全选实现"><a href="#全选实现" class="headerlink" title="全选实现"></a>全选实现</h4><p>先看效果：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1g0d5876tz7g30uo0br3yp.gif" alt=""></p>
-<p>思路是给全选按钮一个class: select-all, 每个选项一个class：select-item， 最外面包一层指令: select-all-container. 这样所有相关的checkbox都在指令的el内了，这样就可以定位到对应的元素。</p>
-<p>然后利用bind钩子函数，来给按钮添加change事件。</p>
-<p>具体步骤基本同focus，只是<code>directives.js</code>的内容不一样，这里贴上指令的定义部分和示例的HTML代码：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// plugins/directives.js</span></span><br><span class="line"><span class="keyword">import</span> Vue <span class="keyword">from</span> <span class="string">'vue'</span></span><br><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">'jquery'</span></span><br><span class="line"></span><br><span class="line">Vue.directive(<span class="string">'select-all-container'</span>, &#123;</span><br><span class="line">  bind: <span class="function"><span class="keyword">function</span> (<span class="params">el</span>) </span>&#123;</span><br><span class="line">    $(el).on(<span class="string">'change'</span>, <span class="string">'.select-item'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">const</span> $items = $(el).find(<span class="string">'.select-item'</span>)</span><br><span class="line">      <span class="keyword">const</span> allChecked = $items.length != <span class="number">0</span> &amp;&amp; $items.not(<span class="string">':checked'</span>).length == <span class="number">0</span></span><br><span class="line">      $(el).find(<span class="string">'.select-all'</span>).prop(<span class="string">'checked'</span>, allChecked)</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    $(el).on(<span class="string">'change'</span>, <span class="string">'.select-all'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      $(el).find(<span class="string">'.select-item'</span>).prop(<span class="string">'checked'</span>, <span class="keyword">this</span>.checked)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-<p>调用bind钩子函数，给全选及单个子选项添加change事件。</p>
-<p>HTML示例部分：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">v-select-all-container</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">class</span>=<span class="string">"select-all"</span>&gt;</span> 全选</span><br><span class="line">    <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">ul</span> <span class="attr">class</span>=<span class="string">"list-unstyled ml-4"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">li</span> <span class="attr">v-for</span>=<span class="string">"student in students"</span> <span class="attr">:key</span>=<span class="string">"student.id"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">:value</span>=<span class="string">"student.id"</span> <span class="attr">class</span>=<span class="string">"select-item"</span>&gt;</span></span><br><span class="line">          &#123;&#123; student.name &#125;&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">  <span class="keyword">export</span> <span class="keyword">default</span> &#123;</span></span><br><span class="line"><span class="undefined">      data() &#123;</span></span><br><span class="line"><span class="javascript">          <span class="keyword">return</span> &#123;</span></span><br><span class="line"><span class="javascript">              students: [&#123; <span class="string">'id'</span>: <span class="number">1</span>, <span class="string">'name'</span>: <span class="string">"张三"</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">'id'</span>: <span class="number">2</span>, <span class="string">'name'</span>: <span class="string">"李四"</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">'id'</span>: <span class="number">3</span>, <span class="string">'name'</span>: <span class="string">"王五"</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">'id'</span>: <span class="number">4</span>, <span class="string">'name'</span>: <span class="string">"赵麻子"</span> &#125;]</span></span><br><span class="line"><span class="undefined">          &#125;</span></span><br><span class="line"><span class="undefined">      &#125;  </span></span><br><span class="line"><span class="undefined">  &#125;    </span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
-<p>好，大功告成。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/nuxt/nuxt.js/issues/3127" target="_blank" rel="noopener">Where do custom directives belong?</a></p>
-<p><a href="https://vuejs.org/v2/guide/custom-directive.html" target="_blank" rel="noopener">custom-directive</a></p>
-<p><a href="https://segmentfault.com/a/1190000006811318" target="_blank" rel="noopener">用Vue实现全选指令</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2162,7 +2186,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">187</span>
+                <span class="site-state-item-count">188</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2184,7 +2208,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">52</span>
+                <span class="site-state-item-count">53</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -2295,7 +2319,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    191.3k
+    192.2k
   </span>
 
 </div>
