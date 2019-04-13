@@ -89,18 +89,18 @@
 
 
 
-<meta name="description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： 123resources :books do  get :publish_info, on: :memberend 想要查找某本书详细的出版信息时，URL长这样： 1/books/&amp;#123;book_id&amp;#125;/publish_info 假定现在要求传递的是商品的序列号ISBN，而不是book">
+<meta name="description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： resources :books do   get :publish_info, on: :member end  想要查找某本书详细的出版信息时，URL长这样： /books/{book_id}/publish_info  假定现在要求传递的是商品的序列号ISBN，而不是book.id，怎么写？ 解">
 <meta name="keywords" content="Rails">
 <meta property="og:type" content="article">
 <meta property="og:title" content="rails routes中使用自定义的params">
 <meta property="og:url" content="http://lupeipei.github.io/2018/09/26/custom-params-in-rails-routes/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： 123resources :books do  get :publish_info, on: :memberend 想要查找某本书详细的出版信息时，URL长这样： 1/books/&amp;#123;book_id&amp;#125;/publish_info 假定现在要求传递的是商品的序列号ISBN，而不是book">
+<meta property="og:description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： resources :books do   get :publish_info, on: :member end  想要查找某本书详细的出版信息时，URL长这样： /books/{book_id}/publish_info  假定现在要求传递的是商品的序列号ISBN，而不是book.id，怎么写？ 解">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2019-03-15T10:38:24.991Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="rails routes中使用自定义的params">
-<meta name="twitter:description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： 123resources :books do  get :publish_info, on: :memberend 想要查找某本书详细的出版信息时，URL长这样： 1/books/&amp;#123;book_id&amp;#125;/publish_info 假定现在要求传递的是商品的序列号ISBN，而不是book">
+<meta name="twitter:description" content="问题描述：写接口的时候，遇到的一个问题： 通常情况下，通过ID来查找instance，类似这样： resources :books do   get :publish_info, on: :member end  想要查找某本书详细的出版信息时，URL长这样： /books/{book_id}/publish_info  假定现在要求传递的是商品的序列号ISBN，而不是book.id，怎么写？ 解">
 
 
 
@@ -374,7 +374,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>274 words</span>
+              <span>261 words</span>
             </span>
           
 
@@ -393,17 +393,30 @@
       
         <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>写接口的时候，遇到的一个问题：</p>
 <p>通常情况下，通过ID来查找instance，类似这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:books</span> <span class="keyword">do</span></span><br><span class="line">  get <span class="symbol">:publish_info</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">resources :books do
+  get :publish_info, on: :member
+end
+</code></pre>
 <p>想要查找某本书详细的出版信息时，URL长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/books/&#123;book_id&#125;/publish_info</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">/books/{book_id}/publish_info
+</code></pre>
 <p>假定现在要求传递的是商品的序列号ISBN，而不是book.id，怎么写？</p>
 <h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>在rails的routes部分有介绍，类似这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">get <span class="string">'books/*section/:title'</span>, <span class="symbol">to:</span> <span class="string">'books#show'</span></span><br><span class="line"></span><br><span class="line">get <span class="string">'photos/:id'</span>, <span class="symbol">to:</span> <span class="string">'photos#show'</span>, <span class="symbol">id:</span> /[A-Z]\d&#123;<span class="number">5</span>&#125;/</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">get &#39;books/*section/:title&#39;, to: &#39;books#show&#39;
+
+get &#39;photos/:id&#39;, to: &#39;photos#show&#39;, id: /[A-Z]\d{5}/
+</code></pre>
 <p>可以用其他字段来代替id，且可以给字段添加上正则校验。</p>
 <p>比如上面的ISBN，可以这么写：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:books</span>, <span class="symbol">params:</span> <span class="symbol">:isbn</span> <span class="keyword">do</span></span><br><span class="line">  get <span class="symbol">:publish_info</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">resources :books, params: :isbn do
+  get :publish_info, on: :member
+end
+</code></pre>
 <p>同时参考<a href="http://regexlib.com" target="_blank" rel="noopener">RegExLib.com</a>, ISBN 10 or 13 对应的正则表达式是<code>^(97(8|9))?\d{9}(\d|X)$</code> ，故可以添加上正则校验：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:books</span>, <span class="symbol">params:</span> <span class="symbol">:isbn</span>, <span class="symbol">isbn:</span> %r&#123;^(<span class="number">97</span>(<span class="number">8</span><span class="params">|9))?\d&#123;9&#125;(\d|</span>X)$&#125; <span class="keyword">do</span></span><br><span class="line">  get <span class="symbol">:publish_info</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">resources :books, params: :isbn, isbn: %r{^(97(8|9))?\d{9}(\d|X)$} do
+  get :publish_info, on: :member
+end
+</code></pre>
 <p>OK。</p>
 <h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://edgeguides.rubyonrails.org/routing.html" target="_blank" rel="noopener">Rails Routing from the Outside In</a></p>
 <p> <a href="https://robots.thoughtbot.com/rails-patch-change-the-name-of-the-id-parameter-in" target="_blank" rel="noopener">Rails Patch: Change the Name of the :id Parameter in Routing Resources</a></p>
@@ -692,7 +705,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -845,5 +858,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

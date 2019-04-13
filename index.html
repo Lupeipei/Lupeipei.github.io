@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>894 words</span>
+              <span>840 words</span>
             </span>
           
 
@@ -394,10 +394,43 @@
 <h4 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h4><p>根据《the little schemer》chapter 08 中给出的奇偶数例子稍稍加以改编。</p>
 <p>定义函数 <code>number-only*&amp;co</code>，给到一个list， 要求：找出这个list中的所有数字，并求出数字的总和。将总和和新的数字集一并输出。</p>
 <p>比如：</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">; 输出结果的格式（sum newlist), list的第一个元素是求和的结果，第二个元素为所取到数字集。</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples <span class="number">2</span> oranges <span class="number">10</span> peaches <span class="number">11</span> pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 2 10 11))</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 (2) (10) ((11))))</span></span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">; 输出结果的格式（sum newlist), list的第一个元素是求和的结果，第二个元素为所取到数字集。
+;
+(number-only*&amp;co (quote (9 apples 2 oranges 10 peaches 11 pears)) cal-number)
+;Value : (32 (9 2 10 11))
+
+(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) cal-number)
+;Value : (32 (9 (2) (10) ((11))))
+
+</code></pre>
 <p>这里<code>cal-number</code> 就是一个collector。</p>
 <p>来看<code>number-only*&amp;co</code> 和 <code>cal-number</code>的定义：</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">; define number-only*&amp;co</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-only*&amp;co</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l col)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) (<span class="name">col</span> (<span class="name"><span class="builtin-name">quote</span></span> ()) <span class="number">0</span>))</span><br><span class="line">      ((<span class="name">atom?</span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">number?</span></span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">         (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">            (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l) col))))</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">car</span></span> l)</span><br><span class="line">                           (<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">                            (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">                              (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">                                (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds))))))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; define cal-number</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> cal-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cons</span></span> s (<span class="name"><span class="builtin-name">cons</span></span> l (<span class="name"><span class="builtin-name">quote</span></span> ())))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">; define number-only*&amp;co
+;
+(define number-only*&amp;co
+  (lambda (l col)
+    (cond
+      ((null? l) (col (quote ()) 0))
+      ((atom? (car l))
+      (cond
+        ((number? (car l))
+         (number-only*&amp;co (cdr l)
+          (lambda (newlat s)
+            (col (cons (car l) newlat) (+ (car l) s)))))
+        (else (number-only*&amp;co (cdr l) col))))
+      (else (number-only*&amp;co (car l)
+                           (lambda (al as)
+                            (number-only*&amp;co (cdr l)
+                              (lambda (dl ds)
+                                (col (cons al dl) (+ as ds))))))))))
+;
+; define cal-number
+;
+(define cal-number
+  (lambda (l s)
+    (cons s (cons l (quote ())))))
+;
+</code></pre>
 <p>  简单解释下：</p>
 <p>  number-only*&amp;co 接受两个参数，一个是list，一个是collector。</p>
 <p>  collector接受两个参数，一个是newlist,  一个是 s (s is short for sum)， newlist用来存 l 中的数字，s用来存数字求和的结果。</p>
@@ -410,7 +443,9 @@
 <li><p><code>(atom? (car l))</code> 为 #t, 判断第一个元素是不是number：</p>
 <ul>
 <li><p>第一个元素是number，添加到newlist里面，同时s = s + (car l)。此时新的collector长这样:</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">   (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))</span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(lambda (newlat s)
+   (col (cons (car l) newlat) (+ (car l) s)))
+</code></pre>
 </li>
 <li><p>第一个元素不是number，那就什么也不做，collector不变，仍然为col。</p>
 </li>
@@ -418,11 +453,19 @@
 </li>
 <li><p><code>(atom? (car l))</code> 为 #f:</p>
 <p>这里就要定义 <code>(car l)</code> 后的collector了。这个collector需要使用<code>number-only*&amp;co</code> 来遍历 <code>(cdr l)</code>，挑出<code>(cdr l)</code>中的所有数字，并算出这些数字的和。所以，它应该长成这样：</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">     (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">  		......)))</span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(lambda (al as)
+  (number-only*&amp;co (cdr l)
+     (lambda (dl ds)
+          ......)))
+</code></pre>
 <p>「这里al, as 是 <code>number-only*&amp;co</code>  处理<code>(car l)</code> 时得到的结果，而dl, ds 是 <code>number-only*&amp;co</code> 处理 <code>(cdr l)</code> 时得到的结果。」</p>
 <p>有了al, dl, as, ds， 后面只需要将两者得到的结果整合起来即可。</p>
 <p>所以，else语句中，最后的collector长这样：</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">	  (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds)))))</span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(lambda (al as)
+  (number-only*&amp;co (cdr l)
+    (lambda (dl ds)
+      (col (cons al dl) (+ as ds)))))
+</code></pre>
 </li>
 </ul>
 </li>
@@ -430,9 +473,21 @@
 <p>至此， <code>number-only*&amp;co</code>  的定义完成。</p>
 <p>而<code>cal-number</code> 仅仅是一个collector，返回(sum newlist)， 没什么特别的。</p>
 <p>也可以定义新的collector，比如只返回sum，或者只返回newlist。</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> sum-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    s))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-list</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    l))</span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(define sum-number
+  (lambda (l s)
+    s))
+;
+(define number-list
+  (lambda (l s)
+    l))
+</code></pre>
 <p>然后调用的时候，使用新的collector：</p>
-<figure class="highlight scheme"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) sum-number)</span><br><span class="line"><span class="comment">;Value: 32</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) number-list)</span><br><span class="line"><span class="comment">;Value : (9 (2) (10) ((11)))</span></span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) sum-number)
+;Value: 32
+
+(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) number-list)
+;Value : (9 (2) (10) ((11)))
+</code></pre>
 <p>OK。算是又刷了一遍，可以开启下一章的旅途了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://mitpress.mit.edu/books/little-scheme-fourth-edition" target="_blank" rel="noopener">《The little schemer》</a></p>
 
@@ -575,7 +630,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>227 words</span>
+              <span>207 words</span>
             </span>
           
 
@@ -596,18 +651,41 @@
           
             <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在nuxt中添加plugins时，遇到的问题，Google了大半天才解决，记录下以备忘。</p>
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>自定义plugins，里面引用了jquery，比如pluginA.js：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// plugins/pluginA.js</span></span><br><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">'jquery'</span></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span>(<span class="params">&#123; app &#125;</span>) </span>&#123;</span><br><span class="line">  .....</span><br><span class="line">  $(<span class="string">'body'</span>).append(<span class="string">"&lt;div&gt;hello&lt;/div&gt;"</span>)</span><br><span class="line">  .....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// plugins/pluginA.js
+import $ from &#39;jquery&#39;
+export default function({ app }) {
+  .....
+  $(&#39;body&#39;).append(&quot;&lt;div&gt;hello&lt;/div&gt;&quot;)
+  .....
+}
+</code></pre>
 <p>修改<code>nuxt.config.js</code>文件，将pluginA.js 加入到plugings中：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nuxt.config.js</span></span><br><span class="line"></span><br><span class="line">plugins: [</span><br><span class="line">   <span class="string">'~/plugins/pluginA'</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// nuxt.config.js
+
+plugins: [
+   &#39;~/plugins/pluginA&#39;
+]
+</code></pre>
 <p>重启后，一直报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">document is not defined</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>document is not defined</p>
+</blockquote>
 <p>或者</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">jQuery requires a window with a document</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>jQuery requires a window with a document</p>
+</blockquote>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>官网<a href="https://nuxtjs.org/faq/window-document-undefined/" target="_blank" rel="noopener">window or document undefined?</a> 部分给到了解释：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This is due to the server-side rendering. If you need to specify that you want to import a resource only on the client-side.</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>This is due to the server-side rendering. If you need to specify that you want to import a resource only on &gt; &gt; the client-side.</p>
+</blockquote>
 <p>查看文档<a href="https://nuxtjs.org/guide/plugins" target="_blank" rel="noopener">plugins</a> ， 在 <a href="https://nuxtjs.org/guide/plugins/#client-side-only" target="_blank" rel="noopener">Client-side only</a>部分给到了解决方法，使用option：<code>ssr: false</code></p>
 <p>修改nuxt.config.js文件：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// nuxt.config.js</span></span><br><span class="line"></span><br><span class="line">plugins: [</span><br><span class="line">   &#123; <span class="attr">src</span>: <span class="string">'~/plugins/pluginA'</span>, <span class="attr">ssr</span>: <span class="literal">false</span> &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// nuxt.config.js
+
+plugins: [
+   { src: &#39;~/plugins/pluginA&#39;, ssr: false }
+]
+</code></pre>
 <p>重启，OK.</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://nuxtjs.org/guide/plugins/#client-side-only" target="_blank" rel="noopener">plugins Client-side only</a></p>
 <p><a href="https://nuxtjs.org/faq/window-document-undefined/" target="_blank" rel="noopener">window or document undefined?</a></p>
@@ -752,7 +830,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>297 words</span>
+              <span>290 words</span>
             </span>
           
 
@@ -777,31 +855,31 @@
 <p>如：Armed Bear Common Lisp (ABCL) ，Clozure CL(CCL),  Embeddable Common Lisp(ECL), Steel Bank Common Lisp (SBCL) 。</p>
 <p>这里，我选了<a href="https://github.com/sbcl/sbcl" target="_blank" rel="noopener">SBCL</a>。</p>
 <p>先安装SBCL：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install sbcl</span><br></pre></td></tr></table></figure>
-<p>执行某个文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sbcl --script FILENAME</span><br></pre></td></tr></table></figure>
-<p>执行<code>sbcl --help</code>， 了解更多。</p>
+<pre><code>brew install sbcl
+</code></pre><p>执行某个文件：</p>
+<pre><code>sbcl --script FILENAME
+</code></pre><p>执行<code>sbcl --help</code>， 了解更多。</p>
 <h5 id="更新-2019-03-29-："><a href="#更新-2019-03-29-：" class="headerlink" title="更新[2019-03-29]："></a>更新[2019-03-29]：</h5><p>练习common lisp的时候，想试试在终端运行指令，类似mit-scheme，发现sbcl没那么顺手，改用<a href="https://clisp.sourceforge.io/" target="_blank" rel="noopener">clisp</a>。</p>
 <p>安装:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install clisp</span><br></pre></td></tr></table></figure>
-<p>安装后，终端直接 <code>clisp</code>， 进入交互环境。</p>
+<pre><code>brew install clisp
+</code></pre><p>安装后，终端直接 <code>clisp</code>， 进入交互环境。</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1g1jl0x336wj319i0i4whc.jpg" alt=""></p>
 <p>使用 <code>(exit)</code> 或者 <code>(quit)</code> 退出clisp。</p>
 <p>执行某个文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clisp FILENAME</span><br></pre></td></tr></table></figure>
-<p>执行<code>clisp --help</code>， 了解更多。</p>
+<pre><code>clisp FILENAME
+</code></pre><p>执行<code>clisp --help</code>， 了解更多。</p>
 <h4 id="Scheme"><a href="#Scheme" class="headerlink" title="Scheme"></a>Scheme</h4><p>参考<a href="https://www.gnu.org/software/mit-scheme/" target="_blank" rel="noopener">mit-scheme</a>, 下载MIT-scheme:</p>
 <p>[对于Mac OS version 10.14 +，请不要直接在<a href="https://www.gnu.org/software/mit-scheme/" target="_blank" rel="noopener">mit-scheme</a>下载适用于Mac OS 10.13的安装包，会坑得人莫名其妙……]</p>
 <p>使用Homebrew：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install mit-scheme</span><br></pre></td></tr></table></figure>
-<p>安装完成后，终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mit-scheme</span><br></pre></td></tr></table></figure>
-<p>进入scheme交互环境:</p>
+<pre><code>brew install mit-scheme
+</code></pre><p>安装完成后，终端输入：</p>
+<pre><code>mit-scheme
+</code></pre><p>进入scheme交互环境:</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g1bi2w09qej31ry0aijtk.jpg" alt=""></p>
 <p>使用 <code>(exit)</code> 或者 <code>(quit)</code> 退出scheme。</p>
 <p>执行某个文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scheme &lt; FILENAME</span><br></pre></td></tr></table></figure>
-<p>执行<code>scheme --help</code>， 了解更多。</p>
+<pre><code>scheme &lt; FILENAME
+</code></pre><p>执行<code>scheme --help</code>， 了解更多。</p>
 <p>At last, Thanks, Homebrew,  you saved me.</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://en.wikipedia.org/wiki/Common_Lisp" target="_blank" rel="noopener">common lisp wiki</a></p>
 <p><a href="https://github.com/sbcl/sbcl" target="_blank" rel="noopener">SBCL</a></p>
@@ -946,7 +1024,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,417 words</span>
+              <span>1,403 words</span>
             </span>
           
 
@@ -969,11 +1047,16 @@
 <p>全书共15章，章章之间并没有很强的逻辑关联。就挑一些自己印象深刻的写一写。</p>
 <p>有关lisp</p>
 <p>书中多次提到了lisp，并认为这是一门非常值得去学习的语言，虽然在工作中你可能很少使用到它。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Lisp is worth learning for the profound enlightment experience you will have when you finally get it; that experience will make you a better programmer for the rest of your days, even if you never actually use Lisp itself a lot.</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Lisp is worth learning for the profound enlightment experience you will have when you finally get it; that experience will make you a better programmer for the rest of your days, even if you never actually use Lisp itself a lot.</p>
+</blockquote>
 <p>特意在GitHub上搜了下，有关common lisp的项目并不多，而<a href="https://github.com/sbcl/sbcl" target="_blank" rel="noopener">sbcl</a>截止目前的star竟然1K都不到，这个诞生于1958年的古老语言已经退出主流语言的阵营。</p>
-<p>在<a href="https://en.wikipedia.org/wiki/Lisp_(programming_language" target="_blank" rel="noopener">lisp wiki</a>&gt;) 里，提到目前Lisp的两大主流方言是common lisp 和scheme，两者的语法有些不一样。</p>
+<p>在<a href="https://en.wikipedia.org/wiki/Lisp_programming_language" target="_blank" rel="noopener">lisp wiki</a> 里，提到目前Lisp的两大主流方言是common lisp 和scheme，两者的语法有些不一样。</p>
 <p>初学者容易懵，学哪个？有什么参考书籍推荐？Paul Graham在他自己的blog <a href="http://paulgraham.com/lispfaq1.html" target="_blank" rel="noopener">Lisp FAQ</a>里面给了回复：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Which should I learn, Common Lisp or Scheme? What&apos;s the difference?</span><br><span class="line"></span><br><span class="line">Common Lisp is powerful but ugly. Scheme is small and clean, but the standard only defines the inner core of the language. If I had to deliver an application I&apos;d probably use Common Lisp; if I were teaching a course I might use Scheme (but with Common Lisp macros).</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Which should I learn, Common Lisp or Scheme? What’s the difference?</p>
+<p>Common Lisp is powerful but ugly. Scheme is small and clean, but the standard only defines the inner core of the language. If I had to deliver an application I’d probably use Common Lisp; if I were teaching a course I might use Scheme (but with Common Lisp macros).</p>
+</blockquote>
 <p>同时也给出了学习common lisp的参考书籍：正是他本人操刀的那本《ansi common lisp》。</p>
 <p>此外，Google有一个<a href="https://github.com/google/lisp-koans" target="_blank" rel="noopener">lisp-koan</a>， 2K多star，用于练习common lisp。</p>
 <p>如果你使用atom编辑器，练习lisp-koan时，推荐下载package： language-lisp，代码敲起来会舒服很多。</p>
@@ -984,15 +1067,21 @@
 <p>有关hacker</p>
 <p>我记得很久之前看过一个纪录片系列：《互联网时代》，里面采访了一些计算机界的大牛们，大多已经年老，看的时候会觉得这些人真的很伟大，像上古时代那些开疆拓土的英雄们，硬生生辟出了一个完全不一样的时代，撬动一个点，真的改变了整个世界。陡然生出一种脑残粉式的崇拜。</p>
 <p>Raymond在<a href="http://www.catb.org/esr/faqs/hacker-howto.html" target="_blank" rel="noopener">How to become a Hacker</a>上写了一系列很经典的文章，其中有一首Zen诗：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">to follow the path</span><br><span class="line">look to the master</span><br><span class="line">follow the master</span><br><span class="line">walk with the master</span><br><span class="line">see through the master</span><br><span class="line">become the master</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>to follow the path<br>look to the master<br>follow the master<br>walk with the master<br>see through the master<br>become the master</p>
+</blockquote>
 <p>可站在金字塔尖儿的master毕竟是少数，大部分是小花小草，不过小花小草也是可以仰望参天，努力成长的嘛。</p>
 <p>牛逼也是时间积累出来的。</p>
 <p>作者本人做为一名hacker，在书中并没有什么说教的内容，倒是实实在在的说了些自己知道的，特别是第三章-不能说的话，能把大实话这么说出来的，还真的挺需要勇气的，当然，这也许跟作者当时已经把Viaweb卖了有关，没卖之前他应该还是会有所顾忌吧。</p>
 <p>很喜欢第三章的结尾处那段话，阮一峰老师翻译得也很好：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Everyone encourages you to grow up to the point where you can discount your own bad moods. Few encourages you to continue to the point where you can discount society&apos;s bad moods.</span><br><span class="line">小时候，每个人都会鼓励你不断成长，变成一个心智成熟，不再耍小孩子脾气的人。但是，没有人鼓励你继续成长，变成一个怀疑和抵制社会错误潮流的人。</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>  Everyone encourages you to grow up to the point where you can discount your own bad moods. Few encourages you to continue to the point where you can discount society’s bad moods.<br>  小时候，每个人都会鼓励你不断成长，变成一个心智成熟，不再耍小孩子脾气的人。但是，没有人鼓励你继续成长，变成一个怀疑和抵制社会错误潮流的人。</p>
+</blockquote>
 <p>变成一个怀疑和抵制社会错误潮流的人很难，毕竟，独立思考本身就不是一件轻松的事。</p>
 <p>书中有些章节看得还挺鸡汤的，很客观很现实，比如下面这碗：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">In our world, you sink or swim, and there are no excuses.</span><br><span class="line">我们这个世界，你向下沉沦或者向上奋进都取决于你自己，不能把原因推给别人。</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p> In our world, you sink or swim, and there are no excuses.<br>我们这个世界，你向下沉沦或者向上奋进都取决于你自己，不能把原因推给别人。</p>
+</blockquote>
 <p>汤味浓郁，喝完很滋补。</p>
 <h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>之前写读书笔记，我都会顺着章节一一总结，比如这本，常规整理思路会是这样：</p>
 <p>本书一共xxx章，每章主要说了xxx。这一章xxxx最让我印象深刻。</p>
@@ -1148,7 +1237,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>401 words</span>
+              <span>317 words</span>
             </span>
           
 
@@ -1170,7 +1259,91 @@
             <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前用JS写过文件上传，现在改用Vue的方式重新写一遍，发现清爽多了。附上成品及代码。</p>
 <h4 id="成品："><a href="#成品：" class="headerlink" title="成品："></a>成品：</h4><p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1g0wten50w4g30tj0ck4bn.gif" alt=""></p>
 <h4 id="代码："><a href="#代码：" class="headerlink" title="代码："></a>代码：</h4><p>组件名：Attachment，props只有一个：最大允许上传的附件数量。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;attachment&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;p-2 rounded&quot;&gt;</span><br><span class="line">      &lt;p class=&quot;mb-2&quot;&gt;请选择图片上传: &lt;span&gt;(最多可上传&#123;&#123; maxAttachmentsCount &#125;&#125;张图片)&lt;/span&gt;&lt;/p&gt;</span><br><span class="line">      &lt;div class=&quot;preview d-block float-left&quot;&gt;</span><br><span class="line">        &lt;div v-for=&quot;(file, index) in files&quot; :key=&quot;`file_$&#123;index&#125;`&quot; class=&quot;pre-item mr-2&quot;&gt;</span><br><span class="line">          &lt;div class=&quot;cover rounded&quot;&gt;</span><br><span class="line">            &lt;img :src=&quot;file.src&quot; /&gt;</span><br><span class="line">          &lt;/div&gt;</span><br><span class="line">        &lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">      &lt;label :class=&quot;&#123; &apos;hidden-label&apos;: files.length &gt;= parseInt(maxAttachmentsCount) &#125;&quot; class=&quot;d-flex align-items-center justify-content-center attachment-upload-area rounded bg-secondary border border-light mb-1&quot;&gt;</span><br><span class="line">        &lt;i class=&quot;fas fa-camera fa-3x&quot; style=&quot;color: white;&quot;&gt;&lt;/i&gt;</span><br><span class="line">        &lt;input type=&quot;file&quot; class=&quot;d-none&quot; @change=&quot;uploadAttachment&quot;&gt;</span><br><span class="line">      &lt;/label&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import $ from &apos;jquery&apos;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [ &apos;maxAttachmentsCount&apos; ],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      files: []</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    uploadAttachment(event) &#123;</span><br><span class="line">      const file = $(event.target)[0]</span><br><span class="line"></span><br><span class="line">      if (file.files[0].type.indexOf(&apos;image/&apos;) === -1) &#123;</span><br><span class="line">        alert(&apos;只能上传图片，请重新上传。&apos;)</span><br><span class="line">        return false</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      if (file.files[0] !== undefined) &#123;</span><br><span class="line">        const reader = new FileReader()</span><br><span class="line">        reader.readAsDataURL(file.files[0])</span><br><span class="line">        reader.onloadend = (e) =&gt; &#123;</span><br><span class="line">          this.files.push(&#123; src: e.target.result &#125;)</span><br><span class="line">        &#125;</span><br><span class="line">        this.$el.querySelector(&apos;label&apos;).appendChild(event.target.cloneNode(true))</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br><span class="line"></span><br><span class="line">&lt;style scoped lang=&quot;scss&quot;&gt;</span><br><span class="line">  .attachment &#123;</span><br><span class="line">    margin-bottom: 1em;</span><br><span class="line"></span><br><span class="line">    .pre-item &#123;</span><br><span class="line">      position: relative;</span><br><span class="line">      display: inline-block;</span><br><span class="line">      vertical-align: bottom;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .cover &#123;</span><br><span class="line">      width: 80px;</span><br><span class="line">      height: 80px;</span><br><span class="line">      overflow: hidden;</span><br><span class="line"></span><br><span class="line">      img &#123;</span><br><span class="line">        max-height: 80px;</span><br><span class="line">        width: auto;</span><br><span class="line">        clip: rect(200px 300px 300px 200px);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    .attachment-upload-area &#123;</span><br><span class="line">      height: 80px;</span><br><span class="line">      width: 80px;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  .hidden-label &#123;</span><br><span class="line">    visibility: hidden;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/style&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;attachment&quot;&gt;
+    &lt;div class=&quot;p-2 rounded&quot;&gt;
+      &lt;p class=&quot;mb-2&quot;&gt;请选择图片上传: &lt;span&gt;(最多可上传{{ maxAttachmentsCount }}张图片)&lt;/span&gt;&lt;/p&gt;
+      &lt;div class=&quot;preview d-block float-left&quot;&gt;
+        &lt;div v-for=&quot;(file, index) in files&quot; :key=&quot;`file_${index}`&quot; class=&quot;pre-item mr-2&quot;&gt;
+          &lt;div class=&quot;cover rounded&quot;&gt;
+            &lt;img :src=&quot;file.src&quot; /&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;label :class=&quot;{ &#39;hidden-label&#39;: files.length &gt;= parseInt(maxAttachmentsCount) }&quot; class=&quot;d-flex align-items-center justify-content-center attachment-upload-area rounded bg-secondary border border-light mb-1&quot;&gt;
+        &lt;i class=&quot;fas fa-camera fa-3x&quot; style=&quot;color: white;&quot;&gt;&lt;/i&gt;
+        &lt;input type=&quot;file&quot; class=&quot;d-none&quot; @change=&quot;uploadAttachment&quot;&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import $ from &#39;jquery&#39;
+
+export default {
+  props: [ &#39;maxAttachmentsCount&#39; ],
+  data() {
+    return {
+      files: []
+    }
+  },
+  methods: {
+    uploadAttachment(event) {
+      const file = $(event.target)[0]
+
+      if (file.files[0].type.indexOf(&#39;image/&#39;) === -1) {
+        alert(&#39;只能上传图片，请重新上传。&#39;)
+        return false
+      }
+
+      if (file.files[0] !== undefined) {
+        const reader = new FileReader()
+        reader.readAsDataURL(file.files[0])
+        reader.onloadend = (e) =&gt; {
+          this.files.push({ src: e.target.result })
+        }
+        this.$el.querySelector(&#39;label&#39;).appendChild(event.target.cloneNode(true))
+      }
+    }
+  }
+}
+&lt;/script&gt;
+
+&lt;style scoped lang=&quot;scss&quot;&gt;
+  .attachment {
+    margin-bottom: 1em;
+
+    .pre-item {
+      position: relative;
+      display: inline-block;
+      vertical-align: bottom;
+    }
+
+    .cover {
+      width: 80px;
+      height: 80px;
+      overflow: hidden;
+
+      img {
+        max-height: 80px;
+        width: auto;
+        clip: rect(200px 300px 300px 200px);
+      }
+    }
+
+    .attachment-upload-area {
+      height: 80px;
+      width: 80px;
+    }
+  }
+
+  .hidden-label {
+    visibility: hidden;
+  }
+}
+&lt;/style&gt;
+</code></pre>
 <p>感觉没什么需要特别解释的。</p>
 <p>over。</p>
 
@@ -1313,7 +1486,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,602 words</span>
+              <span>1,353 words</span>
             </span>
           
 
@@ -1345,35 +1518,284 @@
 <p>6、使用eventbus进行组件间的通信，在audio play之前，触发beforeplay事件，同时在AuidoPlay组件中监听beforeplay事件。</p>
 <p>分步来：</p>
 <p>先布局出音频播放组件的模子：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;audio-player mr-2&quot;&gt;</span><br><span class="line">      &lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">      &lt;i v-if=&quot;state === &apos;playing&apos;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;</span><br><span class="line">      &lt;i v-if=&quot;state != &apos;playing&apos;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;div class=&quot;w-100&quot;&gt;</span><br><span class="line">      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; currentTime &#125;&#125; / &#123;&#123; mediaDuration &#125;&#125;&lt;/span&gt;</span><br><span class="line">      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;</span><br><span class="line">      &lt;div class=&quot;progress&quot;&gt;</span><br><span class="line">        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import numbro from &apos;numbro&apos;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [ &apos;src&apos; ],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      currentTime: 0,</span><br><span class="line">      mediaDuration: 0,</span><br><span class="line">      state: &apos;stopped&apos;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  computed: &#123;</span><br><span class="line">    currentPercentage() &#123;</span><br><span class="line">      if (this.mediaDuration === 0) &#123;</span><br><span class="line">        return numbro(this.mediaDuration).format(&#123; output: &apos;percent&apos;, mantissa: 0 &#125;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        return numbro(this.currentTime / this.mediaDuration ).format(&#123; output: &apos;percent&apos;, mantissa: 0 &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
+    &lt;div class=&quot;audio-player mr-2&quot;&gt;
+      &lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; /&gt;
+      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
+      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;w-100&quot;&gt;
+      &lt;span class=&quot;float-right text-muted small&quot;&gt;{{ currentTime }} / {{ mediaDuration }}&lt;/span&gt;
+      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
+      &lt;div class=&quot;progress&quot;&gt;
+        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import numbro from &#39;numbro&#39;
+
+export default {
+  props: [ &#39;src&#39; ],
+  data() {
+    return {
+      currentTime: 0,
+      mediaDuration: 0,
+      state: &#39;stopped&#39;
+    }
+  },
+  computed: {
+    currentPercentage() {
+      if (this.mediaDuration === 0) {
+        return numbro(this.mediaDuration).format({ output: &#39;percent&#39;, mantissa: 0 })
+      } else {
+        return numbro(this.currentTime / this.mediaDuration ).format({ output: &#39;percent&#39;, mantissa: 0 })
+      }
+    }
+  }
+}
+&lt;/script&gt;
+</code></pre>
 <p>Step1: 获取duration</p>
 <p>在audio上添加事件监听@canplay，在methods中定义对应的处理函数onCanplay。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; @canplay=&quot;onCanplay&quot; /&gt;</span><br><span class="line"></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line">    onCanplay(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      this.mediaDuration = parseInt(audio.duration)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; @canplay=&quot;onCanplay&quot; /&gt;
+
+.....
+
+    onCanplay(event) {
+      const audio = event.target
+      this.mediaDuration = parseInt(audio.duration)
+    }
+</code></pre>
 <p>Step2: 获取currentTime</p>
 <p>在audio上添加事件监听@timeupdate，在methods中定义对应的处理函数onTimeupdate. 这里调用的stop函数，会在下一步定义。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;audio :src=&quot;src&quot; @canplay=&quot;onCanplay&quot; @timeupdate=&quot;onTimeupdate&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">.......</span><br><span class="line">    onTimeupdate(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      if (audio.currentTime &gt;= this.mediaDuration) &#123;</span><br><span class="line">        this.currentTime = this.mediaDuration</span><br><span class="line">        this.stop()</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        this.currentTime = audio.currentTime</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;audio :src=&quot;src&quot; @canplay=&quot;onCanplay&quot; @timeupdate=&quot;onTimeupdate&quot; ref=&quot;audio&quot; /&gt;
+.......
+    onTimeupdate(event) {
+      const audio = event.target
+      if (audio.currentTime &gt;= this.mediaDuration) {
+        this.currentTime = this.mediaDuration
+        this.stop()
+      } else {
+        this.currentTime = audio.currentTime
+      }
+    }
+</code></pre>
 <p>Step3: 在methods中，定义play, pause, stop函数，用以处理audio的状态。</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">play() &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="keyword">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.state === <span class="string">'stopped'</span>) &#123;</span><br><span class="line">    audio.currentTime = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (audio.paused) &#123;</span><br><span class="line">    audio.play()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>.state = <span class="string">'playing'</span></span><br><span class="line">&#125;,</span><br><span class="line">pause() &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="keyword">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (!audio.paused) &#123;</span><br><span class="line">    audio.pause()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>.state = <span class="string">'paused'</span></span><br><span class="line">&#125;,</span><br><span class="line"></span><br><span class="line">stop() &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="keyword">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (!audio.paused) &#123;</span><br><span class="line">    audio.pause()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>.state = <span class="string">'stopped'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">    play() {
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) {
+        audio.currentTime = 0
+      }
+      if (audio.paused) {
+        audio.play()
+      }
+      this.state = &#39;playing&#39;
+    },
+    pause() {
+      const audio = this.$refs.audio
+      if (!audio.paused) {
+        audio.pause()
+      }
+      this.state = &#39;paused&#39;
+    },
+
+    stop() {
+      const audio = this.$refs.audio
+      if (!audio.paused) {
+        audio.pause()
+      }
+      this.state = &#39;stopped&#39;
+    }
+</code></pre>
 <p>Step4: 定义numberToStardardMinuteSecond函数，将currentTime，duration转化为时间。</p>
 <p>引入numbro.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yarn add numbro</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">yarn add numbro
+</code></pre>
 <p>在methods中定义numberToStardardMinuteSecond：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">numberToStardardMinuteSecond(num) &#123;</span><br><span class="line">  <span class="keyword">const</span> number = <span class="built_in">parseInt</span>(num)</span><br><span class="line">  <span class="keyword">const</span> time = numbro(number).format(&#123; <span class="attr">output</span>: <span class="string">'time'</span> &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (time.substr(<span class="number">0</span>, <span class="number">1</span>) === <span class="string">'0'</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> time.substr(<span class="number">2</span>, time.length - <span class="number">2</span>)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> time</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">    numberToStardardMinuteSecond(num) {
+      const number = parseInt(num)
+      const time = numbro(number).format({ output: &#39;time&#39; })
+
+      if (time.substr(0, 1) === &#39;0&#39;) {
+        return time.substr(2, time.length - 2)
+      } else {
+        return time
+      }
+    }
+</code></pre>
 <p>Step5: 在进度条上监听click事件，在methods中定义seek函数来处理click事件。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;</span><br><span class="line">  &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">&lt;/div&gt;</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">    seek(event) &#123;</span><br><span class="line">      const $this = $(event.target)</span><br><span class="line"></span><br><span class="line">      const widthclicked = event.pageX - $this.offset().left</span><br><span class="line">      const totalWidth = $this.width()</span><br><span class="line"></span><br><span class="line">      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
+  &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+
+......
+
+    seek(event) {
+      const $this = $(event.target)
+
+      const widthclicked = event.pageX - $this.offset().left
+      const totalWidth = $this.width()
+
+      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
+    }
+</code></pre>
 <p>为了使progress可以点击，需要在style中给progress设置pointer-events。</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.progress</span> &#123;</span><br><span class="line">  <span class="attribute">pointer-events</span>: auto;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.progress {
+  pointer-events: auto;
+}
+</code></pre>
 <p>Step6: 使用eventbus进行组件间的通信，实现一次只播放一个视频。</p>
 <p>在audio play之前，$emit一个事件beforeplay， 同时将audio作为参数传出去。</p>
 <p>修改play函数，添加事件派发：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">play() &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="keyword">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.state === <span class="string">'stopped'</span>) &#123;</span><br><span class="line">    audio.currentTime = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (audio.paused) &#123;</span><br><span class="line">    <span class="keyword">this</span>.$nuxt.$emit(<span class="string">'beforeplay'</span>, audio)</span><br><span class="line">    audio.play()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">this</span>.state = <span class="string">'playing'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">    play() {
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) {
+        audio.currentTime = 0
+      }
+      if (audio.paused) {
+        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
+        audio.play()
+      }
+      this.state = &#39;playing&#39;
+    }
+</code></pre>
 <p>任何其他的组件都可以监听这个beforeplay事件，当然也包括AudioPlayer组件。</p>
 <p>在AudioPlayer组件添加对beforeplay的监听：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">created() &#123;</span><br><span class="line">  <span class="keyword">this</span>.$nuxt.$on(<span class="string">'beforeplay'</span>, (player) =&gt; &#123;</span><br><span class="line">    <span class="keyword">if</span> (player === <span class="keyword">this</span>.$refs.audio) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.state === <span class="string">'playing'</span>) &#123;</span><br><span class="line">      <span class="keyword">this</span>.pause()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">  created() {
+    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; {
+      if (player === this.$refs.audio) {
+        return
+      }
+      if (this.state === &#39;playing&#39;) {
+        this.pause()
+      }
+    })
+  }
+</code></pre>
 <p>这里判断传过来的参数，如果是自身emit了这个事件，就跳过，如果是其他audio，同时自身还在播放，则自身停止播放。</p>
 <p>OK，大功告成。</p>
 <p>最终的完整代码：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;audio-player mr-2&quot;&gt;</span><br><span class="line">      &lt;audio :src=&quot;src&quot; @timeupdate=&quot;onTimeupdate&quot; @canplay=&quot;onCanplay&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">      &lt;i v-if=&quot;state === &apos;playing&apos;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;</span><br><span class="line">      &lt;i v-if=&quot;state != &apos;playing&apos;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;div class=&quot;w-100&quot;&gt;</span><br><span class="line">      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; numberToStardardMinuteSecond(currentTime) &#125;&#125; / &#123;&#123; numberToStardardMinuteSecond(mediaDuration) &#125;&#125;&lt;/span&gt;</span><br><span class="line">      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;</span><br><span class="line">      &lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;</span><br><span class="line">        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import $ from &apos;jquery&apos;</span><br><span class="line">import numbro from &apos;numbro&apos;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [ &apos;src&apos; ],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      currentTime: 0,</span><br><span class="line">      mediaDuration: 0,</span><br><span class="line">      state: &apos;stopped&apos;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  created() &#123;</span><br><span class="line">    this.$nuxt.$on(&apos;beforeplay&apos;, (player) =&gt; &#123;</span><br><span class="line">      if (player === this.$refs.audio) &#123;</span><br><span class="line">        return</span><br><span class="line">      &#125;</span><br><span class="line">      if (this.state === &apos;playing&apos;) &#123;</span><br><span class="line">        this.pause()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;,</span><br><span class="line">  computed: &#123;</span><br><span class="line">    currentPercentage() &#123;</span><br><span class="line">      if (this.mediaDuration === 0) &#123;</span><br><span class="line">        return numbro(this.mediaDuration).format(&#123; output: &apos;percent&apos;, mantissa: 0 &#125;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        const progress = this.currentTime / this.mediaDuration</span><br><span class="line">        return numbro(progress).format(&#123; output: &apos;percent&apos;, mantissa: 0 &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    play() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (this.state === &apos;stopped&apos;) &#123;</span><br><span class="line">        audio.currentTime = 0</span><br><span class="line">      &#125;</span><br><span class="line">      if (audio.paused) &#123;</span><br><span class="line">        this.$nuxt.$emit(&apos;beforeplay&apos;, audio)</span><br><span class="line">        audio.play()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &apos;playing&apos;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    pause() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (!audio.paused) &#123;</span><br><span class="line">        audio.pause()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &apos;paused&apos;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    stop() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (!audio.paused) &#123;</span><br><span class="line">        audio.pause()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &apos;stopped&apos;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    onTimeupdate(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      if (audio.currentTime &gt;= this.mediaDuration) &#123;</span><br><span class="line">        this.currentTime = this.mediaDuration</span><br><span class="line">        this.stop()</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        this.currentTime = audio.currentTime</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    seek(event) &#123;</span><br><span class="line">      const $this = $(event.target)</span><br><span class="line"></span><br><span class="line">      const widthclicked = event.pageX - $this.offset().left</span><br><span class="line">      const totalWidth = $this.width()</span><br><span class="line"></span><br><span class="line">      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    onCanplay(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      this.mediaDuration = parseInt(audio.duration)</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    numberToStardardMinuteSecond(num) &#123;</span><br><span class="line">      const number = parseInt(num)</span><br><span class="line">      const time = numbro(number).format(&#123; output: &apos;time&apos; &#125;)</span><br><span class="line"></span><br><span class="line">      if (time.substr(0, 1) === &apos;0&apos;) &#123;</span><br><span class="line">        return time.substr(2, time.length - 2)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        return time</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
+    &lt;div class=&quot;audio-player mr-2&quot;&gt;
+      &lt;audio :src=&quot;src&quot; @timeupdate=&quot;onTimeupdate&quot; @canplay=&quot;onCanplay&quot; ref=&quot;audio&quot; /&gt;
+      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
+      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;w-100&quot;&gt;
+      &lt;span class=&quot;float-right text-muted small&quot;&gt;{{ numberToStardardMinuteSecond(currentTime) }} / {{ numberToStardardMinuteSecond(mediaDuration) }}&lt;/span&gt;
+      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
+      &lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
+        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import $ from &#39;jquery&#39;
+import numbro from &#39;numbro&#39;
+
+export default {
+  props: [ &#39;src&#39; ],
+  data() {
+    return {
+      currentTime: 0,
+      mediaDuration: 0,
+      state: &#39;stopped&#39;
+    }
+  },
+  created() {
+    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; {
+      if (player === this.$refs.audio) {
+        return
+      }
+      if (this.state === &#39;playing&#39;) {
+        this.pause()
+      }
+    })
+  },
+  computed: {
+    currentPercentage() {
+      if (this.mediaDuration === 0) {
+        return numbro(this.mediaDuration).format({ output: &#39;percent&#39;, mantissa: 0 })
+      } else {
+        const progress = this.currentTime / this.mediaDuration
+        return numbro(progress).format({ output: &#39;percent&#39;, mantissa: 0 })
+      }
+    }
+  },
+  methods: {
+    play() {
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) {
+        audio.currentTime = 0
+      }
+      if (audio.paused) {
+        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
+        audio.play()
+      }
+      this.state = &#39;playing&#39;
+    },
+
+    pause() {
+      const audio = this.$refs.audio
+      if (!audio.paused) {
+        audio.pause()
+      }
+      this.state = &#39;paused&#39;
+    },
+
+    stop() {
+      const audio = this.$refs.audio
+      if (!audio.paused) {
+        audio.pause()
+      }
+      this.state = &#39;stopped&#39;
+    },
+
+    onTimeupdate(event) {
+      const audio = event.target
+      if (audio.currentTime &gt;= this.mediaDuration) {
+        this.currentTime = this.mediaDuration
+        this.stop()
+      } else {
+        this.currentTime = audio.currentTime
+      }
+    },
+
+    seek(event) {
+      const $this = $(event.target)
+
+      const widthclicked = event.pageX - $this.offset().left
+      const totalWidth = $this.width()
+
+      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
+    },
+
+    onCanplay(event) {
+      const audio = event.target
+      this.mediaDuration = parseInt(audio.duration)
+    },
+
+    numberToStardardMinuteSecond(num) {
+      const number = parseInt(num)
+      const time = numbro(number).format({ output: &#39;time&#39; })
+
+      if (time.substr(0, 1) === &#39;0&#39;) {
+        return time.substr(2, time.length - 2)
+      } else {
+        return time
+      }
+    }
+  }
+}
+&lt;/script&gt;
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events" target="_blank" rel="noopener">Media events</a></p>
 <p><a href="https://medium.com/@Shardik/eventbus-for-nuxt-js-components-46660ae54f2d" target="_blank" rel="noopener">EventBus for Nuxt.js components</a></p>
 
@@ -1516,7 +1938,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,437 words</span>
+              <span>1,332 words</span>
             </span>
           
 
@@ -1537,36 +1959,140 @@
           
             <p>列出常用的Curl命令以备忘。</p>
 <h4 id="请求页面"><a href="#请求页面" class="headerlink" title="请求页面"></a>请求页面</h4><p>默认使用get，直接在终端输出response。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 直接请求，此时response的内容可能会是301 Moved。</span><br><span class="line">curl https://google.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 使用-L选项，允许重定向, 终端会输出Google首页的HTML。</span><br><span class="line">curl -L https://google.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 使用-I， 只查看header部分, 终端将只输出Headers内容。</span><br><span class="line">curl -I -L https://google.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 直接请求，此时response的内容可能会是301 Moved。
+curl https://google.com
+
+# 使用-L选项，允许重定向, 终端会输出Google首页的HTML。
+curl -L https://google.com
+
+# 使用-I， 只查看header部分, 终端将只输出Headers内容。
+curl -I -L https://google.com
+</code></pre>
 <h4 id="下载文件"><a href="#下载文件" class="headerlink" title="下载文件"></a>下载文件</h4><p>将输出结果存储在文件中：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> -O: 「 大写O 」不指定目标文件名，直接使用URL中的文件名，response保存在index.html文件中。</span><br><span class="line">curl -O https://www.centos.org/index.html</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> -o：「 小写o 」指定目标文件名, response保存在centos.html文件中。</span><br><span class="line">curl -o centos.html https://www.centos.org</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 不使用 -o/O， 直接保存到指定文件</span><br><span class="line">curl https://www.centos.org &gt; centos.html</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> -z: 版本比本地指定文件版本要新时，才下载</span><br><span class="line">curl -z centos.html https://www.centos.org &gt; centos.html</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 给定时间点，在该时间点之后有更新，才下载</span><br><span class="line">curl -z "Jan 1 2018" https://www.centos.org &gt; centos.html</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> -C: 从上一次下载中断的地方继续下载, -C 也可跟-T一起使用，继续上传。</span><br><span class="line">curl -C -o centos.html https://www.centos.org</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 一次下载多个文件: curl -O URL1 -O URL2，建议指定目标文件名，如果都是index.html会被覆盖</span><br><span class="line">curl -O https://www.centos.org/index.html -O https://github.com/index.html</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># -O: 「 大写O 」不指定目标文件名，直接使用URL中的文件名，response保存在index.html文件中。
+curl -O https://www.centos.org/index.html
+
+# -o：「 小写o 」指定目标文件名, response保存在centos.html文件中。
+curl -o centos.html https://www.centos.org
+
+# 不使用 -o/O， 直接保存到指定文件
+curl https://www.centos.org &gt; centos.html
+
+# -z: 版本比本地指定文件版本要新时，才下载
+curl -z centos.html https://www.centos.org &gt; centos.html
+
+# 给定时间点，在该时间点之后有更新，才下载
+curl -z &quot;Jan 1 2018&quot; https://www.centos.org &gt; centos.html
+
+# -C: 从上一次下载中断的地方继续下载, -C 也可跟-T一起使用，继续上传。
+curl -C -o centos.html https://www.centos.org
+
+# 一次下载多个文件: curl -O URL1 -O URL2，建议指定目标文件名，如果都是index.html会被覆盖
+curl -O https://www.centos.org/index.html -O https://github.com/index.html
+</code></pre>
 <h4 id="指定代理"><a href="#指定代理" class="headerlink" title="指定代理"></a>指定代理</h4><p>使用<code>-x</code>.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 基本格式 curl -x your-proxy:your-port URL</span><br><span class="line">curl -x http://127.0.0.1:1087 https://www.youtube.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 基本格式 curl -x your-proxy:your-port URL
+curl -x http://127.0.0.1:1087 https://www.youtube.com
+</code></pre>
 <p>这里的x为小写，大写的X有另外的意思，比如下面这个。</p>
 <h4 id="指定请求"><a href="#指定请求" class="headerlink" title="指定请求"></a>指定请求</h4><p>使用<code>-X</code>指定其他请求命令</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 指定request command为DELETE，删除某个gist</span><br><span class="line">curl -X DELETE -H "Authorization: token OAUTH_TOKEN" https://api.github.com/gists/gist_id</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 指定request command为DELETE，删除某个gist
+curl -X DELETE -H &quot;Authorization: token OAUTH_TOKEN&quot; https://api.github.com/gists/gist_id
+</code></pre>
 <h4 id="上传文件"><a href="#上传文件" class="headerlink" title="上传文件"></a>上传文件</h4><p>使用<code>-T</code></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 上传通常都需要授权，使用-u，带上用户名和密码信息</span><br><span class="line">curl -T uploadfile -u user:password ftp://ftp.upload.com/file</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> -a : 将本地文件追加到服务器中某个文件</span><br><span class="line">curl -T uploadfile -a -u user:password ftp://ftp.upload.com/file</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> -C: 从上一次中断的地方继续上传</span><br><span class="line">curl -C -T uploadfile -u user:password ftp://ftp.upload.com/file</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 上传多个文件:</span><br><span class="line">curl -T file1 ftp://ftp.com/moo.exe -T file2 ftp://ftp.com/moo2.txt</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 上传通常都需要授权，使用-u，带上用户名和密码信息
+curl -T uploadfile -u user:password ftp://ftp.upload.com/file
+
+# -a : 将本地文件追加到服务器中某个文件
+curl -T uploadfile -a -u user:password ftp://ftp.upload.com/file
+
+# -C: 从上一次中断的地方继续上传
+curl -C -T uploadfile -u user:password ftp://ftp.upload.com/file
+
+# 上传多个文件:
+curl -T file1 ftp://ftp.com/moo.exe -T file2 ftp://ftp.com/moo2.txt
+</code></pre>
 <h4 id="限制网速"><a href="#限制网速" class="headerlink" title="限制网速"></a>限制网速</h4><p>使用<code>--limit-rate</code></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 限制下载速度不超过10KB/s</span><br><span class="line">curl -O --limit-rate 10K https://www.youtube.com/index.html</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 限制上传速度不超过1MB/s</span><br><span class="line">curl -T --limit-rate 1M ftp://ftp.upload.com/file</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 限制下载速度不超过10KB/s
+curl -O --limit-rate 10K https://www.youtube.com/index.html
+
+# 限制上传速度不超过1MB/s
+curl -T --limit-rate 1M ftp://ftp.upload.com/file
+</code></pre>
 <h4 id="授权访问"><a href="#授权访问" class="headerlink" title="授权访问"></a>授权访问</h4><p>涉及到用户名的部分，使用 <code>-u</code>。</p>
 <p>以GitHub API的授权为例：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 基本授权，用户名和密码</span><br><span class="line">curl -u username:password https://api.github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 或者下面这种更安全，回车，终端会提示输入密码，密码不明文输入，以防浏览历史记录时泄露密码</span><br><span class="line">curl -u username https://api.github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 指定代理，并授权访问</span><br><span class="line">curl -u username https://api.github.com -x http://127.0.0.1:1087</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> OAuth2 token，作为参数</span><br><span class="line">curl https://api.github.com/?access_token=OAUTH-TOKEN</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> OAuth2 token，放在header中传递，使用 -H</span><br><span class="line">curl -H "Authorization: token OAUTH-TOKEN" https://api.github.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 基本授权，用户名和密码
+curl -u username:password https://api.github.com
+
+# 或者下面这种更安全，回车，终端会提示输入密码，密码不明文输入，以防浏览历史记录时泄露密码
+curl -u username https://api.github.com
+
+# 指定代理，并授权访问
+curl -u username https://api.github.com -x http://127.0.0.1:1087
+
+# OAuth2 token，作为参数
+curl https://api.github.com/?access_token=OAUTH-TOKEN
+
+# OAuth2 token，放在header中传递，使用 -H
+curl -H &quot;Authorization: token OAUTH-TOKEN&quot; https://api.github.com
+</code></pre>
 <h4 id="存取cookies"><a href="#存取cookies" class="headerlink" title="存取cookies"></a>存取cookies</h4><p>某些场景下需要存储cookies. 比如访问GitHub:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 返回的header中带有Set-Cookie</span><br><span class="line">curl -I https://github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 部分输出</span><br><span class="line">Set-Cookie: has_recent_activity=1; path=/; expires= xxxxx</span><br><span class="line">Set-Cookie: logged_in=no; domain=.github.com; path=/; expires= xxxx; secure; HttpOnly</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 返回的header中带有Set-Cookie
+curl -I https://github.com
+
+# 部分输出
+Set-Cookie: has_recent_activity=1; path=/; expires= xxxxx
+Set-Cookie: logged_in=no; domain=.github.com; path=/; expires= xxxx; secure; HttpOnly
+</code></pre>
 <p>通常的Set-Cookie是带有sessionId=xxxx，每次访问指定的path时都要求带上sessionId。</p>
 <p>保存及使用cookies：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 保存cookie: Netscape HTTP Cookie File</span><br><span class="line">curl -c cookies.txt https://github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 使用保存的cookies</span><br><span class="line">curl -b cookies.txt https://github.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 保存cookie: Netscape HTTP Cookie File
+curl -c cookies.txt https://github.com
+
+# 使用保存的cookies
+curl -b cookies.txt https://github.com
+</code></pre>
 <h4 id="发送POST"><a href="#发送POST" class="headerlink" title="发送POST"></a>发送POST</h4><p>使用<code>-d</code> 或者<code>-F</code>.</p>
 <p><code>-d</code> 使用的是application/x-www-form-urlencoded mime-type， 如果涉及到文件上传时，使用<code>-F</code>.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> -d:&lt;data&gt;, 值为编译后的字符串，基本样式 &lt;variable1&gt;=&lt;data1&gt;&amp;&lt;variable2&gt;=&lt;data2&gt;</span><br><span class="line">curl -d "client_id=xxxx&amp;client_secret=yyyy" https://api.github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 上面同样的数据，使用-F "name=contents"，则是这样传</span><br><span class="line">curl -F "client_id=xxxx" -F "client_secret=yyyy" https://api.github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 传multipart/form-data,文件名前面要加上@</span><br><span class="line">curl -F "files=@file1.txt" https://api.github.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> 可传多个文件并指定文件类型，不指定时curl会根据文件后缀名来猜。</span><br><span class="line">curl -F "files=@file1.gif;type=image/gif, file2.html, file2.jpg"</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># -d:&lt;data&gt;, 值为编译后的字符串，基本样式 &lt;variable1&gt;=&lt;data1&gt;&amp;&lt;variable2&gt;=&lt;data2&gt;
+curl -d &quot;client_id=xxxx&amp;client_secret=yyyy&quot; https://api.github.com
+
+# 上面同样的数据，使用-F &quot;name=contents&quot;，则是这样传
+curl -F &quot;client_id=xxxx&quot; -F &quot;client_secret=yyyy&quot; https://api.github.com
+
+# 传multipart/form-data,文件名前面要加上@
+curl -F &quot;files=@file1.txt&quot; https://api.github.com
+
+# 可传多个文件并指定文件类型，不指定时curl会根据文件后缀名来猜。
+curl -F &quot;files=@file1.gif;type=image/gif, file2.html, file2.jpg&quot;
+</code></pre>
 <h4 id="设置User-Agent"><a href="#设置User-Agent" class="headerlink" title="设置User-Agent"></a>设置User-Agent</h4><p>使用<code>-A</code>:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> 设置</span><br><span class="line">curl -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36' https://api.github.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># 设置
+curl -A &#39;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.96 Safari/537.36&#39; https://api.github.com
+</code></pre>
 <h4 id="追踪记录"><a href="#追踪记录" class="headerlink" title="追踪记录"></a>追踪记录</h4><p>使用<code>-v</code>或者 <code>--trace</code> 记录更多详细信息，个人理解为记录日志，方便在出错时debug。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span> -v：verbose，记录更多信息</span><br><span class="line">curl -v https://www.google.com</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span> --trace: 追踪curl命令的细节</span><br><span class="line">curl --trace trace.txt https://github.com</span><br></pre></td></tr></table></figure>
+<pre><code class="shell"># -v：verbose，记录更多信息
+curl -v https://www.google.com
+
+# --trace: 追踪curl命令的细节
+curl --trace trace.txt https://github.com
+</code></pre>
 <p><code>less trace.txt</code> ，查看trace的具体内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">== Info: Rebuilt URL to: https://github.com/</span><br><span class="line">== Info:   Trying 127.0.0.1...</span><br><span class="line">== Info: TCP_NODELAY set</span><br><span class="line">== Info: Connected to 127.0.0.1 (127.0.0.1) port 1087 (#0)</span><br><span class="line">== Info: Establish HTTP proxy tunnel to github.com:443</span><br><span class="line">=&gt; Send header, 112 bytes (0x70)</span><br><span class="line">0000: 43 4f 4e 4e 45 43 54 20 67 69 74 68 75 62 2e 63 CONNECT github.c</span><br><span class="line">0010: 6f 6d 3a 34 34 33 20 48 54 54 50 2f 31 2e 31 0d om:443 HTTP/1.1.</span><br><span class="line">0020: 0a 48 6f 73 74 3a 20 67 69 74 68 75 62 2e 63 6f .Host: github.co</span><br><span class="line">0030: 6d 3a 34 34 33 0d 0a 55 73 65 72 2d 41 67 65 6e m:443..User-Agen</span><br><span class="line">0040: 74 3a 20 63 75 72 6c 2f 37 2e 35 34 2e 30 0d 0a t: curl/7.54.0..</span><br><span class="line">0050: 50 72 6f 78 79 2d 43 6f 6e 6e 65 63 74 69 6f 6e Proxy-Connection</span><br><span class="line">0060: 3a 20 4b 65 65 70 2d 41 6c 69 76 65 0d 0a 0d 0a : Keep-Alive....</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-<p>果然详细，画风有没有很Wireshark？</p>
+<pre><code>== Info: Rebuilt URL to: https://github.com/
+== Info:   Trying 127.0.0.1...
+== Info: TCP_NODELAY set
+== Info: Connected to 127.0.0.1 (127.0.0.1) port 1087 (#0)
+== Info: Establish HTTP proxy tunnel to github.com:443
+=&gt; Send header, 112 bytes (0x70)
+0000: 43 4f 4e 4e 45 43 54 20 67 69 74 68 75 62 2e 63 CONNECT github.c
+0010: 6f 6d 3a 34 34 33 20 48 54 54 50 2f 31 2e 31 0d om:443 HTTP/1.1.
+0020: 0a 48 6f 73 74 3a 20 67 69 74 68 75 62 2e 63 6f .Host: github.co
+0030: 6d 3a 34 34 33 0d 0a 55 73 65 72 2d 41 67 65 6e m:443..User-Agen
+0040: 74 3a 20 63 75 72 6c 2f 37 2e 35 34 2e 30 0d 0a t: curl/7.54.0..
+0050: 50 72 6f 78 79 2d 43 6f 6e 6e 65 63 74 69 6f 6e Proxy-Connection
+0060: 3a 20 4b 65 65 70 2d 41 6c 69 76 65 0d 0a 0d 0a : Keep-Alive....
+......
+</code></pre><p>果然详细，画风有没有很Wireshark？</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://curl.haxx.se/docs/manual.html" target="_blank" rel="noopener">Manual – curl usage explained</a></p>
 <p><a href="https://www.cnblogs.com/gbyukg/p/3326825.html" target="_blank" rel="noopener">curl 常用命令</a></p>
 <p><a href="https://www.thegeekstuff.com/2012/04/curl-examples/" target="_blank" rel="noopener">15 Practical Linux CURL command examples</a></p>
@@ -1710,7 +2236,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>393 words</span>
+              <span>389 words</span>
             </span>
           
 
@@ -1744,17 +2270,19 @@
 <p>呃，以上步骤也可以简化成一句：直接访问<a href="https://github.com/settings/tokens，登录，按照指示创建token。" target="_blank" rel="noopener">https://github.com/settings/tokens，登录，按照指示创建token。</a></p>
 <h4 id="使用token"><a href="#使用token" class="headerlink" title="使用token"></a>使用token</h4><p>好了，拿到access token后，就可以在终端使用啦。</p>
 <p>输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -H &quot;Authorization: token YourToken&quot; https://api.github.com</span><br></pre></td></tr></table></figure>
-<p>或者：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl https://api.github.com/?access_token=YourToken</span><br></pre></td></tr></table></figure>
-<p>将「 YourToken 替换成 刚刚生成的token 」</p>
+<pre><code>curl -H &quot;Authorization: token YourToken&quot; https://api.github.com
+</code></pre><p>或者：</p>
+<pre><code>curl https://api.github.com/?access_token=YourToken
+</code></pre><p>将「 YourToken 替换成 刚刚生成的token 」</p>
 <p>会得到如下的response：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g0pgulbufrj31jw0u0k1z.jpg" alt=""></p>
 <p>鉴于每次访问其他接口时，都需要把token放在header中，可以将token设置成环境变量，这样每次用起来就不用copy一大坨的字符了。</p>
 <p>设置：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export GITHUB_ACCESS_TOKEN=YourToken</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">export GITHUB_ACCESS_TOKEN=YourToken
+</code></pre>
 <p>请求你的个人信息:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v -H "Authorization: token $GITHUB_ACCESS_TOKEN" https://api.github.com/user</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">curl -v -H &quot;Authorization: token $GITHUB_ACCESS_TOKEN&quot; https://api.github.com/user
+</code></pre>
 <p>简直完美！</p>
 <h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line" target="_blank" rel="noopener">create a personal access token for the command line</a></p>
 
@@ -2070,7 +2598,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>861 words</span>
+              <span>745 words</span>
             </span>
           
 
@@ -2092,15 +2620,132 @@
             <p>使用axios发请求传参时，需要对参数进行处理，用到了qs，第一次接触，懵逼，刷了遍文档，简单记录下qs的使用。</p>
 <h4 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h4><p><a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">qs</a>: a querystring parse with nesting support.</p>
 <p>主要方法：parse, stringily.</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> qs = <span class="built_in">require</span>(<span class="string">'qs'</span>);</span><br><span class="line"></span><br><span class="line">qs.parse(string, [options]);</span><br><span class="line"></span><br><span class="line">qs.stringily(object, [options])</span><br></pre></td></tr></table></figure>
+<pre><code class="js">const qs = require(&#39;qs&#39;);
+
+qs.parse(string, [options]);
+
+qs.stringily(object, [options])
+</code></pre>
 <p>最新版本：6.6.0，示例代码以6.5.2为主， 所有代码参考其<a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">github主页</a>。</p>
 <h4 id="parse"><a href="#parse" class="headerlink" title="parse"></a>parse</h4><p>可供设置的options及默认options：<a href="https://github.com/ljharb/qs/blob/d33a369e50f45d7d80c8dec4cc87fb9ad4cfd995/lib/parse.js#L7" target="_blank" rel="noopener">default</a>.</p>
 <p>看几个简单的例子：</p>
-<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> qs = <span class="built_in">require</span>(<span class="string">'qs'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'foo[bar]=baz'</span>));</span><br><span class="line"><span class="comment">// 输出： foo: &#123; bar: 'baz' &#125; &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 最多可以解析到5个子层</span></span><br><span class="line"><span class="keyword">const</span> fiveChilden = qs.parse(<span class="string">'a[b][c][d][e][f][g][h][i]=j'</span>)</span><br><span class="line"><span class="built_in">console</span>.log(fiveChilden);</span><br><span class="line"><span class="comment">/* 输出：</span></span><br><span class="line"><span class="comment">&#123; a: &#123; b: &#123; c: [Object] &#125; &#125; &#125;</span></span><br><span class="line"><span class="comment">如果你的输出也是这样，别着急，是console的问题： console.log() is invariably limited to 2 levels.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用util.inspect再输出</span></span><br><span class="line"><span class="keyword">const</span> util = <span class="built_in">require</span>(<span class="string">'util'</span>);</span><br><span class="line"><span class="built_in">console</span>.log(util.inspect(fiveChilden, &#123;<span class="attr">showHidden</span>: <span class="literal">false</span>, <span class="attr">depth</span>: <span class="literal">null</span>&#125;))</span><br><span class="line"><span class="comment">// 输出： &#123; a: &#123; b: &#123; c: &#123; d: &#123; e: &#123; f: &#123; '[g][h][i]': 'j' &#125; &#125; &#125; &#125; &#125; &#125; &#125;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 带 ?</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'?a=b&amp;c=d'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; '?a': 'b', c: 'd' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'?a=b&amp;c=d'</span>, &#123; <span class="attr">ignoreQueryPrefix</span>: <span class="literal">true</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： &#123; a: 'b', c: 'd' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 不带 ?</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a=b&amp;c=d'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: 'b', c: 'd' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 带.</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a.b=c'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; 'a.b': 'c' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a.b=c'</span>, &#123; <span class="attr">allowDots</span>: <span class="literal">true</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： &#123; a: &#123; b: 'c' &#125; &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 带有 ,与文档中的comma设置输出不一致</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a=b,c'</span>, &#123; <span class="attr">comma</span>: <span class="literal">true</span> &#125;));</span><br><span class="line"><span class="comment">// 输出：  &#123; a: 'b,c' &#125;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// parse 数组</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[]=b&amp;a[]=c'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: [ 'b', 'c' ] &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//带索引，索引 &lt;= 20 才能正确解析</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[1]=b&amp;a[2]=c'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: [ 'b', 'c' ] &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[20]=b'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: [ 'b' ] &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[200]=b'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: &#123; '200': 'b' &#125; &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 数据有空值</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[]=&amp;a[]=b'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: [ '', 'b' ] &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 数组对象</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a[][b]=c'</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: [ &#123; b: 'c' &#125; ] &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 传递null, 可设置 strictNullHandling true</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a&amp;b='</span>));</span><br><span class="line"><span class="comment">// 输出： &#123; a: '', b: '' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.parse(<span class="string">'a&amp;b='</span>, &#123; <span class="attr">strictNullHandling</span>: <span class="literal">true</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： &#123; a: null, b: '' &#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="js">const qs = require(&#39;qs&#39;);
+
+console.log(qs.parse(&#39;foo[bar]=baz&#39;));
+// 输出： foo: { bar: &#39;baz&#39; } }
+
+// 最多可以解析到5个子层
+const fiveChilden = qs.parse(&#39;a[b][c][d][e][f][g][h][i]=j&#39;)
+console.log(fiveChilden);
+/* 输出：
+{ a: { b: { c: [Object] } } }
+如果你的输出也是这样，别着急，是console的问题： console.log() is invariably limited to 2 levels.
+*/
+
+
+// 使用util.inspect再输出
+const util = require(&#39;util&#39;);
+console.log(util.inspect(fiveChilden, {showHidden: false, depth: null}))
+// 输出： { a: { b: { c: { d: { e: { f: { &#39;[g][h][i]&#39;: &#39;j&#39; } } } } } } }
+
+
+// 带 ?
+
+console.log(qs.parse(&#39;?a=b&amp;c=d&#39;));
+// 输出： { &#39;?a&#39;: &#39;b&#39;, c: &#39;d&#39; }
+
+console.log(qs.parse(&#39;?a=b&amp;c=d&#39;, { ignoreQueryPrefix: true }));
+// 输出： { a: &#39;b&#39;, c: &#39;d&#39; }
+
+// 不带 ?
+console.log(qs.parse(&#39;a=b&amp;c=d&#39;));
+// 输出： { a: &#39;b&#39;, c: &#39;d&#39; }
+
+// 带.
+console.log(qs.parse(&#39;a.b=c&#39;));
+// 输出： { &#39;a.b&#39;: &#39;c&#39; }
+
+console.log(qs.parse(&#39;a.b=c&#39;, { allowDots: true }));
+// 输出： { a: { b: &#39;c&#39; } }
+
+// 带有 ,与文档中的comma设置输出不一致
+console.log(qs.parse(&#39;a=b,c&#39;, { comma: true }));
+// 输出：  { a: &#39;b,c&#39; }
+
+
+// parse 数组
+
+console.log(qs.parse(&#39;a[]=b&amp;a[]=c&#39;));
+// 输出： { a: [ &#39;b&#39;, &#39;c&#39; ] }
+
+//带索引，索引 &lt;= 20 才能正确解析
+console.log(qs.parse(&#39;a[1]=b&amp;a[2]=c&#39;));
+// 输出： { a: [ &#39;b&#39;, &#39;c&#39; ] }
+
+console.log(qs.parse(&#39;a[20]=b&#39;));
+// 输出： { a: [ &#39;b&#39; ] }
+
+console.log(qs.parse(&#39;a[200]=b&#39;));
+// 输出： { a: { &#39;200&#39;: &#39;b&#39; } }
+
+// 数据有空值
+console.log(qs.parse(&#39;a[]=&amp;a[]=b&#39;));
+// 输出： { a: [ &#39;&#39;, &#39;b&#39; ] }
+
+// 数组对象
+console.log(qs.parse(&#39;a[][b]=c&#39;));
+// 输出： { a: [ { b: &#39;c&#39; } ] }
+
+// 传递null, 可设置 strictNullHandling true
+console.log(qs.parse(&#39;a&amp;b=&#39;));
+// 输出： { a: &#39;&#39;, b: &#39;&#39; }
+
+console.log(qs.parse(&#39;a&amp;b=&#39;, { strictNullHandling: true }));
+// 输出： { a: null, b: &#39;&#39; }
+</code></pre>
 <p>这里有些奇怪的是comma部分，跟文档输出不一致，stringily也出现了同样的问题。去看了issues，发现已经有人提出来了，详见<a href="https://github.com/ljharb/qs/issues/299" target="_blank" rel="noopener">issue299</a>， 等新版本修复发布。</p>
 <h4 id="stringily"><a href="#stringily" class="headerlink" title="stringily"></a>stringily</h4><p>可供设置的options及默认options：<a href="https://github.com/ljharb/qs/blob/d33a369e50f45d7d80c8dec4cc87fb9ad4cfd995/lib/stringify.js#L28" target="_blank" rel="noopener">default</a>.</p>
 <p>直接上代码：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> qs = <span class="built_in">require</span>(<span class="string">'qs'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 对象</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: &#123; <span class="attr">b</span>: <span class="string">'c'</span> &#125; &#125;));</span><br><span class="line"><span class="comment">// 输出： a%5Bb%5D=c</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: &#123; <span class="attr">b</span>: <span class="string">'c'</span> &#125; &#125;, &#123; <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a[b]=c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 数组，默认 indices true</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>, <span class="string">'d'</span>] &#125;, &#123; <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a[0]=b&amp;a[1]=c&amp;a[2]=d</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>, <span class="string">'d'</span>] &#125;, &#123; <span class="attr">indices</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a=b&amp;a=c&amp;a=d</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 使用 arrayFormat 来决定输出的Array样式</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>] &#125;, &#123; <span class="attr">arrayFormat</span>: <span class="string">'indices'</span>, <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a[0]=b&amp;a[1]=c</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>] &#125;, &#123; <span class="attr">arrayFormat</span>: <span class="string">'brackets'</span>, <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a[]=b&amp;a[]=c</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>] &#125;, &#123; <span class="attr">arrayFormat</span>: <span class="string">'repeat'</span>, <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a=b&amp;a=c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 与文档中的comma设置输出不一致</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: [<span class="string">'b'</span>, <span class="string">'c'</span>] &#125;, &#123; <span class="attr">arrayFormat</span>: <span class="string">'comma'</span>, <span class="attr">encode</span>: <span class="literal">false</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a[0]=b&amp;a[1]=c</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// null 被当成空值处理</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: <span class="literal">null</span>, <span class="attr">b</span>: <span class="string">''</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a=&amp;b=</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 跳过值为null的key</span></span><br><span class="line"><span class="built_in">console</span>.log(qs.stringify(&#123; <span class="attr">a</span>: <span class="string">'b'</span>, <span class="attr">c</span>: <span class="literal">null</span>&#125;, &#123; <span class="attr">skipNulls</span>: <span class="literal">true</span> &#125;));</span><br><span class="line"><span class="comment">// 输出： a=b</span></span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">const qs = require(&#39;qs&#39;);
+
+// 对象
+console.log(qs.stringify({ a: { b: &#39;c&#39; } }));
+// 输出： a%5Bb%5D=c
+
+console.log(qs.stringify({ a: { b: &#39;c&#39; } }, { encode: false }));
+// 输出： a[b]=c
+
+// 数组，默认 indices true
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;, &#39;d&#39;] }, { encode: false }));
+// 输出： a[0]=b&amp;a[1]=c&amp;a[2]=d
+
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;, &#39;d&#39;] }, { indices: false }));
+// 输出： a=b&amp;a=c&amp;a=d
+
+// 使用 arrayFormat 来决定输出的Array样式
+
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;indices&#39;, encode: false }));
+// 输出： a[0]=b&amp;a[1]=c
+
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;brackets&#39;, encode: false }));
+// 输出： a[]=b&amp;a[]=c
+
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;repeat&#39;, encode: false }));
+// 输出： a=b&amp;a=c
+
+// 与文档中的comma设置输出不一致
+console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;comma&#39;, encode: false }));
+// 输出： a[0]=b&amp;a[1]=c
+
+// null 被当成空值处理
+console.log(qs.stringify({ a: null, b: &#39;&#39; }));
+// 输出： a=&amp;b=
+
+// 跳过值为null的key
+console.log(qs.stringify({ a: &#39;b&#39;, c: null}, { skipNulls: true }));
+// 输出： a=b
+
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">qs</a></p>
 
           
@@ -2319,7 +2964,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2456,5 +3101,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

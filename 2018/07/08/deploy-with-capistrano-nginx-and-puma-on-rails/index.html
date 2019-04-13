@@ -89,20 +89,20 @@
 
 
 
-<meta name="description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： 1adduser deploy 新增">
+<meta name="description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： adduser deploy 新增 /">
 <meta name="keywords" content="Rails,Nginx,Puma">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2">
 <meta property="og:url" content="http://lupeipei.github.io/2018/07/08/deploy-with-capistrano-nginx-and-puma-on-rails/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： 1adduser deploy 新增">
+<meta property="og:description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： adduser deploy 新增 /">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg">
 <meta property="og:image" content="https://ws2.sinaimg.cn/large/006tNc79ly1fszddggcj1j30cw05fmx9.jpg">
 <meta property="og:updated_time" content="2019-03-15T10:41:05.773Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2">
-<meta name="twitter:description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： 1adduser deploy 新增">
+<meta name="twitter:description" content="部署前的前提条件：  一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上 租云服务器，安装Ubuntu 16.04的操作系统  假定现在有一个rails project ，名为demo，本地运行正常。  以下操作均以demo这个rails项目为例。 添加用户添加用户deploy。 用root权限登录后，终端执行： adduser deploy 新增 /">
 <meta name="twitter:image" content="https://ws3.sinaimg.cn/large/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg">
 
 
@@ -377,7 +377,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,319 words</span>
+              <span>1,183 words</span>
             </span>
           
 
@@ -404,73 +404,195 @@
 <p>以下操作均以demo这个rails项目为例。</p>
 <h4 id="添加用户"><a href="#添加用户" class="headerlink" title="添加用户"></a>添加用户</h4><p>添加用户deploy。</p>
 <p>用root权限登录后，终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser deploy</span><br></pre></td></tr></table></figure>
-<p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deploy ALL=(ALL:ALL) ALL</span><br></pre></td></tr></table></figure>
+<pre><code>adduser deploy
+</code></pre><p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
+<pre><code class="shell">deploy ALL=(ALL:ALL) ALL
+</code></pre>
 <p>免密码登录：</p>
 <p>新用户登录，在当前目录下，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ssh</span><br><span class="line">touch ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>回到本地，把公钥复制出来，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat ~/ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
-<p> 回到服务器，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>把公钥放进去。</p>
+<pre><code>mkdir ~/.ssh
+touch ~/.ssh/authorized_keys
+</code></pre><p>回到本地，把公钥复制出来，执行：</p>
+<pre><code>cat ~/ssh/id_rsa.pub
+</code></pre><p> 回到服务器，执行：</p>
+<pre><code>vi ~/.ssh/authorized_keys
+</code></pre><p>把公钥放进去。</p>
 <p>修改权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 ~/.ssh</span><br><span class="line">chmod 644 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>退出后，重新登录，会发现不需要输入密码 了。</p>
+<pre><code>chmod 700 ~/.ssh
+chmod 644 ~/.ssh/authorized_keys
+</code></pre><p>退出后，重新登录，会发现不需要输入密码 了。</p>
 <h4 id="更新和安装Liunx套件"><a href="#更新和安装Liunx套件" class="headerlink" title="更新和安装Liunx套件"></a>更新和安装Liunx套件</h4><p>先更新系统， 再升级。</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure>
-<h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
+<pre><code>sudo apt-get update -y
+sudo apt-get upgrade -y
+</code></pre><h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><pre><code class="Shell">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev
+</code></pre>
 <h4 id="安装Ruby"><a href="#安装Ruby" class="headerlink" title="安装Ruby"></a>安装Ruby</h4><p>安装 RVM:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev</span><br><span class="line">gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB</span><br><span class="line">curl -sSL https://get.rvm.io | bash -s stable</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+curl -sSL https://get.rvm.io | bash -s stable
+</code></pre>
 <p>成功时，会弹出如下信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Upgrade of RVM in /home/deploy/.rvm/ is complete.</span><br></pre></td></tr></table></figure>
-<p>安装ruby，这里选2.4.0：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">source ~/.rvm/scripts/rvm</span><br><span class="line">rvm requirements</span><br><span class="line">rvm install 2.4.0</span><br><span class="line">rvm use 2.4.0 --default</span><br></pre></td></tr></table></figure>
+<pre><code>Upgrade of RVM in /home/deploy/.rvm/ is complete.
+</code></pre><p>安装ruby，这里选2.4.0：</p>
+<pre><code class="Shell">source ~/.rvm/scripts/rvm
+rvm requirements
+rvm install 2.4.0
+rvm use 2.4.0 --default
+</code></pre>
 <p>安装bundler：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem install bundler --no-ri --no-rdoc</span><br></pre></td></tr></table></figure>
-<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">gem install bundler --no-ri --no-rdoc
+</code></pre>
+<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><pre><code class="Shell">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server
+</code></pre>
 <p>执行 <code>mysql -u root -p</code> 进入 mysql console 后，输入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE demo CHARACTER SET utf8mb4;</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">CREATE DATABASE demo CHARACTER SET utf8mb4;
+</code></pre>
 <p>这里demo记得换成你的数据库名称。</p>
 <p>运行后，会弹出Query OK的信息，exit，退出。</p>
-<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nginx</span><br><span class="line">sudo service nginx start</span><br></pre></td></tr></table></figure>
+<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><pre><code class="Shell">sudo apt-get install nginx
+sudo service nginx start
+</code></pre>
 <h4 id="安装Capistrano"><a href="#安装Capistrano" class="headerlink" title="安装Capistrano"></a>安装Capistrano</h4><p>本地 gemfile中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'mysql2'</span></span><br><span class="line">gem <span class="string">'puma'</span>, <span class="string">'~&gt; 3.11'</span></span><br><span class="line">group <span class="symbol">:development</span> <span class="keyword">do</span></span><br><span class="line">  gem <span class="string">'capistrano'</span>,<span class="string">'3.11.0'</span></span><br><span class="line">  gem <span class="string">'capistrano-rvm'</span>, <span class="string">'0.1.2'</span></span><br><span class="line">  gem <span class="string">'capistrano-rails'</span>,<span class="string">'1.4.0'</span></span><br><span class="line">  gem <span class="string">'capistrano3-puma'</span>, <span class="string">'3.1.1'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">gem &#39;mysql2&#39;
+gem &#39;puma&#39;, &#39;~&gt; 3.11&#39;
+group :development do
+  gem &#39;capistrano&#39;,&#39;3.11.0&#39;
+  gem &#39;capistrano-rvm&#39;, &#39;0.1.2&#39;
+  gem &#39;capistrano-rails&#39;,&#39;1.4.0&#39;
+  gem &#39;capistrano3-puma&#39;, &#39;3.1.1&#39;
+end
+</code></pre>
 <p>保存后，<code>bundle install</code>.</p>
 <p>创建 capfile：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec cap install</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">bundle exec cap install
+</code></pre>
 <p>配置Capfile:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">"capistrano/rvm"</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/rails'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma/nginx'</span></span><br><span class="line">install_plugin Capistrano::Puma</span><br><span class="line">install_plugin Capistrano::Puma::Nginx</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &quot;capistrano/rvm&quot;
+require &#39;capistrano/rails&#39;
+require &#39;capistrano/puma&#39;
+require &#39;capistrano/puma/nginx&#39;
+install_plugin Capistrano::Puma
+install_plugin Capistrano::Puma::Nginx
+</code></pre>
 <p>配置<code>config/deploy.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set <span class="symbol">:application</span>, <span class="string">"demo"</span>  <span class="comment">## demo 换成你的项目名</span></span><br><span class="line">set <span class="symbol">:repo_url</span>, <span class="string">"https://github.com/xxxxx/demo"</span> <span class="comment">## 这里写上项目代码的托管地址</span></span><br><span class="line">append <span class="symbol">:linked_dirs</span>, <span class="string">"log"</span>, <span class="string">"tmp/pids"</span>, <span class="string">"tmp/cache"</span>, <span class="string">"tmp/sockets"</span>, <span class="string">"public/system"</span>, <span class="string">"public/uploads"</span>, <span class="string">"vendor/bundle"</span></span><br><span class="line">append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/master.key"</span></span><br><span class="line"></span><br><span class="line">set <span class="symbol">:rvm_type</span>, <span class="symbol">:user</span></span><br><span class="line">set <span class="symbol">:rvm_ruby_version</span>, <span class="string">'2.4.0'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">set :application, &quot;demo&quot;  ## demo 换成你的项目名
+set :repo_url, &quot;https://github.com/xxxxx/demo&quot; ## 这里写上项目代码的托管地址
+append :linked_dirs, &quot;log&quot;, &quot;tmp/pids&quot;, &quot;tmp/cache&quot;, &quot;tmp/sockets&quot;, &quot;public/system&quot;, &quot;public/uploads&quot;, &quot;vendor/bundle&quot;
+append :linked_files, &quot;config/database.yml&quot;, &quot;config/master.key&quot;
+
+set :rvm_type, :user
+set :rvm_ruby_version, &#39;2.4.0&#39;
+</code></pre>
 <p>配置 <code>config/deploy/staging.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">server <span class="string">'106.15.182.207'</span>, <span class="symbol">user:</span> <span class="string">'deploy'</span>, <span class="symbol">roles:</span> <span class="string">%w&#123;app db web&#125;</span></span><br><span class="line">set <span class="symbol">:deploy_to</span>, <span class="string">"/home/deploy/demo/<span class="subst">#&#123;fetch(<span class="symbol">:rails_env</span>)&#125;</span>"</span></span><br><span class="line">set <span class="symbol">:branch</span>, <span class="symbol">:master</span></span><br><span class="line">set <span class="symbol">:stage</span>, <span class="symbol">:staging</span></span><br><span class="line">set <span class="symbol">:ssh_options</span>, &#123;</span><br><span class="line">    <span class="symbol">keys:</span> <span class="string">%w(/home/deploy/.ssh/authorized_keys)</span>,</span><br><span class="line">    <span class="symbol">auth_methods:</span> <span class="string">%w(publickey)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">server &#39;106.15.182.207&#39;, user: &#39;deploy&#39;, roles: %w{app db web}
+set :deploy_to, &quot;/home/deploy/demo/#{fetch(:rails_env)}&quot;
+set :branch, :master
+set :stage, :staging
+set :ssh_options, {
+    keys: %w(/home/deploy/.ssh/authorized_keys),
+    auth_methods: %w(publickey)
+}
+</code></pre>
 <p>这里的key，就是你放在远端服务器上的SSH公钥，也是放在远端代码仓库上的公钥。</p>
 <p>在远端服务器上创建<code>/home/deploy/demo/shared/config/database.yml</code>:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">staging:</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8</span><br><span class="line">  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) &#123; 5 &#125; %&gt;</span><br><span class="line">  username: root</span><br><span class="line">  password: password</span><br><span class="line">  socket: /var/run/mysqld/mysqld.sock</span><br><span class="line">  database:  deploy_demo</span><br></pre></td></tr></table></figure>
+<pre><code class="Iml">staging:
+  adapter: mysql2
+  encoding: utf8
+  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) { 5 } %&gt;
+  username: root
+  password: password
+  socket: /var/run/mysqld/mysqld.sock
+  database:  deploy_demo
+</code></pre>
 <p>password换成你之前设置的root密码。</p>
 <p>创建 <code>/home/deploy/demo/shared/config/master.key</code> , 把本机的master key贴进去，这里master.key取代了之前的secrets。</p>
 <p>修改demo目录下所有文件的权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /home/deploy/demo</span><br><span class="line">chown -R deploy:deploy .</span><br></pre></td></tr></table></figure>
-<p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
+<pre><code>cd /home/deploy/demo
+chown -R deploy:deploy .
+</code></pre><p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
 <p>回到本地执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy:check</span><br><span class="line">cap staging puma:config</span><br><span class="line">cap staging puma:nginx_config</span><br><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">cap staging deploy:check
+cap staging puma:config
+cap staging puma:nginx_config
+cap staging deploy
+</code></pre>
 <p>如果运行：<code>cap staging puma:nginx_config</code>时报错，显示如下出错信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">00:00 puma:nginx_config</span><br><span class="line">      Uploading /tmp/nginx_demo_staging 100.0%</span><br><span class="line">      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging</span><br><span class="line">      01 sudo</span><br><span class="line">      01 :</span><br><span class="line">      01 no tty present and no askpass program specified</span><br></pre></td></tr></table></figure>
-<p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
+<pre><code>00:00 puma:nginx_config
+      Uploading /tmp/nginx_demo_staging 100.0%
+      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging
+      01 sudo
+      01 :
+      01 no tty present and no askpass program specified
+</code></pre><p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
 <p><code>cap staging puma:nginx_config</code>这一步 本身要做的就是添加了一个nginx的config文件，我们可以自己手动添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd etc/nginx/sites-available</span><br><span class="line">touch demo_staging</span><br></pre></td></tr></table></figure>
-<p>在demo_staging中，填入如下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">upstream puma_deploy_demo_staging &#123;</span><br><span class="line">  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">  listen 80;</span><br><span class="line">  server_name 106.15.182.207;</span><br><span class="line">  root /home/deploy/demo/current/public;</span><br><span class="line">  try_files $uri/index.html $uri @puma_demo_staging;</span><br><span class="line"></span><br><span class="line">  client_max_body_size 4G;</span><br><span class="line">  keepalive_timeout 10;</span><br><span class="line"></span><br><span class="line">  error_page 500 502 504 /500.html;</span><br><span class="line">  error_page 503 @503;</span><br><span class="line"></span><br><span class="line">  location @puma_deploy_demo_staging &#123;</span><br><span class="line">    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header Host $host;</span><br><span class="line">    proxy_redirect off;</span><br><span class="line">    proxy_set_header Upgrade $http_upgrade;</span><br><span class="line">    proxy_set_header Connection &quot;Upgrade&quot;;</span><br><span class="line">    proxy_set_header X-Forwarded-Proto http;</span><br><span class="line">    proxy_pass http://puma_demo_staging;</span><br><span class="line">    # limit_req zone=one;</span><br><span class="line">    access_log /home/deploy/demo/shared/log/nginx.access.log;</span><br><span class="line">    error_log /home/deploy/demo/shared/log/nginx.error.log;</span><br><span class="line">  &#125;</span><br><span class="line">location ^~ /assets/ &#123;</span><br><span class="line">    gzip_static on;</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location = /50x.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line">    location = /404.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location @503 &#123;</span><br><span class="line">    error_page 405 = /system/maintenance.html;</span><br><span class="line">    if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">      rewrite ^(.*)$ /system/maintenance.html break;</span><br><span class="line">    &#125;</span><br><span class="line">    rewrite ^(.*)$ /503.html break;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ )&#123;</span><br><span class="line">    return 405;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">    return 503;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>保存后，退出， 建立link：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging</span><br></pre></td></tr></table></figure>
-<p>继续执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
-<p>完成后，重启nginx:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
-<p>打开浏览器：</p>
+<pre><code>cd etc/nginx/sites-available
+touch demo_staging
+</code></pre><p>在demo_staging中，填入如下内容：</p>
+<pre><code>upstream puma_deploy_demo_staging {
+  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;
+}
+
+server {
+  listen 80;
+  server_name 106.15.182.207;
+  root /home/deploy/demo/current/public;
+  try_files $uri/index.html $uri @puma_demo_staging;
+
+  client_max_body_size 4G;
+  keepalive_timeout 10;
+
+  error_page 500 502 504 /500.html;
+  error_page 503 @503;
+
+  location @puma_deploy_demo_staging {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_redirect off;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;Upgrade&quot;;
+    proxy_set_header X-Forwarded-Proto http;
+    proxy_pass http://puma_demo_staging;
+    # limit_req zone=one;
+    access_log /home/deploy/demo/shared/log/nginx.access.log;
+    error_log /home/deploy/demo/shared/log/nginx.error.log;
+  }
+location ^~ /assets/ {
+    gzip_static on;
+    expires max;
+    add_header Cache-Control public;
+  }
+
+  location = /50x.html {
+    root html;
+  }
+    location = /404.html {
+    root html;
+  }
+
+  location @503 {
+    error_page 405 = /system/maintenance.html;
+    if (-f $document_root/system/maintenance.html) {
+      rewrite ^(.*)$ /system/maintenance.html break;
+    }
+    rewrite ^(.*)$ /503.html break;
+  }
+
+  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ ){
+    return 405;
+  }
+
+  if (-f $document_root/system/maintenance.html) {
+    return 503;
+  }
+}
+</code></pre><p>保存后，退出， 建立link：</p>
+<pre><code>sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging
+</code></pre><p>继续执行：</p>
+<pre><code>cap staging deploy
+</code></pre><p>完成后，重启nginx:</p>
+<pre><code>sudo service nginx restart
+</code></pre><p>打开浏览器：</p>
 <p>  <img src="https://ws2.sinaimg.cn/large/006tNc79ly1fszddggcj1j30cw05fmx9.jpg" alt=""></p>
 <p>OK！！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/deploying-a-rails-app-on-ubuntu-14-04-with-capistrano-nginx-and-puma" target="_blank" rel="noopener">Deploying a Rails App on Ubuntu 14.04 with Capistrano, Nginx, and Puma</a></p>
@@ -762,7 +884,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -915,5 +1037,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,638 words</span>
+              <span>1,442 words</span>
             </span>
           
 
@@ -402,9 +402,24 @@
 <p>最佳效果：写最少的测试，测最多的东西。</p>
 <h4 id="基本结构："><a href="#基本结构：" class="headerlink" title="基本结构："></a>基本结构：</h4><p>最简单的一个场景一个例子:</p>
 <p>describe/it:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe <span class="string">"something"</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">"does something"</span> <span class="keyword">do</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
+  it &quot;does something&quot; do
+  end
+end
+</code></pre>
 <p>嵌套:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe <span class="string">"something"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"in one context"</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">"does one thing"</span> <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  context <span class="string">"in another context"</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">"does another thing"</span> <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
+  context &quot;in one context&quot; do
+    it &quot;does one thing&quot; do
+    end
+  end
+
+  context &quot;in another context&quot; do
+    it &quot;does another thing&quot; do
+    end
+  end
+end
+</code></pre>
 <p>在测试前，通常需要创建测试数据，一般会在每个测试案例中单独创建，也可以借助before【hook methods】来简化，减少重复创建。before调用有两种形式：</p>
 <ul>
 <li>before(:each, &amp;block) - default mode</li>
@@ -412,47 +427,228 @@
 </ul>
 <p>使用before(:each )  创建的测试数据，在每个测试结束后都会回滚，即每个测试里面的数据都是独立的。每次执行context前，都会重新执行一次before(:each)，而before(:all) 只执行一次，被这个describe／context下的所有it公用。使用before(:all)时，建议配after(:all) 来清空数据，保证多个describe之间的独立性，同时使用before(:each) 来重新加载数据，以获取最新的数据。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">before(<span class="symbol">:all</span>) <span class="keyword">do</span></span><br><span class="line">  @widget = Widget.create!</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">before(<span class="symbol">:each</span>) <span class="keyword">do</span></span><br><span class="line">  @widget.reload</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">after(<span class="symbol">:all</span>) <span class="keyword">do</span></span><br><span class="line">  @widget.destroy</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">before(:all) do
+  @widget = Widget.create!
+end
+
+before(:each) do
+  @widget.reload
+end
+
+after(:all) do
+  @widget.destroy
+end
+</code></pre>
 <h4 id="Shared-examples"><a href="#Shared-examples" class="headerlink" title="Shared examples"></a>Shared examples</h4><p>shared_examples 是Rspec的类方法，用于定义class 或者 module的行为，shared的含义就是共享，个人的理解是把多个测试中，重合度高的地方抽出来，封装起来，类似于include module，在module中定义常用方法，每个类include 该module后，就拥有了该module的实例方法。</p>
 <p>可以使用以下四种方式来将定义的shared_examples include到context中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">include_examples <span class="string">"name"</span>      <span class="comment"># include the examples in the current context</span></span><br><span class="line">it_behaves_like <span class="string">"name"</span>       <span class="comment"># include the examples in a nested context</span></span><br><span class="line">it_should_behave_like <span class="string">"name"</span> <span class="comment"># include the examples in a nested context</span></span><br><span class="line">matching metadata            <span class="comment"># include the examples in the current context</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">include_examples &quot;name&quot;      # include the examples in the current context
+it_behaves_like &quot;name&quot;       # include the examples in a nested context
+it_should_behave_like &quot;name&quot; # include the examples in a nested context
+matching metadata            # include the examples in the current context
+</code></pre>
 <p>备注：metadata是什么？describe的部分常会看到 type: :model，这个就是RSpec metadata.【官网中举了相关的例子，还不是很懂】</p>
 <p>看个官方的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">"set"</span></span><br><span class="line"></span><br><span class="line">RSpec.shared_examples <span class="string">"a collection"</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:collection</span>) &#123; described_class.new([<span class="number">7</span>, <span class="number">2</span>, <span class="number">4</span>]) &#125;</span><br><span class="line"></span><br><span class="line">  context <span class="string">"initialized with 3 items"</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">"says it has three items"</span> <span class="keyword">do</span></span><br><span class="line">      expect(collection.size).to eq(<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  describe <span class="string">"#include?"</span> <span class="keyword">do</span></span><br><span class="line">    context <span class="string">"with an item that is in the collection"</span> <span class="keyword">do</span></span><br><span class="line">      it <span class="string">"returns true"</span> <span class="keyword">do</span></span><br><span class="line">        expect(collection.<span class="keyword">include</span>?(<span class="number">7</span>)).to be_truthy</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"with an item that is not in the collection"</span> <span class="keyword">do</span></span><br><span class="line">      it <span class="string">"returns false"</span> <span class="keyword">do</span></span><br><span class="line">        expect(collection.<span class="keyword">include</span>?(<span class="number">9</span>)).to be_falsey</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Array <span class="keyword">do</span></span><br><span class="line">  it_behaves_like <span class="string">"a collection"</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Set <span class="keyword">do</span></span><br><span class="line">  it_behaves_like <span class="string">"a collection"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">require &quot;set&quot;
+
+RSpec.shared_examples &quot;a collection&quot; do
+  let(:collection) { described_class.new([7, 2, 4]) }
+
+  context &quot;initialized with 3 items&quot; do
+    it &quot;says it has three items&quot; do
+      expect(collection.size).to eq(3)
+    end
+  end
+
+  describe &quot;#include?&quot; do
+    context &quot;with an item that is in the collection&quot; do
+      it &quot;returns true&quot; do
+        expect(collection.include?(7)).to be_truthy
+      end
+    end
+
+    context &quot;with an item that is not in the collection&quot; do
+      it &quot;returns false&quot; do
+        expect(collection.include?(9)).to be_falsey
+      end
+    end
+  end
+end
+
+RSpec.describe Array do
+  it_behaves_like &quot;a collection&quot;
+end
+
+RSpec.describe Set do
+  it_behaves_like &quot;a collection&quot;
+end
+</code></pre>
 <p>带参数的shard_example:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">RSpec.shared_examples <span class="string">"a measurable object"</span> <span class="keyword">do</span> <span class="params">|measurement, measurement_methods|</span></span><br><span class="line">  measurement_methods.each <span class="keyword">do</span> <span class="params">|measurement_method|</span></span><br><span class="line">    it <span class="string">"should return <span class="subst">#&#123;measurement&#125;</span> from #<span class="subst">#&#123;measurement_method&#125;</span>"</span> <span class="keyword">do</span></span><br><span class="line">      expect(subject.send(measurement_method)).to eq(measurement)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Array, <span class="string">"with 3 items"</span> <span class="keyword">do</span></span><br><span class="line">  subject &#123; [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>] &#125;</span><br><span class="line">  it_should_behave_like <span class="string">"a measurable object"</span>, <span class="number">3</span>, [<span class="symbol">:size</span>, <span class="symbol">:length</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe String, <span class="string">"of 6 characters"</span> <span class="keyword">do</span></span><br><span class="line">  subject &#123; <span class="string">"FooBar"</span> &#125;</span><br><span class="line">  it_should_behave_like <span class="string">"a measurable object"</span>, <span class="number">6</span>, [<span class="symbol">:size</span>, <span class="symbol">:length</span>]</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.shared_examples &quot;a measurable object&quot; do |measurement, measurement_methods|
+  measurement_methods.each do |measurement_method|
+    it &quot;should return #{measurement} from ##{measurement_method}&quot; do
+      expect(subject.send(measurement_method)).to eq(measurement)
+    end
+  end
+end
+
+RSpec.describe Array, &quot;with 3 items&quot; do
+  subject { [1, 2, 3] }
+  it_should_behave_like &quot;a measurable object&quot;, 3, [:size, :length]
+end
+
+RSpec.describe String, &quot;of 6 characters&quot; do
+  subject { &quot;FooBar&quot; }
+  it_should_behave_like &quot;a measurable object&quot;, 6, [:size, :length]
+end
+</code></pre>
 <p>也可以在context中定义shared_examples，然后在该context中调用，注意，可将context看作是一个作用域，出了这个context，则不能调用定义在该context 中的shared_examples：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe <span class="string">"shared examples"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"per context"</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    shared_examples <span class="string">"shared examples are nestable"</span> <span class="keyword">do</span></span><br><span class="line">      it &#123; expect(<span class="literal">true</span>).to eq <span class="literal">true</span> &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    it_behaves_like <span class="string">"shared examples are nestable"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
+  context &quot;per context&quot; do
+
+    shared_examples &quot;shared examples are nestable&quot; do
+      it { expect(true).to eq true }
+    end
+
+    it_behaves_like &quot;shared examples are nestable&quot;
+  end
+end
+</code></pre>
 <p>如果在另一个context中调用，则会报错：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe <span class="string">"shared examples"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"per context"</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    shared_examples <span class="string">"shared examples are nestable"</span> <span class="keyword">do</span></span><br><span class="line">      it &#123; expect(<span class="literal">true</span>).to eq <span class="literal">true</span> &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  context <span class="string">"another context"</span> <span class="keyword">do</span></span><br><span class="line">    it_behaves_like <span class="string">"shared examples are nestable"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
+  context &quot;per context&quot; do
+
+    shared_examples &quot;shared examples are nestable&quot; do
+      it { expect(true).to eq true }
+    end
+  end
+
+  context &quot;another context&quot; do
+    it_behaves_like &quot;shared examples are nestable&quot;
+  end
+end
+</code></pre>
 <h4 id="Shared-context"><a href="#Shared-context" class="headerlink" title="Shared context"></a>Shared context</h4><p>shared_context顾名思义，将多个context中共用的部分抽出来，定义成method来反复调用。</p>
 <p>调用已定义好的shared_context的方式有两种，一是include_context，而是metadata。</p>
 <p>看一段简单的例子，先定义一个shared_context:</p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">"somethings 1"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 1"</span> <span class="keyword">do</span></span><br><span class="line">    let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">    let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">    let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">    let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">"somethings 2"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 2"</span> <span class="keyword">do</span></span><br><span class="line">    let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">    let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">    let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">    let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### one describe
+RSpec.describe &quot;somethings 1&quot; do
+  context &quot;context 1&quot; do
+    let(:a) { create :a }
+    let(:b) { create :b }
+    let(:c) { create :c }
+    let(:d) { create :d }
+    ........ # do something
+  end
+end
+
+### another describe
+
+RSpec.describe &quot;somethings 2&quot; do
+  context &quot;context 2&quot; do
+    let(:a) { create :a }
+    let(:b) { create :b }
+    let(:c) { create :c }
+    let(:d) { create :d }
+    ........ # do something
+  end
+end
+</code></pre>
 <p>使用shared_context简化，定义shared_context :</p>
 <p>在spec/support下定义一个文件，比如shared_context.rb：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">RSpec.shared_context <span class="string">"shared data"</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">  let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">  let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">  let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.shared_context &quot;shared data&quot; do
+  let(:a) { create :a }
+  let(:b) { create :b }
+  let(:c) { create :c }
+  let(:d) { create :d }
+end
+</code></pre>
 <p>简化之前的测试：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">"somethings 1"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 1"</span> <span class="keyword">do</span></span><br><span class="line">    include_context <span class="string">"shared data"</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">"somethings 2"</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 2"</span> <span class="keyword">do</span></span><br><span class="line">    include_context <span class="string">"shared data"</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### one describe
+RSpec.describe &quot;somethings 1&quot; do
+  context &quot;context 1&quot; do
+    include_context &quot;shared data&quot;
+    ........ # do something
+  end
+end
+
+### another describe
+
+RSpec.describe &quot;somethings 2&quot; do
+  context &quot;context 2&quot; do
+    include_context &quot;shared data&quot;
+    ........ # do something
+  end
+end
+</code></pre>
 <p>如果使用metadata，如何调用？参考官网的例子，需要修改下刚刚创建的这个shared_data.rb文件：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|rspec|</span></span><br><span class="line">  rspec.shared_context_metadata_behavior = <span class="symbol">:apply_to_host_groups</span> <span class="comment">## 用于设置metadata调用后的作用域</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.shared_context <span class="string">"shared data"</span>, <span class="symbol">:shared_context</span> =&gt; <span class="symbol">:metadata</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">  let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">  let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">  let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|rspec|</span></span><br><span class="line">  rspec.include_context <span class="string">"shared data"</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.configure do |rspec|
+  rspec.shared_context_metadata_behavior = :apply_to_host_groups ## 用于设置metadata调用后的作用域
+end
+
+RSpec.shared_context &quot;shared data&quot;, :shared_context =&gt; :metadata do
+  let(:a) { create :a }
+  let(:b) { create :b }
+  let(:c) { create :c }
+  let(:d) { create :d }
+end
+
+RSpec.configure do |rspec|
+  rspec.include_context &quot;shared data&quot;, :include_shared =&gt; true
+end
+</code></pre>
 <p>那么上面的例子，就可以这样调用了：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">"somethings 1"</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 1"</span> <span class="keyword">do</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">"somethings 2"</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">"context 2"</span> <span class="keyword">do</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### one describe
+RSpec.describe &quot;somethings 1&quot;, :include_shared =&gt; true do
+  context &quot;context 1&quot; do
+    ........ # do something
+  end
+end
+
+### another describe
+
+RSpec.describe &quot;somethings 2&quot;, :include_shared =&gt; true do
+  context &quot;context 2&quot; do
+    ........ # do something
+  end
+end
+</code></pre>
 <p>看到这里，说一下shared_context与shared_example的区别，一个是context层面，一个是class／module层的，如果多个describe中，含有重合度高的context／describe，那么用shared_example来抽出共同的行为进行简化，如果是在多个context中，含有重合度高的代码，比如新建各种测试数据等，更偏向setup，则使用shared_context。</p>
 <h4 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h4><ul>
 <li><p><strong>测试数据重置：</strong></p>
 <p>使用gem：database_rewinder</p>
 <p>配置rewinder：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># spec/support/rspec_helper.rb</span></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.before <span class="symbol">:suite</span> <span class="keyword">do</span></span><br><span class="line">    DatabaseRewinder.clean_all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  config.after <span class="symbol">:each</span> <span class="keyword">do</span></span><br><span class="line">    DatabaseRewinder.clean</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby"># spec/support/rspec_helper.rb
+RSpec.configure do |config|
+  config.before :suite do
+    DatabaseRewinder.clean_all
+  end
+
+  config.after :each do
+    DatabaseRewinder.clean
+  end
+end
+</code></pre>
 </li>
 <li><p><strong>Shoulda-matchers</strong></p>
 <p>使用Shoulda-matchers 来测试关联和验证：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rails-helper'</span></span><br><span class="line"></span><br><span class="line">descirbe User <span class="keyword">do</span></span><br><span class="line">  it &#123; should has_many(<span class="symbol">:posts</span>).dependent(<span class="symbol">:destroy</span>) &#125;</span><br><span class="line">  it &#123; should has_many(<span class="symbol">:groups</span>).through(<span class="symbol">:groupships</span>) &#125;</span><br><span class="line">  it &#123; should validate_presence_of <span class="symbol">:name</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">require &#39;rails-helper&#39;
+
+descirbe User do
+  it { should has_many(:posts).dependent(:destroy) }
+  it { should has_many(:groups).through(:groupships) }
+  it { should validate_presence_of :name }
+end
+</code></pre>
 </li>
 <li><p><strong>is_expected vs expect</strong></p>
 <p>is_expected 等价于expect(subject)</p>
 <p>比如下面这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">it &#123; is_expected.to validate_presence_of(<span class="symbol">:title</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># equals to</span></span><br><span class="line"></span><br><span class="line">it &#123; expect(subject).to validate_presence_of(<span class="symbol">:title</span>) &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">it { is_expected.to validate_presence_of(:title) }
+
+# equals to
+
+it { expect(subject).to validate_presence_of(:title) }
+</code></pre>
 <p> RSpec测试缺省都有一个subject，值为described_class.new，而descirbed_class 是对应需要测试的class的实例，可以当成ruby中的self，如果是model，则是model.new, controller,则是controller.new。</p>
 </li>
 </ul>
@@ -827,7 +1023,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>225 words</span>
+              <span>222 words</span>
             </span>
           
 
@@ -875,8 +1071,9 @@
 </tr>
 </tbody>
 </table>
-<p>  发出请求的时候，对应传递的参数内容为：<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; &quot;student&quot;: &#123; &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;gender&quot;: &quot;male&quot; &#125; &#125;</span><br></pre></td></tr></table></figure></p>
-<ul>
+<p>  发出请求的时候，对应传递的参数内容为：</p>
+<pre><code>   { &quot;student&quot;: { &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;gender&quot;: &quot;male&quot; } }
+</code></pre><ul>
 <li>传递的参数是嵌套的hash</li>
 </ul>
 <p>  在body中，输入以下内容：</p>
@@ -902,8 +1099,9 @@
 </tr>
 </tbody>
 </table>
-<p>  发出请求的时候，对应传递的参数内容为：<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; &quot;student&quot;: &#123; &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;teachers&quot;: &#123; &quot;1&quot;: &#123; &quot;name&quot;: &quot;David&quot; &#125;&#125;&#125;&#125;</span><br></pre></td></tr></table></figure></p>
-<ul>
+<p>  发出请求的时候，对应传递的参数内容为：</p>
+<pre><code>   { &quot;student&quot;: { &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;teachers&quot;: { &quot;1&quot;: { &quot;name&quot;: &quot;David&quot; }}}}
+</code></pre><ul>
 <li><p>传递的是array</p>
 <p>在body中，输入以下内容：</p>
 </li>
@@ -930,8 +1128,9 @@
 </tr>
 </tbody>
 </table>
-<p>  发出请求的时候，对应传递的参数内容为：<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123; &quot;student_ids&quot;: [&quot;10&quot;, &quot;11&quot;, &quot;12&quot;] &#125;</span><br></pre></td></tr></table></figure></p>
-<p>  OK！下次不要再踩同样的坑了。</p>
+<p>  发出请求的时候，对应传递的参数内容为：</p>
+<pre><code>   { &quot;student_ids&quot;: [&quot;10&quot;, &quot;11&quot;, &quot;12&quot;] }
+</code></pre><p>  OK！下次不要再踩同样的坑了。</p>
 
           
         
@@ -1253,7 +1452,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,009 words</span>
+              <span>923 words</span>
             </span>
           
 
@@ -1276,31 +1475,118 @@
 <p>《Ruby元编程》中提到，使用load时，可能会出现<strong>常量</strong>污染当前程序的命名空间的问题，添加了true这个参数后，Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的<strong>所有常量</strong>，从而避免污染的问题，但是书中并没有给出例子来详细说明。</p>
 <p>来看两个例子感受下：</p>
 <p>同一个目录下，存在两个文件，a.rb, b.rb，a中加载了b.rb文件。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="comment">## 只定义了一个普通的常量Y</span></span><br><span class="line">Y = <span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby"># b.rb
+## 只定义了一个普通的常量Y
+Y = &quot;hello&quot;
+</code></pre>
 <p>a.rb中加载b.rb</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hi"</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; warning: already initialized constant Y</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+Y = &quot;hi&quot;
+
+p Y
+#=&gt; warning: already initialized constant Y
+</code></pre>
 <p>此时，执行a.rb，会报错，显示：warning: already initialized constant Y</p>
 <p>也就是加载进来的常量Y与a.rb中的常量Y重了，系统报错显示已经初始化了Y。</p>
 <p>如果添加了true，则输出”hi”。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hi"</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; hi</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+Y = &quot;hi&quot;
+
+p Y
+#=&gt; hi
+</code></pre>
 <p>这里Y是一个常规的常量，ruby中类名，模块名也是常量，如果加载同名的类／模块会出现什么情况？</p>
 <p>修改下b.rb文件：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hi</span></span></span><br><span class="line">		p <span class="string">"method hi in b.rb"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># b.rb
+module Mymodule
+    def hi
+        p &quot;method hi in b.rb&quot;
+    end
+end
+</code></pre>
 <p>修改下a.rb文件：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">"hello"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; Mymodule is not a class</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+class Mymodule
+    def hello
+        p &quot;hello&quot;
+    end
+end
+
+Mymodule.new.hello
+
+#=&gt; Mymodule is not a class
+</code></pre>
 <p>可以看到，加载后，执行a.rb时，报错，显示Mymodule is not a class，因为此时加载进来了一个同名的Mymodule，它是一个module，而a.rb文件中，定义了一个同名的Mymodule类，这个类其实并没有创建成功，这里稍微提一下，执行a.rb时，报错不是发生在执行Mymodule.new.hello时，而是在定义Mymodule这个类的地方报错。</p>
 <p>如果添加上true，就正常了。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">"hello"</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+class Mymodule
+    def hello
+        p &quot;hello&quot;
+    end
+end
+
+Mymodule.new.hello
+
+#=&gt; hello
+</code></pre>
 <p>这里，你可能会疑惑，添加了true之后，原本来自b.rb中那个Y，module Mymodule去了哪里？书中提到，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>，也就是等同于他们根本就没有加载进来了？怎么知道它们真的没有加载进来？</p>
 <p>可以通过<strong>Module的类方法constants</strong>来判断，该方法返回当前顶层程序中的所有常量。</p>
 <p>修改下b.rb ，改回原来的样子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># b.rb
+
+Y = &quot;hello&quot;
+</code></pre>
 <p>修改下 a.rb:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line"><span class="comment"># 未加载b.rb</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
-<p>加载b.rb，无true：<br><figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 118</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure></p>
+<pre><code class="Ruby"># a.rb
+# 未加载b.rb
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 117
+
+p Module.constants.include? :Y
+#=&gt; false
+</code></pre>
+<p>加载b.rb，无true：</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 118
+
+p Module.constants.include? :Y
+#=&gt; true
+</code></pre>
 <p>此时<strong>Y</strong>加载进来了，常量总数加1。</p>
 <p>加载b.rb，有true：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">'./b.rb'</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 117
+
+p Module.constants.include? :Y
+#=&gt; false
+</code></pre>
 <p>输出结果与未加载b.rb完全一致。</p>
 <p>也就是书中说的那样，添加true后，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>。</p>
 <p>等同于<strong>load添加true后，所有的常量都没有加载进来</strong>。当然这里的常量，包括类名，模块名。</p>
@@ -1445,7 +1731,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,205 words</span>
+              <span>1,074 words</span>
             </span>
           
 
@@ -1467,15 +1753,147 @@
             <h4 id="实现效果"><a href="#实现效果" class="headerlink" title="实现效果"></a>实现效果</h4><p><img src="https://ws2.sinaimg.cn/large/006tNbRwly1fu3rv5vgcog30v70cyjys.gif" alt=""></p>
 <p>基本流程：点击按钮，上传图片，预览图片，用户可以清除已上传的图片。demo中没体现出来的还有上传文件的的格式检查，图片上传个数的限制以及图片预览时的裁剪。</p>
 <p>这类效果实现，网上有不少前辈已经给出了很好的代码参考。这里仅记录下在Rails项目中，如何借助stimulus，实现以上效果。其中CSS部分，引用了Bootstrap。</p>
-<h4 id="HTML部分"><a href="#HTML部分" class="headerlink" title="HTML部分"></a>HTML部分</h4><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">template</span> = <span class="string">capture</span> <span class="attr">do</span> %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">class</span>=<span class="string">"d-flex align-items-center justify-content-center upload-area rounded bg-secondary border border-light m-0"</span> <span class="attr">data-action</span>=<span class="string">"click-&gt;attachment#checkNumber"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"fas fa-camera fa-3x"</span> <span class="attr">style</span>=<span class="string">"color: white;"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"attachment[file]"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">class</span>=<span class="string">"d-none"</span> <span class="attr">data-action</span>=<span class="string">"change-&gt;attachment#uploadAttachment"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">image_item</span> = <span class="string">capture</span> <span class="attr">do</span> %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"prev-item mr-2"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"closebtn rounded-circle border border-secondary text-muted text-center bg-light"</span> <span class="attr">data-action</span>=<span class="string">"click-&gt;attachment#removeAttachment"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"cover rounded"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">""</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">class</span>=<span class="string">"text-info"</span>&gt;</span>附件：<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">content_tag</span> <span class="attr">:div</span>, <span class="attr">class:</span> "<span class="attr">bg-light</span> <span class="attr">p-2</span>", <span class="attr">data:</span> &#123; <span class="attr">controller:</span> "<span class="attr">attachment</span>", <span class="attr">max_upload_count:</span> <span class="attr">max_attachments_count</span>, <span class="attr">template:</span> <span class="attr">template</span>, <span class="attr">image_item:</span> <span class="attr">image_item</span> &#125; <span class="attr">do</span> %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"preview"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">class</span>=<span class="string">"d-flex align-items-center justify-content-center upload-area rounded bg-secondary border border-light m-0"</span> <span class="attr">data-action</span>=<span class="string">"click-&gt;attachment#checkNumber"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">i</span> <span class="attr">class</span>=<span class="string">"fas fa-camera fa-3x"</span> <span class="attr">style</span>=<span class="string">"color: white;"</span>&gt;</span><span class="tag">&lt;/<span class="name">i</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">"attachment[file]"</span> <span class="attr">type</span>=<span class="string">"file"</span> <span class="attr">class</span>=<span class="string">"d-none"</span> <span class="attr">data-action</span>=<span class="string">"change-&gt;attachment#uploadAttachment"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="HTML部分"><a href="#HTML部分" class="headerlink" title="HTML部分"></a>HTML部分</h4><pre><code class="html">&lt;% template = capture do %&gt;
+  &lt;label class=&quot;d-flex align-items-center justify-content-center upload-area rounded bg-secondary border border-light m-0&quot; data-action=&quot;click-&gt;attachment#checkNumber&quot;&gt;
+    &lt;i class=&quot;fas fa-camera fa-3x&quot; style=&quot;color: white;&quot;&gt;&lt;/i&gt;
+    &lt;input name=&quot;attachment[file]&quot; type=&quot;file&quot; class=&quot;d-none&quot; data-action=&quot;change-&gt;attachment#uploadAttachment&quot;&gt;
+  &lt;/label&gt;
+&lt;% end %&gt;
+
+&lt;% image_item = capture do %&gt;
+  &lt;div class=&quot;prev-item mr-2&quot;&gt;
+        &lt;span class=&quot;closebtn rounded-circle border border-secondary text-muted text-center bg-light&quot; data-action=&quot;click-&gt;attachment#removeAttachment&quot;&gt;
+        &lt;/span&gt;
+    &lt;div class=&quot;cover rounded&quot;&gt;
+      &lt;img src=&quot;&quot;&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;p class=&quot;text-info&quot;&gt;附件：&lt;/p&gt;
+&lt;%= content_tag :div, class: &quot;bg-light p-2&quot;, data: { controller: &quot;attachment&quot;, max_upload_count: max_attachments_count, template: template, image_item: image_item } do %&gt;
+  &lt;div class=&quot;preview&quot;&gt;&lt;/div&gt;
+  &lt;label class=&quot;d-flex align-items-center justify-content-center upload-area rounded bg-secondary border border-light m-0&quot; data-action=&quot;click-&gt;attachment#checkNumber&quot;&gt;
+    &lt;i class=&quot;fas fa-camera fa-3x&quot; style=&quot;color: white;&quot;&gt;&lt;/i&gt;
+    &lt;input name=&quot;attachment[file]&quot; type=&quot;file&quot; class=&quot;d-none&quot; data-action=&quot;change-&gt;attachment#uploadAttachment&quot;&gt;
+  &lt;/label&gt;
+&lt;% end %&gt;
+</code></pre>
 <p>这里，用capture定义了两段html，其中，template对应的是图片上传前的那个label，每次上传完图片后，将这个空的label追加到后面，而image_item则用来预览每张图片，max_attachments_count为最多可上传的附件数量，把这三个一并传给attachment这个controller。</p>
 <p>这里，有几个事件：</p>
 <p>点击label会先触发click事件，对应的是controller里面的function checkNumber, 而上传后，触发了input的change事件，对应的是function uploadAttachment，最后预览图片时，添加了删除事件，对应的是removeAttachment ，下面针对这些事件进行处理。</p>
 <h4 id="JS部分【Stimulus-controller】"><a href="#JS部分【Stimulus-controller】" class="headerlink" title="JS部分【Stimulus controller】"></a>JS部分【Stimulus controller】</h4><p>在<code>attachment_controller.jsx</code>中，添加如下代码：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; Controller &#125; <span class="keyword">from</span> <span class="string">'stimulus'</span></span><br><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">'jquery'</span></span><br><span class="line"><span class="keyword">import</span> <span class="string">'./attachment.scss'</span> <span class="comment">//引入CSS部分，后面会附上该部分代码</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="class"><span class="keyword">class</span> <span class="keyword">extends</span> <span class="title">Controller</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 判断附件上传数量是否超出限制  </span></span><br><span class="line">  checkNumber(event) &#123;</span><br><span class="line">    <span class="keyword">const</span> uploaded = $(<span class="keyword">this</span>.element).find(<span class="string">'label'</span>).length <span class="comment">//目前label的数量，包括未上传文件的那个</span></span><br><span class="line">    <span class="keyword">const</span> attachmentCount = $(<span class="keyword">this</span>.element).data(<span class="string">'maxUploadCount'</span>) <span class="comment">//获取传给controller的值</span></span><br><span class="line">    <span class="keyword">if</span> (uploaded - <span class="number">1</span> &gt;= attachmentCount) &#123;</span><br><span class="line">      event.preventDefault()</span><br><span class="line">      alert(<span class="string">`最多可以上传 <span class="subst">$&#123;attachmentCount&#125;</span> 张图片！`</span>)</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">//上传文件时，触发事件  </span></span><br><span class="line">  uploadAttachment(event) &#123;</span><br><span class="line">    <span class="keyword">const</span> html = $(<span class="keyword">this</span>.element).data(<span class="string">'template'</span>)</span><br><span class="line">    <span class="keyword">const</span> item = $(html)</span><br><span class="line">    <span class="keyword">const</span> $preview = $(<span class="keyword">this</span>.element).find(<span class="string">'.preview'</span>) <span class="comment">// 存放预览图片的container</span></span><br><span class="line">    <span class="keyword">const</span> $imageItem = $($(<span class="keyword">this</span>.element).data(<span class="string">'imageItem'</span>))</span><br><span class="line">    <span class="keyword">const</span> $imgTag = $imageItem.find(<span class="string">'img'</span>)</span><br><span class="line">    <span class="keyword">const</span> file = $(event.currentTarget).get(<span class="number">0</span>) <span class="comment">// 获取到input</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 检查上传文件是否是图片，如果是，则添加图片的预览，不是则弹出警告</span></span><br><span class="line">    <span class="keyword">if</span> (file.files[<span class="number">0</span>] !== <span class="literal">undefined</span>) &#123;</span><br><span class="line">      <span class="keyword">const</span> dataURL = <span class="keyword">this</span>.createObjectURL(file.files[<span class="number">0</span>]) <span class="comment">//调用createObjectURL生成图片的URL</span></span><br><span class="line">      <span class="keyword">const</span> fileName = file.files[<span class="number">0</span>].name</span><br><span class="line">      <span class="keyword">const</span> extension = fileName.split(<span class="string">'.'</span>).pop().trim().toUpperCase()</span><br><span class="line">      <span class="keyword">if</span> ([<span class="string">'JPG'</span>, <span class="string">'JPEG'</span>, <span class="string">'PNG'</span>].includes(extension)) &#123;</span><br><span class="line">        $imgTag.attr(<span class="string">'src'</span>, dataURL)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        alert(<span class="string">'请上传图片(格式为JPG、JPEG、PNG)'</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      $imageItem.appendTo($preview) <span class="comment">// 将图片预览部分，追加到preview中</span></span><br><span class="line">      $(event.currentTarget).parent().addClass(<span class="string">'hidden'</span>) <span class="comment">//已经上传过文件的input，对应的label隐藏</span></span><br><span class="line">      item.appendTo($(<span class="keyword">this</span>.element)) <span class="comment">// 显示空白的文件上传按钮</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 移除attachment  </span></span><br><span class="line">  removeAttachment(event) &#123;</span><br><span class="line">    event.preventDefault()</span><br><span class="line">    <span class="keyword">const</span> index =  $(event.currentTarget).parent().index()</span><br><span class="line">    $(event.currentTarget).parent().remove()</span><br><span class="line">    $(<span class="string">`label:eq(<span class="subst">$&#123;index&#125;</span>)`</span>).remove()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 获取图片的URL  </span></span><br><span class="line">  createObjectURL(blob) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">window</span>.URL) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">window</span>.URL.createObjectURL(blob)</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">window</span>.webkitURL) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="built_in">window</span>.webkitURL.createObjectURL(blob)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">import { Controller } from &#39;stimulus&#39;
+import $ from &#39;jquery&#39;
+import &#39;./attachment.scss&#39; //引入CSS部分，后面会附上该部分代码
+
+export default class extends Controller {
+  // 判断附件上传数量是否超出限制  
+  checkNumber(event) {
+    const uploaded = $(this.element).find(&#39;label&#39;).length //目前label的数量，包括未上传文件的那个
+    const attachmentCount = $(this.element).data(&#39;maxUploadCount&#39;) //获取传给controller的值
+    if (uploaded - 1 &gt;= attachmentCount) {
+      event.preventDefault()
+      alert(`最多可以上传 ${attachmentCount} 张图片！`)
+      return false
+    }
+    return null
+  }
+
+  //上传文件时，触发事件  
+  uploadAttachment(event) {
+    const html = $(this.element).data(&#39;template&#39;)
+    const item = $(html)
+    const $preview = $(this.element).find(&#39;.preview&#39;) // 存放预览图片的container
+    const $imageItem = $($(this.element).data(&#39;imageItem&#39;))
+    const $imgTag = $imageItem.find(&#39;img&#39;)
+    const file = $(event.currentTarget).get(0) // 获取到input
+
+    // 检查上传文件是否是图片，如果是，则添加图片的预览，不是则弹出警告
+    if (file.files[0] !== undefined) {
+      const dataURL = this.createObjectURL(file.files[0]) //调用createObjectURL生成图片的URL
+      const fileName = file.files[0].name
+      const extension = fileName.split(&#39;.&#39;).pop().trim().toUpperCase()
+      if ([&#39;JPG&#39;, &#39;JPEG&#39;, &#39;PNG&#39;].includes(extension)) {
+        $imgTag.attr(&#39;src&#39;, dataURL)
+      } else {
+        alert(&#39;请上传图片(格式为JPG、JPEG、PNG)&#39;)
+        return false
+      }
+
+      $imageItem.appendTo($preview) // 将图片预览部分，追加到preview中
+      $(event.currentTarget).parent().addClass(&#39;hidden&#39;) //已经上传过文件的input，对应的label隐藏
+      item.appendTo($(this.element)) // 显示空白的文件上传按钮
+    }
+    return null
+  }
+
+  // 移除attachment  
+  removeAttachment(event) {
+    event.preventDefault()
+    const index =  $(event.currentTarget).parent().index()
+    $(event.currentTarget).parent().remove()
+    $(`label:eq(${index})`).remove()
+  }
+
+  // 获取图片的URL  
+  createObjectURL(blob) {
+    if (window.URL) {
+      return window.URL.createObjectURL(blob)
+    } else if (window.webkitURL) {
+      return window.webkitURL.createObjectURL(blob)
+    }
+    return null
+  }
+}
+
+</code></pre>
 <h4 id="CSS部分"><a href="#CSS部分" class="headerlink" title="CSS部分"></a>CSS部分</h4><p>CSS部分，踩的坑主要是不知道如何裁剪图片，最终使用了CSS的clip: rect， 看了下W3school，里面对clip: rect 的描述感觉不够清晰，参考阅读<a href="https://www.zhangxinxu.com/wordpress/2011/04/css-clip-rect/" target="_blank" rel="noopener">CSS clip:rect矩形剪裁功能及一些应用介绍</a>。此外，对于关闭按钮那块，用一个圆圈，内含一个X，但是一直无法让X对齐，后面微调对齐了，但是CSS部分的代码有些奇怪，height与inline-height并不相同，故closebtn部分请小心参考。</p>
 <p>附上CSS部分的代码：【attachment.scss】</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.upload-area</span> &#123;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100px</span>;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">100px</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.preview</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>:block;</span><br><span class="line">  <span class="attribute">float</span>:left;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.prev-item</span> &#123;</span><br><span class="line">  <span class="attribute">position</span>:relative;</span><br><span class="line">  <span class="attribute">display</span>: inline-block;</span><br><span class="line">  <span class="attribute">vertical-align</span>: bottom;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.cover</span> &#123;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">100px</span>;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">100px</span>;</span><br><span class="line">  <span class="attribute">overflow</span>: hidden;</span><br><span class="line"></span><br><span class="line">  <span class="selector-tag">img</span> &#123;</span><br><span class="line">    <span class="attribute">max-height</span>:<span class="number">100px</span>;</span><br><span class="line">    <span class="attribute">width</span>: auto;</span><br><span class="line">    <span class="attribute">clip</span>:rect(<span class="number">200px</span> <span class="number">300px</span> <span class="number">300px</span> <span class="number">200px</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.closebtn</span> &#123;</span><br><span class="line">  <span class="attribute">position</span>: absolute;</span><br><span class="line">  <span class="attribute">right</span>: -<span class="number">1px</span>;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">15px</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">15px</span>;</span><br><span class="line">  <span class="attribute">margin-right</span>: -<span class="number">5px</span>;</span><br><span class="line">  <span class="attribute">margin-top</span>: -<span class="number">5px</span>;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">11px</span>;</span><br><span class="line">  <span class="attribute">font-size</span>: <span class="number">9px</span>;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">2px</span>;</span><br><span class="line"></span><br><span class="line">  &amp;::before &#123;</span><br><span class="line">    <span class="attribute">content</span>: <span class="string">"\2716"</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.upload-area {
+  width: 100px;
+  height: 100px;
+}
+
+.preview {
+  display:block;
+  float:left;
+}
+
+.prev-item {
+  position:relative;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.cover {
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+
+  img {
+    max-height:100px;
+    width: auto;
+    clip:rect(200px 300px 300px 200px);
+  }
+}
+
+.closebtn {
+  position: absolute;
+  right: -1px;
+  height: 15px;
+  width: 15px;
+  margin-right: -5px;
+  margin-top: -5px;
+  line-height: 11px;
+  font-size: 9px;
+  padding: 2px;
+
+  &amp;::before {
+    content: &quot;\2716&quot;;
+  }
+}
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://blog.csdn.net/CodingNoob/article/details/76549231" target="_blank" rel="noopener">H5移动端实现仿QQ空间照片上传效果代码</a></p>
 <p><a href="https://www.zhangxinxu.com/wordpress/2011/04/css-clip-rect/" target="_blank" rel="noopener">CSS clip:rect矩形剪裁功能及一些应用介绍</a></p>
 <p><a href="https://www.cnblogs.com/stephenykk/p/3558887.html" target="_blank" rel="noopener">CreateObjectURL方法实现本地图片预览</a></p>
@@ -1620,7 +2038,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>300 words</span>
+              <span>282 words</span>
             </span>
           
 
@@ -1640,28 +2058,37 @@
         
           
             <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>执行<code>rake db: migrate</code>时，中断，再次执行<code>rake db: migrate</code>时，报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">psql: could not connect to server: Connection refused</span><br><span class="line">	Is the server running on host &quot;localhost&quot; (::1) and accepting</span><br><span class="line">	TCP/IP connections on port 5432?</span><br></pre></td></tr></table></figure>
-<h4 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h4><p>重启posgresql：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew services restart postgresql</span><br></pre></td></tr></table></figure>
-<p>显示：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Stopping `postgresql`... (might take a while)</span><br><span class="line">==&gt; Successfully stopped `postgresql` (label: homebrew.mxcl.postgresql)</span><br><span class="line">==&gt; Successfully started `postgresql` (label: homebrew.mxcl.postgresql)</span><br></pre></td></tr></table></figure>
-<p>再次运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">psql: could not connect to server: Connection refused</span><br><span class="line">	Is the server running on host &quot;localhost&quot; (::1) and accepting</span><br><span class="line">	TCP/IP connections on port 5432?</span><br></pre></td></tr></table></figure>
-<p>改成手动启动：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">postges -D /usr/local/var/postgres/</span><br></pre></td></tr></table></figure>
-<p>报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">FATAL:  pre-existing shared memory block (key 5432001, ID 65536) is still in use</span><br><span class="line">HINT:  If you&apos;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.</span><br></pre></td></tr></table></figure>
-<p>切换到/usr/local/var/postgres 下，删除postmaster.pid 文件，然后重启：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">postgres -D /usr/local/var/postgres/</span><br></pre></td></tr></table></figure>
+<pre><code>psql: could not connect to server: Connection refused
+    Is the server running on host &quot;localhost&quot; (::1) and accepting
+    TCP/IP connections on port 5432?
+</code></pre><h4 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h4><p>重启posgresql：</p>
+<pre><code>brew services restart postgresql
+</code></pre><p>显示：</p>
+<pre><code>Stopping `postgresql`... (might take a while)
+==&gt; Successfully stopped `postgresql` (label: homebrew.mxcl.postgresql)
+==&gt; Successfully started `postgresql` (label: homebrew.mxcl.postgresql)
+</code></pre><p>再次运行：</p>
+<pre><code>rake db:migrate
+</code></pre><p>报错：</p>
+<pre><code>psql: could not connect to server: Connection refused
+    Is the server running on host &quot;localhost&quot; (::1) and accepting
+    TCP/IP connections on port 5432?
+</code></pre><p>改成手动启动：</p>
+<pre><code>postges -D /usr/local/var/postgres/
+</code></pre><p>报错：</p>
+<pre><code>FATAL:  pre-existing shared memory block (key 5432001, ID 65536) is still in use
+HINT:  If you&#39;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.
+</code></pre><p>切换到/usr/local/var/postgres 下，删除postmaster.pid 文件，然后重启：</p>
+<pre><code class="postgresql">postgres -D /usr/local/var/postgres/
+</code></pre>
 <p>重启后，再次运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
+<pre><code class="rail">rake db:migrate
+</code></pre>
 <p>报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the database system is starting up</span><br></pre></td></tr></table></figure>
-<p>Google后，尝试修改了postgresql.conf文件，将hot_standby 设置为on，重启Postgresql，继续执行<code>rake db:migrate</code>, 依然报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the database system is starting up</span><br></pre></td></tr></table></figure>
-<p><strong>最后的解决方法：</strong></p>
+<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
+</code></pre><p>Google后，尝试修改了postgresql.conf文件，将hot_standby 设置为on，重启Postgresql，继续执行<code>rake db:migrate</code>, 依然报错：</p>
+<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
+</code></pre><p><strong>最后的解决方法：</strong></p>
 <p>简单粗暴：删除文件夹 /usr/local/var/postgres，卸载并重装PostgreSQL，重新导入数据。</p>
 
           
@@ -1803,7 +2230,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,938 words</span>
+              <span>1,812 words</span>
             </span>
           
 
@@ -1824,59 +2251,132 @@
           
             <p>写一写Rails中一些常用的查询。</p>
 <h4 id="group"><a href="#group" class="headerlink" title="group"></a>group</h4><p>等同与SQL中的group_by，使用：</p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Student.group(<span class="symbol">:gender</span>).count</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Student.group(:gender).count
+</code></pre>
 <p>即：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span> (*) <span class="keyword">AS</span> count_all, gender</span><br><span class="line"><span class="keyword">FROM</span> <span class="string">"students"</span> <span class="keyword">GROUP</span> <span class="keyword">BY</span> gender</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT COUNT (*) AS count_all, gender
+FROM &quot;students&quot; GROUP BY gender
+</code></pre>
 <h4 id="join"><a href="#join" class="headerlink" title="join"></a>join</h4><p>School 与Clazz是一对多的关系。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:school</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.joins(:school)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.*  <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span>  <span class="keyword">ON</span> <span class="string">"schools"</span>.<span class="string">"id"</span>=<span class="string">"clazzes"</span>.<span class="string">"school_id"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.*  FROM &quot;clazzes&quot; INNER JOIN &quot;schools&quot;  ON &quot;schools&quot;.&quot;id&quot;=&quot;clazzes&quot;.&quot;school_id&quot;
+</code></pre>
 <p>同样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">School.joins(<span class="symbol">:clazzes</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">School.joins(:clazzes)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.*  <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span>  <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"school_id"</span>=<span class="string">"schools"</span>.<span class="string">"id"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;schools&quot;.*  FROM &quot;schools&quot; INNER JOIN &quot;clazzes&quot;  ON &quot;clazzes&quot;.&quot;school_id&quot;=&quot;schools&quot;.&quot;id&quot;
+</code></pre>
 <p>这里joins的参数的单复数很重要，School 与Clazz是一对多的关系，Clazz.joins(:school)，school必须是单数，School.joins(:clazzes)时，clazzes则是复数，即<strong>参数对应的不是表名，而是association names</strong>。</p>
 <p>多对多的joins, 比如找出hello老师所在的所有班级：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:teachers</span>).where(<span class="symbol">teachers:</span> &#123; <span class="symbol">name:</span> <span class="string">"hello"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.joins(:teachers).where(teachers: { name: &quot;hello&quot; })
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> = <span class="string">"clazzes"</span>.<span class="string">"id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teachers"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> <span class="keyword">WHERE</span> <span class="string">"teachers"</span>.<span class="string">"name"</span>=<span class="string">"hello"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql"> SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot;
+
+ SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;teacher_id&quot; WHERE &quot;teachers&quot;.&quot;name&quot;=&quot;hello&quot;
+</code></pre>
 <p>多表连接查询，比如查找 1班 A组的老师：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).where(clazzes: { name: &quot;1班&quot; }, groups: { name: &quot;A组&quot; })
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot;
+INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot;
+</code></pre>
 <p>嵌套连接nested joins， 比如找出第一中学1班 A组的老师：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins( <span class="symbol">:groups</span>, <span class="symbol">clazzes:</span> [<span class="symbol">:school</span>]).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">"1班"</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">"A组"</span> &#125;,<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一中学"</span> &#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Teacher.joins( :groups, clazzes: [:school]).where(clazzes: { name: &quot;1班&quot; }, groups: { name: &quot;A组&quot; },schools: { name: &quot;第一中学&quot; })
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"teachers"</span>.* <span class="keyword">FROM</span> <span class="string">"teachers"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"groups"</span> <span class="keyword">ON</span> <span class="string">"teachers"</span>.id = <span class="string">"groups"</span>.<span class="string">"teacher_id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"teacherships"</span> <span class="keyword">ON</span> <span class="string">"teacherships"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"clazzes"</span> <span class="keyword">ON</span> <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teacherships"</span>.<span class="string">"clazz_id"</span> <span class="keyword">INNER</span> <span class="keyword">JOIN</span> <span class="string">"schools"</span> <span class="keyword">ON</span> <span class="string">"schools"</span>.<span class="string">"id"</span> = <span class="string">"clazzes"</span>.<span class="string">"school_id"</span> <span class="keyword">WHERE</span> <span class="string">"clazzes"</span>.<span class="string">"name"</span> = <span class="string">"1班"</span> <span class="keyword">AND</span> <span class="string">"groups"</span>.<span class="string">"name"</span> = <span class="string">"A组"</span> <span class="keyword">AND</span> <span class="string">"schools"</span>.<span class="string">"name"</span> = <span class="string">"第一中学"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;groups&quot; ON &quot;teachers&quot;.id = &quot;groups&quot;.&quot;teacher_id&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot; INNER JOIN &quot;schools&quot; ON &quot;schools&quot;.&quot;id&quot; = &quot;clazzes&quot;.&quot;school_id&quot; WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot; AND &quot;schools&quot;.&quot;name&quot; = &quot;第一中学&quot;
+</code></pre>
 <p>附上一份各种JOIN的差异对比，帮助我自己记忆：P</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg" alt=""></p>
 <p>图片来源: <a href="https://blog.jooq.org/2016/07/05/say-no-to-venn-diagrams-when-explaining-joins/" target="_blank" rel="noopener">say no to venn digrams when explaining joins</a></p>
 <h4 id="includes"><a href="#includes" class="headerlink" title="includes"></a>includes</h4><p>N+1效能查询的解决方法。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">clazzes = Clazz.includes(<span class="symbol">:school</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">clazzes = Clazz.includes(:school).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span></span><br><span class="line">  <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot;
+  WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+</code></pre>
 <p>这里先找到10个clazz，然后根据这10个clazz查找对应的school， 有重复的school_id则去重复查询。</p>
 <p>类似joins，includes也可以关联多表：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:orders</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.includes(:school, :orders).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+</code></pre>
 <p>嵌套includes：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">orders:</span> [<span class="symbol">:product</span>]).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.includes(:school, orders: [:product]).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="string">"clazzes"</span>.* <span class="keyword">FROM</span> <span class="string">"clazzes"</span> <span class="keyword">LIMIT</span> <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">2741</span>,<span class="number">2742</span>，<span class="number">2743</span>，<span class="number">2744</span>)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>)</span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"products"</span>.* <span class="keyword">FROM</span> <span class="string">"products"</span> <span class="keyword">WHERE</span> <span class="string">"products"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> (<span class="number">7</span>,<span class="number">4</span>,<span class="number">16</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (2741,2742，2743，2744)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN (7,4,16)
+</code></pre>
 <p>nested部分，根据clazz的ID，找到对应的order，然后根据order的ID，再找到product，这里可以看成有一层Order.includes(:product)。</p>
 <p>通过explain方法可以很清楚看到SQL的查询步骤【后面会提到】</p>
 <p>上述nested includes，对应的SQL查询步骤：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN for: SELECT  "clazzes".* FROM "clazzes" LIMIT $1 [["LIMIT", 10]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost=0.00..0.42 rows=10 width=99)</span><br><span class="line">   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"id"</span>, <span class="number">617</span>], [<span class="string">"id"</span>, <span class="number">1604</span>], [<span class="string">"id"</span>, <span class="number">783</span>], [<span class="string">"id"</span>, <span class="number">2554</span>], [<span class="string">"id"</span>, <span class="number">1841</span>], [<span class="string">"id"</span>, <span class="number">1469</span>], [<span class="string">"id"</span>, <span class="number">446</span>], [<span class="string">"id"</span>, <span class="number">2820</span>], [<span class="string">"id"</span>, <span class="number">1566</span>], [<span class="string">"id"</span>, <span class="number">2741</span>]]</span><br><span class="line">                                      <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> schools  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span>=<span class="number">10</span> width=<span class="number">141</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"orders"</span>.* <span class="keyword">FROM</span> <span class="string">"orders"</span> <span class="keyword">WHERE</span> <span class="string">"orders"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"clazz_id"</span>, <span class="number">4732</span>], [<span class="string">"clazz_id"</span>, <span class="number">1648</span>], [<span class="string">"clazz_id"</span>, <span class="number">3715</span>], [<span class="string">"clazz_id"</span>, <span class="number">963</span>], [<span class="string">"clazz_id"</span>, <span class="number">278</span>], [<span class="string">"clazz_id"</span>, <span class="number">4525</span>], [<span class="string">"clazz_id"</span>, <span class="number">7096</span>], [<span class="string">"clazz_id"</span>, <span class="number">9064</span>], [<span class="string">"clazz_id"</span>, <span class="number">10299</span>], [<span class="string">"clazz_id"</span>, <span class="number">7980</span>]]</span><br><span class="line">                                               <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------------------------</span></span><br><span class="line"> <span class="keyword">Bitmap</span> <span class="keyword">Heap</span> <span class="keyword">Scan</span> <span class="keyword">on</span> orders  (<span class="keyword">cost</span>=<span class="number">47.22</span>.<span class="number">.1262</span><span class="number">.09</span> <span class="keyword">rows</span>=<span class="number">392</span> width=<span class="number">194</span>)</span><br><span class="line">   Recheck Cond: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">   -&gt;  <span class="keyword">Bitmap</span> <span class="keyword">Index</span> <span class="keyword">Scan</span> <span class="keyword">on</span> index_orders_on_clazz_id  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.47</span><span class="number">.12</span> <span class="keyword">rows</span>=<span class="number">392</span> width=<span class="number">0</span>)</span><br><span class="line">         <span class="keyword">Index</span> Cond: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">4</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"products"</span>.* <span class="keyword">FROM</span> <span class="string">"products"</span> <span class="keyword">WHERE</span> <span class="string">"products"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>) [[<span class="string">"id"</span>, <span class="number">7</span>], [<span class="string">"id"</span>, <span class="number">4</span>], [<span class="string">"id"</span>, <span class="number">16</span>]]</span><br><span class="line">                        <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> products  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.1</span><span class="number">.62</span> <span class="keyword">rows</span>=<span class="number">3</span> width=<span class="number">391</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;7,4,16&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
+
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;{617,1604,783,2554,1841,1469,446,2820,1566,2741}&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                               QUERY PLAN
+--------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on orders  (cost=47.22..1262.09 rows=392 width=194)
+   Recheck Cond: (clazz_id = ANY (&#39;{4732,1648,3715,963,278,4525,7096,9064,10299,7980}&#39;::integer[]))
+   -&gt;  Bitmap Index Scan on index_orders_on_clazz_id  (cost=0.00..47.12 rows=392 width=0)
+         Index Cond: (clazz_id = ANY (&#39;{4732,1648,3715,963,278,4525,7096,9064,10299,7980}&#39;::integer[]))
+(4 rows)
+
+EXPLAIN for: SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN ($1, $2, $3) [[&quot;id&quot;, 7], [&quot;id&quot;, 4], [&quot;id&quot;, 16]]
+                        QUERY PLAN
+----------------------------------------------------------
+ Seq Scan on products  (cost=0.00..1.62 rows=3 width=391)
+   Filter: (id = ANY (&#39;{7,4,16}&#39;::integer[]))
+(2 rows)
+</code></pre>
 <p>includes后，如果添加where条件，则需要传递一个hash给到where，如果不是hash，则需要使用references强制连接table。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="string">"schools.name ='第一小学'"</span>).references(<span class="symbol">:schools</span>)</span><br><span class="line"><span class="comment">## 等同于</span></span><br><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">"第一小学"</span>&#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.includes(:school).where(&quot;schools.name =&#39;第一小学&#39;&quot;).references(:schools)
+## 等同于
+Clazz.includes(:school).where(schools: { name: &quot;第一小学&quot;})
+</code></pre>
 <p>注意到includes接受的参数同joins，是association names，而references则是表名。</p>
 <h4 id="counter-cache"><a href="#counter-cache" class="headerlink" title="counter_cache"></a>counter_cache</h4><p>用来快速获取关联计数，假设school model中有teachers_count这个字段，那么：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Teacher</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:school</span>, <span class="symbol">:counter_cache</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Teacher &lt; ApplicationRecord
+  belongs_to :school, :counter_cache =&gt; true
+end
+</code></pre>
 <p>这样<em>ActiveRecord</em>就会自动更新schools中的teachers_count的值。</p>
 <p>这里counter_cache对应的列名可以自定义，比如说老师和学生之间是一对多的关系，给老师这张表添加一个字段total_students_count ,则可以在student的model中这么设置：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:teacher</span>, <span class="symbol">counter_cache:</span> <span class="string">"total_students_count"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Student &lt; ApplicationRecord
+  belongs_to :teacher, counter_cache: &quot;total_students_count&quot;
+end
+</code></pre>
 <h4 id="find-each"><a href="#find-each" class="headerlink" title="find_each"></a>find_each</h4><p>find_each 分批查询， 默认每次捞出1000条记录。</p>
 <p>有三个参数可以设置：</p>
 <ul>
@@ -1886,37 +2386,89 @@
 </ul>
 <p><strong>batch_size</strong></p>
 <p>指定每次捞出的数据量。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(batch_size: 200) do</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-<p>那么每次则捞出200条记录，对应到SQL中，则是limit的值变成了200。</p>
+<pre><code>School.find_each(batch_size: 200) do
+end
+</code></pre><p>那么每次则捞出200条记录，对应到SQL中，则是limit的值变成了200。</p>
 <p>默认是按照primary key(id) 升序排序查询结果：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">200</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt; <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">200</span></span><br><span class="line">……</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt; 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+……
+</code></pre>
 <p><strong>start</strong></p>
 <p>从哪条记录开始查询， 默认参数是ID。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">School.find_each(start: 200) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt;= <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <p><strong>finish</strong></p>
 <p>指定到哪条记录截止， 默认参数是ID。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">School.find_each(finish: 2000) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &lt;= <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <p>start搭配finish：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>, <span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">School.find_each(start: 200, finish: 2000) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &gt;= <span class="number">200</span> <span class="keyword">AND</span> <span class="string">"schools"</span>.<span class="string">"id"</span> &lt;= <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">ASC</span> <span class="keyword">LIMIT</span> <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 AND &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <h4 id="explain方法"><a href="#explain方法" class="headerlink" title="explain方法"></a>explain方法</h4><p>可以用来查看SQL的执行步骤。<br><code>rails c</code>进入console，执行：<code>User.where(id: 1).explain</code>， 会得到如下结果：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">"users"</span>.* FROM <span class="string">"users"</span> WHERE <span class="string">"users"</span>.<span class="string">"id"</span> = $1 [[<span class="string">"id"</span>, <span class="number">1</span>]]</span><br><span class="line">                                QUERY PLAN</span><br><span class="line">--------------------------------------------------------------------------</span><br><span class="line"> Index Scan using users_pkey on users  (cost=<span class="number">0</span>.<span class="number">42</span>..<span class="number">8.44</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   Index <span class="symbol">Cond:</span> (id = <span class="number">1</span>)</span><br><span class="line">(<span class="number">2</span> rows)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;users&quot;.* FROM &quot;users&quot; WHERE &quot;users&quot;.&quot;id&quot; = $1 [[&quot;id&quot;, 1]]
+                                QUERY PLAN
+--------------------------------------------------------------------------
+ Index Scan using users_pkey on users  (cost=0.42..8.44 rows=1 width=387)
+   Index Cond: (id = 1)
+(2 rows)
+</code></pre>
 <p>显示了数据查询的过程，扫描users的index，最后找到id为1的user。</p>
 <p>看一个joins的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).explain</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).explain
+</code></pre>
 <p>对应的输出：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">"teachers"</span>.* FROM <span class="string">"teachers"</span> INNER JOIN <span class="string">"clazzes"</span> ON <span class="string">"clazzes"</span>.<span class="string">"id"</span> = <span class="string">"teachers"</span>.<span class="string">"clazz_id"</span> INNER JOIN <span class="string">"groups"</span> ON <span class="string">"groups"</span>.<span class="string">"teacher_id"</span> = <span class="string">"teachers"</span>.<span class="string">"id"</span></span><br><span class="line">                                                   QUERY PLAN</span><br><span class="line">------------------------------------------------------------------------------------------</span><br><span class="line"> Nested Loop  (cost=<span class="number">0</span>.<span class="number">99</span>..<span class="number">2382.37</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   -&gt;  Nested Loop  (cost=<span class="number">0</span>.<span class="number">71</span>..<span class="number">2382.05</span> rows=<span class="number">1</span> width=<span class="number">391</span>)</span><br><span class="line">         -&gt;  Seq Scan on groups  (cost=<span class="number">0</span>.<span class="number">00</span>..<span class="number">6.02</span> rows=<span class="number">302</span> width=<span class="number">4</span>)</span><br><span class="line">         -&gt;  Index Scan using teachers_pkey on teachers  (cost=<span class="number">0</span>.<span class="number">42</span>..<span class="number">7.86</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">               Index <span class="symbol">Cond:</span> (id = groups.teacher_id)</span><br><span class="line">   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=<span class="number">0</span>.<span class="number">29</span>..<span class="number">0</span>.<span class="number">33</span> rows=<span class="number">1</span> width=<span class="number">4</span>)</span><br><span class="line">         Index <span class="symbol">Cond:</span> (id = teacherships.clazz_id)</span><br><span class="line">(<span class="number">7</span> rows)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot; INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teachers&quot;.&quot;clazz_id&quot; INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+                                                   QUERY PLAN
+------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.99..2382.37 rows=1 width=387)
+   -&gt;  Nested Loop  (cost=0.71..2382.05 rows=1 width=391)
+         -&gt;  Seq Scan on groups  (cost=0.00..6.02 rows=302 width=4)
+         -&gt;  Index Scan using teachers_pkey on teachers  (cost=0.42..7.86 rows=1 width=387)
+               Index Cond: (id = groups.teacher_id)
+   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=0.29..0.33 rows=1 width=4)
+         Index Cond: (id = teacherships.clazz_id)
+(7 rows)
+</code></pre>
 <p> 看一个includes的例子，多表includes:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:groups</span>).limit(<span class="number">10</span>).explain</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Clazz.includes(:school, :groups).limit(10).explain
+</code></pre>
 <p>对应的输出：</p>
-<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">=&gt; EXPLAIN for: SELECT  "clazzes".* FROM "clazzes" LIMIT $1 [["LIMIT", 10]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost=0.00..0.42 rows=10 width=99)</span><br><span class="line">   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)</span><br><span class="line">(2 rows)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"schools"</span>.* <span class="keyword">FROM</span> <span class="string">"schools"</span> <span class="keyword">WHERE</span> <span class="string">"schools"</span>.<span class="string">"id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"id"</span>, <span class="number">617</span>], [<span class="string">"id"</span>, <span class="number">1604</span>], [<span class="string">"id"</span>, <span class="number">783</span>], [<span class="string">"id"</span>, <span class="number">2554</span>], [<span class="string">"id"</span>, <span class="number">1841</span>], [<span class="string">"id"</span>, <span class="number">1469</span>], [<span class="string">"id"</span>, <span class="number">446</span>], [<span class="string">"id"</span>, <span class="number">2820</span>], [<span class="string">"id"</span>, <span class="number">1566</span>], [<span class="string">"id"</span>, <span class="number">2741</span>]]</span><br><span class="line">                                      <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> schools  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span>=<span class="number">10</span> width=<span class="number">141</span>)</span><br><span class="line">   Filter: (<span class="keyword">id</span> = <span class="keyword">ANY</span> (<span class="string">'&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">EXPLAIN</span> <span class="keyword">for</span>: <span class="keyword">SELECT</span> <span class="string">"groups"</span>.* <span class="keyword">FROM</span> <span class="string">"groups"</span> <span class="keyword">WHERE</span> <span class="string">"groups"</span>.<span class="string">"clazz_id"</span> <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[<span class="string">"clazz_id"</span>, <span class="number">4732</span>], [<span class="string">"clazz_id"</span>, <span class="number">1648</span>], [<span class="string">"clazz_id"</span>, <span class="number">3715</span>], [<span class="string">"clazz_id"</span>, <span class="number">963</span>], [<span class="string">"clazz_id"</span>, <span class="number">278</span>], [<span class="string">"clazz_id"</span>, <span class="number">4525</span>], [<span class="string">"clazz_id"</span>, <span class="number">7096</span>], [<span class="string">"clazz_id"</span>, <span class="number">9064</span>], [<span class="string">"clazz_id"</span>, <span class="number">10299</span>], [<span class="string">"clazz_id"</span>, <span class="number">7980</span>]]</span><br><span class="line">                                          <span class="keyword">QUERY</span> PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq <span class="keyword">Scan</span> <span class="keyword">on</span> <span class="keyword">groups</span>  (<span class="keyword">cost</span>=<span class="number">0.00</span>.<span class="number">.9</span><span class="number">.79</span> <span class="keyword">rows</span>=<span class="number">14</span> width=<span class="number">36</span>)</span><br><span class="line">   Filter: (clazz_id = <span class="keyword">ANY</span> (<span class="string">'&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;'</span>::<span class="built_in">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
+
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;{617,1604,783,2554,1841,1469,446,2820,1566,2741}&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;groups&quot;.* FROM &quot;groups&quot; WHERE &quot;groups&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                          QUERY PLAN
+----------------------------------------------------------------------------------------------
+ Seq Scan on groups  (cost=0.00..9.79 rows=14 width=36)
+   Filter: (clazz_id = ANY (&#39;{4732,1648,3715,963,278,4525,7096,9064,10299,7980}&#39;::integer[]))
+(2 rows)
+</code></pre>
 <p>可以很清楚地看到分开两步，查询到clazz对应的ID后，分别查询了schools和groups，呃，不多说了，太明显了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://dev.to/eviedently/a-rubyists-guide-to-postgresqls-explain" target="_blank" rel="noopener">A Rubyist’s Guide to Postgresql’s Explain</a></p>
 <p><a href="https://guides.rubyonrails.org/active_record_querying.html" target="_blank" rel="noopener">Active Record Query Interface</a></p>
@@ -2061,7 +2613,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>621 words</span>
+              <span>581 words</span>
             </span>
           
 
@@ -2087,20 +2639,60 @@
 <p>这里直接用最简单的例子来说明下它们三个的基本使用。</p>
 <h4 id="使用："><a href="#使用：" class="headerlink" title="使用："></a>使用：</h4><p>[以下代码基于Ruby 2.4]</p>
 <p>例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">demo = [<span class="number">1</span>, <span class="string">'a'</span>, <span class="number">2</span>, <span class="string">'b'</span>, <span class="string">'c'</span>, <span class="number">3</span>, <span class="string">'d'</span>, <span class="string">'e'</span>, <span class="string">'f'</span>]</span><br><span class="line"></span><br><span class="line">demo.slice_before &#123; <span class="params">|e|</span> e.is_a?(Integer)&#125;.to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1, "a"], [2, "b", "c"], [3, "d", "e", "f"]]</span></span><br><span class="line"></span><br><span class="line">demo.slice_before(Integer).to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1, "a"], [2, "b", "c"], [3, "d", "e", "f"]]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">## after 基本类似,只是从匹配元素后开始拆分</span></span><br><span class="line">demo.slice_after &#123; <span class="params">|e|</span> e.is_a?(Integer)&#125;.to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1], ["a", 2], ["b", "c", 3], ["d", "e", "f"]]</span></span><br><span class="line"></span><br><span class="line">demo.slice_after(Integer).to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1], ["a", 2], ["b", "c", 3], ["d", "e", "f"]]</span></span><br><span class="line"></span><br><span class="line">demo.slice_when &#123;<span class="params">|x, y|</span> x.is_a?(Integer)&#125;.to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1], ["a", 2], ["b", "c", 3], ["d", "e", "f"]]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">demo = [1, &#39;a&#39;, 2, &#39;b&#39;, &#39;c&#39;, 3, &#39;d&#39;, &#39;e&#39;, &#39;f&#39;]
+
+demo.slice_before { |e| e.is_a?(Integer)}.to_a
+
+# =&gt; [[1, &quot;a&quot;], [2, &quot;b&quot;, &quot;c&quot;], [3, &quot;d&quot;, &quot;e&quot;, &quot;f&quot;]]
+
+demo.slice_before(Integer).to_a
+
+# =&gt; [[1, &quot;a&quot;], [2, &quot;b&quot;, &quot;c&quot;], [3, &quot;d&quot;, &quot;e&quot;, &quot;f&quot;]]
+
+
+## after 基本类似,只是从匹配元素后开始拆分
+demo.slice_after { |e| e.is_a?(Integer)}.to_a
+
+# =&gt; [[1], [&quot;a&quot;, 2], [&quot;b&quot;, &quot;c&quot;, 3], [&quot;d&quot;, &quot;e&quot;, &quot;f&quot;]]
+
+demo.slice_after(Integer).to_a
+
+# =&gt; [[1], [&quot;a&quot;, 2], [&quot;b&quot;, &quot;c&quot;, 3], [&quot;d&quot;, &quot;e&quot;, &quot;f&quot;]]
+
+demo.slice_when {|x, y| x.is_a?(Integer)}.to_a
+
+# =&gt; [[1], [&quot;a&quot;, 2], [&quot;b&quot;, &quot;c&quot;, 3], [&quot;d&quot;, &quot;e&quot;, &quot;f&quot;]]
+</code></pre>
 <p>这里的Pattern是Integer，有必要提一下Pattern === elt。</p>
 <p>slice_before, slice_after可以 使用Pattern === elt， 不过<code>===</code> 这个method在ruby的不同Object中，有着不一样的定义。<a href="https://ruby-doc.org/docs/ruby-doc-bundle/Manual/man-1.4/syntax.html" target="_blank" rel="noopener">ruby doc</a>中的解释是：</p>
 <p><strong>Behavior of the <code>===</code> method varies for each Object.</strong></p>
 <p>在Object这个类中，===类似于#==，我的理解是, Object中的===，类似于elt.is_a?(Pattern)</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Integer === <span class="number">1</span></span><br><span class="line"><span class="comment"># =&gt; true</span></span><br><span class="line"></span><br><span class="line">Integer === <span class="symbol">:hello</span>  <span class="comment">## :hello 是一个symbol</span></span><br><span class="line"><span class="comment"># =&gt; false</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Integer === 1
+# =&gt; true
+
+Integer === :hello  ## :hello 是一个symbol
+# =&gt; false
+</code></pre>
 <p>在Regexp正则中，如果elt匹配pattern，则返回true，而在ruby2.5的文档中，对于Set类，===则是includes？的别名方法。如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Set[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>] === <span class="number">2</span> <span class="comment">## true</span></span><br><span class="line">Set[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>] === <span class="number">4</span> <span class="comment">## false</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Set[1,2,3] === 2 ## true
+Set[1,2,3] === 4 ## false
+</code></pre>
 <p>此外，上面的例子中，slice_when的执行结果与slice_after一样，呃，举的例子不好。</p>
 <p>slice_when的block中，接受的两个参数，一个是current element，一个是previous element。 它在拆分出连续型数组部分很有用，看例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">demo = [<span class="number">1</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>, <span class="number">10</span>, <span class="number">12</span>]</span><br><span class="line"></span><br><span class="line">demo.sort.slice_when &#123; <span class="params">|a, b|</span> a + <span class="number">1</span> != b &#125;.to_a</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [[1], [3, 4, 5], [7, 8, 9, 10], [12]]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">demo = [1, 3, 4, 5, 7, 8, 9, 10, 12]
+
+demo.sort.slice_when { |a, b| a + 1 != b }.to_a
+
+# =&gt; [[1], [3, 4, 5], [7, 8, 9, 10], [12]]
+</code></pre>
 <p>也可以用来找出数组中重复数据及其对应的重复个数:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">demo = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>]</span><br><span class="line"></span><br><span class="line">demo.sort.slice_when(&amp;<span class="symbol">:</span>!=).map &#123; <span class="params">|x|</span> &#123; x.first =&gt; x.count&#125; &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; [&#123;1=&gt;4&#125;, &#123;2=&gt;5&#125;, &#123;3=&gt;3&#125;]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">demo = [1, 2, 3, 1, 1, 2, 3, 2, 2, 2, 3, 1]
+
+demo.sort.slice_when(&amp;:!=).map { |x| { x.first =&gt; x.count} }
+
+# =&gt; [{1=&gt;4}, {2=&gt;5}, {3=&gt;3}]
+</code></pre>
 <p>OK。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://blog.honeybadger.io/ruby-enumerable-slicing-before-when-and-after" target="_blank" rel="noopener">Slicing and Dicing Ruby Enumerables</a></p>
 <p><a href="http://ruby-doc.org/core-2.2.3/Enumerable.html" target="_blank" rel="noopener">Enumberable</a></p>
@@ -2245,7 +2837,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>247 words</span>
+              <span>225 words</span>
             </span>
           
 
@@ -2267,11 +2859,33 @@
             <p>测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。</p>
 <p>出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a = [ <span class="string">"a"</span>, <span class="literal">nil</span>, <span class="string">"b"</span>, <span class="literal">nil</span>, <span class="string">"c"</span> ]</span><br><span class="line"></span><br><span class="line">a.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", nil, "b", nil, "c"]</span></span><br><span class="line"></span><br><span class="line">a.compact!</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">a = [ &quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot; ]
+
+a.compact
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+a
+#=&gt; [&quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot;]
+
+a.compact!
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+a
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+</code></pre>
 <p>But!!</p>
 <p>如果这个数组本身没有nil，两者的结果完全不同。调用compact或者compact！，数组都不变，但是compact！返回的却是nil。</p>
 <p>看例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">b = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]</span><br><span class="line"></span><br><span class="line">b.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line"></span><br><span class="line">b.compact!</span><br><span class="line"><span class="comment">#=&gt; nil</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">b = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+
+b.compact
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+b
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+
+b.compact!
+#=&gt; nil
+b
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+</code></pre>
 <p>也就是说<strong>在数组中没有nil的情况下，使用compact！返回的值是nil，同时数组本身不会改变</strong>。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.0/Array.html#method-i-compact-21" target="_blank" rel="noopener">compact!</a></p>
 
@@ -2491,7 +3105,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2628,5 +3242,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

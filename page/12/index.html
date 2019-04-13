@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>320 words</span>
+              <span>319 words</span>
             </span>
           
 
@@ -396,8 +396,8 @@
 <p>chrome悄无声息地升级到了65，这个坑真的是让人无言以对……</p>
 <p>解决方法也就是升级chrome driver ，那就开始吧。</p>
 <h4 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h4><p>Mac下，使用brew:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew upgrade chromedriver</span><br></pre></td></tr></table></figure>
-<p>OK, 搞定！一步更新到最新版2.36。</p>
+<pre><code>brew upgrade chromedriver
+</code></pre><p>OK, 搞定！一步更新到最新版2.36。</p>
 <p>再次运行测试，passed。</p>
 <p>后记下：</p>
 <p>现在看升级方法，很简单，但是最开始的时候，我用<code>brew upgrade chromedriver</code>出错了，以为不能这么升级【现在想想，当时应该是翻墙的原因】，然后我竟然脑抽地改用了<code>npm install chromedriver --chromedriver_version=LATEST</code>！！ 报错 http request error, Google后看<a href="https://github.com/vuejs/vue-cli/issues/562" target="_blank" rel="noopener">ChromeDriver installation failed Error with http request: Error</a>，是翻墙的原因，还一本正经地采用了cdn的迂回方法，结果各种惨不忍睹 ……</p>
@@ -706,7 +706,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>655 words</span>
+              <span>608 words</span>
             </span>
           
 
@@ -734,20 +734,66 @@
 <p>四步走。</p>
 <ul>
 <li><p>在gemfile中添加</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gemfile <span class="string">'log4r'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">gemfile &#39;log4r&#39;
+</code></pre>
 <p>终端bundle, 重启服务器。</p>
 </li>
 <li><p>修改<code>config/application.rb</code></p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rails/all'</span></span><br><span class="line"><span class="comment"># add these line for log4r</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r/yamlconfigurator'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'log4r/outputter/datefileoutputter'</span></span><br><span class="line"></span><br><span class="line">Bundler.<span class="keyword">require</span>(<span class="symbol">:default</span>, Rails.env) <span class="keyword">if</span> <span class="keyword">defined</span>?(Bundler)</span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">my_app</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Application</span> &lt; Rails::Application</span></span><br><span class="line">    <span class="comment">#...</span></span><br><span class="line">    <span class="comment"># assign log4r's logger as rails' logger.</span></span><br><span class="line">    <span class="keyword">include</span> Log4r</span><br><span class="line">    log4r_config= YAML.load_file(File.join(File.dirname(__FILE_<span class="number">_</span>),<span class="string">"log4r.yml"</span>))</span><br><span class="line">    YamlConfigurator.decode_yaml( log4r_config[<span class="string">'log4r_config'</span>] )</span><br><span class="line">    config.logger = Log4r::Logger[Rails.env]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rails/all&#39;
+# add these line for log4r
+require &#39;log4r&#39;
+require &#39;log4r/yamlconfigurator&#39;
+require &#39;log4r/outputter/datefileoutputter&#39;
+
+Bundler.require(:default, Rails.env) if defined?(Bundler)
+module my_app
+  class Application &lt; Rails::Application
+    #...
+    # assign log4r&#39;s logger as rails&#39; logger.
+    include Log4r
+    log4r_config= YAML.load_file(File.join(File.dirname(__FILE__),&quot;log4r.yml&quot;))
+    YamlConfigurator.decode_yaml( log4r_config[&#39;log4r_config&#39;] )
+    config.logger = Log4r::Logger[Rails.env]
+  end
+end
+</code></pre>
 </li>
 <li><p>新增配置文件<code>config/log4r.yml</code>：</p>
-<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">log4r_config:</span></span><br><span class="line">  <span class="comment"># define all loggers ...</span></span><br><span class="line"><span class="attr">  loggers:</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">name</span>      <span class="string">:</span> <span class="string">production</span></span><br><span class="line">      <span class="string">level</span>     <span class="string">:</span> <span class="string">WARN</span></span><br><span class="line">      <span class="string">trace</span>     <span class="string">:</span> <span class="string">'false'</span></span><br><span class="line">      <span class="string">outputters</span> <span class="string">:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">datefile</span></span><br><span class="line"><span class="bullet">    -</span> <span class="string">name</span>      <span class="string">:</span> <span class="string">development</span></span><br><span class="line">      <span class="string">level</span>     <span class="string">:</span> <span class="string">DEBUG</span></span><br><span class="line">      <span class="string">trace</span>     <span class="string">:</span> <span class="string">'true'</span></span><br><span class="line">      <span class="string">outputters</span> <span class="string">:</span></span><br><span class="line"><span class="bullet">      -</span> <span class="string">datefile</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># define all outputters (incl. formatters)</span></span><br><span class="line"><span class="attr">  outputters:</span></span><br><span class="line"><span class="attr">  - type:</span> <span class="string">DateFileOutputte</span></span><br><span class="line"><span class="attr">    name:</span> <span class="string">datefile</span></span><br><span class="line"><span class="attr">    dirname:</span> <span class="string">"log"</span></span><br><span class="line"><span class="attr">    filename:</span> <span class="string">"my_app.log"</span> <span class="comment"># notice the file extension is needed!</span></span><br><span class="line"><span class="attr">    formatter:</span></span><br><span class="line"><span class="attr">      date_pattern:</span> <span class="string">'%H:%M:%S'</span></span><br><span class="line">      <span class="string">pattern</span>     <span class="string">:</span> <span class="string">'%d %l: %m '</span></span><br><span class="line">      <span class="string">type</span>        <span class="string">:</span> <span class="string">PatternFormatter</span></span><br></pre></td></tr></table></figure>
+<pre><code class="YMl">log4r_config:
+  # define all loggers ...
+  loggers:
+    - name      : production
+      level     : WARN
+      trace     : &#39;false&#39;
+      outputters :
+      - datefile
+    - name      : development
+      level     : DEBUG
+      trace     : &#39;true&#39;
+      outputters :
+      - datefile
+
+  # define all outputters (incl. formatters)
+  outputters:
+  - type: DateFileOutputte
+    name: datefile
+    dirname: &quot;log&quot;
+    filename: &quot;my_app.log&quot; # notice the file extension is needed!
+    formatter:
+      date_pattern: &#39;%H:%M:%S&#39;
+      pattern     : &#39;%d %l: %m &#39;
+      type        : PatternFormatter
+</code></pre>
 <p>这时，如果重启rails，会发现报错:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">undefined method `formatter&apos; for #&lt;Log4r::Logger:0x007fd97a78e780&gt; (NoMethodError)</span><br></pre></td></tr></table></figure>
-<p>我当时也是懵逼，不知道怎么解决，后来Google到了解决方法。<strong>对于Rail4.0+ ，需要添加文件，声明formatter这个method</strong>。</p>
+<pre><code>undefined method `formatter&#39; for #&lt;Log4r::Logger:0x007fd97a78e780&gt; (NoMethodError)
+</code></pre><p>我当时也是懵逼，不知道怎么解决，后来Google到了解决方法。<strong>对于Rail4.0+ ，需要添加文件，声明formatter这个method</strong>。</p>
 </li>
 <li><p>新增文件<code>config/initializers/log4r_patch_for_rails4.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Log4r::Logger</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">formatter</span><span class="params">()</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Log4r::Logger
+  def formatter()
+  end
+end
+</code></pre>
 </li>
 </ul>
 <p>配置完成！重启下服务器，然后你会发现不管做了什么操作，terminal终端什么也没有输出，一直保持如下内容：</p>
@@ -902,7 +948,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>202 words</span>
+              <span>184 words</span>
             </span>
           
 
@@ -922,17 +968,35 @@
         
           
             <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>默认情况下，controller 中action的layout都是<code>application.html.erb</code>，也可以统一更换，在controller中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">layout <span class="string">'my_layout'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout &#39;my_layout&#39;
+</code></pre>
 <p>现在假定，针对action new，需要使用layout：my_layout， 其他的actions都采用application, 如何实现？</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>我曾一厢情愿地以为应该可以这样， 在controller中添加如下语句👇：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">layout <span class="string">'my_layout'</span>, <span class="symbol">:only</span> =&gt; <span class="symbol">:new</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout &#39;my_layout&#39;, :only =&gt; :new
+</code></pre>
 <p>显然，一厢情愿的结果常常都面临着悲剧。</p>
 <p>正确的脱坑方式是这样的👇：</p>
 <p>在controller中定义一个private method， 然后在该method中进行设置：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">layout <span class="symbol">:my_layout</span></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line"> private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_layout</span></span></span><br><span class="line">	params[<span class="symbol">:action</span>] == <span class="string">'new'</span> ? <span class="string">'my_layout'</span> : <span class="string">'application'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout :my_layout
+.....
+
+ private
+
+def my_layout
+    params[:action] == &#39;new&#39; ? &#39;my_layout&#39; : &#39;application&#39;
+end
+</code></pre>
 <p>如果是指定的多个action都是my_layout呢？</p>
 <p>这么设置：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">layout <span class="symbol">:my_layout</span></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line"> private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_layout</span></span></span><br><span class="line">	<span class="string">%w[action1 action2 action3……]</span>.<span class="keyword">include</span>?params[<span class="symbol">:action</span>] ? <span class="string">'my_layout'</span> : <span class="string">'application'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout :my_layout
+.....
+
+ private
+
+def my_layout
+    %w[action1 action2 action3……].include?params[:action] ? &#39;my_layout&#39; : &#39;application&#39;
+end
+</code></pre>
 <p>Ok。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9903261/rendering-layout-for-specific-actions" target="_blank" rel="noopener">Rendering Layout for specific actions</a></p>
 
@@ -1075,7 +1139,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>856 words</span>
+              <span>767 words</span>
             </span>
           
 
@@ -1102,30 +1166,119 @@
 </ul>
 <p>来看一下每种方式的具体使用。</p>
 <h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"layer-photos-demo"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">"图片id，可以不写"</span> <span class="attr">layer-src</span>=<span class="string">"大图地址"</span> <span class="attr">src</span>=<span class="string">"缩略图"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript"><span class="comment">//调用示例</span></span></span><br><span class="line"><span class="undefined">layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">  photos: <span class="string">'#layer-photos-demo'</span></span></span><br><span class="line"><span class="javascript">  ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span></span><br><span class="line"><span class="undefined">&#125;);</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">//HTML示例
+&lt;div id=&quot;layer-photos-demo&quot; class=&quot;layer-photos-demo&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+//调用示例
+layer.photos({
+  photos: &#39;#layer-photos-demo&#39;
+  ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+});
+&lt;/script&gt;
+</code></pre>
 <p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
 <p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg" alt=""></p>
 <p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
 <p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">%</span> <span class="attr">product.images.each</span> <span class="attr">do</span> |<span class="attr">image</span> |%&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">img</span>  <span class="attr">onclick</span>= <span class="string">"getImage('&lt;%= product.id %&gt;');"</span> <span class="attr">layer-src</span>=<span class="string">"&lt;%= image.src %&gt;"</span> <span class="attr">src</span>=<span class="string">"&lt;%= image.thumb %&gt;"</span> <span class="attr">alt</span>=<span class="string">"图片名"</span>&gt;</span></span><br><span class="line">       <span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span>   </span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImage</span>(<span class="params">productId</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">        layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">            photos: <span class="string">'#product-'</span> + productId,</span></span><br><span class="line"><span class="undefined">            anim:5</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">//HTML示例
+&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;% product.images.each do |image |%&gt;
+      &lt;img  onclick= &quot;getImage(&#39;&lt;%= product.id %&gt;&#39;);&quot; layer-src=&quot;&lt;%= image.src %&gt;&quot; src=&quot;&lt;%= image.thumb %&gt;&quot; alt=&quot;图片名&quot;&gt;
+       &lt;% end %&gt;   
+    &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;script&gt;
+    function getImage(productId){
+        layer.photos({
+            photos: &#39;#product-&#39; + productId,
+            anim:5
+        });
+    }
+&lt;/script&gt;
+</code></pre>
 <h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$.getJSON(<span class="string">'/jquery/layer/test/photos.json'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span><br><span class="line">  layer.photos(&#123;</span><br><span class="line">    photos: json</span><br><span class="line">    ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Javascript">$.getJSON(&#39;/jquery/layer/test/photos.json&#39;, function(json){
+  layer.photos({
+    photos: json
+    ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+  });
+});
+</code></pre>
 <p>返回的JSON需严格按照如下格式：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  "title": "", //相册标题</span><br><span class="line">  "id": 123, //相册id</span><br><span class="line">  "start": 0, //初始显示的图片序号，默认0</span><br><span class="line">  "data": [   //相册包含的图片，数组格式</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">"alt"</span>: <span class="string">"图片名"</span>,</span><br><span class="line">      "pid": 666, //图片id</span><br><span class="line">      "src": "", //原图地址</span><br><span class="line">      "thumb": "" //缩略图地址</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="json">{
+  &quot;title&quot;: &quot;&quot;, //相册标题
+  &quot;id&quot;: 123, //相册id
+  &quot;start&quot;: 0, //初始显示的图片序号，默认0
+  &quot;data&quot;: [   //相册包含的图片，数组格式
+    {
+      &quot;alt&quot;: &quot;图片名&quot;,
+      &quot;pid&quot;: 666, //图片id
+      &quot;src&quot;: &quot;&quot;, //原图地址
+      &quot;thumb&quot;: &quot;&quot; //缩略图地址
+    }
+  ]
+}
+</code></pre>
 <p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
 <p>还是以product为例， 三步走：</p>
 <ul>
 <li><p>给它添加一个preview的action， 在routes中声明</p>
 <p>在<code>routes.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:products</span> <span class="keyword">do</span></span><br><span class="line">  member <span class="keyword">do</span></span><br><span class="line">    get <span class="symbol">:preview</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">resources :products do
+  member do
+    get :preview
+  end
+ end
+</code></pre>
 </li>
 <li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preview</span></span></span><br><span class="line">  @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @images = @product.images.all</span><br><span class="line">  @photo = &#123;</span><br><span class="line">      <span class="symbol">title:</span> @product.title,</span><br><span class="line">      <span class="symbol">id:</span> @product.id,</span><br><span class="line">      <span class="symbol">start:</span> <span class="number">0</span>,</span><br><span class="line">      <span class="symbol">data:</span> @images.map <span class="keyword">do</span> <span class="params">|image|</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="symbol">alt:</span> image.title,</span><br><span class="line">            <span class="symbol">pid:</span> image.id,</span><br><span class="line">            <span class="symbol">src:</span> image.src,</span><br><span class="line">            <span class="symbol">thumb:</span> image.thumb</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">  &#125;</span><br><span class="line">  render <span class="symbol">json:</span> @photo</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def preview
+  @product = Product.find(params[:id])
+  @images = @product.images.all
+  @photo = {
+      title: @product.title,
+      id: @product.id,
+      start: 0,
+      data: @images.map do |image|
+        {
+            alt: image.title,
+            pid: image.id,
+            src: image.src,
+            thumb: image.thumb
+        }
+      end
+  }
+  render json: @photo
+end
+</code></pre>
 <p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
 </li>
 <li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%</span> @<span class="attr">products.each</span> <span class="attr">do</span> |<span class="attr">product</span>| %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"product-&lt;%= product.id %&gt;"</span> <span class="attr">class</span>=<span class="string">"layer-photos-demo"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:getImageJson('&lt;%= product.id %&gt;');"</span>&gt;</span></span><br><span class="line">      查看产品图片<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImageJson</span>(<span class="params">productId</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">        $.getJSON(<span class="string">'/products/'</span> + productId + <span class="string">'/preview'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span></span><br><span class="line"><span class="undefined">            layer.photos(&#123;</span></span><br><span class="line"><span class="undefined">                photos: json,</span></span><br><span class="line"><span class="undefined">                anim: 5</span></span><br><span class="line"><span class="undefined">            &#125;);</span></span><br><span class="line"><span class="undefined">        &#125;);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;a href=&quot;javascript:getImageJson(&#39;&lt;%= product.id %&gt;&#39;);&quot;&gt;
+      查看产品图片&lt;/a&gt;
+    &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;script&gt;
+    function getImageJson(productId) {
+        $.getJSON(&#39;/products/&#39; + productId + &#39;/preview&#39;, function(json){
+            layer.photos({
+                photos: json,
+                anim: 5
+            });
+        });
+    }
+&lt;/script&gt;
+</code></pre>
 </li>
 </ul>
 <p>刷新页面确认是否正常。</p>
@@ -1271,7 +1424,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>869 words</span>
+              <span>779 words</span>
             </span>
           
 
@@ -1294,25 +1447,60 @@
 <h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>先说一个简单的。</p>
 <p>以一个model picture为例，看一下具体步骤：</p>
 <p>model picture的信息：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Table name pictures</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">file_name    <span class="symbol">:string</span></span><br><span class="line">image       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Table name pictures
+
+id          :integer
+file_name    :string
+image       :string
+</code></pre>
 <p>这里，设置routes, 建model，建controller的过程省略，可参见：<a href="http://luciaca.cn/2017/12/31/web-api-practice/" target="_blank" rel="noopener">Rails：Web API接口实作</a>。</p>
 <p>分三步走：</p>
 <ul>
 <li><p>装<a href="https://github.com/carrierwaveuploader/carrierwave" target="_blank" rel="noopener">carrierwave</a></p>
 <p>编辑 Gemfile</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'carrierwave'</span></span><br><span class="line">gem <span class="string">'mini_magick'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">gem &#39;carrierwave&#39;
+gem &#39;mini_magick&#39;
+</code></pre>
 <p>终端执行<code>bundle</code>，重启服务器。</p>
 </li>
 <li><p>新增uploader</p>
 <p>执行：<code>rails g uploader PicImage</code></p>
 <p>编辑<code>app/uploaders/pic_image_uploader.rb</code></p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PicImageUploader</span> &lt; CarrierWave::Uploader::<span class="title">Base</span></span></span><br><span class="line">  + <span class="keyword">include</span> CarrierWave::MiniMagick</span><br><span class="line">  ......  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class PicImageUploader &lt; CarrierWave::Uploader::Base
+  + include CarrierWave::MiniMagick
+  ......  
+end
+</code></pre>
 <p>编辑 <code>app/models/picture.rb</code>，把 carrierwave 的 Uploader 挂上去。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Picture</span> &lt; ApplicationRecord</span></span><br><span class="line">  + mount_uploader <span class="symbol">:image</span>, PicImageUploader</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Picture &lt; ApplicationRecord
+  + mount_uploader :image, PicImageUploader
+  ......
+end
+</code></pre>
 </li>
 <li><p>设定create</p>
 <p>编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># upload image through api</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @picture = Picture.new(picture_params)  </span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">file_name:</span> @picture.file_name, <span class="symbol">image:</span> @picture.image &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  .......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">picture_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:file_name</span>, <span class="symbol">:image</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># upload image through api
+class Api::V1::PicturesController &lt; ApiController
+ before_action :authenticate_user!, only: %i[create]
+
+ def create
+   @picture = Picture.new(picture_params)  
+   if @picture.save
+     render json: { file_name: @picture.file_name, image: @picture.image }
+   else
+     render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
+   end
+ end
+ .......
+ private
+
+ def picture_params
+   params.permit(:file_name, :image)
+ end
+
+end
+</code></pre>
 </li>
 </ul>
 <p>再来个复杂的。👇</p>
@@ -1321,13 +1509,66 @@
 <p>具体来说，前面的步骤都一样，只是create部分会有些不同。</p>
 <p>先给picture新增一个字段，file_base64, 它是图片经base64编译后得到的字符串。</p>
 <p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_file_base64_to_pictures file_base64:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>picture.json文件长这样：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">picture &#123;:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;&#125;</span><br></pre></td></tr></table></figure>
-<p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      <span class="comment"># create a new tempfile named file</span></span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      <span class="comment"># get the file ,decode it with base64, write it to the tempfile</span></span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      <span class="comment"># create a new uploaded file</span></span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      <span class="comment"># delete the tempfile</span></span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g migration add_file_base64_to_pictures file_base64:string
+rake db:migrate
+</code></pre><p>picture.json文件长这样：</p>
+<pre><code>picture {:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;}
+</code></pre><p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
+<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
+  before_action :authenticate_user!, only: %i[create]
+
+  def create
+    if params[:picture][:file_base64]
+      # create a new tempfile named file
+      tempfile = Tempfile.new(&#39;file&#39;)
+      tempfile.binmode
+      # get the file ,decode it with base64, write it to the tempfile
+      tempfile.write(Base64.decode64(params[:picture][:file_base64]))
+      # create a new uploaded file
+      @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
+      @picture = Picture.new(params[:picture])
+      @picture.image = @uploaded_file
+      # delete the tempfile
+      tempfile.delete
+    end
+    if @picture.save
+      render json: @picture
+    else
+      render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
+    end
+  end
+
+end
+</code></pre>
 <p> 这里，create部分显得很臃肿，我们skinny一下，改成这样：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line">  before_action <span class="symbol">:process_file</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> @picture.save</span><br><span class="line">      render <span class="symbol">json:</span> @picture</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">error:</span> @picture.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">process_file</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      tempfile = Tempfile.new(<span class="string">'file'</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      @uploaded_file = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      @picture = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      @picture.image = @uploaded_file</span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
+  before_action :authenticate_user!, only: %i[create]
+  before_action :process_file, only: %i[create]
+
+  def create
+    if @picture.save
+      render json: @picture
+    else
+      render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
+    end
+  end
+
+  private
+
+  def process_file
+    if params[:picture][:file_base64]
+      tempfile = Tempfile.new(&#39;file&#39;)
+      tempfile.binmode
+      tempfile.write(Base64.decode64(params[:picture][:file_base64]))
+      @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
+      @picture = Picture.new(params[:picture])
+      @picture.image = @uploaded_file
+      tempfile.delete
+    end
+  end
+
+end
+</code></pre>
 <p>  呃，貌似process_file还是有点臃肿， 可以继续拆，这里就不实作了。</p>
 <p>  OK. 用postman测试一下，确认正常。</p>
 <p>  这里，你可能会问，编译后的文件在哪呢？在public/uploaders/picture/image下。</p>
@@ -1475,7 +1716,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>373 words</span>
+              <span>326 words</span>
             </span>
           
 
@@ -1496,13 +1737,39 @@
           
             <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Table name products</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br><span class="line">description <span class="symbol">:string</span></span><br><span class="line">price       <span class="symbol">:float</span></span><br><span class="line">category_id <span class="symbol">:integer</span></span><br><span class="line"></span><br><span class="line">Table name  categories</span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Table name products
+
+id          :integer
+title       :string
+description :string
+price       :float
+category_id :integer
+
+Table name  categories
+id          :integer
+title       :string
+</code></pre>
 <p><code>app/models/product.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+  ......
+end
+</code></pre>
 <p><code>app/models/category.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Category</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  has_many <span class="symbol">:products</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Category &lt; ActiveRecord::Base
+  has_many :products
+  ......
+end
+</code></pre>
 <p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> @products</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+# GET /api/v1/products
+  def index
+    @products = Product.all
+    render json: @products
+  end
+end
+</code></pre>
 <p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
 <p>如何实现？</p>
 <p>试试<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
@@ -1510,16 +1777,37 @@
 <ul>
 <li><p>安装<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a> gem</p>
 <p>gemfile中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'has_scope'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">gem &#39;has_scope&#39;
+</code></pre>
 <p>终端bundle，服务器重启。</p>
 </li>
 <li><p>在model中添加scope</p>
 <p>修改<code>app/models/product.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line"></span><br><span class="line"> + scope <span class="symbol">:category</span>, -&gt; (category_id) &#123; where(<span class="symbol">category_id:</span> category_id) &#125;</span><br><span class="line"> + scope <span class="symbol">:price</span>, -&gt; (from, to) &#123; where(<span class="string">"price &gt;= ? AND price &lt;= ?"</span>, from, to) &#125;</span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+
+ + scope :category, -&gt; (category_id) { where(category_id: category_id) }
+ + scope :price, -&gt; (from, to) { where(&quot;price &gt;= ? AND price &lt;= ?&quot;, from, to) }
+  ......
+
+end
+</code></pre>
 </li>
 <li><p>在controller中添加has_scope</p>
 <p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line">  + has_scope <span class="symbol">:category</span>, <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line">  + has_scope <span class="symbol">:price</span>, <span class="symbol">using:</span> [<span class="symbol">:from</span>, <span class="symbol">:to</span>], <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  -  @products = Product.all</span><br><span class="line">  +  @products = apply_scopes(Product).includes(<span class="symbol">:category</span>).all</span><br><span class="line">      <span class="comment"># using includes(:category), fix N+1 query problem</span></span><br><span class="line">    render <span class="symbol">json:</span> @products</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+  + has_scope :category, only: :index
+  + has_scope :price, using: [:from, :to], only: :index
+
+# GET /api/v1/products
+  def index
+  -  @products = Product.all
+  +  @products = apply_scopes(Product).includes(:category).all
+      # using includes(:category), fix N+1 query problem
+    render json: @products
+  end
+end
+</code></pre>
 <p>好，大功告成，用postman测试下，确认正常，cool！</p>
 </li>
 </ul>
@@ -1665,7 +1953,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,258 words</span>
+              <span>1,055 words</span>
             </span>
           
 
@@ -1689,7 +1977,65 @@
 <p>试试<a href="https://github.com/rails/jbuilder" target="_blank" rel="noopener">Jbuilder</a>。</p>
 <p>下面用个简单的例子来说明下怎么给controller瘦身。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>假定你完成了一个products的API接口，对应的<code>app/controllers/api/v1/products_controller.rb</code>文件内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">data:</span> @products.map <span class="keyword">do</span> <span class="params">|product|</span></span><br><span class="line">          &#123;</span><br><span class="line">              <span class="symbol">id:</span> product.id,</span><br><span class="line">              <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">              <span class="symbol">name:</span> product.name,</span><br><span class="line">              <span class="symbol">description:</span> product.description,</span><br><span class="line">              <span class="symbol">price:</span> product.price</span><br><span class="line">          &#125;</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(</span><br><span class="line">        <span class="symbol">name:</span> params[<span class="symbol">:name</span>],</span><br><span class="line">        <span class="symbol">description:</span> params[<span class="symbol">:description</span>],</span><br><span class="line">        <span class="symbol">price:</span> params[<span class="symbol">:price</span>]</span><br><span class="line">    )</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">id:</span> product.id,</span><br><span class="line">        <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">        <span class="symbol">name:</span> product.name,</span><br><span class="line">        <span class="symbol">description:</span> product.description,</span><br><span class="line">        <span class="symbol">price:</span> product.price</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(<span class="symbol">name:</span> params[<span class="symbol">:name</span>], <span class="symbol">description:</span> params[<span class="symbol">:description</span>],<span class="symbol">price:</span> params[<span class="symbol">:price</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
+  before_action :authenticate_user!, only: %i[index show create update destroy]
+
+  def index
+    @products = Product.all
+    render json: {
+        data: @products.map do |product|
+          {
+              id: product.id,
+              creator: product.user.user_name,
+              name: product.name,
+              description: product.description,
+              price: product.price
+          }
+        end
+    }
+  end
+  def create
+    @product = Product.new(
+        name: params[:name],
+        description: params[:description],
+        price: params[:price]
+    )
+    @product.user = current_user
+    if @product.save
+      render json: @product
+    else
+      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
+    end
+  end
+
+  def show
+    @product = Product.find(params[:id])
+    render json: {
+        id: product.id,
+        creator: product.user.user_name,
+        name: product.name,
+        description: product.description,
+        price: product.price
+    }
+  end
+
+  def update
+    @product = Product.find(params[:id])
+    @product.update(name: params[:name], description: params[:description],price: params[:price])
+    render json: {
+        message: &#39;update product successfully&#39;
+    }
+  end
+
+  def destroy
+    @product = Product.find(params[:id])
+    @product.destroy
+    render json: {
+        message: &#39;product deleted&#39;
+    }
+  end
+end  
+</code></pre>
 <p>看着很冗长啊，怎么瘦？</p>
 <p>分三步走：</p>
 <ul>
@@ -1703,23 +2049,71 @@
 <li><p>新建文件：<br><code>app/views/api/v1/products/_item.json.jbuilder</code>, <code>app/views/api/v1/products/show.json.jbuilder</code>,<br><code>app/views/api/v1/products/index.json.jbuilder</code>,</p>
 </li>
 <li><p>在<code>app/views/api/v1/products/_item.json.jbuilder</code>，添加如下内容：</p>
-<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">json.id  product.id</span><br><span class="line">json.creator product.user.user_name</span><br><span class="line">json.name product.name</span><br><span class="line">json.description product.description</span><br><span class="line">json.price product.price</span><br></pre></td></tr></table></figure>
+<pre><code class="json">json.id  product.id
+json.creator product.user.user_name
+json.name product.name
+json.description product.description
+json.price product.price
+</code></pre>
 </li>
 <li><p>在<code>app/views/api/v1/products/show.json.jbuilder</code>，添加如下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.partial! &apos;item&apos;, product: @product</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>json.partial! &#39;item&#39;, product: @product
+</code></pre></li>
 <li><p>在<code>app/views/api/v1/products/index.json.jbuilder</code>， 添加如下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">json.array! @products, partial: &apos;item&apos;, as: :product</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>json.array! @products, partial: &#39;item&#39;, as: :product
+</code></pre></li>
 <li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的index和show部分, 删除render：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
+  before_action :authenticate_user!, only: %i[index show create update destroy]
+
+  def index
+    @products = Product.all
+  end
+ .......
+
+  def show
+    @product = Product.find(params[:id])
+  end
+
+.......
+end  
+</code></pre>
 <p>可以用postman测试一下，确保接口仍正常。</p>
 </li>
 </ul>
 <p>第二步：简化create，update， 用params.require</p>
 <ul>
 <li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的create和update部分，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  .....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span>         </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
+  before_action :authenticate_user!, only: %i[index show create update destroy]
+  .....
+  def create
+    @product = Product.new(product_params)
+    @product.user = current_user
+    if @product.save
+      render json: @product
+    else
+      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
+    end
+  end
+ .......
+
+  def update
+    @product = Product.find(params[:id])
+    @product.update(product_params)
+    render json: {
+        message: &#39;update product successfully&#39;
+    }
+  end
+
+.......
+  private
+
+  def product_params
+    params.permit(:name, :description, :price)
+  end         
+end  
+</code></pre>
 <p>注意，这里<strong>不能使用params.requrie(:product).permit(:name, :description, :price)</strong>，因为你是调用接口来新建或者修改的。</p>
 <p>可参见这个：<a href="https://stackoverflow.com/questions/38701746/when-json-data-posted-in-rails-throws-param-is-missing-or-the-value-is-empty-st" target="_blank" rel="noopener">When JSON data posted in rails throws param is missing or the value is empty: stall</a></p>
 </li>
@@ -1727,16 +2121,111 @@
 <p>第三步：简化show，update， destroy</p>
 <ul>
 <li><p>把show，update， destroy相同的部分： <code>@product = Product.find(params[:id])</code>抽出来：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line">.....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'update product successfully'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">'product deleted'</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">.......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
+  before_action :authenticate_user!, only: %i[index show create update destroy]
+  before_action :find_product, only: %i[show update destroy]
+.....
+  def show; end
+
+  def update
+    @product.update(product_params)
+    render json: {
+        message: &#39;update product successfully&#39;
+    }
+  end
+
+  def destroy
+    @product.destroy
+    render json: {
+        message: &#39;product deleted&#39;
+    }
+  end
+
+  private
+.......
+
+  def find_product
+    @product = Product.find(params[:id])
+  end
+end
+</code></pre>
 </li>
 </ul>
 <p>最后瘦身的controller长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @products = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    @product = Product.new(product_params)</span><br><span class="line">    @product.user = current_user</span><br><span class="line">    <span class="keyword">if</span> @product.save</span><br><span class="line">      render <span class="symbol">json:</span> @product</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'failed'</span>, <span class="symbol">errors:</span> @product.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @product.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'update product successfully'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    @product.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">'product deleted'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    param.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    @product = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
+  before_action :authenticate_user!, only: %i[index show create update destroy]
+  before_action :find_product, only: %i[show update destroy]
+
+  def index
+    @products = Product.all
+  end
+  def create
+    @product = Product.new(product_params)
+    @product.user = current_user
+    if @product.save
+      render json: @product
+    else
+      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
+    end
+  end
+
+  def show; end
+
+  def update
+    @product.update(product_params)
+    render json: { message: &#39;update product successfully&#39;}
+  end
+
+  def destroy
+    @product.destroy
+    render json: { message: &#39;product deleted&#39;}
+  end
+
+  private
+
+  def product_params
+    param.permit(:name, :description, :price)
+  end
+
+  def find_product
+    @product = Product.find(params[:id])
+  end
+end
+</code></pre>
 <p>是不是清爽了很多？看着舒服多了，大功告成！</p>
 <p>这里多一句，如果你的某个method部分代码较多，也可以使用拆分的方式， 比如下面这个show：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  @categories = Category.all</span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def show
+  @category = Category.find(params[:id])
+  @categories = Category.all
+  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
+  @products = @search.result.page(params[:page]).per(50)
+  rate
+end
+</code></pre>
 <p>可以换成：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">before_action <span class="symbol">:fetch_current_category</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_categories</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_search_results</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_current_category</span></span></span><br><span class="line">  @category = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_categories</span></span></span><br><span class="line">  @categories = Category.all</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_search_results</span></span></span><br><span class="line">  @search = @category.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  @products = @search.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">before_action :fetch_current_category, only: [:show]
+before_action :fetch_categories, only: [:show]
+before_action :fetch_search_results, only: [:show]
+
+def show
+  rate
+end
+
+private
+
+def fetch_current_category
+  @category = Category.find(params[:id])
+end
+
+def fetch_categories
+  @categories = Category.all
+end
+
+def fetch_search_results
+  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
+  @products = @search.result.page(params[:page]).per(50)
+end
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/30932732/what-is-meant-by-assignment-branch-condition-size-too-high-and-how-to-fix-it" target="_blank" rel="noopener">What is meant by ‘Assignment Branch Condition Size too high’ and how to fix it?</a></p>
 <p>对于”<strong>fat model, skinny controller</strong>“这个原则，也有人反对，提出<strong>“skinny everything”</strong>， 戳链接了解：</p>
 <p><a href="http://blog.joncairns.com/2013/04/fat-model-skinny-controller-is-a-load-of-rubbish/" target="_blank" rel="noopener">“Fat model, skinny controller” is a load of rubbish</a></p>
@@ -1880,7 +2369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>858 words</span>
+              <span>819 words</span>
             </span>
           
 
@@ -1905,19 +2394,44 @@
 <ul>
 <li><p>无参</p>
 <p>以一个简单的alert为例，可以这么写【href】：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'javascript: dosomething();'</span>&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">dosomething</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        alert(<span class="string">"hello, world!"</span>);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;javascript: dosomething();&#39;&gt;click me&lt;/a&gt;
+
+&lt;script&gt;
+    function dosomething(){
+        alert(&quot;hello, world!&quot;);
+    }
+&lt;/script&gt;
+</code></pre>
 <p>上面的代码还可以这么写【onclick】：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'#'</span> <span class="attr">onclick</span>=<span class="string">"javascript: dosomething()"</span>&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">dosomething</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        alert(<span class="string">"hello, world!"</span>);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;javascript: dosomething()&quot;&gt;click me&lt;/a&gt;
+
+&lt;script&gt;
+    function dosomething(){
+        alert(&quot;hello, world!&quot;);
+    }
+&lt;/script&gt;
+</code></pre>
 <p>或者这样：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'#'</span> <span class="attr">onclick</span>=<span class="string">"dosomething()"</span>&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">dosomething</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        alert(<span class="string">"hello, world!"</span>);</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;dosomething()&quot;&gt;click me&lt;/a&gt;
+
+&lt;script&gt;
+    function dosomething(){
+        alert(&quot;hello, world!&quot;);
+    }
+&lt;/script&gt;
+</code></pre>
 <p>这样也行：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'#'</span> <span class="attr">onclick</span>=<span class="string">"javascript: while (true) &#123; alert("</span><span class="attr">hello</span>, <span class="attr">world</span>!"); <span class="attr">break</span> <span class="attr">javascript</span>; &#125;"&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;a href=&#39;#&#39; onclick=&quot;javascript: while (true) { alert(&quot;hello, world!&quot;); break javascript; }&quot;&gt;click me&lt;/a&gt;
+</code></pre>
 <p>也可以这样：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'#'</span> <span class="attr">onclick</span>=<span class="string">"foo: while (true) &#123; alert("</span><span class="attr">hello</span>, <span class="attr">world</span>!"); <span class="attr">break</span> <span class="attr">foo</span>; &#125;"&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/a&gt;
+</code></pre>
 <p>还能这样：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">'#'</span> <span class="attr">onclick</span>=<span class="string">"foo: while (true) &#123; alert("</span><span class="attr">hello</span>, <span class="attr">world</span>!"); <span class="attr">break</span> <span class="attr">foo</span>; &#125;"&gt;</span>click me<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/a&gt;
+</code></pre>
 <p>使用onclick时，tag也可以是span，button等，比如：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">span</span> <span class="attr">onclick</span>=<span class="string">"foo: while (true) &#123; alert("</span><span class="attr">hello</span>, <span class="attr">world</span>!"); <span class="attr">break</span> <span class="attr">foo</span>; &#125;"&gt;</span>click me<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;span onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/span&gt;
+</code></pre>
 <p>这里提一下，在搜索相关用法的时候，发现对于onclick， javascript:其实是可以不用添加的，它的作用只是一个label的作用，而且在IE下，使用<code>onclick=&quot;javascript: JsFunc()&quot;</code>还会报错，参见这篇文章<a href="https://crisp.tweakblogs.net/blog/the-useless-javascript-pseudo-protocol.html" target="_blank" rel="noopener">The useless javascript: pseudo-protocol</a>。</p>
 <p>此外，逛stack overflow时，还人提到onclick这种调用JS的方式”is a bad practice”.</p>
 <p>参见<a href="https://stackoverflow.com/questions/134845/which-href-value-should-i-use-for-javascript-links-or-javascriptvoid0" target="_blank" rel="noopener">Which “href” value should I use for JavaScript links, “#” or “javascript:void(0)”?</a></p>
@@ -1927,9 +2441,23 @@
 <li><p>有参</p>
 <p>有参和无参的函数调用基本一样，只是多了参数。</p>
 <p>看例子方便理解 ，比如传递了一个user的name[rails]：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;a href='javascript: dosomething('&lt;%= @user.name %&gt;');'&gt;click me&lt;/a&gt;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">dosomething</span>(<span class="params">username</span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        alert(<span class="string">"hello, "</span> + username );</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;a href=&#39;javascript: dosomething(&#39;&lt;%= @user.name %&gt;&#39;);&#39;&gt;click me&lt;/a&gt;
+
+&lt;script&gt;
+    function dosomething(username){
+        alert(&quot;hello, &quot; + username );
+    }
+&lt;/script&gt;
+</code></pre>
 <p>onclick的方式来调用也一样：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;a href='#' onclick='dosomething('&lt;%= @user.name %&gt;');'&gt;click me&lt;/a&gt;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">dosomething</span>(<span class="params">username</span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        alert(<span class="string">"hello, "</span> + username );</span></span><br><span class="line"><span class="undefined">    &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;a href=&#39;#&#39; onclick=&#39;dosomething(&#39;&lt;%= @user.name %&gt;&#39;);&#39;&gt;click me&lt;/a&gt;
+
+&lt;script&gt;
+    function dosomething(username){
+        alert(&quot;hello, &quot; + username );
+    }
+&lt;/script&gt;
+</code></pre>
 <p>一点感想：</p>
 <p>我觉得这种调用JS的方式，最好的地方是传递参数，当你用Ajax只是为了将参数传递给JS时，这真的是很方便的一种解决方法。我之前苦恼怎么传递参数给JS，Ajax是用来在不刷新页面的情况下，更新页面的某一部分，但它也可以用来传递参数，通过用Ajax，好比绕了个弯，去逛了一趟controller，在controller里面把那些需要的参数都整出来，再将它们回传给到 js.erb文件，在js.erb中写JS来实现需求。事后反思为什么我第一时间想到Ajax而不是href 或 onclick的方式，因为我根本不知道这种用法【怪自己太小白】，而Ajax是我用过的，熟悉的，继而想到人们在处理问题的时候，总是偏向于用以往的经验去解决，那些过往的经验就好比你的工具，当你的工具库很小的时候，这样做的弊端就是避开了寻找更好的方法去更高效地解决问题的机会，同时也意味着你失去了扩充工具库的机会。</p>
 </li>
@@ -2076,7 +2604,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>502 words</span>
+              <span>489 words</span>
             </span>
           
 
@@ -2113,10 +2641,23 @@
 <li><p>使用</p>
 <p>引入layer前，需要引入jQuery， 鉴于rails默认引入了jQuery，这里直接引入layer即可。</p>
 <p>在需要使用弹窗的页面对应的layout中，比如<code>application.html.erb</code>，添加：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">......</span><br><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">javascript_include_tag</span> '<span class="attr">application</span>' %&gt;</span></span><br><span class="line">+ <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"/layer/layer.js"</span>&gt;</span><span class="undefined"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">......
+&lt;head&gt;
+......
+&lt;%= javascript_include_tag &#39;application&#39; %&gt;
++ &lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+</code></pre>
 <p><strong>请务必将<code>&lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;</code>置于<code>&lt;%= javascript_include_tag &#39;application&#39; %&gt;</code>之后。</strong></p>
 <p>测试一下是否可以正常使用。在任何一个页面最后，比如landing page着陆页，添加：</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;div id=<span class="string">"for_test"</span> <span class="class"><span class="keyword">class</span></span>=<span class="string">"btn btn-lg btn-danger"</span>&gt;test&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;script&gt;</span></span><br><span class="line"><span class="regexp">  $('#for_test').on('click', function()&#123;</span></span><br><span class="line"><span class="regexp">      layer.msg('hello world');</span></span><br><span class="line"><span class="regexp">  &#125;);</span></span><br><span class="line"><span class="regexp">&lt;/</span>script&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">......
+&lt;div id=&quot;for_test&quot; class=&quot;btn btn-lg btn-danger&quot;&gt;test&lt;/div&gt;
+&lt;script&gt;
+  $(&#39;#for_test&#39;).on(&#39;click&#39;, function(){
+      layer.msg(&#39;hello world&#39;);
+  });
+&lt;/script&gt;
+</code></pre>
 <p>此时点击该页面的test按钮，会弹出一个含有“hello world”的弹窗，说明可以正常使用了。</p>
 <p>它的弹窗使用有多种，可以在<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>玩一下，还是蛮酷的，此外，文档写的也蛮有趣的，可以读读。</p>
 <p>另：如果你使用layer.photos(options) - 相册层时，使用了JSON传入的方式【layer的photos有两种实现方式：JSON传入和直接读取页面图片】，不想肉眼检查自己的JSON文件格式是否正确，推荐使用这个在线json解析和格式验证的网站： <a href="https://www.json.cn/" target="_blank" rel="noopener">JSON.cn</a>。</p>
@@ -2342,7 +2883,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2479,5 +3020,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

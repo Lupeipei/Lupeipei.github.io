@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>645 words</span>
+              <span>594 words</span>
             </span>
           
 
@@ -391,23 +391,74 @@
             <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>在工作中遇到的一个问题：</p>
 <p>navbar的item根据是否存在项目来决定是否显示，也就是写一个类似current_user的helper method <strong>current_project</strong>，要求当<strong>current_project</strong>存在时，navbar中的dropdown组件【以project为item】显示<strong>current_project</strong>的name，navbar的item则显示该project下的plans，issues等等，当current_project为nil时，则不显示project的任何信息。</p>
 <p>其中，project与plan，issue存在一对多的关系：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#project.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:plans</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  has_many <span class="symbol">:issues</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#plan.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Plan</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#issue.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#project.rb
+class Project &lt; ApplicationRecord
+  has_many :plans, dependent: :destroy
+  has_many :issues, dependent: :destroy
+end
+
+#plan.rb
+class Plan &lt; ApplicationRecord
+  belongs_to :project
+end
+
+#issue.rb
+class Issue &lt; ApplicationRecord
+  belongs_to :project
+end
+</code></pre>
 <p>我最初在module ApplicationHelper中定义了一个helper method，算是勉强实现了功能，但是写的极为难看，是通过request.original_fullpath()来判断请求中是否存在project， 如果存在，则找到current_project。而且这个helper method因为定义在ApplicationHelper中，便只能在views中使用。后面老大教了个好方法，真心觉得很赞，记录下大致的解决方法。</p>
 <h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>devise的current_user的定义，较为复杂，在它的源代码<a href="https://github.com/plataformatec/devise/blob/3722aa62961720eafa5bb5ee6c99b76c26b6be3e/lib/devise/controllers/helpers.rb#L112" target="_blank" rel="noopener">define_helpers</a>中可以看到：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_</span><span class="comment">#&#123;mapping&#125;</span></span></span><br><span class="line">  @current_<span class="comment">#&#123;mapping&#125; ||= warden.authenticate(scope: :#&#123;mapping&#125;)</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def current_#{mapping}
+  @current_#{mapping} ||= warden.authenticate(scope: :#{mapping})
+end
+</code></pre>
 <p>以我目前的水平，真心看的不是很明白，在stack overflow看到了一个比较简单的定义：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_user</span></span></span><br><span class="line">  @current_user <span class="params">||</span>= User.find_by_id!(session[<span class="symbol">:user_id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_user</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#application_controller.rb
+def current_user
+  @current_user ||= User.find_by_id!(session[:user_id])
+end
+helper_method :current_user
+</code></pre>
 <p>参考这个，我们可以定义一下current_project:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">  @current_project <span class="params">||</span>= Project.find(params[<span class="symbol">:project_id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_project</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#application_controller.rb
+def current_project
+  @current_project ||= Project.find(params[:project_id])
+end
+helper_method :current_project
+</code></pre>
 <p>这样看着，貌似很简单就解决了，但是有一个问题，那就是所有的request中，project_id并不一定存在，这样使用<code>Project.find(params[:project_id])</code>就有可能报错，显示params中找不到project_id。</p>
 <p>老大教的方法是这样的，重新定义了一个controller，然后通过继承，覆写current_project。具体如下：</p>
 <p>Step1、在<code>application_controller.rb</code>定义current_project：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">  <span class="literal">nil</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_project</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#application_controller.rb
+def current_project
+  nil
+end
+helper_method :current_project
+</code></pre>
 <p>注意，这里的current_project返回的是nil值，这样所有继承自ApplicationController的Controller，其current_project默认为nil。</p>
 <p>Step2、新建一个BaseProjectController, 继承自ApplicationController，重新定义current_project，覆盖掉父类的method：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#base_project_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseProjectController</span> &lt; ApplicationController</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">    @current_project <span class="params">||</span>= Project.find(params[<span class="symbol">:project_id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#base_project_controller.rb
+class BaseProjectController &lt; ApplicationController
+  def current_project
+    @current_project ||= Project.find(params[:project_id])
+  end
+end
+</code></pre>
 <p>Step3、修改IssuesController和PlansController，让它们继承自BaseProjectController，拥有current_project方法：【以IssuesController为例，PlansController以此类推】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## 修改前：</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IssuesController</span> &lt; BaseProjectController</span></span><br><span class="line">  load_and_authorize_resource <span class="symbol">:project</span></span><br><span class="line">  .....</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 修改后：</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IssuesController</span> &lt; BaseProjectController</span></span><br><span class="line">  before_action -&gt; &#123; @project = current_project &#125;</span><br><span class="line">  authorize_resource <span class="symbol">:project</span></span><br><span class="line">  .....</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">## 修改前：
+class IssuesController &lt; BaseProjectController
+  load_and_authorize_resource :project
+  .....
+end
+
+## 修改后：
+class IssuesController &lt; BaseProjectController
+  before_action -&gt; { @project = current_project }
+  authorize_resource :project
+  .....
+end
+</code></pre>
 <p>这里删除了cancancan的load_authorize，改用before_action的方式，将current_project赋给了@project。</p>
 <p>对于没有继承自BaseProjectController的Controller，其current_project则为nil，不得不说，这样方式真的是漂亮。</p>
 <p> OK！</p>
@@ -553,7 +604,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,500 words</span>
+              <span>1,434 words</span>
             </span>
           
 
@@ -577,36 +628,102 @@
 <p>现有model project， model member， model user，可以将member看作是user与project之间多对多关系的中间表，现在需要在project新建后，将创建该project的当前用户current_user设为该项目的负责人，也就是在member中新增一条记录。同时在project 的<code>new.html.erb</code>表单中，只有一个name，即项目名称字段。</p>
 <p>如何实现？</p>
 <p>我开始用了极为粗暴简单的方式，在<code>projects_controller.rb</code>的create action中添加了这么一句：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  @project.save</span><br><span class="line">  Member.create!(<span class="symbol">role:</span> <span class="string">"owner"</span>, <span class="symbol">project:</span> @project, <span class="symbol">user:</span> current_user)</span><br><span class="line">  respond_with @project, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def create
+  @project.save
+  Member.create!(role: &quot;owner&quot;, project: @project, user: current_user)
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
 <p>这样功能是实现了，但是这明显不是正确的写法，找不到一点rails的影子，完全新手小白的方式。老大提到了用assign_attributes和accepts_nested_attributes_for来实现。改写了，实现了，踩了点坑。</p>
 <p>记录下assign_attributes的用法，主要是与accepts_nested_attributes_for结合使用，在不依靠表单的情况下，更新数据库。</p>
 <h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><p><a href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes" target="_blank" rel="noopener">assign_attributes</a>，既可以更新model所有的attributes，也可以用来更新model的部分attributes。光看没什么感觉，拿个例子练练手。</p>
 <p>有一个model movie，字段name, description, name要求不能为空,同时与user之间存在一对多的关联。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Movie</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:name</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Movie &lt; ApplicationRecord
+  validates :name, presence: true
+  belongs_to :user
+end  
+</code></pre>
 <p>进入console试试：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">m = Movie.new</span><br><span class="line"></span><br><span class="line"><span class="comment">### 只更新一部分</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"before you"</span>)</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;nil, <span class="string">"name"</span>=&gt;<span class="string">"before you"</span>, <span class="string">"description"</span>=&gt;nil, <span class="string">"created_at"</span>=&gt;nil, <span class="string">"updated_at"</span>=&gt;nil, <span class="string">"user_id"</span>=&gt;nil&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">### 更新全部并保存</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"before you"</span>, <span class="symbol">description:</span> <span class="string">"it is a love story"</span>, <span class="symbol">user:</span> User.first)</span><br><span class="line">m.save</span><br><span class="line">=&gt; true</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;<span class="number">7</span>, <span class="string">"name"</span>=&gt;<span class="string">"before you"</span>, <span class="string">"description"</span>=&gt;<span class="string">"it is a love story"</span>, <span class="string">"created_at"</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"updated_at"</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"user_id"</span>=&gt;<span class="number">1</span>&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">m = Movie.new
+
+### 只更新一部分
+m.assign_attributes(name: &quot;before you&quot;)
+m.attributes
+=&gt; {&quot;id&quot;=&gt;nil, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;nil, &quot;created_at&quot;=&gt;nil, &quot;updated_at&quot;=&gt;nil, &quot;user_id&quot;=&gt;nil}
+
+### 更新全部并保存
+m.assign_attributes(name: &quot;before you&quot;, description: &quot;it is a love story&quot;, user: User.first)
+m.save
+=&gt; true
+m.attributes
+=&gt; {&quot;id&quot;=&gt;7, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;&quot;it is a love story&quot;, &quot;created_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;updated_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;user_id&quot;=&gt;1}
+</code></pre>
 <p>上面的例子是create，如果要update呢？</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">m = Movie.first</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: "once", description: "Apart but still together", created_at: "2018-06-04 07:55:59", updated_at: "2018-06-04 07:55:59", user_id: 1&gt;</span><br><span class="line"></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">"one day"</span>)</span><br><span class="line">m.attributes</span><br><span class="line"></span><br><span class="line">=&gt; &#123;<span class="string">"id"</span>=&gt;<span class="number">4</span>, <span class="string">"name"</span>=&gt;<span class="string">"one day"</span>, <span class="string">"description"</span>=&gt;<span class="string">"Apart but still together"</span>, <span class="string">"created_at"</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"updated_at"</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">"user_id"</span>=&gt;<span class="number">1</span>&#125;</span><br><span class="line"></span><br><span class="line">m.save</span><br><span class="line">m</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: "one day", description: "Apart but still together", created_at: "2018-06-04 07:55:59", updated_at: "2018-06-23 01:30:41", user_id: 1&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">m = Movie.first
+=&gt; #&lt;Movie id: 4, name: &quot;once&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-04 07:55:59&quot;, user_id: 1&gt;
+
+m.assign_attributes(name: &quot;one day&quot;)
+m.attributes
+
+=&gt; {&quot;id&quot;=&gt;4, &quot;name&quot;=&gt;&quot;one day&quot;, &quot;description&quot;=&gt;&quot;Apart but still together&quot;, &quot;created_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;updated_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;user_id&quot;=&gt;1}
+
+m.save
+m
+=&gt; #&lt;Movie id: 4, name: &quot;one day&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-23 01:30:41&quot;, user_id: 1&gt;
+</code></pre>
 <p>可以看到成功完成了更新！</p>
 <p>这么看，好像没什么，更新和新建而已，但是结合accepts_nested_attributes_for就很cool了。</p>
 <p>下面的例子均以create为导向，不涉及update。</p>
 <h4 id="单个关联下"><a href="#单个关联下" class="headerlink" title="单个关联下"></a>单个关联下</h4><p>assign_attributes中，针对一对一的关联关系，有一个单独的private method，<a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association" target="_blank" rel="noopener">assign_nested_attributes_for_one_to_one_association</a>， private method不能直接调用，用assign_attributes 和accepts_nested_attributes_for也可以实现一样的效果。</p>
 <p>比如有一个model 别名alias , 与user之间是一对一的关系，每次创建alias时，需要关联到user。对应model中的代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Class Alias &lt; ActiveRecord::Base</span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Class Alias &lt; ActiveRecord::Base
+  belongs_to :user
+  accepts_nested_attributes_for :user
+end
+</code></pre>
 <p>这样使用assign_attributes，如果alias的user已经存在，则会更新，如果不存在，则新建一个对应的user。这里要注意，不要在user里面添加<code>belongs_to :alias</code>， 这样你在传递user_attribute时，会报错，显示alias必须存在，而此时alias还没有创建成功。</p>
 <p>进入console试试, 在alias未创建前，创建一个user：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">a = Alias.new</span><br><span class="line"></span><br><span class="line">a.assign_attributes(&#123;<span class="symbol">name:</span> <span class="string">"ruby"</span>, <span class="symbol">user_attributes:</span> &#123; <span class="symbol">email:</span> <span class="string">"world@gmail.com"</span>, <span class="symbol">password:</span> <span class="string">"123456"</span>, <span class="symbol">password_confirmation:</span> <span class="string">"123456"</span>&#125;&#125;)</span><br><span class="line"></span><br><span class="line">a.save</span><br><span class="line">=&gt; true</span><br><span class="line">a</span><br><span class="line">=&gt; #&lt;Alias id: 1, name: "ruby", user_id: 3, created_at: "2018-06-23 02:33:23", updated_at: "2018-06-23 02:33:23"&gt;</span><br><span class="line">a.user</span><br><span class="line">=&gt; #&lt;User id: 3, email: "world@gmail.com", created_at: "2018-06-23 02:33:23", updated_at: "2018-06-23 02:33:23"&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">a = Alias.new
+
+a.assign_attributes({name: &quot;ruby&quot;, user_attributes: { email: &quot;world@gmail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;}})
+
+a.save
+=&gt; true
+a
+=&gt; #&lt;Alias id: 1, name: &quot;ruby&quot;, user_id: 3, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+a.user
+=&gt; #&lt;User id: 3, email: &quot;world@gmail.com&quot;, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+</code></pre>
 <p>可以看到user已经创建完成！</p>
 <p>不过我觉得这种情况，多半是你需要新建一个默认的user，因为参数的值是你传递过去的，已经定义好了，而不是像页面的表单那样。这个方法的好处在于，你不需要在页面表单中添加user部分，让用户选择，直接在创建alias时就与user建立起了关联。</p>
 <h4 id="多关联下"><a href="#多关联下" class="headerlink" title="多关联下"></a>多关联下</h4><p>如同一对一关联中，一对多关系下，也有一个private method：<a href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association" target="_blank" rel="noopener">assign_nested_attributes_for_collection_association</a>。 官方给到的例子是这样的：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, &#123;</span><br><span class="line">  <span class="string">'1'</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">'1'</span>, <span class="symbol">name:</span> <span class="string">'Peter'</span> &#125;,</span><br><span class="line">  <span class="string">'2'</span> =&gt; &#123; <span class="symbol">name:</span> <span class="string">'John'</span> &#125;,</span><br><span class="line">  <span class="string">'3'</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">'2'</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, {
+  &#39;1&#39; =&gt; { id: &#39;1&#39;, name: &#39;Peter&#39; },
+  &#39;2&#39; =&gt; { name: &#39;John&#39; },
+  &#39;3&#39; =&gt; { id: &#39;2&#39;, _destroy: true }
+})
+</code></pre>
 <p>People 是复数，这里传递的参数是一个hash，可以看出传了三条记录。如果用assign_attributes怎么实现呢？我这里直接用背景中那个问题来举例。【啧啧，在背景里卖关子没给到解答，悄悄把解答放在了这里。】</p>
 <p>在<code>project.rb</code>中，添加<code>accepts_nested_attributes_for :members</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:members</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:members</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Project &lt; ApplicationRecord
+  has_many :members, dependent: :destroy
+  accepts_nested_attributes_for :members
+end
+</code></pre>
 <p>这样，我们可以修改controller中的action create了, 在save之前进行assign_attributes:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  @project.assign_attributes(<span class="symbol">members_attributes:</span> [ &#123; <span class="symbol">role:</span> <span class="string">"owner"</span>, <span class="symbol">project:</span> @project, <span class="symbol">user:</span> current_user &#125; ])</span><br><span class="line">  @project.save</span><br><span class="line">  respond_with @project, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def create
+  @project.assign_attributes(members_attributes: [ { role: &quot;owner&quot;, project: @project, user: current_user } ])
+  @project.save
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
 <p>踩坑的地方就在于members_attributes后面传递的是一个Array数组<code>[ { role: &quot;owner&quot;, project: @project, user: current_user } ]</code>，数组里面的元素才是Hash。启发来自于文档中的这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, [</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">'1'</span>, <span class="symbol">name:</span> <span class="string">'Peter'</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">name:</span> <span class="string">'John'</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">'2'</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, [
+  { id: &#39;1&#39;, name: &#39;Peter&#39; },
+  { name: &#39;John&#39; },
+  { id: &#39;2&#39;, _destroy: true }
+])
+</code></pre>
 <p>OK！</p>
 <p>BTW，还有一个类似assign_attributes的method，update_attributes，官方没有给到例子，可以参考这篇文章<a href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed" target="_blank" rel="noopener">accepts_nested_attributes_for is Creating New Records; Gotcha!</a>，感觉跟assign_attributes还是很像的。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes" target="_blank" rel="noopener">assign_attributes</a></p>
@@ -755,7 +872,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2,957 words</span>
+              <span>2,922 words</span>
             </span>
           
 
@@ -792,14 +909,20 @@
 <li>rebase</li>
 </ul>
 <p>先看merge，很简单，终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git checkout master ## 切到分支master</span><br><span class="line">git merge experiment  ## 将experiment merge 到master</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">git checkout master ## 切到分支master
+git merge experiment  ## 将experiment merge 到master
+</code></pre>
 <p>用three-merge  【我理解为三路合并】的方式来将两个最新的分支快照（C3和C4）和它们最近的共同祖先（C2）之间进行合并，创建了一个新的快照 C5。</p>
 <p>效果：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd7rrxa4vj30g10683ym.jpg" alt=""></p>
 <p>​</p>
 <p>​</p>
 <p>rebase的方式，终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git checkout experiment ## 切到分支experiment</span><br><span class="line">git rebase master ## 将experiment嫁接到master上，即ancestor由原来的C2，变成了C3，生成了新的snapshot C4‘</span><br><span class="line">git checkout master ## 切回到master</span><br><span class="line">git merge experiment ## 将experiment merge进 master</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">git checkout experiment ## 切到分支experiment
+git rebase master ## 将experiment嫁接到master上，即ancestor由原来的C2，变成了C3，生成了新的snapshot C4‘
+git checkout master ## 切回到master
+git merge experiment ## 将experiment merge进 master
+</code></pre>
 <p>效果：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd7ywqkh0j30g604sglo.jpg" alt=""></p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsd81284n1j30he04sq2y.jpg" alt=""></p>
@@ -809,19 +932,23 @@
 </blockquote>
 <p>思路也很清晰，先把远端最新的代码pull下来，让本地的master与origin/master同步，然后将B1 rebase 到同步后的master上即可。</p>
 <p>终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git checkout master ## 切换到master</span><br><span class="line">git pull origin master ## 拉下origin/master，让本地master与origin/master同步</span><br><span class="line">git checkout B1 ## 切换到分支B1</span><br><span class="line">git rebase master ## 将B1嫁接到master上，这样B1就是在最新的master上进行开发了，随后你push B1时，项目的maintainer就可以直接merge你的分支了</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">git checkout master ## 切换到master
+git pull origin master ## 拉下origin/master，让本地master与origin/master同步
+git checkout B1 ## 切换到分支B1
+git rebase master ## 将B1嫁接到master上，这样B1就是在最新的master上进行开发了，随后你push B1时，项目的maintainer就可以直接merge你的分支了
+</code></pre>
 <p>当然， rebase master的时候，可能会出现冲突问题，比如B2分支和你的B1同时修改了同一个地方，此时需要手动修正冲突，修改后，<code>git add</code>， 不用commit，然后<code>git rebase —continue</code>，直到没有冲突，完成rebase。</p>
 <p>如果rebase仅仅只是这样，好像也没什么神奇的，下面才是重头戏。</p>
 </li>
 <li><p>偷天换日，篡改历史</p>
 <p>执行如下命令，可以进入git rebase的interactive 交互模式 ：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i xxx</span><br></pre></td></tr></table></figure>
-<p>其中XXX指的是你要在哪个commit的基础上进行修改，也就是最后一个修改的commit的父commit，比如你现在在分支B上，想要rebase 分支B的最后3个，那就写：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~3</span><br></pre></td></tr></table></figure>
-<p>这样rebase的时候，重新生成的commit history，就会是从HEAD, HEAD~1到HEAD~2的快照，而不会影响其它的snapshot。</p>
+<pre><code>git rebase -i xxx
+</code></pre><p>其中XXX指的是你要在哪个commit的基础上进行修改，也就是最后一个修改的commit的父commit，比如你现在在分支B上，想要rebase 分支B的最后3个，那就写：</p>
+<pre><code>git rebase -i HEAD~3
+</code></pre><p>这样rebase的时候，重新生成的commit history，就会是从HEAD, HEAD~1到HEAD~2的快照，而不会影响其它的snapshot。</p>
 <p>同样，想要rebase 分支B的所有commit，假定B是从master主分支上开发的，则可以直接：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i master</span><br></pre></td></tr></table></figure>
-<p>进入到interactive 模式后， 可以看到目前有7个命令可以使用：</p>
+<pre><code>git rebase -i master
+</code></pre><p>进入到interactive 模式后， 可以看到目前有7个命令可以使用：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1frl89ao69gj30yk0f0whk.jpg" alt=""></p>
 <p>简单过一下上面的命令列表：</p>
 <ul>
@@ -839,8 +966,8 @@
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdb6606a4j30ov07qtae.jpg" alt=""></p>
 <p>我们把最后6个拎出来练练。</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~6</span><br></pre></td></tr></table></figure>
-<p>使用默认编辑器打开了git-rebase-todo：</p>
+<pre><code>git rebase -i HEAD~6
+</code></pre><p>使用默认编辑器打开了git-rebase-todo：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fsdbrskqurj30hy0fktar.jpg" alt=""></p>
 <p>我们修改一下commit “  implement like &amp; dislike movie “ ，把 &amp; 换成 and， 使用reword 命令试试。</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdbworp60j30h503cwew.jpg" alt=""></p>
@@ -852,7 +979,15 @@
 <p>同样的步骤，我们这次动 <strong>41e6c73</strong> implement my favorite movies, 把my 改成 users‘：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdcefvmkdj30g4034wev.jpg" alt=""></p>
 <p>保存后退出，终端会输出如下的内容：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Stopped at 41e6c73... implement my favorite movies</span><br><span class="line">You can amend the commit now, with</span><br><span class="line"></span><br><span class="line">	git commit --amend</span><br><span class="line"></span><br><span class="line">Once you are satisfied with your changes, run</span><br><span class="line"></span><br><span class="line">	git rebase --continue</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">Stopped at 41e6c73... implement my favorite movies
+You can amend the commit now, with
+
+    git commit --amend
+
+Once you are satisfied with your changes, run
+
+    git rebase --continue
+</code></pre>
 <p>按照指示来，执行<code>git commit --amend</code>, 在打开的编辑器中修改：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fsdclnuardj30i5024aa7.jpg" alt=""></p>
 <p>保存后退出，执行<code>git rebase --continue</code>, 完成， 此时查看short SHA-1, 会发现，从刚刚修改的那条commit开始，又重新生成了新的short SHA-1。</p>
@@ -862,15 +997,22 @@
 <p>还是一样的，在它前面添加e:</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdcw0a3f4j30hr03dmxl.jpg" alt=""></p>
 <p>同样，保存后退出，回到命令行，我们reset下这个commit，将所有的文件从history里面捞出来，变成unstaged状态，然后再创建多个commit。终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">git reset HEAD~</span><br><span class="line">git add app/controllers/movies_controller.rb</span><br><span class="line">git commit -m &quot;add like and dislike actions&quot;</span><br><span class="line">git add app/views/movies/show.html.erb</span><br><span class="line">git commit -m &quot;add like and dislike button on movie&apos;s show page&quot;</span><br><span class="line">git add config/routes.rb</span><br><span class="line">git commit -m &quot;update routes for like and dislike actions&quot;</span><br><span class="line">git rebase --continue</span><br></pre></td></tr></table></figure>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdd83pbc6j30r408wdi9.jpg" alt=""></p>
+<pre><code>git reset HEAD~
+git add app/controllers/movies_controller.rb
+git commit -m &quot;add like and dislike actions&quot;
+git add app/views/movies/show.html.erb
+git commit -m &quot;add like and dislike button on movie&#39;s show page&quot;
+git add config/routes.rb
+git commit -m &quot;update routes for like and dislike actions&quot;
+git rebase --continue
+</code></pre><p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdd83pbc6j30r408wdi9.jpg" alt=""></p>
 <p>此时，一个commit被拆成了三个，short SHA-1也都更新了。</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsddapyuonj30pc04jmy2.jpg" alt=""></p>
 <p>好，下一个，squash。</p>
 <p>刚刚我们用<code>edit</code>拆了一个commit，现在我们使用<code>squash</code>把它们合并回来。</p>
 <p>终端执行：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD~8</span><br></pre></td></tr></table></figure>
-<p>在<strong>bf9a37c</strong> 和<strong>66c0d7e</strong>前面的pick改成s:</p>
+<pre><code>git rebase -i HEAD~8
+</code></pre><p>在<strong>bf9a37c</strong> 和<strong>66c0d7e</strong>前面的pick改成s:</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsddmig2w9j30ja04taas.jpg" alt=""></p>
 <p>保存后退出，会打开COMMIT_EDITMSG:</p>
 <p> <img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsddoiz6i9j30l206w754.jpg" alt=""></p>
@@ -902,8 +1044,8 @@
 <p>在pro git中没有看到exec相关的例子，不过在这篇文章<a href="http://kamalmarhubi.com/blog/2016/03/08/git-rebase-exec-make-sure-your-tests-pass-at-each-commit-and-other-rebase-goodies/" target="_blank" rel="noopener">git rebase –exec: make sure your tests pass at each commit! (and other rebase goodies)</a>里面看到相关的操作, 照着试试。</p>
 <p>选择<strong>9996f59</strong> render partial with collection， 我们添加上exec。</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i --exec &quot;pwd&quot; 9996f59</span><br></pre></td></tr></table></figure>
-<p>会在<strong>9996f59</strong>后执行 pwd 命令，可以看到已经执行了pwd命令：</p>
+<pre><code>git rebase -i --exec &quot;pwd&quot; 9996f59
+</code></pre><p>会在<strong>9996f59</strong>后执行 pwd 命令，可以看到已经执行了pwd命令：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdgn2vahrj30k401s0sv.jpg" alt=""></p>
 <p>额，Google上exec相关的内容还是较少的，少有的几篇说到了测试与重置authors的：</p>
 <ul>
@@ -912,8 +1054,8 @@
 </ul>
 <p>d，移除commit：</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git rebase -i HEAD-6</span><br></pre></td></tr></table></figure>
-<p>删除最后一条 <strong>bac0634</strong>：</p>
+<pre><code>git rebase -i HEAD-6
+</code></pre><p>删除最后一条 <strong>bac0634</strong>：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fsdgv7qw4lj30hk044q3h.jpg" alt=""></p>
 <p>保存后退出， 查看fork：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsdgw5d060j30pb02adg5.jpg" alt=""></p>
@@ -938,8 +1080,9 @@
 <p>此时，git merge了C4‘， C7和C1，重新生成快照C8，这时C8中来自于C4‘中的commit history，会跟C7中的commit history有重合的部分，相当于存在两个C4，导致出现两个一模一样的commit。</p>
 <p>书中在rebase your rebase 部分中，提到一个针对这种情况的解决方法，思路就是分辨出所有的snapshot中，哪些是你做的修改，哪些是你的同事做的，值得庆幸的是，git 帮我们处理了这种情况。</p>
 <p>终端执行：</p>
- <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git fetch</span><br><span class="line">git rebase teamone/master</span><br></pre></td></tr></table></figure>
-<p>会得到这样的效果：</p>
+<pre><code>git fetch
+git rebase teamone/master
+</code></pre><p>会得到这样的效果：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fsda5p6fh0j30gl086wet.jpg" alt=""></p>
 <p>相当于将C2，C3直接嫁接到C4‘上，生成了新的commit，厉害！不过这种方法的前提是C4与C4’需要是一样的snapshot。至于原因，书中这样说的：</p>
 <blockquote>
@@ -1256,7 +1399,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>551 words</span>
+              <span>508 words</span>
             </span>
           
 
@@ -1278,19 +1421,63 @@
             <p>项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查<a href="http://api.rubyonrails.org/v5.2/classes/ActiveSupport/MessageVerifier.html" target="_blank" rel="noopener">ActiveSupport::MessageVerifier::InvalidSignature</a>， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。</p>
 <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>现有model attachment，含有字段file，title，另有一个model issue，issue与attachment是一对多的关系。</p>
 <p> 在<code>app/models/attachment.rb</code>中，添加了：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Attachment</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:issue</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line">  has_one_attached <span class="symbol">:file</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Attachment &lt; ApplicationRecord
+  belongs_to :issue, optional: true
+  has_one_attached :file
+end
+</code></pre>
 <p>在<code>app/models/issue.rb</code>中，添加了：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:attachments</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:attachments</span>, <span class="symbol">allow_destroy:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  has_many :attachments, dependent: :destroy
+  accepts_nested_attributes_for :attachments, allow_destroy: true
+end
+</code></pre>
 <p>使用Rspec做测试时，用factorybot给Attachment建立测试数据，把测试使用的图片存放在<code>spec/resources</code>下，其中<code>spec/factories/attachments.rb</code>中的内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    file &#123; Rack::Test::UploadedFile.new(Rails.root.join(<span class="string">"spec"</span>, <span class="string">"resources"</span>, <span class="string">"image.jpg"</span>) &#125;</span><br><span class="line">    title <span class="string">"this is a title"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">FactoryBot.define do
+  factory :attachment do
+    file { Rack::Test::UploadedFile.new(Rails.root.join(&quot;spec&quot;, &quot;resources&quot;, &quot;image.jpg&quot;) }
+    title &quot;this is a title&quot;
+  end
+end
+</code></pre>
 <p>这里通过<a href="https://www.rubydoc.info/github/brynary/rack-test/Rack/Test/UploadedFile" target="_blank" rel="noopener">Rack ::Test::UploadedFile</a>构建了file，这样在controller的spec中，传递给params的file就会被视为一个上传的文件。</p>
 <p>现在需要测试issue中添加了attachment的场景。<br>在<code>spec/controllers/issues_controller_spec.rb</code>中，有这样一段：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">RSpec.describe IssuesController, <span class="symbol">type:</span> <span class="symbol">:controller</span> <span class="keyword">do</span></span><br><span class="line">  let!(<span class="symbol">:issue</span>) &#123; create <span class="symbol">:issue</span> &#125;</span><br><span class="line">  let(<span class="symbol">:issue_attributes</span>) &#123; &#123;&#125; &#125;</span><br><span class="line">  .....  </span><br><span class="line">    describe <span class="string">"PUT update issue"</span> <span class="keyword">do</span></span><br><span class="line">      action &#123; put <span class="symbol">:update</span>, <span class="symbol">params:</span> &#123; <span class="symbol">id:</span> issue, <span class="symbol">issue:</span> issue_attributes &#125; &#125;</span><br><span class="line"></span><br><span class="line">      context <span class="string">"with attachment"</span> <span class="keyword">do</span></span><br><span class="line">       let!(<span class="symbol">:attachment</span>) &#123; create <span class="symbol">:attachment</span>, <span class="symbol">issue:</span> issue &#125;</span><br><span class="line">       it expect(issue.attachments.count).to eq <span class="number">1</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">      ......</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe IssuesController, type: :controller do
+  let!(:issue) { create :issue }
+  let(:issue_attributes) { {} }
+  .....  
+    describe &quot;PUT update issue&quot; do
+      action { put :update, params: { id: issue, issue: issue_attributes } }
+
+      context &quot;with attachment&quot; do
+       let!(:attachment) { create :attachment, issue: issue }
+       it expect(issue.attachments.count).to eq 1
+      end
+      ......
+    end
+end
+
+</code></pre>
 <p>此时运行，会报错，显示：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Failures:</span></span><br><span class="line"></span><br><span class="line">  <span class="number">1</span>) IssuesController PUT update issue with attachment should <span class="keyword">not</span> be <span class="literal">nil</span></span><br><span class="line">     Failure/<span class="symbol">Error:</span> @issue.update(issue_params)</span><br><span class="line"></span><br><span class="line">     ActiveSupport::MessageVerifier::<span class="symbol">InvalidSignature:</span></span><br><span class="line">       ActiveSupport::MessageVerifier::InvalidSignature</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Failures:
+
+  1) IssuesController PUT update issue with attachment should not be nil
+     Failure/Error: @issue.update(issue_params)
+
+     ActiveSupport::MessageVerifier::InvalidSignature:
+       ActiveSupport::MessageVerifier::InvalidSignature
+</code></pre>
 <p>如果你在<code>issues_controller.rb</code>的issue_params中设置断点，会发现attachment虽然创建成功，但是attachment的file为空，也就是active storage并没有创建对应的blob， file并没有成功attached，可以通过<code>attachment.file.attached?</code>来判断file是否已经attached。</p>
 <h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>最后找到的解决的方法其实很简单，来自stack overflow上<a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a>， 只要修改一下attachment测试数据的生成方式即可，修改<code>spec/factories/attachments.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    title <span class="string">"this is a title"</span></span><br><span class="line">    after(<span class="symbol">:build</span>) <span class="keyword">do</span> <span class="params">|attachment|</span></span><br><span class="line">      attachment.file.attach(<span class="symbol">io:</span> File.open(Rails.root.join(<span class="string">"spec"</span>, <span class="string">"resources"</span>, <span class="string">"image.jpg"</span>)), <span class="symbol">filename:</span> <span class="string">'image.jpg'</span>, <span class="symbol">content_type:</span> <span class="string">"image/jpg"</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">FactoryBot.define do
+  factory :attachment do
+    title &quot;this is a title&quot;
+    after(:build) do |attachment|
+      attachment.file.attach(io: File.open(Rails.root.join(&quot;spec&quot;, &quot;resources&quot;, &quot;image.jpg&quot;)), filename: &#39;image.jpg&#39;, content_type: &quot;image/jpg&quot;)
+    end
+  end
+end
+</code></pre>
 <p>再次跑测试，会发现通过了。</p>
 <h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://stackoverflow.com/questions/48162667/active-storage-raises-activesupportmessageverifierinvalidsignature" target="_blank" rel="noopener">Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature</a></p>
 <p><a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a></p>
@@ -1435,7 +1622,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>752 words</span>
+              <span>708 words</span>
             </span>
           
 
@@ -1459,19 +1646,54 @@
 <h4 id="add-reference-VS-add-foreign-key"><a href="#add-reference-VS-add-foreign-key" class="headerlink" title="add_reference VS add_foreign_key"></a>add_reference VS add_foreign_key</h4><ul>
 <li><p><strong>add_reference</strong>(table_name, ref_name, **options)</p>
 <p>用来给表添加一个参考列，使用时，options可以有如下的设置：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">:type</span><br><span class="line">参考列的类型. 默认是 :bigint.</span><br><span class="line"></span><br><span class="line">:index</span><br><span class="line">添加一个键. 默认是 true.</span><br><span class="line"></span><br><span class="line">:foreign_key</span><br><span class="line">添加一个合适的外键约束. 默认是 false.</span><br><span class="line"></span><br><span class="line">:polymorphic</span><br><span class="line">多态关联，也就是是否需要添加额外的_type. 默认是 false， 即不添加， 设置为true时，则添加上_type</span><br><span class="line"></span><br><span class="line">:null</span><br><span class="line">该列是否允许为 nulls. 默认是 true.</span><br></pre></td></tr></table></figure>
-<p>以articles，authors为例，这里我们主要看添加外键：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_reference <span class="symbol">:articles</span>, <span class="symbol">:author</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<pre><code>:type
+参考列的类型. 默认是 :bigint.
+
+:index
+添加一个键. 默认是 true.
+
+:foreign_key
+添加一个合适的外键约束. 默认是 false.
+
+:polymorphic
+多态关联，也就是是否需要添加额外的_type. 默认是 false， 即不添加， 设置为true时，则添加上_type
+
+:null
+该列是否允许为 nulls. 默认是 true.
+</code></pre><p>以articles，authors为例，这里我们主要看添加外键：</p>
+<pre><code class="Ruby">add_reference :articles, :author, foreign_key: true
+</code></pre>
 <p>上面的这种用法，使用add_foreign_key可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">add_foreign_key :articles, :authors
+</code></pre>
 <p>默认添加的列名为author_id。</p>
 <p>或者指定列名：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span>, <span class="symbol">column:</span> <span class="symbol">:custom_author_id</span>, <span class="symbol">primary_key:</span> <span class="string">'id'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">add_foreign_key :articles, :authors, column: :custom_author_id, primary_key: &#39;id&#39;
+</code></pre>
 </li>
+</ul>
+<ul>
 <li><p><strong>add_foreign_key</strong>(from_table, to_table, options = {})</p>
 <p>用来给表添加一个外键，使用时，options可以有如下的设置：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">:column</span><br><span class="line">外键列的名字. 默认是to_table的单数形式 + &quot;_id&quot;</span><br><span class="line"></span><br><span class="line">:primary_key</span><br><span class="line">to_table的主键. 默认是 id.</span><br><span class="line"></span><br><span class="line">:name</span><br><span class="line">约束名或者说是外键的名称 默认是 fk_rails_&lt;identifier&gt; 样式，identifier是一个根据from_table和column来生成的总长为10的字符串，比如fk_rails_e74ce85cbc.</span><br><span class="line"></span><br><span class="line">:on_delete</span><br><span class="line">发生删除时的行为，可设置为nullify，cascade， restrict</span><br><span class="line"></span><br><span class="line">:on_update</span><br><span class="line">发生更新时的行为，同delete</span><br><span class="line"></span><br><span class="line">:validate</span><br><span class="line">只用于Postgres， 指定是否应该验证约束. 默认是 true.</span><br></pre></td></tr></table></figure>
-<p>add_foreign_key还可以指定to_table主表delete或者update时，from_table从表的行为约束。</p>
+<pre><code>:column
+外键列的名字. 默认是to_table的单数形式 + &quot;_id&quot;
+
+:primary_key
+to_table的主键. 默认是 id.
+
+:name
+约束名或者说是外键的名称 默认是 fk_rails_&lt;identifier&gt; 样式，identifier是一个根据from_table和column来生成的总长为10的字符串，比如fk_rails_e74ce85cbc.
+
+:on_delete
+发生删除时的行为，可设置为nullify，cascade， restrict
+
+:on_update
+发生更新时的行为，同delete
+
+:validate
+只用于Postgres， 指定是否应该验证约束. 默认是 true.
+
+</code></pre><p>add_foreign_key还可以指定to_table主表delete或者update时，from_table从表的行为约束。</p>
 <p>nullify：删除／更新主表时，自动更新从表值为NULL。删除／更新从表，主表不变</p>
 <p>cascade：删除／更新主表时，自动删除／更新从表。删除／更新从表，主表不变</p>
 <p>restrict：从表记录不存在时，主表才可以删除／更新。删除／更新从表，主表不变</p>
@@ -1484,24 +1706,34 @@
 <li><p><strong>remove_reference</strong>(table_name, ref_name, foreign_key: false, polymorphic: false, **options)</p>
 <p>顾名思义，移除reference。</p>
 <p>移除单个reference，同时移除index：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">remove_reference(:products, :user, index: true)
+</code></pre>
 <p>移除设置为多态关联的reference：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:supplier</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_reference(:products, :supplier, polymorphic: true)
+</code></pre>
 <p>移除外键：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_reference(:products, :user, index: true, foreign_key: true)
+</code></pre>
 </li>
 <li><p><strong>remove_foreign_key</strong>(from_table, options_or_to_table = {})</p>
 <p>移除外键约束。</p>
 <p>移除一个外键， 这里移除了accounts的branch_id 这个外键：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">:branches</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_foreign_key :accounts, :branches
+</code></pre>
 <p>指定移除的外键列：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">column:</span> <span class="symbol">:owner_id</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_foreign_key :accounts, column: :owner_id
+</code></pre>
 <p>指定移除的外键名称，这里移除了accounts表中名为special_fk_name的外键。「前面add_foreign_key中，可以通过name来设定添加的外键名称。」</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">name:</span> <span class="symbol">:special_fk_name</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_foreign_key :accounts, name: :special_fk_name
+</code></pre>
 </li>
 <li><p><strong>两者的区别</strong></p>
 <p>基本同添加外键一样，remove_reference当指定了<code>foreign_key: true</code> 时，等同与remove_foreign_key。比如下面这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">remove_reference <span class="symbol">:groups</span>, <span class="symbol">:order</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment">## 等同于下面这两种写法</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:orders</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">column:</span> <span class="symbol">:order_id</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_reference :groups, :order, foreign_key: true
+## 等同于下面这两种写法
+remove_foreign_key :groups, :orders
+remove_foreign_key :groups, column: :order_id
+</code></pre>
 </li>
 </ul>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://edgeapi.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-add_reference" target="_blank" rel="noopener">add_reference</a></p>
@@ -1648,7 +1880,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,199 words</span>
+              <span>1,090 words</span>
             </span>
           
 
@@ -1685,37 +1917,142 @@
 </ul>
 <p>好，一步步来。</p>
 <p>目前的group表结构如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">groups：</span><br><span class="line">  string   <span class="string">"title"</span></span><br><span class="line">  text     <span class="string">"description"</span></span><br><span class="line">  datetime <span class="string">"created_at"</span>,  <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">  datetime <span class="string">"updated_at"</span>,  <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">  bigint  <span class="string">"user_id"</span></span><br><span class="line">  index [<span class="string">"user_id"</span>], <span class="symbol">name:</span> <span class="string">"index_groups_on_user_id"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">groups：
+  string   &quot;title&quot;
+  text     &quot;description&quot;
+  datetime &quot;created_at&quot;,  null: false
+  datetime &quot;updated_at&quot;,  null: false
+  bigint  &quot;user_id&quot;
+  index [&quot;user_id&quot;], name: &quot;index_groups_on_user_id&quot;
+</code></pre>
 <p>用户部分使用devise生成了user model。</p>
 <p><strong>第一步：给group添加字段，重新生成一对多关联</strong></p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_creator_and_admin_to_group</span><br></pre></td></tr></table></figure>
-<p>在新生成的migration表中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorAndAdminToGroup</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_reference <span class="symbol">:groups</span>, <span class="symbol">:creator</span></span><br><span class="line">    add_reference <span class="symbol">:groups</span>, <span class="symbol">:admin</span></span><br><span class="line">    add_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:users</span>, <span class="symbol">column:</span> <span class="symbol">:creator_id</span>, <span class="symbol">primary_key:</span> <span class="symbol">:id</span></span><br><span class="line">    add_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:users</span>, <span class="symbol">column:</span> <span class="symbol">:admin_id</span>, <span class="symbol">primary_key:</span> <span class="symbol">:id</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g migration add_creator_and_admin_to_group
+</code></pre><p>在新生成的migration表中，添加如下内容：</p>
+<pre><code class="Ruby">class AddCreatorAndAdminToGroup &lt; ActiveRecord::Migration[5.0]
+  def change
+    add_reference :groups, :creator
+    add_reference :groups, :admin
+    add_foreign_key :groups, :users, column: :creator_id, primary_key: :id
+    add_foreign_key :groups, :users, column: :admin_id, primary_key: :id
+  end
+end
+</code></pre>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:mgirate</span><br></pre></td></tr></table></figure>
-<p>这里为group添加了两个reference, creator_id, admin_id，同时通过add_foreign_key，将creator_id，admin_id指定成外键。</p>
+<pre><code>rake db:mgirate
+</code></pre><p>这里为group添加了两个reference, creator_id, admin_id，同时通过add_foreign_key，将creator_id，admin_id指定成外键。</p>
 <p>在<code>app/models/group.rb</code>中，添加:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Group</span> &lt; ApplicationRecord</span></span><br><span class="line">  ......</span><br><span class="line">  belongs_to <span class="symbol">:creator</span>, <span class="symbol">class_name:</span> <span class="string">'User'</span></span><br><span class="line">  belongs_to <span class="symbol">:admin</span>, <span class="symbol">class_name:</span> <span class="string">'User'</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Group &lt; ApplicationRecord
+  ......
+  belongs_to :creator, class_name: &#39;User&#39;
+  belongs_to :admin, class_name: &#39;User&#39;, optional: true
+end
+</code></pre>
 <p>这里对于admin添加了<code>optional: true</code>，这样创建group的时候，不必指定admin。</p>
 <p>在<code>app/models/user.rb</code>中，添加:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ApplicationRecord</span></span><br><span class="line">  ......</span><br><span class="line">  has_many <span class="symbol">:created_groups</span>, <span class="symbol">class_name:</span> <span class="string">'Group'</span>, <span class="symbol">foreign_key:</span> <span class="string">'creator_id'</span></span><br><span class="line">  has_many <span class="symbol">:admined_groups</span>, <span class="symbol">class_name:</span> <span class="string">'Group'</span>, <span class="symbol">foreign_key:</span> <span class="string">'admin_id'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class User &lt; ApplicationRecord
+  ......
+  has_many :created_groups, class_name: &#39;Group&#39;, foreign_key: &#39;creator_id&#39;
+  has_many :admined_groups, class_name: &#39;Group&#39;, foreign_key: &#39;admin_id&#39;
+end
+</code></pre>
 <p>此时<code>rails c</code> 进入rails控制台， 可以检查下刚刚创建的关系是否成功。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">User.create(<span class="symbol">email:</span> <span class="string">"admin@mail.com"</span>, <span class="symbol">password:</span> <span class="string">"123456"</span>, <span class="symbol">password_confirmation:</span> <span class="string">"123456"</span>)</span><br><span class="line">=&gt;  #&lt;User id: 2, email: "admin@mail.com", created_at: "2018-06-09 05:43:58", updated_at: "2018-06-09 05:43:58"&gt;</span><br><span class="line"></span><br><span class="line">User.create(<span class="symbol">email:</span> <span class="string">"creator@mail.com"</span>, <span class="symbol">password:</span> <span class="string">"123456"</span>, <span class="symbol">password_confirmation:</span> <span class="string">"123456"</span>)</span><br><span class="line"></span><br><span class="line">=&gt; #&lt;User id: 3, email: "creator@mail.com", created_at: "2018-06-09 05:44:17", updated_at: "2018-06-09 05:44:17"&gt;</span><br><span class="line"></span><br><span class="line">a = Group.new(<span class="symbol">title:</span> <span class="string">"rubyist"</span>, <span class="symbol">description:</span> <span class="string">"for search"</span>)</span><br><span class="line">=&gt; #&lt;Group:0x007ff3d0a04030</span><br><span class="line"> id: nil,</span><br><span class="line"> title: "rubyist",</span><br><span class="line"> description: "for search",</span><br><span class="line"> created_at: nil,</span><br><span class="line"> updated_at: nil,</span><br><span class="line"> user_id: nil,</span><br><span class="line"> creator_id: nil,</span><br><span class="line"> admin_id: nil&gt;</span><br><span class="line"></span><br><span class="line"> a.user = User.last</span><br><span class="line">=&gt; #&lt;User id: 3, email: "creator@mail.com", created_at: "2018-06-09 05:44:17", updated_at: "2018-06-09 05:44:17"&gt;</span><br><span class="line"></span><br><span class="line"> a.creator = User.last</span><br><span class="line">=&gt; #&lt;User id: 3, email: "creator@mail.com", created_at: "2018-06-09 05:44:17", updated_at: "2018-06-09 05:44:17"&gt;</span><br><span class="line"></span><br><span class="line">a.admin = User.find(<span class="number">2</span>)</span><br><span class="line">=&gt; #&lt;User id: 2, email: "admin@mail.com", created_at: "2018-06-09 05:43:58", updated_at: "2018-06-09 05:43:58"&gt;</span><br><span class="line"></span><br><span class="line">a.save</span><br><span class="line">=&gt; true</span><br><span class="line"></span><br><span class="line">User.last.created_groups</span><br><span class="line">=&gt; [#&lt;Group:0x007ff3ce0a3ee8</span><br><span class="line">  id: 5,</span><br><span class="line">  title: "rubyist",</span><br><span class="line">  description: "for search",</span><br><span class="line">  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  user_id: 3,</span><br><span class="line">  creator_id: 3,</span><br><span class="line">  admin_id: 2&gt;]</span><br><span class="line"></span><br><span class="line">User.second.admined_groups</span><br><span class="line">=&gt; [#&lt;Group:0x007ff3cd61ff80</span><br><span class="line">  id: 5,</span><br><span class="line">  title: "rubyist",</span><br><span class="line">  description: "for search",</span><br><span class="line">  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  user_id: 3,</span><br><span class="line">  creator_id: 3,</span><br><span class="line">  admin_id: 2&gt;]</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">User.create(email: &quot;admin@mail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;)
+=&gt;  #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;
+
+User.create(email: &quot;creator@mail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;)
+
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+a = Group.new(title: &quot;rubyist&quot;, description: &quot;for search&quot;)
+=&gt; #&lt;Group:0x007ff3d0a04030
+ id: nil,
+ title: &quot;rubyist&quot;,
+ description: &quot;for search&quot;,
+ created_at: nil,
+ updated_at: nil,
+ user_id: nil,
+ creator_id: nil,
+ admin_id: nil&gt;
+
+ a.user = User.last
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+ a.creator = User.last
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+a.admin = User.find(2)
+=&gt; #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;
+
+a.save
+=&gt; true
+
+User.last.created_groups
+=&gt; [#&lt;Group:0x007ff3ce0a3ee8
+  id: 5,
+  title: &quot;rubyist&quot;,
+  description: &quot;for search&quot;,
+  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  user_id: 3,
+  creator_id: 3,
+  admin_id: 2&gt;]
+
+User.second.admined_groups
+=&gt; [#&lt;Group:0x007ff3cd61ff80
+  id: 5,
+  title: &quot;rubyist&quot;,
+  description: &quot;for search&quot;,
+  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  user_id: 3,
+  creator_id: 3,
+  admin_id: 2&gt;]
+</code></pre>
 <p>OK! 基本功能实现。下面我们将user_id的数据赋给creator_id，同时删除掉user_id这个外键。</p>
 <p><strong>第二步：数据迁移</strong></p>
 <p>没有迁移前，进<code>rails c</code> ， 查看Group的第一个record：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Group.first</span><br><span class="line">&gt; #&lt;Group:0x007ff3d093d9d0</span><br><span class="line"> id: 3,</span><br><span class="line"> title: "group1",</span><br><span class="line"> description: "groups",</span><br><span class="line"> created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> updated_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> user_id: 1,</span><br><span class="line"> creator_id: nil,</span><br><span class="line"> admin_id: nil&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Group.first
+&gt; #&lt;Group:0x007ff3d093d9d0
+ id: 3,
+ title: &quot;group1&quot;,
+ description: &quot;groups&quot;,
+ created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ updated_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ user_id: 1,
+ creator_id: nil,
+ admin_id: nil&gt;
+</code></pre>
 <p>可以看到creator_id此时为nil， user_id 为1。我们需要把user_id给到creator_id。</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration remove_user_id_on_group</span><br></pre></td></tr></table></figure>
-<p>在新生成的migration表中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RemoveUserIdOnGroup</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Group</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    Group.where.<span class="keyword">not</span>(<span class="symbol">user_id:</span> <span class="literal">nil</span>).find_each <span class="keyword">do</span> <span class="params">|g|</span></span><br><span class="line">      g.update(<span class="symbol">creator_id:</span> g.user_id)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">column:</span> <span class="symbol">:user_id</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g migration remove_user_id_on_group
+</code></pre><p>在新生成的migration表中，添加如下内容：</p>
+<pre><code class="Ruby">class RemoveUserIdOnGroup &lt; ActiveRecord::Migration[5.0]
+  class Group &lt; ActiveRecord::Base
+  end
+  def change
+    Group.where.not(user_id: nil).find_each do |g|
+      g.update(creator_id: g.user_id)
+    end
+    remove_foreign_key :groups, column: :user_id
+  end
+end
+</code></pre>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:mgirate</span><br></pre></td></tr></table></figure>
-<p>这样数据就迁移过来了，同时group的外键user_id也被删除了。</p>
+<pre><code>rake db:mgirate
+</code></pre><p>这样数据就迁移过来了，同时group的外键user_id也被删除了。</p>
 <p>进<code>rails console</code> 看看：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Group.first</span><br><span class="line">&gt; #&lt;Group:0x007ff3d093d9d0</span><br><span class="line"> id: 3,</span><br><span class="line"> title: "group1",</span><br><span class="line"> description: "groups",</span><br><span class="line"> created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> updated_at: Sat, 09 Jun 2018 06:05:24 UTC +00:00,</span><br><span class="line"> creator_id: 1,</span><br><span class="line"> admin_id: nil&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Group.first
+&gt; #&lt;Group:0x007ff3d093d9d0
+ id: 3,
+ title: &quot;group1&quot;,
+ description: &quot;groups&quot;,
+ created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ updated_at: Sat, 09 Jun 2018 06:05:24 UTC +00:00,
+ creator_id: 1,
+ admin_id: nil&gt;
+</code></pre>
 <p>可以看到数据已经成功迁移了。</p>
 <p>但是，还没有完，需要清理下代码。</p>
 <p>在<code>app/models/group.rb</code>中，删除<code>belongs_to :user</code></p>
@@ -1864,7 +2201,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,002 words</span>
+              <span>926 words</span>
             </span>
           
 
@@ -1892,39 +2229,112 @@
 <h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>在修改代码前，需要知道这两点：</p>
 <ul>
 <li><p>使用devise作用户管理时，如果你的 <code>app/models/user.rb</code>中，devise添加了validatable:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">devise :xxxx, :..., :validatable</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>devise :xxxx, :..., :validatable
+</code></pre></li>
 </ul>
 <p>那么相当于给user添加了如下的validates：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">validates_uniqueness_of <span class="symbol">:email</span>, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_format_of     <span class="symbol">:email</span>, <span class="symbol">with:</span> email_regexp, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_presence_of     <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_confirmation_of <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_length_of       <span class="symbol">:password</span>, <span class="symbol">within:</span> password_length, <span class="symbol">allow_blank:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">validates_uniqueness_of :email, allow_blank: true, if: :email_changed?
+validates_format_of     :email, with: email_regexp, allow_blank: true, if: :email_changed?
+validates_presence_of     :password, if: :password_required?
+validates_confirmation_of :password, if: :password_required?
+validates_length_of       :password, within: password_length, allow_blank: true
+</code></pre>
 <p>这里注意到<code>validates_presence_of     :password, if: :password_required?</code>,当password_required?为true时，password必填。password_required?这个method的源代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  !persisted? <span class="params">||</span> !password.<span class="literal">nil</span>? <span class="params">||</span> !password_confirmation.<span class="literal">nil</span>?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def password_required?
+  !persisted? || !password.nil? || !password_confirmation.nil?
+end
+</code></pre>
 <p>如果更新的时候，我们不更新密码部分，只更新姓名或者头像，就会报错，因为此时表单送出的password是“”，即空值，但不是nil，这样 !password.nil? 就会为true，导致password_required?为true，所以我们需要重写这个method，当password为空时，也可以更新用户信息。</p>
 <p>在<code>app/models/user.rb</code>中，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  new_record? <span class="params">||</span> password.present? <span class="params">||</span> password_confirmation.present?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def password_required?
+  new_record? || password.present? || password_confirmation.present?
+end
+</code></pre>
 <p>这样添加后，当你修改用户信息时，如果password那一栏没有填写，不会出现如下报错：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg" alt=""></p>
 <ul>
 <li><p>修改密码时，因为需要输入当前的密码，也就是current_password这个字段，而原先user中是没有添加这个字段的，所以需要在<code>app/models/user.rb</code>中，添加如下代码，保证current_password可读写。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">attr_writer</span> <span class="symbol">:current_password</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">attr_writer :current_password
+</code></pre>
 </li>
 </ul>
 <p>好了，准备工作完成，算是解决了大半了，我们的重头戏来了。</p>
 <p>新增一个controller account::user 来让让用户完成修改密码的操作：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller account::user</span><br></pre></td></tr></table></figure>
-<p>在<code>routes.rb</code>中添加路径：【因为修改密码是用户单个个体的行为，所以我们使用resource】</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">namespace <span class="symbol">:account</span> <span class="keyword">do</span></span><br><span class="line">  resource <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g controller account::user
+</code></pre><p>在<code>routes.rb</code>中添加路径：【因为修改密码是用户单个个体的行为，所以我们使用resource】</p>
+<pre><code class="Ruby">namespace :account do
+  resource :user
+end
+</code></pre>
 <p>我们添加上view，让用户可以修改个人信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch app/views/account/users/show.html.erb</span><br></pre></td></tr></table></figure>
-<p>在 <code>app/views/account/users/show.html.erb</code> 中添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= simple_form_for @user, <span class="symbol">url:</span> &#123; <span class="symbol">action:</span> <span class="symbol">:update</span> &#125; <span class="keyword">do</span> <span class="params">|f|</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:name</span> %&gt;</span><br><span class="line">  &lt;%= f.file_field <span class="symbol">:avatar</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.input <span class="symbol">:current_password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password_confirmation</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.submit <span class="string">"更新"</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>"%&gt;    </span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
+<pre><code>touch app/views/account/users/show.html.erb
+</code></pre><p>在 <code>app/views/account/users/show.html.erb</code> 中添加如下内容：</p>
+<pre><code class="Ruby">&lt;%= simple_form_for @user, url: { action: :update } do |f| %&gt;
+  &lt;%= f.input :name %&gt;
+  &lt;%= f.file_field :avatar %&gt;
+
+  &lt;%= f.input :current_password %&gt;
+  &lt;%= f.input :password %&gt;
+  &lt;%= f.input :password_confirmation %&gt;
+
+  &lt;%= f.submit &quot;更新&quot;, class: &quot;btn btn-success&quot;%&gt;    
+&lt;% end %&gt;
+</code></pre>
 <p>同时需要在其他页面，比如navbar中提供入口，让用户可以进入该页面更新个人信息，这里略去。</p>
 <p>在<code>app/controllers/account/users_controller.rb</code>中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @user = User.find(current_user.id)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @user = User.find(current_user.id)</span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      @user.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      @user.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, <span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>)</span><br><span class="line">  <span class="keyword">end</span>    </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Account::UsersController &lt; ApplicationController
+  authorize_resource :user, parent: false
+  def show
+    @user = User.find(current_user.id)
+  end
+
+  def update
+    @user = User.find(current_user.id)
+    if user_params.values_at(:current_password, :password, :password_confirmation).any?(&amp;:present?)
+      @user.update_with_password(user_params)
+    else
+      @user.update(user_params)
+    end
+    redirect_to profile_path
+  end
+
+  protected
+
+  def user_params
+    params.require(:user).permit(:name, :avatar, :current_password, :password, :password_confirmation)
+  end    
+end
+</code></pre>
 <p>其中，因为使用cancancan做权限管理，所以这里我们用<code>authorize_resource :user, parent: false</code>来给user授权authorize，让user可以有读写的权利， update action部分中，我们使用了devise的instance method <a href="https://github.com/plataformatec/devise/blob/715192a7709a4c02127afb067e66230061b82cf2/lib/devise/models/database_authenticatable.rb#L67" target="_blank" rel="noopener">update_with_password</a>来修改密码，它会检查用户的:current_password, :password, :password_confirmation这三者的有效性。</p>
 <p>上面的代码看着有些不够简洁，我们稍稍重构下：</p>
 <p>把@user = User.find(current_user.id)拎出来，放在before action里面，把[:current_password, :password, :password_confirmation]这三个密码相关的变量用一个method包起来。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; @user = User.find(current_user.id) &#125;</span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(*password_param_lists).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      @user.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      @user.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, *password_param_lists)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">password_param_lists</span></span></span><br><span class="line">    [<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Account::UsersController &lt; ApplicationController
+  before_action -&gt; { @user = User.find(current_user.id) }
+  authorize_resource :user, parent: false
+
+  def show
+  end
+
+  def update
+    if user_params.values_at(*password_param_lists).any?(&amp;:present?)
+      @user.update_with_password(user_params)
+    else
+      @user.update(user_params)
+    end
+    redirect_to profile_path
+  end
+
+protected
+
+  def user_params
+    params.require(:user).permit(:name, :avatar, *password_param_lists)
+  end
+
+  def password_param_lists
+    [:current_password, :password, :password_confirmation]
+  end
+end
+</code></pre>
 <p>OK!  基本功能实现。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/plataformatec/devise" target="_blank" rel="noopener">devise</a></p>
 <p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
@@ -2068,7 +2478,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>591 words</span>
+              <span>570 words</span>
             </span>
           
 
@@ -2088,23 +2498,40 @@
         
           
             <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在运行<code>rails g migration xxxx</code>时弹出如下的报错：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Running via Spring preloader in process 16933</span><br><span class="line">      invoke  active_record</span><br><span class="line">Could not find &quot;migration.rb&quot; in any of your source paths. Your current source paths are:</span><br><span class="line">/Users/username/path/to/project/lib/templates/active_record/migration</span><br><span class="line">/Users/username/.rvm/gems/ruby-2.4.0/gems/activerecord-5.2.0/lib/rails/generators/active_record/migration/templates</span><br></pre></td></tr></table></figure>
-<p>其中：</p>
+<pre><code>Running via Spring preloader in process 16933
+      invoke  active_record
+Could not find &quot;migration.rb&quot; in any of your source paths. Your current source paths are:
+/Users/username/path/to/project/lib/templates/active_record/migration
+/Users/username/.rvm/gems/ruby-2.4.0/gems/activerecord-5.2.0/lib/rails/generators/active_record/migration/templates
+</code></pre><p>其中：</p>
 <p>ruby v2.4.0</p>
 <p>rails v5.2.0</p>
 <p>同样，运行<code>rails g controller xxx</code> , <code>rails g model xxx</code>时，同样显示无法找到controller.rb， model.rb文件。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>google了下，一直没有看到类似的问题，于是按照提示，去终端提示的：Your current source paths中去搜索，查看目录下的文件，发现有一个migration.rb.tt的文件，直接复制了一份，命名为migration.rb， 终端再次执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration xxxx</span><br></pre></td></tr></table></figure>
-<p>OK!</p>
+<pre><code>rails g migration xxxx
+</code></pre><p>OK!</p>
 <p>对于controller以及model部分做同样的处理即可。</p>
 <p>不过疑惑的是，为什么会有这些文件，它们是什么，应该存放的文件放在了哪里呢？</p>
 <p>Google后，在<a href="https://github.com/bundler/bundler/blob/master/lib/bundler/cli/gem.rb" target="_blank" rel="noopener">gem bundle</a>里面可以发现，这些带有tt后缀的文件应该是临时文件。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">templates = &#123;</span><br><span class="line">  <span class="string">"Gemfile.tt"</span> =&gt; <span class="string">"Gemfile"</span>,</span><br><span class="line">  <span class="string">"lib/newgem.rb.tt"</span> =&gt; <span class="string">"lib/<span class="subst">#&#123;namespaced_path&#125;</span>.rb"</span>,</span><br><span class="line">  <span class="string">"lib/newgem/version.rb.tt"</span> =&gt; <span class="string">"lib/<span class="subst">#&#123;namespaced_path&#125;</span>/version.rb"</span>,</span><br><span class="line">  <span class="string">"newgem.gemspec.tt"</span> =&gt; <span class="string">"<span class="subst">#&#123;name&#125;</span>.gemspec"</span>,</span><br><span class="line">  <span class="string">"Rakefile.tt"</span> =&gt; <span class="string">"Rakefile"</span>,</span><br><span class="line">  <span class="string">"README.md.tt"</span> =&gt; <span class="string">"README.md"</span>,</span><br><span class="line">  <span class="string">"bin/console.tt"</span> =&gt; <span class="string">"bin/console"</span>,</span><br><span class="line">  <span class="string">"bin/setup.tt"</span> =&gt; <span class="string">"bin/setup"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">
+      templates = {
+        &quot;Gemfile.tt&quot; =&gt; &quot;Gemfile&quot;,
+        &quot;lib/newgem.rb.tt&quot; =&gt; &quot;lib/#{namespaced_path}.rb&quot;,
+        &quot;lib/newgem/version.rb.tt&quot; =&gt; &quot;lib/#{namespaced_path}/version.rb&quot;,
+        &quot;newgem.gemspec.tt&quot; =&gt; &quot;#{name}.gemspec&quot;,
+        &quot;Rakefile.tt&quot; =&gt; &quot;Rakefile&quot;,
+        &quot;README.md.tt&quot; =&gt; &quot;README.md&quot;,
+        &quot;bin/console.tt&quot; =&gt; &quot;bin/console&quot;,
+        &quot;bin/setup.tt&quot; =&gt; &quot;bin/setup&quot;
+      }
+</code></pre>
 <p>顺藤摸瓜，发现本机上ruby-2.4.0下的那些ruby文件，很多都是带有了tt扩展名的，比如：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">model.rb.tt</span><br><span class="line">module.rb.tt</span><br><span class="line">application_record.rb.tt</span><br></pre></td></tr></table></figure>
-<p>至于为什么会出现这种情况，Google了也没找到，我回顾自己的操作，因为之前用的ruby是2.3.6，rails5.2， 后面将ruby升级了到2.4.0，随即重新在ruby2.4.0下裝rails，2.4.0 ruby on 5.2.0 rails，安装的过程中出现报错:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ruby-2.4.0/lib/ruby/site_ruby/2.4.0/rubygems/core_ext/kernel_require.rb:55:in `require&apos;: cannot load such file -- bundler (LoadError)</span><br></pre></td></tr></table></figure>
-<p>于是按照指示，执行了<code>gem install bundler</code>。看了下，这些带有tt扩展名的文件生成时间差不多也是这个指令执行的时间，也许是在这一步导致的。至于到底为什么会这样，我也是很疑惑，也许是bundle很强大，连这些rails的源文件也能备份？</p>
+<pre><code>model.rb.tt
+module.rb.tt
+application_record.rb.tt
+</code></pre><p>至于为什么会出现这种情况，Google了也没找到，我回顾自己的操作，因为之前用的ruby是2.3.6，rails5.2， 后面将ruby升级了到2.4.0，随即重新在ruby2.4.0下裝rails，2.4.0 ruby on 5.2.0 rails，安装的过程中出现报错:</p>
+<pre><code>ruby-2.4.0/lib/ruby/site_ruby/2.4.0/rubygems/core_ext/kernel_require.rb:55:in `require&#39;: cannot load such file -- bundler (LoadError)
+</code></pre><p>于是按照指示，执行了<code>gem install bundler</code>。看了下，这些带有tt扩展名的文件生成时间差不多也是这个指令执行的时间，也许是在这一步导致的。至于到底为什么会这样，我也是很疑惑，也许是bundle很强大，连这些rails的源文件也能备份？</p>
 <p>先记录下，在脑子里留个印象，下次再遇到，也许可以解惑。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/23401612/what-is-tt-file-in-ruby?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa" target="_blank" rel="noopener">what is .tt file in ruby</a></p>
 
@@ -2247,7 +2674,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>797 words</span>
+              <span>776 words</span>
             </span>
           
 
@@ -2278,9 +2705,16 @@
 <p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p>
 <p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;254, "c"=&gt;300&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
+</code></pre>
 <p>你可以通过block来指定merge的规则：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;454, "c"=&gt;300&#125;</span></span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; "a" =&gt; 100, "b" =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
+h1.merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+</code></pre>
 </li>
 <li><p>deep_merge用法</p>
 <p>官方给到的解释和例子是这样的：</p>
@@ -2290,20 +2724,34 @@
 </blockquote>
 <p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p>
 <p>还是以上面的例子为例：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;254, "c"=&gt;300&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.deep_merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
+</code></pre>
 <p>同样，你也可以通过block来指定deep_merge的规则：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="string">"a"</span> =&gt; <span class="number">100</span>, <span class="string">"b"</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">"b"</span> =&gt; <span class="number">254</span>, <span class="string">"c"</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;"a"=&gt;100, "b"=&gt;454, "c"=&gt;300&#125;</span></span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; "a" =&gt; 100, "b" =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.deep_merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
+h1.deep_merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+</code></pre>
 </li>
 <li><p>二者差异</p>
 <p>从上面的例子看，似乎两者没有什么区别。</p>
 <p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p>
 <p>但是针对nested hash，两者就不一样了。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="symbol">x:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>] &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> [<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] &#125; &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:x=&gt;[3, 4, 5]&#125;&#125;</span></span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = { a: true, b: { c: [1, 2, 3], x: [1, 2, 3] } }
+h2 = { a: false, b: { x: [3, 4, 5] } }
+h1.merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:x=&gt;[3, 4, 5]}}
+h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]}}
+</code></pre>
 <p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p>
 <p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p>
 <p>再看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>], <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">1</span> &#125; &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">2</span>, <span class="symbol">z:</span> <span class="number">1</span>&#125; &#125; &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;&#123;:y=&gt;2, :z=&gt;1&#125;&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">h1 = { a: true, b: { c: [1,2,3], x: { y: 1 } } }
+h2 = { a: false, b: { x: { y: 2, z: 1} } }
+h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;{:y=&gt;2, :z=&gt;1}}}
+</code></pre>
 <p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
 <h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li>
 <li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p>
@@ -2528,7 +2976,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2665,5 +3113,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

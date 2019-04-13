@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>379 words</span>
+              <span>350 words</span>
             </span>
           
 
@@ -393,17 +393,46 @@
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>当你想要在examples中传递一个Array时，要怎么做？直接传递？我们试试。</p>
 <p>背景如下：</p>
 <p>在文件<code>search.feature</code>中，search_terms的数据是一个数组[ ‘chocolate’ , ‘Nigella Lawson’]：</p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span></span><br><span class="line">When I search <span class="keyword">for</span> <span class="string">"&lt;search_terms&gt;"</span></span><br><span class="line">Then I should get a list of <span class="string">"&lt;recipe_title&gt;"</span></span><br><span class="line"><span class="symbol">Examples:</span></span><br><span class="line">        <span class="params">| search_terms |</span> recipe_title <span class="params">|</span></span><br><span class="line"><span class="params">        |</span> [ <span class="string">'chocolate'</span> , <span class="string">'Nigella Lawson'</span>] <span class="params">| White chocolate <span class="keyword">and</span> mintmousse |</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"> Scenario Outline:
+ When I search for &quot;&lt;search_terms&gt;&quot;
+ Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
+ Examples:
+         | search_terms | recipe_title |
+         | [ &#39;chocolate&#39; , &#39;Nigella Lawson&#39;] | White chocolate and mintmousse |
+</code></pre>
 <p>对应的step文件，如<code>search_step.rb</code>，内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">When(<span class="regexp">/^I search for "([^"]*)"$/</span>) <span class="keyword">do</span> <span class="params">|terms|</span></span><br><span class="line">  search_terms = terms</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="regexp">/^I should get a list of "([^"]*)"$/</span>) <span class="keyword">do</span> <span class="params">|recipe_title|</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
+  search_terms = terms
+  ......
+end
+
+Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
+  ......
+end
+</code></pre>
 <p>这时如果直接在终端运行cucumber会报错，因为你的search_terms传递的是一个array。</p>
 <p>在 <a href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315" target="_blank" rel="noopener">Cucumber:10316 -  Passing arrays in tables</a>中有位mswinson提到了这个问题，然后有位叫Andy的回复了他。【蛮好玩的，有兴趣的可以看看。】</p>
 <p>解决方法就是<strong>避开Array，传递String，用“，”来区分各个element，然后在step definitions中用<code>split(/, /)</code>将其转换为Array</strong>。</p>
 <p>比如上面的这个例子，可以这么来：</p>
 <p>修改文件<code>search.feature</code>内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span></span><br><span class="line">When I search <span class="keyword">for</span> <span class="string">"&lt;search_terms&gt;"</span></span><br><span class="line">Then I should get a list of <span class="string">"&lt;recipe_title&gt;"</span></span><br><span class="line"></span><br><span class="line"><span class="symbol">Examples:</span></span><br><span class="line">        <span class="params">| search_terms |</span> recipe_title <span class="params">|</span></span><br><span class="line"><span class="params">        |</span> chocolate , Nigella Lawson<span class="params">| White chocolate <span class="keyword">and</span> mintmousse |</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"> Scenario Outline:
+ When I search for &quot;&lt;search_terms&gt;&quot;
+ Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
+
+ Examples:
+         | search_terms | recipe_title |
+         | chocolate , Nigella Lawson| White chocolate and mintmousse |
+</code></pre>
 <p>在对应的step文件中， 使用<code>search_terms = terms.split(/, /)</code>。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">When(<span class="regexp">/^I search for "([^"]*)"$/</span>) <span class="keyword">do</span> <span class="params">|terms|</span></span><br><span class="line">  search_terms = terms.split(<span class="regexp">/, /</span>) <span class="comment">## 这时search_terms就是一个array了</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="regexp">/^I should get a list of "([^"]*)"$/</span>) <span class="keyword">do</span> <span class="params">|recipe_title|</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
+  search_terms = terms.split(/, /) ## 这时search_terms就是一个array了
+  ......
+end
+
+Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
+  ......
+end
+</code></pre>
 <p>OK，完成。</p>
 <h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>嗯，就这么简单，可我还是想把它写出来，硬生生整出了一篇文章来……</p>
 <p>参考： <a href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315" target="_blank" rel="noopener">Cucumber:10316 -  Passing arrays in tables</a></p>
@@ -548,7 +577,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>967 words</span>
+              <span>871 words</span>
             </span>
           
 
@@ -572,36 +601,130 @@
 <p>如果你的专案中多处需要用到rest-client，你一定希望可以封装起来，易于调用，让代码更优雅。</p>
 <p>我们开始吧。</p>
 <h4 id="用法简介"><a href="#用法简介" class="headerlink" title="用法简介"></a>用法简介</h4><p><a href="https://github.com/rest-client/rest-client" target="_blank" rel="noopener">Rest-client</a>的<a href="http://www.rubydoc.info/github/rest-client/rest-client/RestClient#post-class_method" target="_blank" rel="noopener">官方文档</a>中， 详细地列出了各个method的参数情况，我们挑出最重要的那四个：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">.get(url, headers = &#123;&#125;, &amp;block)</span><br><span class="line">.post(url, payload, headers = &#123;&#125;, &amp;block)</span><br><span class="line">.put(url, payload, headers = &#123;&#125;, &amp;block)</span><br><span class="line">.delete(url, headers = &#123;&#125;, &amp;block)</span><br></pre></td></tr></table></figure>
-<p>会发现四个verb请求都带有headers，block，但是这两个参数都不是必填的。比如<code>get</code>， 只给一个URL就满足了。</p>
+<pre><code>.get(url, headers = {}, &amp;block)
+.post(url, payload, headers = {}, &amp;block)
+.put(url, payload, headers = {}, &amp;block)
+.delete(url, headers = {}, &amp;block)
+</code></pre><p>会发现四个verb请求都带有headers，block，但是这两个参数都不是必填的。比如<code>get</code>， 只给一个URL就满足了。</p>
 <p>在<a href="https://github.com/rest-client/rest-client" target="_blank" rel="noopener">GitHub</a>库上有相关的实例，长这样：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1flbgi7h7mgj30oh07r407.jpg" alt=""></p>
 <p>用起来很简单，那么在ruby中如何封装呢？比如有个图书model，我想要对某个书进行修改，使用put时，就要传递至少三个参数，冗长的URL表明是哪本书，你的登录信息，比如sessionId, 要更新的内容。类似这样：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RestClient.post &apos;http://book.com/books/bookid&apos;, &#123;:sessionId =&gt; &apos;XXXXXXXX&apos;, :token =&gt; &quot;xxxx&quot;&#125;,&#123;&quot;name&quot;: &quot;XXX&quot;, &quot;description:&quot; &quot;XXXXX&quot; .......&#125;</span><br></pre></td></tr></table></figure>
-<p>代码看着很不整洁，如何改进？</p>
+<pre><code>RestClient.post &#39;http://book.com/books/bookid&#39;, {:sessionId =&gt; &#39;XXXXXXXX&#39;, :token =&gt; &quot;xxxx&quot;},{&quot;name&quot;: &quot;XXX&quot;, &quot;description:&quot; &quot;XXXXX&quot; .......}
+</code></pre><p>代码看着很不整洁，如何改进？</p>
 <p>别急，先来看看在ruby中如何实现全局调用一个method。</p>
 <h4 id="call-method-from-the-global-scope"><a href="#call-method-from-the-global-scope" class="headerlink" title="call method from the global scope"></a>call method from the global scope</h4><p>比如你定义了method C</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">	puts <span class="string">"hello, <span class="subst">#&#123;name&#125;</span>"</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def C(name)
+    puts &quot;hello, #{name}&quot;
+end
+</code></pre>
 <p>你想要在专案的多个文件中均可以调用这个method C，怎么实现？</p>
 <p>使用module，这么来，在文件A.rb中，放入如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">A</span></span></span><br><span class="line">	<span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">		<span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">			puts <span class="string">"hello, <span class="subst">#&#123;name&#125;</span>"</span></span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module A
+    module B
+        def C(name)
+            puts &quot;hello, #{name}&quot;
+        end
+    end
+end
+</code></pre>
 <p>这时候，你引用C，需要写成A::B.C， 呃，这不是我们想要的结果，继续优化。</p>
 <p>在Ruby中，任何一个method都绑定了一个对象。当我们调用比较常见的method，比如<code>puts</code>， <code>require</code>时，其实我们是在调用<code>main.puts</code>, <code>main.require</code>, 也就是它们有一个默认的object，叫做main。</p>
 <p>那我们也想给C挂上这样的object，让它也可以像puts一样被直接调用，怎么做？</p>
 <p>让Object这个class中，包含我们的A::B即可，修改文件A.rb：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">A</span></span></span><br><span class="line">	<span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">		<span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">			puts <span class="string">"hello, <span class="subst">#&#123;name&#125;</span>"</span></span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">	<span class="keyword">include</span> A::B</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module A
+    module B
+        def C(name)
+            puts &quot;hello, #{name}&quot;
+        end
+    end
+end
+
+class Object
+    include A::B
+end
+</code></pre>
 <p>这样当你在其他文件中，比如app.rb中调用C时，只要加上如下代码即可：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'A'</span> <span class="comment">#C定义的文件名</span></span><br><span class="line">extend A::B</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;A&#39; #C定义的文件名
+extend A::B
+</code></pre>
 <p>好，回到我们的restclient, 现在就很好做了。</p>
 <h4 id="简化restclient的调用"><a href="#简化restclient的调用" class="headerlink" title="简化restclient的调用"></a>简化restclient的调用</h4><p>知道如何对method进行global 调用，我们可以这么玩。</p>
 <p>新建<code>myclient.rb</code>文件，内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rest-client'</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
+
+module MyClient
+  module Client
+  end
+end
+</code></pre>
 <p>里面没有任何method，我们加上get。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rest-client'</span></span><br><span class="line">$apiurl = <span class="symbol">http:</span>/<span class="regexp">/example.com/api</span>. <span class="comment">#这是你API的URL，请自行修改</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(url, headers = <span class="literal">nil</span>)</span></span></span><br><span class="line">      response = RestClient.get(</span><br><span class="line">          $apiurl + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">   <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyClient::Client</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
+$apiurl = http://example.com/api. #这是你API的URL，请自行修改
+module MyClient
+  module Client
+    def get(url, headers = nil)
+      response = RestClient.get(
+          $apiurl + url,
+          headers
+      )
+    end
+   end
+ end
+
+class Object
+  include MyClient::Client
+end
+</code></pre>
 <p>这时，如果要在其他文件调用，比如app.rb文件中，使用get,就可以这么用了。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">require_relative <span class="string">'my_client'</span></span><br><span class="line">extend MyClient::Client</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line">headers =  &#123;<span class="symbol">:<span class="string">'session'</span></span> =&gt; <span class="string">'XXXX'</span>&#125;</span><br><span class="line">get(<span class="string">"/books"</span>, headers)</span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require_relative &#39;my_client&#39;
+extend MyClient::Client
+
+......
+headers =  {:&#39;session&#39; =&gt; &#39;XXXX&#39;}
+get(&quot;/books&quot;, headers)
+.....
+</code></pre>
 <p>同样的，将post，put， delete 加入，补全代码，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rest-client'</span></span><br><span class="line">$apiurl = <span class="symbol">http:</span>/<span class="regexp">/example.com/api</span>. <span class="comment">#这是你API的URL，请自行修改</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(url, headers = <span class="literal">nil</span>)</span></span></span><br><span class="line">      response = RestClient.get(</span><br><span class="line">          $apiurl + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(url, payload, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.post(</span><br><span class="line">          $apiurl + url,</span><br><span class="line">          payload,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">put</span><span class="params">(url, payload, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.put(</span><br><span class="line">          $apiurl + url,</span><br><span class="line">          payload,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">delete</span><span class="params">(url, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.delete(</span><br><span class="line">          $apiurl + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyClient::Client</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
+$apiurl = http://example.com/api. #这是你API的URL，请自行修改
+module MyClient
+  module Client
+    def get(url, headers = nil)
+      response = RestClient.get(
+          $apiurl + url,
+          headers
+      )
+    end
+
+    def post(url, payload, headers = nil )
+      response = RestClient.post(
+          $apiurl + url,
+          payload,
+          headers
+      )
+    end
+
+    def put(url, payload, headers = nil )
+      response = RestClient.put(
+          $apiurl + url,
+          payload,
+          headers
+      )
+    end
+
+    def delete(url, headers = nil )
+      response = RestClient.delete(
+          $apiurl + url,
+          headers
+      )
+    end
+  end
+end
+
+class Object
+  include MyClient::Client
+end
+</code></pre>
 <p>搞定，可以欢快地调用啦！！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/18964016/how-can-i-add-a-method-to-the-global-scope-in-ruby" target="_blank" rel="noopener">How can I add a method to the global scope in Ruby?</a></p>
 
@@ -744,7 +867,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>169 words</span>
+              <span>160 words</span>
             </span>
           
 
@@ -769,14 +892,22 @@
 <li>可以添加tag</li>
 </ul>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@approved @car_buy</span><br><span class="line"></span><br><span class="line">　　<span class="symbol">Feature:</span> Car Buy</span><br><span class="line"></span><br><span class="line">        　　@wip</span><br><span class="line"></span><br><span class="line">        　　<span class="symbol">Scenario:</span> Buy a car <span class="keyword">in</span> store</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">@approved @car_buy
+
+　　Feature: Car Buy
+
+        　　@wip
+
+        　　Scenario: Buy a car in store
+
+</code></pre>
 <p>　　一个Scenario会继承指定给Feature的tags，所以在上面的例子中，Scenario有三个tags：@approved @car_buy @wip.  </p>
 <p>调用时，使用<code>cucumber  --tags tag_name</code>。</p>
 <p>比如运行feature，终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber  --tags @car_buy</span><br></pre></td></tr></table></figure>
-<p>使用tag的好处是可以细化到scenario。比如上例， 就可以使用命令：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber –tags @wip</span><br></pre></td></tr></table></figure>
-<p>来运行你想要的那部分Scenario.</p>
+<pre><code>cucumber  --tags @car_buy
+</code></pre><p>使用tag的好处是可以细化到scenario。比如上例， 就可以使用命令：</p>
+<pre><code>cucumber –tags @wip
+</code></pre><p>来运行你想要的那部分Scenario.</p>
 <p>插一句：cucumber默认加载<code>features/support/.</code>. 即support下的所有文件。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.cnblogs.com/puresoul/archive/2011/12/28/2305160.html" target="_blank" rel="noopener">cucumber 入门之Gherkin</a></p>
 
@@ -919,7 +1050,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>975 words</span>
+              <span>927 words</span>
             </span>
           
 
@@ -941,28 +1072,36 @@
             <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用cucumber 实作了个小小的例子，来感受一下小黄瓜的魅力：P。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>做了一个用于计算的专案，名为calculator。</p>
 <p>calculator会做这样的事情：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">如果你输入了：</span><br><span class="line">2+2</span><br><span class="line">那么它会输出4</span><br><span class="line">如果你输入了：</span><br><span class="line">3*3</span><br><span class="line">那么它会输出9</span><br><span class="line">……</span><br></pre></td></tr></table></figure>
-<p>其实就是一个简单的计算器。</p>
+<pre><code>如果你输入了：
+2+2
+那么它会输出4
+如果你输入了：
+3*3
+那么它会输出9
+……
+</code></pre><p>其实就是一个简单的计算器。</p>
 <p>好，我们开始吧。</p>
 <p>终端运行:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails new calculator</span><br><span class="line">cd calculator</span><br></pre></td></tr></table></figure>
-<p>建立专案calculator, 安装cucumber。参考：<a href="https://github.com/cucumber/cucumber-rails/blob/master/README.md" target="_blank" rel="noopener">Cucumber-Rails</a></p>
+<pre><code>rails new calculator
+cd calculator
+</code></pre><p>建立专案calculator, 安装cucumber。参考：<a href="https://github.com/cucumber/cucumber-rails/blob/master/README.md" target="_blank" rel="noopener">Cucumber-Rails</a></p>
 <p>在gemfile文件中添加 cucumber-rails：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl533xnblyj30fm037t90.jpg" alt=""></p>
 <p>database_cleaner这个gem是用来清理测试数据的，可加可不加，不过建议添加。</p>
 <p>终端运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bundle install</span><br><span class="line">rails g cucumber:install</span><br></pre></td></tr></table></figure>
-<p>会自动生成一些文件：</p>
+<pre><code>bundle install
+rails g cucumber:install
+</code></pre><p>会自动生成一些文件：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fl53d5jnsaj30oq06ota5.jpg" alt=""></p>
 <p>它帮我们生成好了features文件夹， 还有step_definitions.</p>
 <p>让我们删除rails自带的test:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf test</span><br></pre></td></tr></table></figure>
-<p>终端输入cucumber试试：</p>
+<pre><code>rm -rf test
+</code></pre><p>终端输入cucumber试试：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl53j79w13j30st072gng.jpg" alt=""></p>
 <p>显示Deprecated了，针对这个问题我 Google了一下，你可以在cucumber-rails的<a href="https://github.com/cucumber/cucumber-rails/issues/346" target="_blank" rel="noopener">issues346</a>中看到, 但是没有找到解答，如果你留意，你会发现config文件下的<code>cucumber.yml</code>里面确实有<code>~@wip</code>, 如果你尝试着把所有的<code>~@wip</code> 替换成<code>not @tag</code> 会出现报错，鉴于它并不影响测试，所以你可以选择无视这些Deprecated：P</p>
 <p>好，我们继续添加测试文件吧！新增<code>adding.feature</code>文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch features/adding.feature</span><br></pre></td></tr></table></figure>
-<p><code>adding.feature</code>文件的内容如下：</p>
+<pre><code>touch features/adding.feature
+</code></pre><p><code>adding.feature</code>文件的内容如下：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl54cns0dnj30fx04aaab.jpg" alt=""></p>
 <p>终端运行cucumber，显示如下：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54f04mr0j30zk0k9tdg.jpg" alt=""></p>
@@ -973,26 +1112,59 @@
 <p>再次运行cucumber试试：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54qokbosj30j807kjse.jpg" alt=""></p>
 <p>显示一个pending，2个skipped了，我们来修改一下<code>calculator_steps.rb</code>，让第一个step可以pass。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Given(<span class="string">"the input &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  @input = string</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">When(<span class="string">"the calculator is run"</span>) <span class="keyword">do</span></span><br><span class="line">  pending <span class="comment"># Write code here that turns the phrase above into concrete actions</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="string">"the output should be &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  pending <span class="comment"># Write code here that turns the phrase above into concrete actions</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
+  @input = string
+end
+
+When(&quot;the calculator is run&quot;) do
+  pending # Write code here that turns the phrase above into concrete actions
+end
+
+Then(&quot;the output should be {string}&quot;) do |string|
+  pending # Write code here that turns the phrase above into concrete actions
+end
+</code></pre>
 <p>运行cucumber，step1 pass.</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54vc0mf4j30kk07g3zj.jpg" alt=""></p>
 <p>第二个step pending，Oops，我们继续。</p>
 <p>这里可以梳理一下，第一步是input，最后是output，所以第二步应当是调用了method进行计算。好，我们添加一个ruby文件: calc.rb, 修改<code>calculator_steps.rb</code>，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Given(<span class="string">"the input &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  @input = string</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">When(<span class="string">"the calculator is run"</span>) <span class="keyword">do</span></span><br><span class="line">  @output = <span class="string">`ruby calc.rb <span class="subst">#&#123;@input&#125;</span>`</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="string">"the output should be &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  pending <span class="comment"># Write code here that turns the phrase above into concrete actions</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
+  @input = string
+end
+
+When(&quot;the calculator is run&quot;) do
+  @output = `ruby calc.rb #{@input}`
+end
+
+Then(&quot;the output should be {string}&quot;) do |string|
+  pending # Write code here that turns the phrase above into concrete actions
+end
+</code></pre>
 <p>运行cucumber，step2 pass.</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fl56z0meapj30ma07jq43.jpg" alt=""></p>
 <p>注意到这里<code>calc.rb</code>还只是一个空文件，而且需要注意<code>calc.rb</code>是在根目录下。</p>
 <p>继续修改<code>calculator_steps.rb</code>, 让第三个step pass：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Given(<span class="string">"the input &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  @input = string</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">When(<span class="string">"the calculator is run"</span>) <span class="keyword">do</span></span><br><span class="line">  @output = <span class="string">`ruby calc.rb <span class="subst">#&#123;@input&#125;</span>`</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="string">"the output should be &#123;string&#125;"</span>) <span class="keyword">do</span> <span class="params">|string|</span></span><br><span class="line">  expect(@output).to eq string</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
+  @input = string
+end
+
+When(&quot;the calculator is run&quot;) do
+  @output = `ruby calc.rb #{@input}`
+end
+
+Then(&quot;the output should be {string}&quot;) do |string|
+  expect(@output).to eq string
+end
+</code></pre>
 <p>在<code>calc.rb</code>中加入一行，使得output等于预期:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print eval (ARGV[0])</span><br></pre></td></tr></table></figure>
-<p>不了解eval的用法？👉戳这里<a href="https://ruby-hacking-guide.github.io/anyeval.html" target="_blank" rel="noopener">Dynamic evaluation</a></p>
+<pre><code>print eval (ARGV[0])
+</code></pre><p>不了解eval的用法？👉戳这里<a href="https://ruby-hacking-guide.github.io/anyeval.html" target="_blank" rel="noopener">Dynamic evaluation</a></p>
 <p>简单来说，这里input是”2 + 2”，那么eval(input)就是会4.</p>
 <p>这时继续运行cucumber，出现这样的报错：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl5763tsrqj30mg084jsm.jpg" alt=""></p>
 <p>显示except是undefined method，那是由于没有安装RSpec，在gemfile中加入</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;rspec-rails&apos;</span><br></pre></td></tr></table></figure>
-<p>然后<code>bundle install</code>，再次运行<code>cucumber</code>，Pass！</p>
+<pre><code>gem &#39;rspec-rails&#39;
+</code></pre><p>然后<code>bundle install</code>，再次运行<code>cucumber</code>，Pass！</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl579bi1l5j30mf04r3yx.jpg" alt=""></p>
 <p>整个流程算是走完了。</p>
 <p>以上就是一个cucumber测试的基本流程了。</p>
@@ -1143,7 +1315,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>932 words</span>
+              <span>884 words</span>
             </span>
           
 
@@ -1179,7 +1351,18 @@
 <li>And &amp; But：用来延续之前的steps</li>
 </ul>
 <h4 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h4><p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> user can manually add movie</span><br><span class="line"></span><br><span class="line"><span class="symbol">Scenario:</span> Add a movie</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	When I follow <span class="string">"Add new movie"</span></span><br><span class="line">	Then I should be on the Create New Movie page</span><br><span class="line">	<span class="keyword">when</span> I fill <span class="keyword">in</span> <span class="string">"Title"</span> with <span class="string">"Men In Black"</span></span><br><span class="line">	And I select <span class="string">"PG-13"</span> from <span class="string">"Rating"</span></span><br><span class="line">	And I press <span class="string">"Save changes"</span></span><br><span class="line">	Then I shoud be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Men in Black"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Feature: user can manually add movie
+
+Scenario: Add a movie
+    Given I am on the RottenPotatoes home page
+    When I follow &quot;Add new movie&quot;
+    Then I should be on the Create New Movie page
+    when I fill in &quot;Title&quot; with &quot;Men In Black&quot;
+    And I select &quot;PG-13&quot; from &quot;Rating&quot;
+    And I press &quot;Save changes&quot;
+    Then I shoud be on the RottenPotatoes home page
+    And I should see &quot;Men in Black&quot;
+</code></pre>
 <p>这里测试一个feature，用户可以手动添加电影，添加的电影会在首页显示，表明添加成功。</p>
 <p>具体的steps是这样的：</p>
 <p>Given：用户在烂番茄主页，<strong>这是precondition</strong></p>
@@ -1194,11 +1377,48 @@
 <p>再看一个实例，看看如何DRY：P。</p>
 <p>用户在TMDb首页搜索movie，可能出现的两种结果: 搜索到该影片(happy path)，没有搜索到(bad path)</p>
 <p>测试文件长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Movie that Does Not Exist"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Movie That Does Not Exist"</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Inception"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Inception"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
+    Database(TMDb)
+    As a movie fan
+    so that I can add new movies without manual tedium
+    I want to add movies by looking up their details in TMDb
+Scenario: Try to add nonexistent movie(sad path)
+    Given I am on the RottenPotatoes home page
+    Then I should see &quot;Search TMDb for a movie&quot;
+    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
+Scenario: Try to add nonexistent movie(happy path)
+    Given I am on the RottenPotatoes home page
+    Then I should see &quot;Search TMDb for a movie&quot;
+    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Inception&quot;
+</code></pre>
 <p>其中，sad path ，happy path都有6个 steps，两者的前两个steps是一样的，how to DRY it?</p>
 <p>这里用到<strong>background</strong>，我的理解是background类似于RSpec中的before。</p>
 <p>我们重构一下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Background:</span> Start from the Search form on the home page</span><br><span class="line">			Given I am on the RottenPotatoes home page</span><br><span class="line">			Then I should see <span class="string">"Search TMDb for a movie"</span></span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Movie that Does Not Exist"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Movie That Does Not Exist"</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">"Search Terms"</span> with <span class="string">"Inception"</span></span><br><span class="line">	And I press <span class="string">"Search TMDb"</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">"Inception"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
+    Database(TMDb)
+    As a movie fan
+    so that I can add new movies without manual tedium
+    I want to add movies by looking up their details in TMDb
+Background: Start from the Search form on the home page
+            Given I am on the RottenPotatoes home page
+            Then I should see &quot;Search TMDb for a movie&quot;
+Scenario: Try to add nonexistent movie(sad path)
+    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
+Scenario: Try to add nonexistent movie(happy path)
+    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Inception&quot;
+</code></pre>
 <p>OK，大功告成。</p>
 
           
@@ -1526,7 +1746,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>773 words</span>
+              <span>768 words</span>
             </span>
           
 
@@ -1557,12 +1777,17 @@
 <p>现在的情况是，movie model里面没有定义任何执行search 行为的method，而我们只想要验证controller的search_tmdb 调用了model里面执行search的method，不管这个method的存不存在，有没有返回预期结果，我们不care, 我们只想确定controller的search_tmdb做了正确的事，怎么破？</p>
 <p>用stub来打破依赖。用一个伪造的method去替代，确保这个伪造的method被调用即可。</p>
 <p>你的<code>movies_controller.rb</code>中定义了一个search_tmdb,但是里面啥也没有：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def search_tmdb
+end
+</code></pre>
 <p>你的test文件长这样：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fktni1u9gaj30df05o3z5.jpg" alt=""></p>
 <p>这时运行测试文件，会报错，因为你的search_tmdb并没有说让Movie去调用这个find_in_tmdb，如何让测试通过？</p>
 <p>在<code>movies_controller.rb</code>中修改search_tmdb method，使它长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">search_tmdb</span></span></span><br><span class="line">+ Movie.find_in_tmdb(params[<span class="symbol">:search_terms</span>])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def search_tmdb
++ Movie.find_in_tmdb(params[:search_terms])
+end
+</code></pre>
 <p>再次运行测试文件，通过！！</p>
 <p>这里值得注意的是，你的movie model中，<strong>根本就没有find_in_tmdb这个method</strong>，很神奇是不是？</p>
 <p>事实上，为了打破method之间的依赖，保证测试的独立性，这里伪造了一个针对find_in_tmdb的调用，<strong>即使这个find_in_tmdb本身存在model中，也会被忽视，overriding it</strong>。</p>
@@ -1716,7 +1941,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>483 words</span>
+              <span>479 words</span>
             </span>
           
 
@@ -1745,15 +1970,17 @@
 <p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks5pqia5ej30tc0ka46y.jpg" alt=""></p>
 <p>怎么办？按照指示去tmp下找文件，看error log。</p>
 <p>以root身份登录，去tmp目录下，查看出错的log,这里是passenger-error-pxhJuZ.html。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /tmp</span><br><span class="line">nano passenger-error-pxhJuZ.html</span><br></pre></td></tr></table></figure>
-<p>打开显示如下：</p>
+<pre><code>cd /tmp
+nano passenger-error-pxhJuZ.html
+</code></pre><p>打开显示如下：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fksdg0z54rj30wv0dftdo.jpg" alt=""></p>
 <p>OK，那就动动listen 这个gem, google 后，参考stackoverflow上的解答<a href="https://stackoverflow.com/questions/38663706/loaderror-could-not-load-the-listen-gem-rails-5" target="_blank" rel="noopener">LoadError: Could not load the ‘listen’ gem (Rails 5)</a>， 把listen从development中移除，放在了global中</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksdhtg52aj30et0azdhc.jpg" alt=""></p>
 <p>本地运行<code>bundle</code>，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面，发现还是老样子。怎么回事？突然想到stack overflow上提到可以登录rails console看看，好，试试。</p>
 <p>用deploy身份登录远端后，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd ~/Together/current #Together 是你的APP名称</span><br><span class="line">RAILS_ENV=production bundle exec rake db:seed</span><br></pre></td></tr></table></figure>
-<p>果然，报错，显示网站有bug，立马回去修bug……</p>
+<pre><code>cd ~/Together/current #Together 是你的APP名称
+RAILS_ENV=production bundle exec rake db:seed
+</code></pre><p>果然，报错，显示网站有bug，立马回去修bug……</p>
 <p>在本地修复好，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面， OK！！</p>
 <h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>这段爬坑的日子，遇到了不少Google了也不一定能解决的坑，甚至会让你在懵逼的情况下，被别人的解答带得越来越远。只想说解决问题的思路真的太重要了，同时多点耐心，相信坑坑皆有解。</p>
 <p>Be more patient.</p>
@@ -2084,7 +2311,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>795 words</span>
+              <span>775 words</span>
             </span>
           
 
@@ -2111,14 +2338,29 @@
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkq88je5s0j30sd04xmyd.jpg" alt=""></p>
 <p><strong>怎么破？</strong></p>
 <p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.<span class="keyword">include</span> FactoryBot::Syntax::Methods</span><br><span class="line">  .....</span><br><span class="line">+  config.before <span class="keyword">do</span></span><br><span class="line">+    FactoryBot.find_definitions</span><br><span class="line">+  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  .....
++  config.before do
++    FactoryBot.find_definitions
++  end
+end
+</code></pre>
 </li>
 <li><p><strong>FactoryBot::DuplicateDefinitionError: Factory already registered: event</strong></p>
 <p>运行测试文件时，终端报出这样的错误：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkq8u4t8xfj30qg07wdh6.jpg" alt=""></p>
 <p><strong>怎么破？</strong></p>
 <p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.<span class="keyword">include</span> FactoryBot::Syntax::Methods</span><br><span class="line">  .....</span><br><span class="line">  config.before <span class="keyword">do</span></span><br><span class="line">+   FactoryBot.factories.clear</span><br><span class="line">    FactoryBot.find_definitions</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  .....
+  config.before do
++   FactoryBot.factories.clear
+    FactoryBot.find_definitions
+  end
+end
+</code></pre>
 </li>
 <li><p><strong>Please set Qiniu’s access_key and secret_key before authorize any tokens</strong></p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkqrce6o1ij30pc052wfp.jpg" alt=""></p>
@@ -2134,7 +2376,12 @@
 <p><strong>怎么破？</strong></p>
 <p>google后，在stack overflow上找到了解答。</p>
 <p>修改<code>spec/support/rails_helper.rb</code>文件，在<code>RSpec.configure do |config|</code>部分添加<code>config.include Devise::TestHelpers, type: :controller</code> :</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  ......</span><br><span class="line">+ config.<span class="keyword">include</span> Devise::TestHelpers, <span class="symbol">type:</span> <span class="symbol">:controller</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.configure do |config|
+  ......
++ config.include Devise::TestHelpers, type: :controller
+  ......
+end
+</code></pre>
 <p>再次测试, pass!  </p>
 </li>
 <li><p>如果你的model中有图片部分，比如event model中有个event logo，而你用factoryBot生成数据时，是这样的：</p>
@@ -2154,7 +2401,7 @@
 </li>
 </ul>
 <p>   终端再次运行：<code>rspec spec/controllers/events_controller_spec.rb</code>, OK !</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><pre><code>按照TDD「Test driven development」的理论，应该测试先行, 像下图酱样子：
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><pre><code> 按照TDD「Test driven development」的理论，应该测试先行, 像下图酱样子：
 </code></pre><p>  <img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkr2b72qhfj30s60djt92.jpg" alt=""></p>
 <p>  无奈我已经做好了整个网站，决定不按套路出牌，后期加入TDD，来测测前期代码的稳定性 , 在测了一部分功能后，深有感触，测试果然是很有必要的：P。</p>
 
@@ -2374,7 +2621,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2511,5 +2758,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

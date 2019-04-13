@@ -89,19 +89,19 @@
 
 
 
-<meta name="description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category 12ra">
+<meta name="description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category rail">
 <meta name="keywords" content="Rails">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Together网站搭建之踩坑系列3">
 <meta property="og:url" content="http://lupeipei.github.io/2017/09/29/web-together-build-3/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category 12ra">
+<meta property="og:description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category rail">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://ws3.sinaimg.cn/large/006tNc79gy1fjqcf5bajjg30x40i0k2j.gif">
 <meta property="og:updated_time" content="2019-03-15T11:20:52.538Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Together网站搭建之踩坑系列3">
-<meta name="twitter:description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category 12ra">
+<meta name="twitter:description" content="写在前面这是功能实现的第二篇，扯一扯如何添加分类筛选功能。 完整作品源码及效果，看这里作品网站,   作品源码。 目录 给活动添加收藏功能，并使用Ajax进行优化 给活动Events添加分类筛选 添加省市自治区地址, 并实现热门城市筛选 添加时间筛选 添加评论区，并使用ajax优化 实作活动申请 在个人中心实作密码修改  正文先上效果图：  如何实现？  新建model category rail">
 <meta name="twitter:image" content="https://ws3.sinaimg.cn/large/006tNc79gy1fjqcf5bajjg30x40i0k2j.gif">
 
 
@@ -376,7 +376,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>475 words</span>
+              <span>440 words</span>
             </span>
           
 
@@ -409,35 +409,67 @@
 <p><strong>如何实现？</strong></p>
 <ul>
 <li><p>新建model category</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g model category name:string</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>rails g model category name:string
+rake db:migrate
+</code></pre></li>
 <li><p>在event中新增category的栏位</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_category_id_to_event category_id:integer</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>rails g migration add_category_id_to_event category_id:integer
+rake db:migrate
+</code></pre></li>
 <li><p>建立category和event的关系，在<code>event.rb</code>中添加</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">belongs_to <span class="symbol">:categroy</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">belongs_to :categroy
+</code></pre>
 <p><code>category.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">has_many <span class="symbol">:events</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">has_many :events
+</code></pre>
 </li>
 <li><p>在event的new ，edit中添加如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= select_tag(:category_id, options_for_select(@categories), :prompt =&gt; &quot;类别&quot;) %&gt;</span><br></pre></td></tr></table></figure>
-<p>如果是simple_form格式，可添加如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-group"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.association</span> <span class="attr">:category</span> %&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code>&lt;%= select_tag(:category_id, options_for_select(@categories), :prompt =&gt; &quot;类别&quot;) %&gt;
+</code></pre><p>如果是simple_form格式，可添加如下：</p>
+<pre><code class="Html">  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;%= f.association :category %&gt;
+  &lt;/div&gt;
+</code></pre>
 </li>
 <li><p>在<code>events_controller.rb</code>中，将category_id添加到params白名单中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">event_params</span></span></span><br><span class="line">  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:title</span>, ......, <span class="symbol">:category_id</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  def event_params
+    params.require(:event).permit(:title, ......, :category_id)
+  end
+</code></pre>
 </li>
 <li><p>为方便后续部署到heroku,可在seeds文档中新建category。在seeds.rb中添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Category部分</span></span><br><span class="line">Category.delete_all</span><br><span class="line"></span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">1</span>, <span class="symbol">name:</span> <span class="string">"音乐"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">2</span>, <span class="symbol">name:</span> <span class="string">"户外"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">3</span>, <span class="symbol">name:</span> <span class="string">"约厨"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">4</span>, <span class="symbol">name:</span> <span class="string">"交友"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">5</span>, <span class="symbol">name:</span> <span class="string">"读书"</span>)</span><br><span class="line">Category.create!(<span class="symbol">id:</span><span class="number">6</span>, <span class="symbol">name:</span> <span class="string">"游戏"</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># Category部分
+Category.delete_all
+
+Category.create!(id:1, name: &quot;音乐&quot;)
+Category.create!(id:2, name: &quot;户外&quot;)
+Category.create!(id:3, name: &quot;约厨&quot;)
+Category.create!(id:4, name: &quot;交友&quot;)
+Category.create!(id:5, name: &quot;读书&quot;)
+Category.create!(id:6, name: &quot;游戏&quot;)
+</code></pre>
 </li>
 <li><p>在event 的index页面显示分类列表，在event的<code>index.html.erb</code>中添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class="btn-group"&gt;</span><br><span class="line">	&lt;%= link_to <span class="string">"全部"</span>, events_path, <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>].blank?)? <span class="string">"active"</span> : <span class="string">""</span>&#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% Category.all.each <span class="keyword">do</span> <span class="params">|c|</span> %&gt;</span><br><span class="line">  	&lt;%= link_to c.name, events_path(<span class="symbol">category:</span> c), <span class="symbol">:class</span> =&gt; <span class="string">"btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:category</span>] == c)? <span class="string">"active"</span> : <span class="string">""</span> &#125;</span>"</span>%&gt;</span><br><span class="line">	&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">&lt;div class=&quot;btn-group&quot;&gt;
+    &lt;%= link_to &quot;全部&quot;, events_path, :class =&gt; &quot;btn btn-default btn-group #{(params[:category].blank?)? &quot;active&quot; : &quot;&quot;}&quot;%&gt;
+    &lt;% Category.all.each do |c| %&gt;
+      &lt;%= link_to c.name, events_path(category: c), :class =&gt; &quot;btn btn-default btn-group #{(params[:category] == c)? &quot;active&quot; : &quot;&quot; }&quot;%&gt;
+    &lt;% end %&gt;
+&lt;/div&gt;
+</code></pre>
 </li>
 <li><p>用上scope，在<code>event.rb</code>中加入以下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">scope <span class="symbol">:by_category</span>, -&gt;(c)&#123;where( <span class="symbol">:category_id</span> =&gt; c )&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">scope :by_category, -&gt;(c){where( :category_id =&gt; c )}
+</code></pre>
 </li>
 <li><p>修改<code>events_controller.rb</code>，修改index部分：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  @events = Event.order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:category</span>].present?</span><br><span class="line">    @events = @events.by_category(params[<span class="symbol">:category</span>]).order(<span class="string">"created_at DESC"</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  def index
+    @events = Event.order(&quot;created_at DESC&quot;)
+    if params[:category].present?
+      @events = @events.by_category(params[:category]).order(&quot;created_at DESC&quot;)
+    end
+  end
+</code></pre>
 </li>
 </ul>
 <p>大功告成！</p>
@@ -724,7 +756,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -877,5 +909,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

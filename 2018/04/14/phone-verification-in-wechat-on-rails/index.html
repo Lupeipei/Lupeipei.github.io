@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2,291 words</span>
+              <span>2,062 words</span>
             </span>
           
 
@@ -415,25 +415,82 @@
 <p>好，一步步来。</p>
 <p><strong>Step1、建手机验证的model phone_tokens</strong></p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g model phone_token</span><br></pre></td></tr></table></figure>
-<p>在生成的migration文档中，修改成这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">lass CreatePhoneTokens &lt; ActiveRecord::Migration[<span class="number">5.1</span>]</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:phone_tokens</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string <span class="symbol">:phone</span></span><br><span class="line">      t.string <span class="symbol">:token</span></span><br><span class="line">      t.datetime <span class="symbol">:expired_at</span></span><br><span class="line">      t.timestamps</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    add_index <span class="symbol">:phone_tokens</span>, [<span class="symbol">:phone</span>, <span class="symbol">:token</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g model phone_token
+</code></pre><p>在生成的migration文档中，修改成这样：</p>
+<pre><code class="Ruby">lass CreatePhoneTokens &lt; ActiveRecord::Migration[5.1]
+  def change
+    create_table :phone_tokens do |t|
+      t.string :phone
+      t.string :token
+      t.datetime :expired_at
+      t.timestamps
+    end
+    add_index :phone_tokens, [:phone, :token]
+  end
+end
+</code></pre>
 <p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/models/phone_tokenk.rb</code>, 要求token ，phone 必填：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rake db:migrate
+</code></pre><p>修改<code>app/models/phone_tokenk.rb</code>, 要求token ，phone 必填：</p>
+<pre><code class="Ruby">class PhoneToken &lt; ApplicationRecord
+  validates_presence_of :token
+  validates_presence_of :phone
+end
+</code></pre>
 <p>修改<code>config/route.rb</code> ， 添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">resources <span class="symbol">:phone_tokens</span>, <span class="symbol">only:</span> [<span class="symbol">:create</span>]</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">resources :phone_tokens, only: [:create]
+</code></pre>
 <p><strong>Step2、建controller phone_tokens，实现手机验证码发送</strong></p>
 <p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g controller phone_tokens</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/controllers/phone_tokens_controller.rb</code></p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneTokensController</span> &lt; ApplicationController</span></span><br><span class="line"></span><br><span class="line">  before_action <span class="symbol">:verify_phone_unrepeated</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">unless</span> params[<span class="symbol">:phone</span>] =~ User::CELLPHONE_RE</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'手机号格式不正确！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> session[<span class="symbol">:token_created_at</span>] &amp;&amp; session[<span class="symbol">:token_created_at</span>] + <span class="number">60</span> &gt; Time.now.to_i</span><br><span class="line">      render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'error'</span>, <span class="symbol">message:</span> <span class="string">'您已经申请过验证码，请60s后再试！'</span>&#125;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">     <span class="comment">## 生成验证码</span></span><br><span class="line">    token = sms_send(params[<span class="symbol">:phone</span>])</span><br><span class="line">    <span class="comment">## 初次生成验证码，新增record，验证码过期二次生成token，则更新record</span></span><br><span class="line">    PhoneToken.add_or_update params[<span class="symbol">:phone</span>], token</span><br><span class="line">    render <span class="symbol">json:</span> &#123;<span class="symbol">status:</span> <span class="string">'ok'</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">verify_phone_unrepeated</span></span></span><br><span class="line">    phone = User.find_by(<span class="symbol">phone:</span> params[<span class="symbol">:phone</span>])</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123; <span class="symbol">status:</span> <span class="string">'repeated'</span>&#125; <span class="keyword">if</span> phone.present?</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g controller phone_tokens
+</code></pre><p>修改<code>app/controllers/phone_tokens_controller.rb</code></p>
+<pre><code class="ruby">class PhoneTokensController &lt; ApplicationController
+
+  before_action :verify_phone_unrepeated
+
+  def create
+    unless params[:phone] =~ User::CELLPHONE_RE
+      render json: {status: &#39;error&#39;, message: &#39;手机号格式不正确！&#39;}
+      return
+    end
+    if session[:token_created_at] &amp;&amp; session[:token_created_at] + 60 &gt; Time.now.to_i
+      render json: {status: &#39;error&#39;, message: &#39;您已经申请过验证码，请60s后再试！&#39;}
+      return
+    end
+
+     ## 生成验证码
+    token = sms_send(params[:phone])
+    ## 初次生成验证码，新增record，验证码过期二次生成token，则更新record
+    PhoneToken.add_or_update params[:phone], token
+    render json: {status: &#39;ok&#39;}
+  end
+
+  private
+
+  def verify_phone_unrepeated
+    phone = User.find_by(phone: params[:phone])
+    render :json =&gt; { status: &#39;repeated&#39;} if phone.present?
+  end
+end
+</code></pre>
 <p>这里添加了手机重复绑定的检查。其中，User::CELLPHONE_RE是定义在<code>user.rb</code>, 用正则验证手机号码有效，稍后会加上。</p>
 <p>另外，生成验证码的method sms_send 我们在下一步调用第三方短信服务来实现。</p>
 <p>而对于add_or_update 类方法，我们在<code>app/models/phone_token.rb</code>中定义，实现新增和更新：</p>
 <p>修改<code>app/models/phone_token.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PhoneToken</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:token</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">add_or_update</span><span class="params">(phone, token)</span></span></span><br><span class="line">    record = find_by(<span class="symbol">phone:</span> phone)</span><br><span class="line">    <span class="keyword">if</span> record</span><br><span class="line">      record.update_attributes <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      create <span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token, <span class="symbol">expired_at:</span> Time.now + <span class="number">10</span>.minutes</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class PhoneToken &lt; ApplicationRecord
+  validates_presence_of :token
+  validates_presence_of :phone
+
+  def self.add_or_update(phone, token)
+    record = find_by(phone: phone)
+    if record
+      record.update_attributes token: token, expired_at: Time.now + 10.minutes
+    else
+      create phone: phone, token: token, expired_at: Time.now + 10.minutes
+    end
+  end
+end
+</code></pre>
 <p><strong>Step3、调用第三方短信服务</strong></p>
 <p>这里，以阿里云的短信服务为例，官方文档的接口调用代码示例是Java，也没找到ruby的，google了下，有一个现成的gem <a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a>，用这个。</p>
 <p>购买服务后，进行设置，你会得到四个参数值：</p>
@@ -445,38 +502,205 @@
 </ol>
 <p>开始调用吧！</p>
 <p>修改gemfile：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem &apos;aliyun-sms&apos;</span><br></pre></td></tr></table></figure>
-<p>执行<code>bundle</code>，服务器重启.</p>
+<pre><code>gem &#39;aliyun-sms&#39;
+</code></pre><p>执行<code>bundle</code>，服务器重启.</p>
 <p>修改<code>config/applicaton.yml</code>，将重要的参数值放进去，供调用：</p>
-<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">access_key_secret:</span> <span class="string">"ACCESS_KEY_SECRET"</span></span><br><span class="line"><span class="attr">access_key_id:</span> <span class="string">"ACCESS_KEY_ID"</span></span><br><span class="line"><span class="attr">sign_name:</span> <span class="string">"SIGN_NAME"</span></span><br><span class="line"><span class="attr">template_code:</span> <span class="string">"TEMPLATE_CODE"</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Yml">access_key_secret: &quot;ACCESS_KEY_SECRET&quot;
+access_key_id: &quot;ACCESS_KEY_ID&quot;
+sign_name: &quot;SIGN_NAME&quot;
+template_code: &quot;TEMPLATE_CODE&quot;
+</code></pre>
 <p>新增文件<code>config/initializers/aliyun-sms.rb</code>, 内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Aliyun::Sms.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.access_key_secret = Figaro.env.access_key_secret</span><br><span class="line">  config.access_key_id = Figaro.env.access_key_id</span><br><span class="line">  config.action = <span class="string">'SendSms'</span>                       <span class="comment"># default value</span></span><br><span class="line">  config.format = <span class="string">'XML'</span>                           <span class="comment"># http return format, value is 'JSON' or 'XML'</span></span><br><span class="line">  config.region_id = <span class="string">'cn-hangzhou'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.sign_name = Figaro.env.sign_name</span><br><span class="line">  config.signature_method = <span class="string">'HMAC-SHA1'</span>           <span class="comment"># default value</span></span><br><span class="line">  config.signature_version = <span class="string">'1.0'</span>                <span class="comment"># default value</span></span><br><span class="line">  config.version = <span class="string">'2017-05-25'</span>                   <span class="comment"># default value</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Aliyun::Sms.configure do |config|
+  config.access_key_secret = Figaro.env.access_key_secret
+  config.access_key_id = Figaro.env.access_key_id
+  config.action = &#39;SendSms&#39;                       # default value
+  config.format = &#39;XML&#39;                           # http return format, value is &#39;JSON&#39; or &#39;XML&#39;
+  config.region_id = &#39;cn-hangzhou&#39;                # default value
+  config.sign_name = Figaro.env.sign_name
+  config.signature_method = &#39;HMAC-SHA1&#39;           # default value
+  config.signature_version = &#39;1.0&#39;                # default value
+  config.version = &#39;2017-05-25&#39;                   # default value
+end
+</code></pre>
 <p><a href="https://github.com/VICTOR-LUO-F/aliyun-sms" target="_blank" rel="noopener">aliyun-sms</a> 提供了调用方法Aliyun::Sms.send，我稍微进行了封装，封装后的method只有一个参数phone number。</p>
 <p>新增<code>lib/sms.rb</code>, 内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Send</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Sms</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">sms_send</span><span class="params">(phone)</span></span></span><br><span class="line">      template_code = Figaro.env.template_code</span><br><span class="line">      code = rand(<span class="number">100000</span>..<span class="number">999999</span>)</span><br><span class="line">      template_param = &#123;<span class="string">"code"</span> =&gt; code.to_s&#125;.to_json</span><br><span class="line">      Aliyun::Sms.send(phone, template_code, template_param)</span><br><span class="line">      code</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> Send::Sms</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module Send
+  module Sms
+    def sms_send(phone)
+      template_code = Figaro.env.template_code
+      code = rand(100000..999999)
+      template_param = {&quot;code&quot; =&gt; code.to_s}.to_json
+      Aliyun::Sms.send(phone, template_code, template_param)
+      code
+    end
+  end
+end
+
+class Object
+  include Send::Sms
+end
+</code></pre>
 <p>修改<code>app/controllers/phone_tokens_controller.rb</code>, 添加上relative_require, 加载下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">require_relative <span class="string">'../../lib/sms'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require_relative &#39;../../lib/sms&#39;
+</code></pre>
 <p>OK，短信发送完成！</p>
 <p>下面给授权页面添加上手机验证的表单。</p>
 <p><strong>Step4、在授权页面添加手机验证</strong></p>
 <p>修改<code>app/views/devise/registrations/new.html.erb</code>, 添加上手机验证：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">%=</span> <span class="attr">form_for</span>(<span class="attr">resource</span>, <span class="attr">as:</span> <span class="attr">resource_name</span>, <span class="attr">url:</span> <span class="attr">registration_path</span>(<span class="attr">resource_name</span>)) <span class="attr">do</span> |<span class="attr">f</span>| %&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells_title"</span>&gt;</span>请输入您的手机号，绑定会员<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cells weui-cells_form"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>手机号, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:phone</span>, <span class="attr">class:</span> '<span class="attr">weui-input</span>',<span class="attr">id:</span> '<span class="attr">user_cellphone</span>',<span class="attr">type:</span> "<span class="attr">tel</span>", <span class="attr">placeholder:</span> '请输入手机号' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__ft"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">style</span>=<span class="string">"background: none; border: none "</span> <span class="attr">value</span>=<span class="string">"获取验证码"</span> <span class="attr">class</span>=<span class="string">"weui-vcode-btn"</span> <span class="attr">id</span>=<span class="string">"token_btn"</span>&gt;</span>获取验证码<span class="tag">&lt;/<span class="name">input</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell weui-cell_vcode"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__hd"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.label</span> <span class="attr">:</span>验证码, <span class="attr">class:</span> '<span class="attr">weui-label</span>' %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-cell__bd weui-cell_primary"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.text_field</span> <span class="attr">:token</span>, <span class="attr">class:</span>"<span class="attr">weui-input</span>", <span class="attr">type:</span> "<span class="attr">number</span>", <span class="attr">placeholder:</span> "请输入验证码" %&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"weuiAgree"</span> <span class="attr">class</span>=<span class="string">"weui-agree"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">"weuiAgree"</span> <span class="attr">type</span>=<span class="string">"checkbox"</span> <span class="attr">checked</span>=<span class="string">"checked"</span> <span class="attr">class</span>=<span class="string">"weui-agree__checkbox"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"weui-agree__text"</span>&gt;</span></span><br><span class="line">        获得您的公开信息（昵称，头像等）</span><br><span class="line">    <span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"weui-btn-area"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">%=</span> <span class="attr">f.submit</span> "确认", <span class="attr">class:</span> '<span class="attr">weui-btn</span> <span class="attr">weui-btn_primary</span>' %&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"javascript:wx.closeWindow();"</span> <span class="attr">class</span>=<span class="string">"weui-btn weui-btn_plain-default"</span>&gt;</span>关闭<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">%</span> <span class="attr">end</span> %&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %&gt;
+  &lt;div class=&quot;weui-cells_title&quot;&gt;请输入您的手机号，绑定会员&lt;/div&gt;
+  &lt;div class=&quot;weui-cells weui-cells_form&quot;&gt;
+    &lt;div class=&quot;weui-cell weui-cell_vcode&quot;&gt;
+      &lt;div class=&quot;weui-cell__hd&quot;&gt;
+        &lt;%= f.label :手机号, class: &#39;weui-label&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__bd weui-cell_primary&quot;&gt;
+        &lt;%= f.text_field :phone, class: &#39;weui-input&#39;,id: &#39;user_cellphone&#39;,type: &quot;tel&quot;, placeholder: &#39;请输入手机号&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__ft&quot;&gt;
+        &lt;input type=&quot;button&quot; style=&quot;background: none; border: none &quot; value=&quot;获取验证码&quot; class=&quot;weui-vcode-btn&quot; id=&quot;token_btn&quot;&gt;获取验证码&lt;/input&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;weui-cell weui-cell_vcode&quot;&gt;
+      &lt;div class=&quot;weui-cell__hd&quot;&gt;
+        &lt;%= f.label :验证码, class: &#39;weui-label&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__bd weui-cell_primary&quot;&gt;
+        &lt;%= f.text_field :token, class:&quot;weui-input&quot;, type: &quot;number&quot;, placeholder: &quot;请输入验证码&quot; %&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+    &lt;label for=&quot;weuiAgree&quot; class=&quot;weui-agree&quot;&gt;
+      &lt;input id=&quot;weuiAgree&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot; class=&quot;weui-agree__checkbox&quot;&gt;
+      &lt;span class=&quot;weui-agree__text&quot;&gt;
+        获得您的公开信息（昵称，头像等）
+    &lt;/span&gt;
+    &lt;/label&gt;
+
+  &lt;div class=&quot;weui-btn-area&quot;&gt;
+    &lt;%= f.submit &quot;确认&quot;, class: &#39;weui-btn weui-btn_primary&#39; %&gt;
+    &lt;a href=&quot;javascript:wx.closeWindow();&quot; class=&quot;weui-btn weui-btn_plain-default&quot;&gt;关闭&lt;/a&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+</code></pre>
 <p>点击获取验证码的按钮，调用phone_tokens的create 方法，发送验证码，同时phone_token插入或更新一个record。</p>
 <p>修改<code>app/views/devise/registrations/new.html.erb</code>, 在最下面添加如下代码：「这里也一并加上手机验证码的60秒倒计时特效和手机号的验证」</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="javascript">        (<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">            <span class="comment">// 手机验证码</span></span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span>;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> token_wait = <span class="number">60</span>, token_interval;</span></span><br><span class="line"><span class="javascript">            <span class="keyword">var</span> $token_btn = $(<span class="string">'#token_btn'</span>);</span></span><br><span class="line"><span class="javascript">            $token_btn.click(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                <span class="keyword">var</span> $<span class="keyword">this</span> = $(<span class="keyword">this</span>), cellphone = $(<span class="string">'#user_cellphone'</span>).val();</span></span><br><span class="line"><span class="javascript">                $.ajax(&#123;</span></span><br><span class="line"><span class="javascript">                    url: <span class="string">"/phone_tokens?phone="</span> + cellphone,</span></span><br><span class="line"><span class="javascript">                    method: <span class="string">'post'</span>,</span></span><br><span class="line"><span class="javascript">                    beforeSend: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (!CELLPHONE_RE.test(cellphone)) &#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"手机号码格式错误,请重填!"</span>);</span></span><br><span class="line"><span class="javascript">                            $(<span class="string">'#user_cellphone'</span>).val(<span class="string">""</span>);</span></span><br><span class="line"><span class="javascript">                            <span class="keyword">return</span> <span class="literal">false</span>;</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="javascript">                        $<span class="keyword">this</span>.attr(<span class="string">'value'</span>,<span class="string">"已发送"</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;,</span></span><br><span class="line"><span class="javascript">                    success: <span class="function"><span class="keyword">function</span> (<span class="params">data</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        <span class="keyword">if</span> (data.status == <span class="string">'error'</span>) &#123;</span></span><br><span class="line"><span class="undefined">                            alert(data.message);</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span> <span class="keyword">if</span>(data.status == <span class="string">'repeated'</span>)&#123;</span></span><br><span class="line"><span class="javascript">                            alert(<span class="string">"您的手机号已经验证过，无需验证"</span>);</span></span><br><span class="line"><span class="javascript">                        &#125;<span class="keyword">else</span></span></span><br><span class="line"><span class="undefined">                        &#123;</span></span><br><span class="line"><span class="javascript">                            $token_btn.attr(<span class="string">'value'</span>,<span class="string">'已发送'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="javascript">                            $<span class="keyword">this</span>.trigger(<span class="string">'start_token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                        &#125;</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">            &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'start_token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                    token_interval = setInterval(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.trigger(<span class="string">'token_timer'</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;, 1000);</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="javascript">                .on(<span class="string">'token_timer'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span></span><br><span class="line"><span class="undefined">                    token_wait--;</span></span><br><span class="line"><span class="javascript">                    <span class="keyword">if</span> (token_wait &lt;= <span class="number">0</span>) &#123;</span></span><br><span class="line"><span class="undefined">                        clearInterval(token_interval);</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'获取验证码'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">false</span>);</span></span><br><span class="line"><span class="undefined">                        token_wait = 60;</span></span><br><span class="line"><span class="javascript">                    &#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="javascript">                        $token_btn.attr(<span class="string">'value'</span>,<span class="string">'重新发送 '</span> + token_wait + <span class="string">' 秒'</span>).prop(<span class="string">'disabled'</span>, <span class="literal">true</span>);</span></span><br><span class="line"><span class="undefined">                    &#125;</span></span><br><span class="line"><span class="undefined">                &#125;)</span></span><br><span class="line"><span class="undefined">        &#125;)()</span></span><br><span class="line"><span class="undefined">    </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;script&gt;
+        (function(){
+            // 手机验证码
+            var CELLPHONE_RE = /^1[3|4|5|6|7|8][0-9]{9}$/;
+            var token_wait = 60, token_interval;
+            var $token_btn = $(&#39;#token_btn&#39;);
+            $token_btn.click(function () {
+                var $this = $(this), cellphone = $(&#39;#user_cellphone&#39;).val();
+                $.ajax({
+                    url: &quot;/phone_tokens?phone=&quot; + cellphone,
+                    method: &#39;post&#39;,
+                    beforeSend: function () {
+                        if (!CELLPHONE_RE.test(cellphone)) {
+                            alert(&quot;手机号码格式错误,请重填!&quot;);
+                            $(&#39;#user_cellphone&#39;).val(&quot;&quot;);
+                            return false;
+                        }
+                        $this.attr(&#39;value&#39;,&quot;已发送&quot;).prop(&#39;disabled&#39;, true);
+                    },
+                    success: function (data) {
+                        if (data.status == &#39;error&#39;) {
+                            alert(data.message);
+                            $token_btn.attr(&#39;value&#39;,&#39;获取验证码&#39;).prop(&#39;disabled&#39;, false);
+                        }else if(data.status == &#39;repeated&#39;){
+                            alert(&quot;您的手机号已经验证过，无需验证&quot;);
+                        }else
+                        {
+                            $token_btn.attr(&#39;value&#39;,&#39;已发送&#39;).prop(&#39;disabled&#39;, true);
+                            $this.trigger(&#39;start_token_timer&#39;);
+                        }
+                    }
+                })
+            })
+                .on(&#39;start_token_timer&#39;, function () {
+                    token_interval = setInterval(function () {
+                        $token_btn.trigger(&#39;token_timer&#39;);
+                    }, 1000);
+                })
+                .on(&#39;token_timer&#39;, function () {
+                    token_wait--;
+                    if (token_wait &lt;= 0) {
+                        clearInterval(token_interval);
+                        $token_btn.attr(&#39;value&#39;,&#39;获取验证码&#39;).prop(&#39;disabled&#39;, false);
+                        token_wait = 60;
+                    } else {
+                        $token_btn.attr(&#39;value&#39;,&#39;重新发送 &#39; + token_wait + &#39; 秒&#39;).prop(&#39;disabled&#39;, true);
+                    }
+                })
+        })()
+    &lt;/script&gt;
+</code></pre>
 <p>以上，手机验证码的发送基本完成，下面来完成验证码的验证，即用户填写的验证码就是发送给他的验证码。</p>
 <p><strong>Step5、给User添加字段phone，并验证token填写正确</strong></p>
 <p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rails g migration add_phone_to_users</span><br></pre></td></tr></table></figure>
-<p>在生成的migration文档中，修改成这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddPhoneToUsers</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:users</span>, <span class="symbol">:phone</span>, <span class="symbol">:string</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rails g migration add_phone_to_users
+</code></pre><p>在生成的migration文档中，修改成这样：</p>
+<pre><code class="Ruby">class AddPhoneToUsers &lt; ActiveRecord::Migration[5.1]
+  def change
+    add_column :users, :phone, :string
+  end
+end
+</code></pre>
 <p>执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-<p>修改<code>app/controllers/users/registrations_controller.rb</code>的configure_sign_up_params method：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">configure_sign_up_params</span></span></span><br><span class="line">  devise_parameter_sanitizer.permit(<span class="symbol">:sign_up</span>, <span class="symbol">keys:</span> %i[phone token])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code>rake db:migrate
+</code></pre><p>修改<code>app/controllers/users/registrations_controller.rb</code>的configure_sign_up_params method：</p>
+<pre><code class="Ruby">def configure_sign_up_params
+  devise_parameter_sanitizer.permit(:sign_up, keys: %i[phone token])
+end
+</code></pre>
 <p>这样在授权页面用户必须输入手机和验证码才能通过。</p>
 <p>修改<code>app/models/user.rb</code>，添加验证码的检验，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  <span class="comment"># Include default devise modules. Others available are:</span></span><br><span class="line">  <span class="comment"># :confirmable, :lockable, :timeoutable and :omniauthable</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:registerable</span>,</span><br><span class="line">         <span class="symbol">:recoverable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:trackable</span>, <span class="symbol">:validatable</span>, <span class="symbol">:omniauthable</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:token</span></span><br><span class="line">  CELLPHONE_RE = <span class="regexp">/^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/</span></span><br><span class="line"></span><br><span class="line">  before_validation <span class="symbol">:set_password</span></span><br><span class="line">  validates_presence_of <span class="symbol">:phone</span></span><br><span class="line">  validate <span class="symbol">:validate_phone</span>, <span class="symbol">on:</span> <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">from_omniauth</span><span class="params">(auth)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">new_with_session</span><span class="params">(params, session)</span></span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">email_required?</span></span></span><br><span class="line">    <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">set_password</span></span></span><br><span class="line">    <span class="keyword">self</span>.password <span class="params">||</span>= Devise.friendly_token[<span class="number">0</span>, <span class="number">20</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">validate_phone</span></span></span><br><span class="line">    <span class="keyword">if</span> phone.<span class="literal">nil</span>?</span><br><span class="line">      errors.add <span class="symbol">:base</span>, <span class="string">'手机号不能为空'</span></span><br><span class="line">    <span class="keyword">elsif</span> !PhoneToken.find_by(<span class="symbol">phone:</span> phone, <span class="symbol">token:</span> token)</span><br><span class="line">      errors.add <span class="symbol">:phone</span>, <span class="string">'手机验证码不正确或已过期,请重填'</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class User &lt; ActiveRecord::Base
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+
+  attr_accessor :token
+  CELLPHONE_RE = /^1[3|4|5|6|7|8][0-9]{9}$/
+
+  before_validation :set_password
+  validates_presence_of :phone
+  validate :validate_phone, on: :create
+
+  def self.from_omniauth(auth)
+    ......
+  end
+
+  def self.new_with_session(params, session)
+    ......
+  end
+
+  def email_required?
+    false
+  end
+
+  private
+  def set_password
+    self.password ||= Devise.friendly_token[0, 20]
+  end
+
+  def validate_phone
+    if phone.nil?
+      errors.add :base, &#39;手机号不能为空&#39;
+    elsif !PhoneToken.find_by(phone: phone, token: token)
+      errors.add :phone, &#39;手机验证码不正确或已过期,请重填&#39;
+    end
+  end
+
+end
+
+</code></pre>
 <p>通过validate_phone 这个method，来检验用户输入的token是否正确。</p>
 <p>OK，基本功能已经完成！</p>
 <p>最后，简单的美化一下弹窗。</p>
@@ -772,7 +996,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -925,5 +1149,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

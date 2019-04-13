@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>124 words</span>
+              <span>119 words</span>
             </span>
           
 
@@ -392,13 +392,15 @@
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>两步：</p>
 <ul>
 <li><p>生成全局的gitignore文件，终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd ~</span><br><span class="line">git config --global core.excludesfile ~/.gitignore_global</span><br><span class="line">touch .gitignore_global</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>cd ~
+git config --global core.excludesfile ~/.gitignore_global
+touch .gitignore_global
+</code></pre></li>
 <li><p>将需要ignore的文件路径添加到.gitignore_global文件中，以.idea为例，将～/ROR下所有项目的.idea都ignore：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi .gitignore_global</span><br></pre></td></tr></table></figure>
-<p>在打开的.gitignore_global中，添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ROR/*/.idea</span><br></pre></td></tr></table></figure>
-<p>保存，退出，OK!</p>
+<pre><code>vi .gitignore_global
+</code></pre><p>在打开的.gitignore_global中，添加：</p>
+<pre><code>ROR/*/.idea
+</code></pre><p>保存，退出，OK!</p>
 </li>
 </ul>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://help.github.com/articles/ignoring-files/" target="_blank" rel="noopener">ignoring files</a></p>
@@ -543,7 +545,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>801 words</span>
+              <span>756 words</span>
             </span>
           
 
@@ -571,10 +573,55 @@
 <p>遍历A中的元素，如果该元素属于B，则塞进一个新的数组中，不属于B，则单独生成一个单一元素的数组，然后把这些生成的新数组组合起来，最后生成一个大的数组，这个内嵌数组的大数组长这样：[[2], [4], [5, 1, 9], [0]]， 这样只需要针对大数组进行元素互换即可。</p>
 <p>我这表达可能还不够清晰，看代码实现吧！</p>
 <h4 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h4><p>定义一个method reorder，这里我们用step来表示移位，step为正，则向前移动step步，step为负，则向后移动step步，有关参数部分的检验，这里略去。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">reorder</span><span class="params">(current, part ,step)</span></span></span><br><span class="line">  order_index = <span class="literal">nil</span></span><br><span class="line">  new_order = []</span><br><span class="line">  current.each <span class="keyword">do</span> <span class="params">|item|</span></span><br><span class="line">    <span class="keyword">if</span> part.<span class="keyword">include</span>?(item)</span><br><span class="line">      <span class="keyword">if</span> order_index</span><br><span class="line">        new_order[order_index] &lt;&lt; item</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">        new_order &lt;&lt; [item]</span><br><span class="line">        order_index = new_order.count - <span class="number">1</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      new_order &lt;&lt; [item]</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  new_index = order_index + step</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> new_index &gt;= <span class="number">0</span> &amp;&amp; new_index &lt; current.count</span><br><span class="line">    new_order[order_index], new_order[new_index] = new_order[new_index], new_order[order_index]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  new_order.flatten!</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">def reorder(current, part ,step)
+  order_index = nil
+  new_order = []
+  current.each do |item|
+    if part.include?(item)
+      if order_index
+        new_order[order_index] &lt;&lt; item
+      else
+        new_order &lt;&lt; [item]
+        order_index = new_order.count - 1
+      end
+    else
+      new_order &lt;&lt; [item]
+    end
+  end
+
+  new_index = order_index + step
+
+  if new_index &gt;= 0 &amp;&amp; new_index &lt; current.count
+    new_order[order_index], new_order[new_index] = new_order[new_index], new_order[order_index]
+  end
+  new_order.flatten!
+end
+</code></pre>
 <p>基本跟思路走的。</p>
 <p>用一两个例子测试一下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">a = [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">b1 = [<span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">15</span>, <span class="number">52</span>]</span><br><span class="line">b2 = [<span class="number">57</span>]</span><br><span class="line">b3 = [<span class="number">65</span>]</span><br><span class="line">b4 = [<span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b1, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b2, -<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">27</span>, <span class="number">20</span>, <span class="number">57</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b3, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b4, -<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">a = [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
+
+b1 = [90, 23, 31, 15, 52]
+b2 = [57]
+b3 = [65]
+b4 = [20]
+
+p reorder(a, b1, 2)
+
+=&gt; [65, 34, 47, 29, 15, 52, 90, 23, 31, 72, 74, 56, 89, 3, 85, 55, 57, 27, 20]
+
+p reorder(a, b2, -2)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 27, 20, 57]
+
+p reorder(a, b3, 1)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
+
+p reorder(a, b4, -1)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
+</code></pre>
 <p>b1是a中[15, 52, 90, 23, 31]这5个元素无序组合而成，reorder(a, b1, 2) ，则需要将这5个元素往前移动两位，通过最后生成的新数组，可以看到确实移动了两位，15前面的72，74都移动到了31的后面。</p>
 <p>b2是含单一元素的数组，一样适用。</p>
 <p>b3, b4是特例，分别是a的第一个和最后一个元素，第一个元素无法向前移动一位，最后一个元素也无法向后移动一位，所以生成的new_order与a一样。</p>
@@ -719,7 +766,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,492 words</span>
+              <span>1,307 words</span>
             </span>
           
 
@@ -741,7 +788,18 @@
             <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>最近跟着老大学到了一个新技能，label标签的for属性，对于前端菜鸟来说，看到使用label for后，点击文本就可以选中单选框radio，还是很激动的，记录下label for的使用。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>w3school里面有相关的解释:<a href="http://www.w3school.com.cn/tags/att_label_for.asp" target="_blank" rel="noopener">label 标签的for属性</a>，这里通过一两个例子来感受一下。</p>
 <p>代码如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h5</span>&gt;</span>What's your main focus for today?<span class="tag">&lt;/<span class="name">h5</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"things"</span> <span class="attr">id</span>=<span class="string">"song"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"song"</span>&gt;</span>Sing a song<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"things"</span> <span class="attr">id</span>=<span class="string">"coding"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"coding"</span>&gt;</span>Coding<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"things"</span> <span class="attr">id</span>=<span class="string">"shopping"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"shopping"</span>&gt;</span>go shopping<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;form&gt;
+  &lt;h5&gt;What&#39;s your main focus for today?&lt;/h5&gt;
+  &lt;input type=&quot;radio&quot; name=&quot;things&quot; id=&quot;song&quot;&gt;
+  &lt;label for=&quot;song&quot;&gt;Sing a song&lt;/label&gt;
+  &lt;br&gt;
+  &lt;input type=&quot;radio&quot; name=&quot;things&quot; id=&quot;coding&quot;&gt;
+  &lt;label for=&quot;coding&quot;&gt;Coding&lt;/label&gt;
+  &lt;br&gt;
+  &lt;input type=&quot;radio&quot; name=&quot;things&quot; id=&quot;shopping&quot;&gt;
+  &lt;label for=&quot;shopping&quot;&gt;go shopping&lt;/label&gt;
+&lt;/form&gt;
+</code></pre>
 <p>对应的页面效果如下：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fthnyy2z3pg30cf05vjrb.gif" alt=""></p>
 <p>只要点击对应的文本，即可选中选项。这样看，好像没什么特别的，我们来点不一样的。</p>
@@ -749,15 +807,121 @@
 <p>先看最终实现的页面效果：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fthp4rvq4pg30cf05vdft.gif" alt=""></p>
 <p>对应的html代码如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h4</span>&gt;</span>请判断以下语句是否正确？<span class="tag">&lt;/<span class="name">h4</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"d-flex"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-boolean"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"statement"</span> <span class="attr">id</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"input-yes"</span> <span class="attr">value</span>=<span class="string">"1"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"statement"</span> <span class="attr">id</span>=<span class="string">"statement-no"</span> <span class="attr">class</span>=<span class="string">"input-no"</span> <span class="attr">value</span>=<span class="string">"0"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-no"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-yes"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>Y<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-no"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>N<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-empty"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>太阳每天都从东边升起来<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;form&gt;
+  &lt;h4&gt;请判断以下语句是否正确？&lt;/h4&gt;
+  &lt;div class=&quot;d-flex&quot;&gt;
+    &lt;div class=&quot;form-boolean&quot;&gt;
+      &lt;input type=&quot;radio&quot; name=&quot;statement&quot; id=&quot;statement-yes&quot; class=&quot;input-yes&quot; value=&quot;1&quot;&gt;
+      &lt;input type=&quot;radio&quot; name=&quot;statement&quot; id=&quot;statement-no&quot; class=&quot;input-no&quot; value=&quot;0&quot;&gt;
+      &lt;label for=&quot;statement-no&quot; class=&quot;form-checkbox label-yes&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;Y&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label for=&quot;statement-yes&quot; class=&quot;form-checkbox label-no&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;N&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label for=&quot;statement-yes&quot; class=&quot;form-checkbox label-empty&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;&lt;/span&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;太阳每天都从东边升起来&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
 <p>对应的CSS部分【重头戏其实在CSS这里】：</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.d-flex</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: flex;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.form-checkbox</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#3c763d</span>;</span><br><span class="line">  <span class="attribute">border-color</span>: <span class="number">#3c763d</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#dff0d8</span>;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">10%</span>;</span><br><span class="line">  <span class="attribute">display</span>: inline-block;</span><br><span class="line">  <span class="attribute">cursor</span>: pointer;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0.4em</span>;</span><br><span class="line">  <span class="attribute">margin-top</span>: -<span class="number">0.2em</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">1.0</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">1em</span>;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">1em</span>;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.radio-value</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.form-boolean</span> &#123;</span><br><span class="line">  <span class="selector-tag">input</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-tag">input</span>:checked ~ <span class="selector-class">.label-empty</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.label-yes</span>, <span class="selector-class">.label-no</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.input-yes</span>:checked ~ <span class="selector-class">.label-yes</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.input-no</span>:checked ~ <span class="selector-class">.label-no</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.d-flex {
+  display: flex;
+}
+
+.form-checkbox {
+  color: #3c763d;
+  border-color: #3c763d;
+  background-color: #dff0d8;
+  border-radius: 10%;
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.4em;
+  margin-top: -0.2em;
+  text-align: center;
+  line-height: 1.0;
+  width: 1em;
+  height: 1em;
+
+  .radio-value {
+    display: block;
+  }
+}
+
+.form-boolean {
+  input {
+    display: none;
+  }
+
+  input:checked ~ .label-empty {
+    display: none;
+  }
+
+  .label-yes, .label-no {
+    display: none;
+  }
+
+  .input-yes:checked ~ .label-yes {
+    display: block;
+  }
+
+  .input-no:checked ~ .label-no {
+    display: block;
+  }
+}
+</code></pre>
 <p>我们下面从零开始，一步步来。</p>
 <p>因为是boolean型，在未选择之前，应该有三种状态：</p>
 <p>没选，一个空的框，含Y的一个框，含N的一个框。我们先画出三个框来：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h4</span>&gt;</span>请判断以下语句是否正确？<span class="tag">&lt;/<span class="name">h4</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"d-flex"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-boolean"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-yes"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>Y<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-no"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>N<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-empty"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>太阳每天都从东边升起来<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;form&gt;
+  &lt;h4&gt;请判断以下语句是否正确？&lt;/h4&gt;
+  &lt;div class=&quot;d-flex&quot;&gt;
+    &lt;div class=&quot;form-boolean&quot;&gt;
+      &lt;label class=&quot;form-checkbox label-yes&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;Y&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;form-checkbox label-no&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;N&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label class=&quot;form-checkbox label-empty&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;&lt;/span&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;太阳每天都从东边升起来&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
 <p>设置下form-checkbox， radio-value 的CSS，让框好看点：</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.d-flex</span> &#123;</span><br><span class="line">  <span class="attribute">display</span>: flex;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-class">.form-checkbox</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: <span class="number">#3c763d</span>;</span><br><span class="line">  <span class="attribute">border-color</span>: <span class="number">#3c763d</span>;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="number">#dff0d8</span>;</span><br><span class="line">  <span class="attribute">border-radius</span>: <span class="number">10%</span>;</span><br><span class="line">  <span class="attribute">display</span>: inline-block;</span><br><span class="line">  <span class="attribute">cursor</span>: pointer;</span><br><span class="line">  <span class="attribute">padding</span>: <span class="number">0.4em</span>;</span><br><span class="line">  <span class="attribute">margin-top</span>: -<span class="number">0.2em</span>;</span><br><span class="line">  <span class="attribute">text-align</span>: center;</span><br><span class="line">  <span class="attribute">line-height</span>: <span class="number">1.0</span>;</span><br><span class="line">  <span class="attribute">width</span>: <span class="number">1em</span>;</span><br><span class="line">  <span class="attribute">height</span>: <span class="number">1em</span>;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.radio-value</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.d-flex {
+  display: flex;
+}
+
+.form-checkbox {
+  color: #3c763d;
+  border-color: #3c763d;
+  background-color: #dff0d8;
+  border-radius: 10%;
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.4em;
+  margin-top: -0.2em;
+  text-align: center;
+  line-height: 1.0;
+  width: 1em;
+  height: 1em;
+
+  .radio-value {
+    display: block;
+  }
+}
+</code></pre>
 <p>页面的效果：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fthped4faaj30to09qgm8.jpg" alt=""></p>
 <p>这时，你去点击，会发现什么都没有发生，我们需要借助CSS的:checked来做点变化。</p>
@@ -766,28 +930,96 @@
 <p>页面上任何处于选中状态的radio, checkbox 或select元素中的option HTML元素。</p>
 <p>比如<code>input[type=&quot;radio&quot;]:checked</code>  表示页面上的所有选中的radio按钮，<code>input[type=&quot;checkbox&quot;]:checked</code>表示页面上的所有选中的checkbox按钮 ，<code>option:checked</code>表示页面上的所有选中的select的选项。】</p>
 <p>现在页面上没有input，我们加上input，同时添加上label的for属性。</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h4</span>&gt;</span>请判断以下语句是否正确？<span class="tag">&lt;/<span class="name">h4</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"d-flex"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"form-boolean"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"statement"</span> <span class="attr">id</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"input-yes"</span> <span class="attr">value</span>=<span class="string">"1"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"radio"</span> <span class="attr">name</span>=<span class="string">"statement"</span> <span class="attr">id</span>=<span class="string">"statement-no"</span> <span class="attr">class</span>=<span class="string">"input-no"</span> <span class="attr">value</span>=<span class="string">"0"</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-no"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-yes"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>Y<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-no"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span>N<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line"></span><br><span class="line">      <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"statement-yes"</span> <span class="attr">class</span>=<span class="string">"form-checkbox label-empty"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">span</span> <span class="attr">class</span>=<span class="string">"radio-value"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>太阳每天都从东边升起来<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;form&gt;
+  &lt;h4&gt;请判断以下语句是否正确？&lt;/h4&gt;
+  &lt;div class=&quot;d-flex&quot;&gt;
+    &lt;div class=&quot;form-boolean&quot;&gt;
+      &lt;input type=&quot;radio&quot; name=&quot;statement&quot; id=&quot;statement-yes&quot; class=&quot;input-yes&quot; value=&quot;1&quot;&gt;
+      &lt;input type=&quot;radio&quot; name=&quot;statement&quot; id=&quot;statement-no&quot; class=&quot;input-no&quot; value=&quot;0&quot;&gt;
+      &lt;label for=&quot;statement-no&quot; class=&quot;form-checkbox label-yes&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;Y&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label for=&quot;statement-yes&quot; class=&quot;form-checkbox label-no&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;N&lt;/span&gt;
+      &lt;/label&gt;
+
+      &lt;label for=&quot;statement-yes&quot; class=&quot;form-checkbox label-empty&quot;&gt;
+        &lt;span class=&quot;radio-value&quot;&gt;&lt;/span&gt;
+      &lt;/label&gt;
+    &lt;/div&gt;
+    &lt;div&gt;太阳每天都从东边升起来&lt;/div&gt;
+  &lt;/div&gt;
+ &lt;/form&gt;
+</code></pre>
 <p>这时，通过label for，我们点击N或者空框时，第一个radio会被选中，点击Y时，第二个radio会被选中。这里给空框也指定了一个for，默认是选择yes。【后面CSS部分，我们就会知道这里空框的for值的选择，决定了第一次点击的时候，出现的是Y还是N，这里我们选了Y。】</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fthq2dgonzg30cf05vgln.gif" alt=""></p>
 <p>离目标已经很近了！</p>
 <p>我们先设置下两个radio不可见，同时，初始状态时，只有空框。</p>
 <p>CSS中添加如下代码：</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.form-boolean</span> &#123;</span><br><span class="line">  <span class="selector-tag">input</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.label-no</span>, <span class="selector-class">.label-yes</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="SCSS">.form-boolean {
+  input {
+    display: none;
+  }
+
+  .label-no, .label-yes {
+    display: none;
+  }
+}
+</code></pre>
 <p>这里用form-boolean包了一层，这样，设置的CSS，是针对form-boolean 选择器中的input。</p>
 <p>此时的页面效果：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fthqypbrbbj30kg07q0t8.jpg" alt=""></p>
 <p>但是你会发现，点击空框，没有任何反应，因为我们隐藏了Y和N。那么要怎么把Y和N唤出来？</p>
 <p>前面我们已经设置了点击空框时，第一个input radio其实是被选中的，所有我们可以使用：checked唤出Y，同时Y出现的时候，空框隐藏。CSS添加如下代码：</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.form-boolean</span> &#123;</span><br><span class="line"> ........</span><br><span class="line"></span><br><span class="line">  <span class="selector-tag">input</span>:checked ~ <span class="selector-class">.label-empty</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.input-yes</span>:checked ~ <span class="selector-class">.label-yes</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.form-boolean {
+ ........
+
+  input:checked ~ .label-empty {
+    display: none;
+  }
+
+  .input-yes:checked ~ .label-yes {
+    display: block;
+  }
+}
+</code></pre>
 <p>这时的页面效果：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fthr0ybiyyg30cf05v3yk.gif" alt=""></p>
 <p>如果<code>~</code>不清楚，可以参考这篇<a href="https://luciaca.cn/2018/07/18/css-symbol-compare/" target="_blank" rel="noopener">CSS中’&gt;’,’+’,’～’符号的区别</a>.</p>
 <p>还剩最后一步，点击Y时，更换成N。依然还是使用:checked，.form-boolean里面添加如下代码：</p>
- <figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.form-boolean</span> &#123;</span><br><span class="line">   .......</span><br><span class="line">  <span class="selector-class">.input-no</span>:checked ~ <span class="selector-class">.label-no</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.form-boolean {
+   .......
+  .input-no:checked ~ .label-no {
+    display: block;
+  }
+}
+</code></pre>
 <p>此时的页面效果：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fthp4rvq4pg30cf05vdft.gif" alt=""></p>
 <p>最后.form-boolean 部分完整的CSS：</p>
-<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.form-boolean</span> &#123;</span><br><span class="line">  <span class="selector-tag">input</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.label-no</span>, <span class="selector-class">.label-yes</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-tag">input</span>:checked ~ <span class="selector-class">.label-empty</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: none;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.input-yes</span>:checked ~ <span class="selector-class">.label-yes</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="selector-class">.input-no</span>:checked ~ <span class="selector-class">.label-no</span> &#123;</span><br><span class="line">    <span class="attribute">display</span>: block;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="scss">.form-boolean {
+  input {
+    display: none;
+  }
+
+  .label-no, .label-yes {
+    display: none;
+  }
+
+  input:checked ~ .label-empty {
+    display: none;
+  }
+
+  .input-yes:checked ~ .label-yes {
+    display: block;
+  }
+
+  .input-no:checked ~ .label-no {
+    display: block;
+  }
+}
+</code></pre>
 <p>OK!  </p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/:checked" target="_blank" rel="noopener">:checked</a></p>
 <p><a href="http://www.w3school.com.cn/tags/att_label_for.asp" target="_blank" rel="noopener">label 标签的for属性</a></p>
@@ -931,7 +1163,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>550 words</span>
+              <span>495 words</span>
             </span>
           
 
@@ -953,40 +1185,95 @@
             <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>工作中遇到了+,～不清楚两者的区别，查了下，顺带把>也缕缕，记录下三者的差异。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>用一个例子来说明一下。</p>
 <p>页面内容如下：</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第一段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>第一段落: 子段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第二段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第三段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第四段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;div class=&quot;container&quot;&gt;
+  &lt;p&gt;第一段落&lt;/p&gt;
+  &lt;div&gt;
+    &lt;p&gt;第一段落: 子段落&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;p&gt;第二段落&lt;/p&gt;
+  &lt;p&gt;第三段落&lt;/p&gt;
+  &lt;p&gt;第四段落&lt;/p&gt;
+&lt;/div&gt;
+</code></pre>
 <p>在不设置任何格式的情况下，页面画风如下：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fte98sm1epj30u80aqdge.jpg" alt=""></p>
 <p>来一个个试一下。</p>
 <h4 id=""><a href="#" class="headerlink" title=">"></a>></h4><p>> 只对该选择器下的直接子元素设定CSS值。</p>
 <p>添加CSS：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.container</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: red;</span><br><span class="line"></span><br><span class="line">  &gt; p &#123;</span><br><span class="line">    <span class="selector-tag">color</span>: <span class="selector-tag">green</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.container {
+  color: red;
+
+  &gt; p {
+    color: green;
+  }
+}  
+</code></pre>
 <p>这时，container下面的所有第一级子元素p，都变成了green：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fte7l4ewkzj30w00b6dh4.jpg" alt=""></p>
 <p>而用div 包起来的那个p，则依然继承container的颜色属性值red.</p>
 <p>页面效果：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fte7p5o59ej30em0ast96.jpg" alt=""></p>
 <p>如果去掉 &gt; ,则container下的所有p都会变成绿色：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.container</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: red;</span><br><span class="line"></span><br><span class="line">  p &#123;</span><br><span class="line">    <span class="selector-tag">color</span>: <span class="selector-tag">green</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.container {
+  color: red;
+
+  p {
+    color: green;
+  }
+}  
+</code></pre>
 <p>页面效果：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fte7uub8woj30oy0akdgc.jpg" alt=""></p>
 <h4 id="-1"><a href="#-1" class="headerlink" title="+"></a>+</h4><p>+ 连接两个selector，要求这两个selector必须同属于一个父selector，同时第二个selector必须是紧跟第一个selector。</p>
 <p>试一下，改CSS：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.container</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: red;</span><br><span class="line"></span><br><span class="line">  div + p &#123;</span><br><span class="line">    <span class="selector-tag">color</span>: <span class="selector-tag">blue</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.container {
+  color: red;
+
+  div + p {
+    color: blue;
+  }
+}
+</code></pre>
 <p>这时，只有紧随div的那个p变成了蓝色，而且它与div同属一个 父selector .container，也就是两者是同级的。</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fte80zob35j30sq0b83zp.jpg" alt=""></p>
 <p>页面效果：</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fte82emeplj30t60aegm8.jpg" alt=""></p>
 <h4 id="-2"><a href="#-2" class="headerlink" title="~"></a>~</h4><p>~ 跟+  很像，但是它不要求第二个selector必须紧随其后，它会选中所有它后面的第二个selector，设置CSS。</p>
 <p>试一下，改CSS：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.container</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: red;</span><br><span class="line"></span><br><span class="line">  div ~ p &#123;</span><br><span class="line">    <span class="selector-tag">color</span>: <span class="selector-tag">blue</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.container {
+  color: red;
+
+  div ~ p {
+    color: blue;
+  }
+}
+</code></pre>
 <p>这时，div后面的所有p都成了蓝色。</p>
 <p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fte8a0yrgdj30ns0a40ts.jpg" alt=""></p>
 <p>对应的页面效果：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fte8ar807nj30no0aeq3l.jpg" alt=""></p>
 <p>跟+  一样，~ 也只对同一个层级的selector有效，比如我们添加上span.</p>
- <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第一段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">p</span>&gt;</span>第一段落: 子段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第二段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第三段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>第四段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">span</span>&gt;</span>这是跟div同级的span<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span>&gt;</span><span class="tag">&lt;<span class="name">span</span>&gt;</span>这是子span<span class="tag">&lt;/<span class="name">span</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="html">&lt;div class=&quot;container&quot;&gt;
+  &lt;p&gt;第一段落&lt;/p&gt;
+  &lt;div&gt;
+    &lt;p&gt;第一段落: 子段落&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;p&gt;第二段落&lt;/p&gt;
+  &lt;p&gt;第三段落&lt;/p&gt;
+  &lt;p&gt;第四段落&lt;/p&gt;
+  &lt;span&gt;这是跟div同级的span&lt;/span&gt;
+  &lt;div&gt;&lt;span&gt;这是子span&lt;/span&gt;&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
 <p>对应的CSS：</p>
-<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-class">.container</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: red;</span><br><span class="line"></span><br><span class="line">  div ~ span &#123;</span><br><span class="line">    <span class="selector-tag">color</span>: <span class="selector-tag">blue</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="css">.container {
+  color: red;
+
+  div ~ span {
+    color: blue;
+  }
+}
+</code></pre>
 <p>页面效果：</p>
 <p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fte8iywqqvj30pe0dmab0.jpg" alt=""></p>
 <p>第一个span颜色变成了blue，而用div包起来的span，依然继承container的color值。</p>
@@ -1132,7 +1419,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>308 words</span>
+              <span>301 words</span>
             </span>
           
 
@@ -1155,20 +1442,23 @@
 <p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1ft3lwlla7oj317u0aejup.jpg" alt=""></p>
 <p>稍稍整理了下参考的内容，简化了一些步骤，5步完成配置。</p>
 <h4 id="将bash改为zsh"><a href="#将bash改为zsh" class="headerlink" title="将bash改为zsh"></a>将bash改为zsh</h4><p>打开安装好的iTerm, 终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chsh -s /bin/zsh</span><br></pre></td></tr></table></figure>
-<h4 id="安装-oh-my-zsh"><a href="#安装-oh-my-zsh" class="headerlink" title="安装 oh-my-zsh"></a>安装 oh-my-zsh</h4><p>终端继续输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cd ~/</span><br><span class="line">git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh</span><br><span class="line">cp ~/.zshrc ~/.zshrc.orig</span><br><span class="line">cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h4 id="修改主题"><a href="#修改主题" class="headerlink" title="修改主题"></a>修改主题</h4><ul>
+<pre><code>chsh -s /bin/zsh
+</code></pre><h4 id="安装-oh-my-zsh"><a href="#安装-oh-my-zsh" class="headerlink" title="安装 oh-my-zsh"></a>安装 oh-my-zsh</h4><p>终端继续输入：</p>
+<pre><code>cd ~/
+git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
+cp ~/.zshrc ~/.zshrc.orig
+cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
+</code></pre><h4 id="修改主题"><a href="#修改主题" class="headerlink" title="修改主题"></a>修改主题</h4><ul>
 <li><p>编辑.zshrc文件，将主题修改为agnoster：</p>
 <p>终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi .zshrc</span><br></pre></td></tr></table></figure>
-<p>将 <code>ZSH_THEME=&quot;robbyrussell</code> 修改为：<code>ZSH_THEME=&quot;agnoster&quot;</code></p>
+<pre><code>vi .zshrc
+</code></pre><p>将 <code>ZSH_THEME=&quot;robbyrussell</code> 修改为：<code>ZSH_THEME=&quot;agnoster&quot;</code></p>
 <p>保存退出。</p>
 </li>
 <li><p>修改agnoster主题的源代码</p>
 <p>终端输入：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi  ~/.oh-my-zsh/themes/agnoster.zsh-theme</span><br></pre></td></tr></table></figure>
-<p>在打开的agnoster.zsh-theme文件中，把内容替换成：</p>
+<pre><code>vi  ~/.oh-my-zsh/themes/agnoster.zsh-theme
+</code></pre><p>在打开的agnoster.zsh-theme文件中，把内容替换成：</p>
 <p><a href="https://gist.githubusercontent.com/agnoster/3712874/raw/c3107c06c04fb42b0ca27b0a81b15854819969c6/agnoster.zsh-theme中的内容。" target="_blank" rel="noopener">https://gist.githubusercontent.com/agnoster/3712874/raw/c3107c06c04fb42b0ca27b0a81b15854819969c6/agnoster.zsh-theme中的内容。</a></p>
 <p>保存退出。</p>
 </li>
@@ -1334,7 +1624,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>582 words</span>
+              <span>579 words</span>
             </span>
           
 
@@ -1358,7 +1648,10 @@
 <h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>三步即可：</p>
 <ul>
 <li><p>设备重启，启动时，按住“command + S”， 进入单一用户模式，会出现类似终端的界面，依次输入如下三个命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/sbin/mount -uw</span><br><span class="line">rm /var/db/.AppleSetupDone</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">/sbin/mount -uw
+rm /var/db/.AppleSetupDone
+reboot
+</code></pre>
 <p>随后电脑会重启，但也有可能不重启，我遇到的便是没有重启，要求输入用户登陆的密码，输入即可，随后设备自动重启了。如果一直没有重启，请手动重启。</p>
 </li>
 <li><p>创建一个新的管理员账号</p>
@@ -1510,7 +1803,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,319 words</span>
+              <span>1,183 words</span>
             </span>
           
 
@@ -1539,73 +1832,195 @@
 <p>以下操作均以demo这个rails项目为例。</p>
 <h4 id="添加用户"><a href="#添加用户" class="headerlink" title="添加用户"></a>添加用户</h4><p>添加用户deploy。</p>
 <p>用root权限登录后，终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser deploy</span><br></pre></td></tr></table></figure>
-<p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">deploy ALL=(ALL:ALL) ALL</span><br></pre></td></tr></table></figure>
+<pre><code>adduser deploy
+</code></pre><p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
+<pre><code class="shell">deploy ALL=(ALL:ALL) ALL
+</code></pre>
 <p>免密码登录：</p>
 <p>新用户登录，在当前目录下，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ssh</span><br><span class="line">touch ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>回到本地，把公钥复制出来，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat ~/ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
-<p> 回到服务器，执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>把公钥放进去。</p>
+<pre><code>mkdir ~/.ssh
+touch ~/.ssh/authorized_keys
+</code></pre><p>回到本地，把公钥复制出来，执行：</p>
+<pre><code>cat ~/ssh/id_rsa.pub
+</code></pre><p> 回到服务器，执行：</p>
+<pre><code>vi ~/.ssh/authorized_keys
+</code></pre><p>把公钥放进去。</p>
 <p>修改权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 ~/.ssh</span><br><span class="line">chmod 644 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>退出后，重新登录，会发现不需要输入密码 了。</p>
+<pre><code>chmod 700 ~/.ssh
+chmod 644 ~/.ssh/authorized_keys
+</code></pre><p>退出后，重新登录，会发现不需要输入密码 了。</p>
 <h4 id="更新和安装Liunx套件"><a href="#更新和安装Liunx套件" class="headerlink" title="更新和安装Liunx套件"></a>更新和安装Liunx套件</h4><p>先更新系统， 再升级。</p>
 <p>终端执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure>
-<h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
+<pre><code>sudo apt-get update -y
+sudo apt-get upgrade -y
+</code></pre><h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><pre><code class="Shell">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev
+</code></pre>
 <h4 id="安装Ruby"><a href="#安装Ruby" class="headerlink" title="安装Ruby"></a>安装Ruby</h4><p>安装 RVM:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev</span><br><span class="line">gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB</span><br><span class="line">curl -sSL https://get.rvm.io | bash -s stable</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+curl -sSL https://get.rvm.io | bash -s stable
+</code></pre>
 <p>成功时，会弹出如下信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Upgrade of RVM in /home/deploy/.rvm/ is complete.</span><br></pre></td></tr></table></figure>
-<p>安装ruby，这里选2.4.0：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">source ~/.rvm/scripts/rvm</span><br><span class="line">rvm requirements</span><br><span class="line">rvm install 2.4.0</span><br><span class="line">rvm use 2.4.0 --default</span><br></pre></td></tr></table></figure>
+<pre><code>Upgrade of RVM in /home/deploy/.rvm/ is complete.
+</code></pre><p>安装ruby，这里选2.4.0：</p>
+<pre><code class="Shell">source ~/.rvm/scripts/rvm
+rvm requirements
+rvm install 2.4.0
+rvm use 2.4.0 --default
+</code></pre>
 <p>安装bundler：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gem install bundler --no-ri --no-rdoc</span><br></pre></td></tr></table></figure>
-<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">gem install bundler --no-ri --no-rdoc
+</code></pre>
+<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><pre><code class="Shell">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server
+</code></pre>
 <p>执行 <code>mysql -u root -p</code> 进入 mysql console 后，输入：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CREATE DATABASE demo CHARACTER SET utf8mb4;</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">CREATE DATABASE demo CHARACTER SET utf8mb4;
+</code></pre>
 <p>这里demo记得换成你的数据库名称。</p>
 <p>运行后，会弹出Query OK的信息，exit，退出。</p>
-<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nginx</span><br><span class="line">sudo service nginx start</span><br></pre></td></tr></table></figure>
+<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><pre><code class="Shell">sudo apt-get install nginx
+sudo service nginx start
+</code></pre>
 <h4 id="安装Capistrano"><a href="#安装Capistrano" class="headerlink" title="安装Capistrano"></a>安装Capistrano</h4><p>本地 gemfile中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">gem <span class="string">'mysql2'</span></span><br><span class="line">gem <span class="string">'puma'</span>, <span class="string">'~&gt; 3.11'</span></span><br><span class="line">group <span class="symbol">:development</span> <span class="keyword">do</span></span><br><span class="line">  gem <span class="string">'capistrano'</span>,<span class="string">'3.11.0'</span></span><br><span class="line">  gem <span class="string">'capistrano-rvm'</span>, <span class="string">'0.1.2'</span></span><br><span class="line">  gem <span class="string">'capistrano-rails'</span>,<span class="string">'1.4.0'</span></span><br><span class="line">  gem <span class="string">'capistrano3-puma'</span>, <span class="string">'3.1.1'</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">gem &#39;mysql2&#39;
+gem &#39;puma&#39;, &#39;~&gt; 3.11&#39;
+group :development do
+  gem &#39;capistrano&#39;,&#39;3.11.0&#39;
+  gem &#39;capistrano-rvm&#39;, &#39;0.1.2&#39;
+  gem &#39;capistrano-rails&#39;,&#39;1.4.0&#39;
+  gem &#39;capistrano3-puma&#39;, &#39;3.1.1&#39;
+end
+</code></pre>
 <p>保存后，<code>bundle install</code>.</p>
 <p>创建 capfile：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bundle exec cap install</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">bundle exec cap install
+</code></pre>
 <p>配置Capfile:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">"capistrano/rvm"</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/rails'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'capistrano/puma/nginx'</span></span><br><span class="line">install_plugin Capistrano::Puma</span><br><span class="line">install_plugin Capistrano::Puma::Nginx</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &quot;capistrano/rvm&quot;
+require &#39;capistrano/rails&#39;
+require &#39;capistrano/puma&#39;
+require &#39;capistrano/puma/nginx&#39;
+install_plugin Capistrano::Puma
+install_plugin Capistrano::Puma::Nginx
+</code></pre>
 <p>配置<code>config/deploy.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set <span class="symbol">:application</span>, <span class="string">"demo"</span>  <span class="comment">## demo 换成你的项目名</span></span><br><span class="line">set <span class="symbol">:repo_url</span>, <span class="string">"https://github.com/xxxxx/demo"</span> <span class="comment">## 这里写上项目代码的托管地址</span></span><br><span class="line">append <span class="symbol">:linked_dirs</span>, <span class="string">"log"</span>, <span class="string">"tmp/pids"</span>, <span class="string">"tmp/cache"</span>, <span class="string">"tmp/sockets"</span>, <span class="string">"public/system"</span>, <span class="string">"public/uploads"</span>, <span class="string">"vendor/bundle"</span></span><br><span class="line">append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/master.key"</span></span><br><span class="line"></span><br><span class="line">set <span class="symbol">:rvm_type</span>, <span class="symbol">:user</span></span><br><span class="line">set <span class="symbol">:rvm_ruby_version</span>, <span class="string">'2.4.0'</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">set :application, &quot;demo&quot;  ## demo 换成你的项目名
+set :repo_url, &quot;https://github.com/xxxxx/demo&quot; ## 这里写上项目代码的托管地址
+append :linked_dirs, &quot;log&quot;, &quot;tmp/pids&quot;, &quot;tmp/cache&quot;, &quot;tmp/sockets&quot;, &quot;public/system&quot;, &quot;public/uploads&quot;, &quot;vendor/bundle&quot;
+append :linked_files, &quot;config/database.yml&quot;, &quot;config/master.key&quot;
+
+set :rvm_type, :user
+set :rvm_ruby_version, &#39;2.4.0&#39;
+</code></pre>
 <p>配置 <code>config/deploy/staging.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">server <span class="string">'106.15.182.207'</span>, <span class="symbol">user:</span> <span class="string">'deploy'</span>, <span class="symbol">roles:</span> <span class="string">%w&#123;app db web&#125;</span></span><br><span class="line">set <span class="symbol">:deploy_to</span>, <span class="string">"/home/deploy/demo/<span class="subst">#&#123;fetch(<span class="symbol">:rails_env</span>)&#125;</span>"</span></span><br><span class="line">set <span class="symbol">:branch</span>, <span class="symbol">:master</span></span><br><span class="line">set <span class="symbol">:stage</span>, <span class="symbol">:staging</span></span><br><span class="line">set <span class="symbol">:ssh_options</span>, &#123;</span><br><span class="line">    <span class="symbol">keys:</span> <span class="string">%w(/home/deploy/.ssh/authorized_keys)</span>,</span><br><span class="line">    <span class="symbol">auth_methods:</span> <span class="string">%w(publickey)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">server &#39;106.15.182.207&#39;, user: &#39;deploy&#39;, roles: %w{app db web}
+set :deploy_to, &quot;/home/deploy/demo/#{fetch(:rails_env)}&quot;
+set :branch, :master
+set :stage, :staging
+set :ssh_options, {
+    keys: %w(/home/deploy/.ssh/authorized_keys),
+    auth_methods: %w(publickey)
+}
+</code></pre>
 <p>这里的key，就是你放在远端服务器上的SSH公钥，也是放在远端代码仓库上的公钥。</p>
 <p>在远端服务器上创建<code>/home/deploy/demo/shared/config/database.yml</code>:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">staging:</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8</span><br><span class="line">  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) &#123; 5 &#125; %&gt;</span><br><span class="line">  username: root</span><br><span class="line">  password: password</span><br><span class="line">  socket: /var/run/mysqld/mysqld.sock</span><br><span class="line">  database:  deploy_demo</span><br></pre></td></tr></table></figure>
+<pre><code class="Iml">staging:
+  adapter: mysql2
+  encoding: utf8
+  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) { 5 } %&gt;
+  username: root
+  password: password
+  socket: /var/run/mysqld/mysqld.sock
+  database:  deploy_demo
+</code></pre>
 <p>password换成你之前设置的root密码。</p>
 <p>创建 <code>/home/deploy/demo/shared/config/master.key</code> , 把本机的master key贴进去，这里master.key取代了之前的secrets。</p>
 <p>修改demo目录下所有文件的权限：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd /home/deploy/demo</span><br><span class="line">chown -R deploy:deploy .</span><br></pre></td></tr></table></figure>
-<p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
+<pre><code>cd /home/deploy/demo
+chown -R deploy:deploy .
+</code></pre><p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
 <p>回到本地执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy:check</span><br><span class="line">cap staging puma:config</span><br><span class="line">cap staging puma:nginx_config</span><br><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">cap staging deploy:check
+cap staging puma:config
+cap staging puma:nginx_config
+cap staging deploy
+</code></pre>
 <p>如果运行：<code>cap staging puma:nginx_config</code>时报错，显示如下出错信息：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">00:00 puma:nginx_config</span><br><span class="line">      Uploading /tmp/nginx_demo_staging 100.0%</span><br><span class="line">      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging</span><br><span class="line">      01 sudo</span><br><span class="line">      01 :</span><br><span class="line">      01 no tty present and no askpass program specified</span><br></pre></td></tr></table></figure>
-<p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
+<pre><code>00:00 puma:nginx_config
+      Uploading /tmp/nginx_demo_staging 100.0%
+      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging
+      01 sudo
+      01 :
+      01 no tty present and no askpass program specified
+</code></pre><p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
 <p><code>cap staging puma:nginx_config</code>这一步 本身要做的就是添加了一个nginx的config文件，我们可以自己手动添加：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd etc/nginx/sites-available</span><br><span class="line">touch demo_staging</span><br></pre></td></tr></table></figure>
-<p>在demo_staging中，填入如下内容：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">upstream puma_deploy_demo_staging &#123;</span><br><span class="line">  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">  listen 80;</span><br><span class="line">  server_name 106.15.182.207;</span><br><span class="line">  root /home/deploy/demo/current/public;</span><br><span class="line">  try_files $uri/index.html $uri @puma_demo_staging;</span><br><span class="line"></span><br><span class="line">  client_max_body_size 4G;</span><br><span class="line">  keepalive_timeout 10;</span><br><span class="line"></span><br><span class="line">  error_page 500 502 504 /500.html;</span><br><span class="line">  error_page 503 @503;</span><br><span class="line"></span><br><span class="line">  location @puma_deploy_demo_staging &#123;</span><br><span class="line">    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header Host $host;</span><br><span class="line">    proxy_redirect off;</span><br><span class="line">    proxy_set_header Upgrade $http_upgrade;</span><br><span class="line">    proxy_set_header Connection &quot;Upgrade&quot;;</span><br><span class="line">    proxy_set_header X-Forwarded-Proto http;</span><br><span class="line">    proxy_pass http://puma_demo_staging;</span><br><span class="line">    # limit_req zone=one;</span><br><span class="line">    access_log /home/deploy/demo/shared/log/nginx.access.log;</span><br><span class="line">    error_log /home/deploy/demo/shared/log/nginx.error.log;</span><br><span class="line">  &#125;</span><br><span class="line">location ^~ /assets/ &#123;</span><br><span class="line">    gzip_static on;</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location = /50x.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line">    location = /404.html &#123;</span><br><span class="line">    root html;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  location @503 &#123;</span><br><span class="line">    error_page 405 = /system/maintenance.html;</span><br><span class="line">    if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">      rewrite ^(.*)$ /system/maintenance.html break;</span><br><span class="line">    &#125;</span><br><span class="line">    rewrite ^(.*)$ /503.html break;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ )&#123;</span><br><span class="line">    return 405;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if (-f $document_root/system/maintenance.html) &#123;</span><br><span class="line">    return 503;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>保存后，退出， 建立link：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging</span><br></pre></td></tr></table></figure>
-<p>继续执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cap staging deploy</span><br></pre></td></tr></table></figure>
-<p>完成后，重启nginx:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure>
-<p>打开浏览器：</p>
+<pre><code>cd etc/nginx/sites-available
+touch demo_staging
+</code></pre><p>在demo_staging中，填入如下内容：</p>
+<pre><code>upstream puma_deploy_demo_staging {
+  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;
+}
+
+server {
+  listen 80;
+  server_name 106.15.182.207;
+  root /home/deploy/demo/current/public;
+  try_files $uri/index.html $uri @puma_demo_staging;
+
+  client_max_body_size 4G;
+  keepalive_timeout 10;
+
+  error_page 500 502 504 /500.html;
+  error_page 503 @503;
+
+  location @puma_deploy_demo_staging {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_redirect off;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;Upgrade&quot;;
+    proxy_set_header X-Forwarded-Proto http;
+    proxy_pass http://puma_demo_staging;
+    # limit_req zone=one;
+    access_log /home/deploy/demo/shared/log/nginx.access.log;
+    error_log /home/deploy/demo/shared/log/nginx.error.log;
+  }
+location ^~ /assets/ {
+    gzip_static on;
+    expires max;
+    add_header Cache-Control public;
+  }
+
+  location = /50x.html {
+    root html;
+  }
+    location = /404.html {
+    root html;
+  }
+
+  location @503 {
+    error_page 405 = /system/maintenance.html;
+    if (-f $document_root/system/maintenance.html) {
+      rewrite ^(.*)$ /system/maintenance.html break;
+    }
+    rewrite ^(.*)$ /503.html break;
+  }
+
+  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ ){
+    return 405;
+  }
+
+  if (-f $document_root/system/maintenance.html) {
+    return 503;
+  }
+}
+</code></pre><p>保存后，退出， 建立link：</p>
+<pre><code>sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging
+</code></pre><p>继续执行：</p>
+<pre><code>cap staging deploy
+</code></pre><p>完成后，重启nginx:</p>
+<pre><code>sudo service nginx restart
+</code></pre><p>打开浏览器：</p>
 <p>  <img src="https://ws2.sinaimg.cn/large/006tNc79ly1fszddggcj1j30cw05fmx9.jpg" alt=""></p>
 <p>OK！！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/deploying-a-rails-app-on-ubuntu-14-04-with-capistrano-nginx-and-puma" target="_blank" rel="noopener">Deploying a Rails App on Ubuntu 14.04 with Capistrano, Nginx, and Puma</a></p>
@@ -1750,7 +2165,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>565 words</span>
+              <span>541 words</span>
             </span>
           
 
@@ -1771,13 +2186,34 @@
           
             <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
 <p>使用scope进行处理：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(order_by.join(<span class="string">' '</span>))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  .........
+  IDLIST = [4, 6, 9]
+  scope :order_by_custom_id, -&gt; {
+     order_by = [&#39;CASE&#39;]
+    order_by &lt;&lt; &quot;WHEN id in (#{IDLIST.join(&#39;, &#39;)}) THEN 0&quot;
+    order_by &lt;&lt; &#39;ELSE 1 END&#39;
+    order(order_by.join(&#39; &#39;))
+  }
+end
+</code></pre>
 <p>在controller中调用了该scope。刷新页面后，发现服务器报出warning message：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DEPRECATION <span class="symbol">WARNING:</span> Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): <span class="string">"CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END"</span>. Non-attribute arguments will be disallowed <span class="keyword">in</span> Rails <span class="number">6.0</span>. This method should <span class="keyword">not</span> be called with user-provided values, such as request parameters <span class="keyword">or</span> model attributes. Known-safe values can be passed by wrapping them <span class="keyword">in</span> Arel.sql().</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">DEPRECATION WARNING: Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): &quot;CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END&quot;. Non-attribute arguments will be disallowed in Rails 6.0. This method should not be called with user-provided values, such as request parameters or model attributes. Known-safe values can be passed by wrapping them in Arel.sql().
+</code></pre>
 <h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
 <p>很简单，就是使用warning message里面提到的Arel.sql()方法，将<code>CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END</code> 用Arel.sql() 包起来即可。</p>
 <p>修改scope：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">'CASE'</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">"WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">', '</span>)&#125;</span>) THEN 0"</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">'ELSE 1 END'</span></span><br><span class="line">    order(Arel.sql(order_by.join(<span class="string">' '</span>)))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  .........
+  IDLIST = [4, 6, 9]
+  scope :order_by_custom_id, -&gt; {
+     order_by = [&#39;CASE&#39;]
+    order_by &lt;&lt; &quot;WHEN id in (#{IDLIST.join(&#39;, &#39;)}) THEN 0&quot;
+    order_by &lt;&lt; &#39;ELSE 1 END&#39;
+    order(Arel.sql(order_by.join(&#39; &#39;)))
+  }
+end
+</code></pre>
 <p>OK!</p>
 <p>但是，这个Arel.sql(raw_sql)是什么？</p>
 <p>先看看Arel是什么。</p>
@@ -1791,7 +2227,10 @@
 </blockquote>
 <p>文档里面还列出了很多例子，从简单的select * from users 到复杂点的joins table，我猜是因为我接触Rails的时间不长，反正是从来没用过这东西。</p>
 <p>Arel.sql(raw_sql) 这个类方法的源代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">sql</span> <span class="title">raw_sql</span></span></span><br><span class="line">  Arel::Nodes::SqlLiteral.new raw_sql</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def self.sql raw_sql
+  Arel::Nodes::SqlLiteral.new raw_sql
+end
+</code></pre>
 <p>也就是新建了一个Arel::Nodes::SqlLiteral实例，而Arel::Nodes::SqlLiteral为什么是安全的呢？用Arel::Nodes::SqlLiteral 把raw_sql包起来的用意是什么？估计也能猜到，防攻击啥的。果然，Google了下，发现说是可以防止<strong>SQL注入</strong>的情况。</p>
 <p>有些复杂了，脑子暂时消化不了。</p>
 <p>此外，文档中有关<a href="https://www.rubydoc.info/github/rails/rails/ActiveRecord%2FConnectionAdapters%2FDatabaseStatements:sanitize_limit" target="_blank" rel="noopener"><strong>sanitize_limit</strong></a> 部分也有提到SQL injection的问题。</p>
@@ -2170,7 +2609,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,819 words</span>
+              <span>1,576 words</span>
             </span>
           
 
@@ -2193,16 +2632,63 @@
 <p>目前最新的版本是<a href="https://rubygems.org/search?utf8=%E2%9C%93&amp;query=cancancan" target="_blank" rel="noopener">2.2.0</a>， 安装部分可见文档，这里我记录下自己在定义权限时遇到的问题，同时附上验证权限及Rspec下如何测试Ability。</p>
 <h4 id="定义权限"><a href="#定义权限" class="headerlink" title="定义权限"></a>定义权限</h4><p>cancancan的wiki中<a href="https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities" target="_blank" rel="noopener">Defining Abilities</a>中给到了权限定义的例子：</p>
 <p>较常规的，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    can <span class="symbol">:read</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">if</span> user.present?</span><br><span class="line">      can <span class="symbol">:manage</span>, Post, <span class="symbol">user_id:</span> user.id</span><br><span class="line">      can <span class="symbol">:manage</span>, Comment</span><br><span class="line">      can <span class="symbol">:read</span>, Tag, <span class="symbol">released:</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">## ability.rb
+class Ability
+  include CanCan::Ability
+
+  def initialize(user)
+    can :read, :all
+    if user.present?
+      can :manage, Post, user_id: user.id
+      can :manage, Comment
+      can :read, Tag, released: true
+    end
+    if user.admin?
+      can :manage, :all
+    end
+  end
+end
+</code></pre>
 <p>简单说一下，<code>can :manage, Post, user_id: user.id</code>, 表明post含有字段user_id，且当前的user.id等于project的user_id，可以理解成对于所有current_user创建的post，都有manage的权限。</p>
 <p>而<code>can :read, Tag, released: true</code>则表明，用户只能阅读已经发布的tag。</p>
 <p>需要注意的是，Ability的初始化，默认是在application_controller中添加了helper method:current_ability， 可以在它的源码module CanCan的定义中看到，调用了钩子方法included，当include CanCan时，这些method会自动引入：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">self</span>.<span class="title">included</span><span class="params">(base)</span></span></span><br><span class="line">  base.extend ClassMethods</span><br><span class="line">  base.helper_method <span class="symbol">:can?</span>, <span class="symbol">:cannot?</span>, <span class="symbol">:current_ability</span> <span class="keyword">if</span> base.respond_to? <span class="symbol">:helper_method</span></span><br><span class="line">  base.class_attribute <span class="symbol">:_cancan_skipper</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def self.included(base)
+  base.extend ClassMethods
+  base.helper_method :can?, :cannot?, :current_ability if base.respond_to? :helper_method
+  base.class_attribute :_cancan_skipper
+end
+</code></pre>
 <p>而module CanCan是自动included 到所有的controller的，这样所有的controller都拥有了current_ability 这个helper method。</p>
 <p>我们可以通过在ApplicationController中自定义current_ability来定制权限分配。</p>
 <p>看一个稍微有点不一样的场景：</p>
 <p>现有model: project，user，member，task，其中project与task是一对多的关系，member是连接user与project之间多对多关系的中间表，4个model的表结构如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Table name: projects</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  name       :string</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                     :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  email                  :string           default(""), not null</span></span><br><span class="line"><span class="comment">#  name                   :string</span></span><br><span class="line"><span class="comment">#  admin                  :boolean          default(FALSE)</span></span><br><span class="line">......[users使用devise创建，其他的attributes省去]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: task</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id           :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  title        :string</span></span><br><span class="line"><span class="comment">#  content      :text</span></span><br><span class="line"><span class="comment">#  project_id   :bigint(8)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: members</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  role       :string           [owner, member]</span></span><br><span class="line"><span class="comment">#  project_id :bigint(8)</span></span><br><span class="line"><span class="comment">#  user_id    :bigint(8)</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># Table name: projects
+#
+#  id         :bigint(8)        not null, primary key
+#  name       :string
+
+# Table name: users
+#
+#  id                     :bigint(8)        not null, primary key
+#  email                  :string           default(&quot;&quot;), not null
+#  name                   :string
+#  admin                  :boolean          default(FALSE)
+......[users使用devise创建，其他的attributes省去]
+
+# Table name: task
+#
+#  id           :bigint(8)        not null, primary key
+#  title        :string
+#  content      :text
+#  project_id   :bigint(8)
+
+# Table name: members
+#
+#  id         :bigint(8)        not null, primary key
+#  role       :string           [owner, member]
+#  project_id :bigint(8)
+#  user_id    :bigint(8)
+</code></pre>
 <p>需要定义权限如下：</p>
 <ul>
 <li><p>user是admin时，拥有最高权限，即can :manage, :all</p>
@@ -2210,41 +2696,238 @@
 <li><p>User不是admin时，根据user在project中的角色来决定他的权限，比如role为owner时，可以读和改project，manage task，role为member时，则只能读project, manage task。</p>
 <p>这里就相当于initialize ability的时候，user是参数，需要判断是否是admin，另外需要创建一个新的method，将member作为参数传递过去，根据member的role来定义权限。</p>
 <p>我们先来定义从user出发的权限：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">## ability.rb
+class Ability
+  include CanCan::Ability
+
+  def initialize(user)
+    return unless user
+    if user.admin?
+      can :manage, :all
+      return
+    end
+  end
+end
+</code></pre>
 <p>而current_ability的默认定义是这样的：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  @current_ability <span class="params">||</span>= Ability.new(current_user)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def current_ability
+  @current_ability ||= Ability.new(current_user)
+end
+</code></pre>
 <p>这样user的权限是OK了，但是member呢？我们需要基于项目给user授权，同一个user在不同的项目中可能有不同的角色。我们需要重新修改下ability的初始化，把user和member的授权都定义在单独的method中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(&amp;block)</span></span></span><br><span class="line">    block.(<span class="keyword">self</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_user_permissions</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    can <span class="symbol">:read</span>, Project, <span class="symbol">members:</span> &#123; <span class="symbol">user_id:</span> user.id &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_member_permissions</span><span class="params">(member)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> member</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.owner?</span><br><span class="line">      can [<span class="symbol">:read</span>, <span class="symbol">:update</span>], member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.member?</span><br><span class="line">      can <span class="symbol">:read</span>, member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Ability
+  include CanCan::Ability
+
+  def initialize(&amp;block)
+    block.(self)
+  end
+
+  def apply_user_permissions(user)
+    return unless user
+
+    if user.admin?
+      can :manage, :all
+      return
+    end
+    can :read, Project, members: { user_id: user.id }
+  end
+
+  def apply_member_permissions(member)
+    return unless member
+
+    if member.role.owner?
+      can [:read, :update], member.project
+      can :manage, Task
+    end
+
+    if member.role.member?
+      can :read, member.project
+      can :manage, Task
+    end
+  end
+end
+</code></pre>
 <p>这样权限就定义好了，要如何使用呢？</p>
 <p>在<code>application_controller.rb</code>中，添加current_ability method：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  @current_ability <span class="params">||</span>= Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(current_user) &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  def current_ability
+    @current_ability ||= Ability.new { |a| a.apply_user_permissions(current_user) }
+  end
+</code></pre>
 <p>传递给apply_user_permissions的参数是current_user，类似地，调用apply_member_permissions，传递的是current_member，而这个权限的初始化，则在project和task中，遵循着DRY原则，我们新建一个BaseController来定义current_ability， 然后让ProjectsController， TasksController继承它。</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">BaseController</span> <span class="title">&lt;</span> <span class="title">ApplicationController</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">def BaseController &lt; ApplicationController
+  def current_ability
+    super.tap { |a| a.apply_member_permissions(current_member) }
+  end
+end
+</code></pre>
 <p>这里，先调用了ApplicationController中的current_ability，判断如果user是admin，则直接manage all，如果不是admin，同时也不是nil，则调用apply_member_permissions来授权，那么current_member如何定义呢？参考<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>, 我们可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">  @current_member <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def current_member
+  @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
+end
+</code></pre>
 <p>首先找出当前project的所有members，然后在members中找出user_id == current_user.id的那一条member纪录即可。【此处，current_project的定义略去，可参见<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>】</p>
 <p>将这个method添加到BaseController中：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">BaseController</span> <span class="title">&lt;</span> <span class="title">ApplicationController</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">    @current_member <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">def BaseController &lt; ApplicationController
+  def current_member
+    @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
+  end
+
+  def current_ability
+    super.tap { |a| a.apply_member_permissions(current_member) }
+  end
+end
+</code></pre>
 <p>让ProjectsController， TasksController都继承自BaseController：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### projects_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProjectsController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### tasks_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### projects_controller.rb
+class ProjectsController &lt; BaseController
+  ......
+end
+
+### tasks_controller.rb
+class TasksController &lt; BaseController
+  ......
+end
+</code></pre>
 <p>OK!! 下面看看如何验证权限。</p>
 </li>
 </ul>
 <h4 id="验证权限"><a href="#验证权限" class="headerlink" title="验证权限"></a>验证权限</h4><p>验证权限其实比较简单，在view中直接添加if语句即可：</p>
-  <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;%= link_to <span class="string">"New Post"</span>, new_post_path <span class="keyword">if</span> can? <span class="symbol">:create</span>, Post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">"edit Post"</span>, edit_post_path(@post) <span class="keyword">if</span> can? <span class="symbol">:edit</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to @post.title, post_path(@post) <span class="keyword">if</span> can? <span class="symbol">:read</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">"destroy Post"</span>, post_path(@post), <span class="symbol">method:</span> <span class="symbol">:delete</span> <span class="keyword">if</span> can? <span class="symbol">:destroy</span>, @post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;% <span class="keyword">if</span> cannot? <span class="symbol">:destroy</span>, @post %&gt;</span><br><span class="line"> &lt;span class="permission-message"&gt;you are not allowed to delete this post&lt;/span&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">&lt;%= link_to &quot;New Post&quot;, new_post_path if can? :create, Post %&gt;
+
+&lt;%= link_to &quot;edit Post&quot;, edit_post_path(@post) if can? :edit, @post %&gt;
+
+&lt;%= link_to @post.title, post_path(@post) if can? :read, @post %&gt;
+
+&lt;%= link_to &quot;destroy Post&quot;, post_path(@post), method: :delete if can? :destroy, @post %&gt;
+
+&lt;% if cannot? :destroy, @post %&gt;
+ &lt;span class=&quot;permission-message&quot;&gt;you are not allowed to delete this post&lt;/span&gt;
+&lt;% end %&gt;
+</code></pre>
 <h4 id="加载资源并授权"><a href="#加载资源并授权" class="headerlink" title="加载资源并授权"></a>加载资源并授权</h4><p>非常好用的一个method：<code>load_and_authorize_resource</code>, 顾名思义，就是加载资源并授权，可以拆分成：<code>load_resource</code>, <code>authorize_resource</code>来单独使用。</p>
 <p>看个简单的例子：</p>
- <figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_and_authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  load_and_authorize_resource
+  def show
+  end
+end
+</code></pre>
 <p>等同于：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @post = Post.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    authorize! <span class="symbol">:read</span>, @post</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  def show
+    @post = Post.find(params[:id])
+    authorize! :read, @post
+  end
+end
+</code></pre>
 <p>你也可以按需择取，比如你load_resource的方式不是通过 <code>Post.find(params[:id])</code>，而是自定义了一个current_post的helper method，则可以这样：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; @post = current_post &#125;</span><br><span class="line">  authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  before_action -&gt; { @post = current_post }
+  authorize_resource
+  def show
+  end
+end
+</code></pre>
 <h4 id="有关Rspec"><a href="#有关Rspec" class="headerlink" title="有关Rspec"></a>有关Rspec</h4><p>Rspec部分比较简单，参见<a href="https://github.com/CanCanCommunity/cancancan/wiki/Testing-Abilities#rspec" target="_blank" rel="noopener">test Ability Rspec</a>.</p>
 <p>这里，直接用上面定义的ability为例，来写一写对应的Rspec。</p>
 <p>先写好factories：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### users.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:user</span> <span class="keyword">do</span></span><br><span class="line">    email &#123; Faker::Internet.email &#125;</span><br><span class="line">    name &#123; Faker::Name.name &#125;</span><br><span class="line">    password <span class="string">"password"</span></span><br><span class="line">    password_confirmation <span class="string">"password"</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      admin <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### projects.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:project</span> <span class="keyword">do</span></span><br><span class="line">    name <span class="string">"My project"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### members.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">    project</span><br><span class="line">    user</span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">"admin"</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">"member"</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### users.rb
+FactoryBot.define do
+  factory :user do
+    email { Faker::Internet.email }
+    name { Faker::Name.name }
+    password &quot;password&quot;
+    password_confirmation &quot;password&quot;
+
+    trait :admin do
+      admin true
+    end
+  end
+end
+
+### projects.rb
+FactoryBot.define do
+  factory :project do
+    name &quot;My project&quot;
+  end
+end
+
+### members.rb
+FactoryBot.define do
+  factory :member do
+    project
+    user
+
+    trait :admin do
+      role &quot;admin&quot;
+    end
+
+    trait :member do
+      role &quot;member&quot;
+    end
+  end
+end
+</code></pre>
 <p>在<code>spec/models/ability_spec.rb</code>添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">'rails_helper'</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">'cancan/matchers'</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Ability, <span class="symbol">type:</span> <span class="symbol">:model</span> <span class="keyword">do</span></span><br><span class="line">  describe <span class="string">"#apply_user_permissions"</span> <span class="keyword">do</span></span><br><span class="line">    context <span class="string">"admin"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:admin</span>) &#123; create <span class="symbol">:user</span>, <span class="symbol">:admin</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(admin) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, <span class="symbol">:all</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"not admin but a member of a project"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">project:</span> project, <span class="symbol">user:</span> user, <span class="symbol">role:</span> <span class="string">"member"</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"neither admin nor member of a project"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.not_to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  describe <span class="string">"#apply_member_permissions"</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"admin"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:admin</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to([<span class="symbol">:read</span>, <span class="symbol">:update</span>], project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">"member"</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:member</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rails_helper&#39;
+require &#39;cancan/matchers&#39;
+
+RSpec.describe Ability, type: :model do
+  describe &quot;#apply_user_permissions&quot; do
+    context &quot;admin&quot; do
+      let!(:admin) { create :user, :admin }
+      let!(:project) { create :project }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(admin) } }
+      it {
+        is_expected.to be_able_to(:manage, :all)
+      }
+    end
+
+    context &quot;not admin but a member of a project&quot; do
+      let!(:user) { create :user }
+      let!(:project) { create :project }
+      let!(:member) { create :member, project: project, user: user, role: &quot;member&quot; }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(user) } }
+      it {
+        is_expected.to be_able_to(:read, project)
+      }
+    end
+
+    context &quot;neither admin nor member of a project&quot; do
+      let!(:user) { create :user }
+      let!(:project) { create :project }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(user) } }
+      it {
+        is_expected.not_to be_able_to(:read, project)
+      }
+    end
+  end
+
+  describe &quot;#apply_member_permissions&quot; do
+
+    context &quot;admin&quot; do
+      let!(:project) { create :project }
+      let!(:member) { create :member, :admin, project: project }
+      subject(:ability) { Ability.new { |a| a.apply_member_permissions(member) } }
+      it {
+        is_expected.to be_able_to([:read, :update], project)
+        is_expected.to be_able_to(:manage, Task)
+      }
+    end
+
+    context &quot;member&quot; do
+      let!(:project) { create :project }
+      let!(:member) { create :member, :member, project: project }
+      subject(:ability) { Ability.new { |a| a.apply_member_permissions(member) } }
+      it {
+        is_expected.to be_able_to(:read, project)
+        is_expected.to be_able_to(:manage, Task)
+      }
+    end
+  end
+end
+
+</code></pre>
 <p>OK ! 终端跑一下测试，pass！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
 
@@ -2464,7 +3147,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -2601,5 +3284,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

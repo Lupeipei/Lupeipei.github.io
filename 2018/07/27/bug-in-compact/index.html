@@ -89,18 +89,18 @@
 
 
 
-<meta name="description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： 1234567891011a = [ &quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot; ]a">
+<meta name="description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： a = [ &amp;quot;a&amp;quot;, nil, &amp;quot;b&amp;quot;, nil,">
 <meta name="keywords" content="Ruby">
 <meta property="og:type" content="article">
 <meta property="og:title" content="踩坑之compact！">
 <meta property="og:url" content="http://lupeipei.github.io/2018/07/27/bug-in-compact/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： 1234567891011a = [ &quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot; ]a">
+<meta property="og:description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： a = [ &amp;quot;a&amp;quot;, nil, &amp;quot;b&amp;quot;, nil,">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:updated_time" content="2019-03-15T10:35:29.306Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="踩坑之compact！">
-<meta name="twitter:description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： 1234567891011a = [ &quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot; ]a">
+<meta name="twitter:description" content="测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。 出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。 比如： a = [ &amp;quot;a&amp;quot;, nil, &amp;quot;b&amp;quot;, nil,">
 
 
 
@@ -374,7 +374,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>247 words</span>
+              <span>225 words</span>
             </span>
           
 
@@ -394,11 +394,33 @@
         <p>测试遇到的一个坑，在那里找了大半天，最后发现错误的原因是compact！导致，记录下。</p>
 <p>出错原因在于我之前对于compact 与compact！的理解，错误的理解是：compact用于去除数组对象中的nil，而不改变数组对象本身，而compact！与compact唯一的不同在于它会改变调用对象的值。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">a = [ <span class="string">"a"</span>, <span class="literal">nil</span>, <span class="string">"b"</span>, <span class="literal">nil</span>, <span class="string">"c"</span> ]</span><br><span class="line"></span><br><span class="line">a.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", nil, "b", nil, "c"]</span></span><br><span class="line"></span><br><span class="line">a.compact!</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">a</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">a = [ &quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot; ]
+
+a.compact
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+a
+#=&gt; [&quot;a&quot;, nil, &quot;b&quot;, nil, &quot;c&quot;]
+
+a.compact!
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+a
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+</code></pre>
 <p>But!!</p>
 <p>如果这个数组本身没有nil，两者的结果完全不同。调用compact或者compact！，数组都不变，但是compact！返回的却是nil。</p>
 <p>看例子：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">b = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>]</span><br><span class="line"></span><br><span class="line">b.compact</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br><span class="line"></span><br><span class="line">b.compact!</span><br><span class="line"><span class="comment">#=&gt; nil</span></span><br><span class="line">b</span><br><span class="line"><span class="comment">#=&gt; ["a", "b", "c"]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">b = [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+
+b.compact
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+b
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+
+b.compact!
+#=&gt; nil
+b
+#=&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+</code></pre>
 <p>也就是说<strong>在数组中没有nil的情况下，使用compact！返回的值是nil，同时数组本身不会改变</strong>。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.0/Array.html#method-i-compact-21" target="_blank" rel="noopener">compact!</a></p>
 
@@ -684,7 +706,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -837,5 +859,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

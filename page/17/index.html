@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>407 words</span>
+              <span>402 words</span>
             </span>
           
 
@@ -397,7 +397,12 @@
 <p>两步走：</p>
 <ul>
 <li><p>编辑<code>spec/rails_helper.rb</code>， 加入两行设定：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">  RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line">+  config.filter_run <span class="symbol">:focus</span> =&gt; <span class="literal">true</span></span><br><span class="line">+  config.run_all_when_everything_filtered = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  RSpec.configure do |config|
+  ......
+
++  config.filter_run :focus =&gt; true
++  config.run_all_when_everything_filtered = true
+</code></pre>
 </li>
 <li><p>修改你的test文件，比如针对上面的报错，我的文件是<code>spec/controllers/events_controller_spec.rb</code>, 在未通过的案例中，加入了<code>:focus =&gt; true</code></p>
 <p>​</p>
@@ -735,7 +740,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>820 words</span>
+              <span>798 words</span>
             </span>
           
 
@@ -774,18 +779,36 @@
 <p>出现这个情况，是因为我使用了<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 管理密码，之前部署到heroku时，终端运行<code>figaro heroku:set -e production</code>就可以了，但是这里，我们怎么把七牛对应的AccessKey，SecretKey等信息放入remote server呢？</p>
 <p>其实，<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 的README文档中已经提到了，咱们这么来：</p>
 <p>Step1、在远端的<code>~/yourproject_name/shared/config</code>中，添加<code>application.yml</code>, 内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">production:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="symbol">development:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br></pre></td></tr></table></figure>
-<p>这里，虽然我们添加了这个文件，但是由于你的<code>config/deploy.rb</code>中没有设置，所以部署的时候并不会去连接这个文件。</p>
-<p>Step2、在本机上编辑<code>config/deploy.rb</code>，将<code>application.yml</code>添加进去：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-  append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/secrets.yml"</span></span><br><span class="line">+  append <span class="symbol">:linked_files</span>, <span class="string">"config/database.yml"</span>, <span class="string">"config/secrets.yml"</span>, <span class="string">"config/application.yml"</span></span><br></pre></td></tr></table></figure>
-<p>OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
+<p><code>`</code>Ruby<br>production:<br>   qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
+<p>   qiniu_secret_key: xxxx  # 你的 qiniu SecretKey</p>
+<p>   qiniu_bucket: xxxx  # 你的 qiniu bucket</p>
+<p>   qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain</p>
 </li>
+</ul>
+<p>   development:<br>     qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
+<pre><code> qiniu_secret_key: xxxx  # 你的 qiniu SecretKey
+
+ qiniu_bucket: xxxx  # 你的 qiniu bucket
+
+ qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain
+</code></pre><pre><code>
+  这里，虽然我们添加了这个文件，但是由于你的`config/deploy.rb`中没有设置，所以部署的时候并不会去连接这个文件。
+
+  Step2、在本机上编辑`config/deploy.rb`，将`application.yml`添加进去：
+
+  ```Ruby
+  -  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;
+  +  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;, &quot;config/application.yml&quot;
+</code></pre><p>  OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
+<ul>
 <li><p><strong>TypeError: class or module required for rescue clause</strong></p>
 <p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1fkj0j8b12pj30oa0bujuv.jpg" alt=""></p>
 <p>看到报错，第一反应就是google，在<a href="https://github.com/huobazi/carrierwave-qiniu/issues/17" target="_blank" rel="noopener">carrierwave-qiniu configuration error #17</a> 中, 提到<code>qiniu-rs</code>这个gem已经没有人在维护了，要安装最新版的<code>carrierwave-qiniu</code>。好，那就重新安装，又不是第一次被版本坑了: P。</p>
 <p>在gemfile中做如下修改：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+ gem &apos;carrierwave-qiniu&apos;, &apos;~&gt; 1.1.5&apos;</span><br><span class="line"></span><br><span class="line">- gem &apos;qiniu-rs&apos;</span><br></pre></td></tr></table></figure>
-<p>终端运行<code>bundle install</code>, 报错显示：</p>
+<pre><code>+ gem &#39;carrierwave-qiniu&#39;, &#39;~&gt; 1.1.5&#39;
+
+- gem &#39;qiniu-rs&#39;
+</code></pre><p>终端运行<code>bundle install</code>, 报错显示：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tNc79ly1fkj1s2ugzfj30me0bq76f.jpg" alt=""></p>
 <p>显示没有mime-types，按照提示，运行<code>bundle update</code>， OK！</p>
 <hr>
@@ -934,7 +957,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>612 words</span>
+              <span>608 words</span>
             </span>
           
 
@@ -975,16 +998,18 @@
 <p>Step2、在<strong>机器B</strong>添上本地的公钥</p>
 <ul>
 <li><p>登录远端服务器后，新建authorized_keys</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/.ssh</span><br><span class="line">touch ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-</li>
+<pre><code>mkdir ~/.ssh
+touch ~/.ssh/authorized_keys
+</code></pre></li>
 <li><p>将公钥贴进远端服务器的authorized_keys中</p>
 <p>在A上运行：<code>cat ~/.ssh/id_rsa.pub</code>， 复制本机的公钥</p>
 <p>回到B上，运行：<code>nano ~/.ssh/authorized_keys</code>, 把公钥贴进去</p>
 </li>
 <li><p>设置机器B上的文件权限</p>
 <p>运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 ~/.ssh</span><br><span class="line">chmod 644 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
-<p>有的参考文档要求设置成600，试了下，644，600，保证owner是可读写可执行，而其他用户和群组的最大权限是可读即可。</p>
+<pre><code>chmod 700 ~/.ssh
+chmod 644 ~/.ssh/authorized_keys
+</code></pre><p>有的参考文档要求设置成600，试了下，644，600，保证owner是可读写可执行，而其他用户和群组的最大权限是可读即可。</p>
 </li>
 </ul>
 <p>可以了！很简单是不是？试试看，退出重新登录下，不用敲密码啦！</p>
@@ -1131,7 +1156,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,170 words</span>
+              <span>1,085 words</span>
             </span>
           
 
@@ -1173,20 +1198,68 @@
 <li><p>JSON syntax</p>
 <p>A JSON object uses a notation that’s similar to that of a JavaScript object.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//create a JavaScript object</span></span><br><span class="line"><span class="keyword">var</span> person = &#123;</span><br><span class="line">    firstName: <span class="string">'Christopher'</span>,</span><br><span class="line">    lastName: <span class="string">'Harrison'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//create a JSON object</span></span><br><span class="line"><span class="keyword">var</span> person = &#123;</span><br><span class="line">    <span class="string">'firstName'</span>: <span class="string">'Christopher'</span>,</span><br><span class="line">    <span class="string">'lastName'</span>: <span class="string">'Harrison'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">//create a JavaScript object
+var person = {
+    firstName: &#39;Christopher&#39;,
+    lastName: &#39;Harrison&#39;
+}
+
+//create a JSON object
+var person = {
+    &#39;firstName&#39;: &#39;Christopher&#39;,
+    &#39;lastName&#39;: &#39;Harrison&#39;
+}
+</code></pre>
 <p>Create a more complex object:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> person = &#123;</span><br><span class="line">    <span class="string">'firstName'</span>: <span class="string">'Christopher'</span>,</span><br><span class="line">    <span class="string">'lastName'</span>: <span class="string">'Harrison'</span>,</span><br><span class="line">    <span class="string">'email'</span>: &#123;</span><br><span class="line">        <span class="string">'address'</span>: <span class="string">'charrison@adventure-works.com'</span>,</span><br><span class="line">        <span class="string">'type'</span>: <span class="string">'business'</span></span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var person = {
+    &#39;firstName&#39;: &#39;Christopher&#39;,
+    &#39;lastName&#39;: &#39;Harrison&#39;,
+    &#39;email&#39;: {
+        &#39;address&#39;: &#39;charrison@adventure-works.com&#39;,
+        &#39;type&#39;: &#39;business&#39;
+    }    
+}
+</code></pre>
 <p>Create a object with array:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> person = &#123;</span><br><span class="line">    <span class="string">'firstName'</span>: <span class="string">'Christopher'</span>,</span><br><span class="line">    <span class="string">'lastName'</span>: <span class="string">'Harrison'</span>,</span><br><span class="line">    <span class="string">'emailAddresses'</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">'address'</span>: <span class="string">'charrison@adventure-works.com'</span>,</span><br><span class="line">            <span class="string">'type'</span>: <span class="string">'business'</span></span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="string">'address'</span>: <span class="string">'charrison@fineartschool.net'</span>,</span><br><span class="line">            <span class="string">'type'</span>: <span class="string">'home'</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var person = {
+    &#39;firstName&#39;: &#39;Christopher&#39;,
+    &#39;lastName&#39;: &#39;Harrison&#39;,
+    &#39;emailAddresses&#39;: [
+        {
+            &#39;address&#39;: &#39;charrison@adventure-works.com&#39;,
+            &#39;type&#39;: &#39;business&#39;
+        },
+        {
+            &#39;address&#39;: &#39;charrison@fineartschool.net&#39;,
+            &#39;type&#39;: &#39;home&#39;
+        }
+    ]
+}
+</code></pre>
 </li>
 <li><p>Serializing objects</p>
 <p>JavaScript provides a native utility for <strong>converting objects to JSON</strong> (serializing), and <strong>converting JSON strings to objects</strong> (deserializing).</p>
 <ul>
 <li><p>Serializing an object:<code>JSON.stringify</code></p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Create an instance of Object, a basic JavaScript object</span></span><br><span class="line"><span class="keyword">var</span> person = <span class="keyword">new</span> <span class="built_in">Object</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// add properties</span></span><br><span class="line">person.firstName = <span class="string">'Christopher'</span>;</span><br><span class="line">person.lastName = <span class="string">'Harrison'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// serialize</span></span><br><span class="line"><span class="keyword">var</span> jsonString = <span class="built_in">JSON</span>.stringify(person);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Create an instance of Object, a basic JavaScript object
+var person = new Object();
+
+// add properties
+person.firstName = &#39;Christopher&#39;;
+person.lastName = &#39;Harrison&#39;;
+
+// serialize
+var jsonString = JSON.stringify(person);
+</code></pre>
 </li>
 <li><p>Deserializing JSON: <code>JSON.parse</code></p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Deserialize a JSON string</span></span><br><span class="line"><span class="keyword">var</span> newPerson = <span class="built_in">JSON</span>.parse(jsonString);</span><br><span class="line"></span><br><span class="line"><span class="comment">// access properties as normal</span></span><br><span class="line">$(<span class="string">'#first-name-display'</span>).text(newPerson.firstName);</span><br><span class="line">$(<span class="string">'#last-name-display'</span>).text(newPerson.lastName);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Deserialize a JSON string
+var newPerson = JSON.parse(jsonString);
+
+// access properties as normal
+$(&#39;#first-name-display&#39;).text(newPerson.firstName);
+$(&#39;#last-name-display&#39;).text(newPerson.lastName);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1205,13 +1278,25 @@
 <p><code>get</code> : The most basic Ajax operation we can perform using jQuery.</p>
 <p> <code>get</code> contacts the <strong>URL</strong> we provide, and passes the string the server returns into the parameter we’ll use for our event handler.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$.get(</span><br><span class="line">    <span class="string">'some-url'</span>, <span class="comment">// The URL to call</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123; <span class="comment">// Success event handler</span></span><br><span class="line">        <span class="comment">// The data parameter contains the string</span></span><br><span class="line">        $(<span class="string">'#output'</span>).text(data);</span><br><span class="line">    &#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$.get(
+    &#39;some-url&#39;, // The URL to call
+    function(data) { // Success event handler
+        // The data parameter contains the string
+        $(&#39;#output&#39;).text(data);
+    }
+);
+</code></pre>
 </li>
 <li><p>jQuery Ajax and promises</p>
 <p>All jQuery Ajax calls return a jQuery <strong>promise</strong>.</p>
 <p> So, you can use <code>done</code> for your success event handler, and <code>fail</code> to catch any errors. The two code samples perform the same operations.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Option one (pass the success function as a parameter)</span></span><br><span class="line">$.get(<span class="string">'some-url'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123; $(<span class="string">'#output'</span>).text(data); &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Option two (use the done function of the promise)</span></span><br><span class="line">$.get(<span class="string">'some-url'</span>).done(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123; $(<span class="string">'#output'</span>).text(data); &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Option one (pass the success function as a parameter)
+$.get(&#39;some-url&#39;, function(data) { $(&#39;#output&#39;).text(data); });
+
+// Option two (use the done function of the promise)
+$.get(&#39;some-url&#39;).done(function(data) { $(&#39;#output&#39;).text(data); });
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1222,7 +1307,11 @@
 <p><code>getJSON</code> accepts several parameters, but the most common two that you’ll provide are the URL you need to call, and an event handler for success.</p>
 <p>Because getJSON is expecting JSON data, it automatically deserializes the object, meaning you do not need to call JSON.parse.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$.getJSON(<span class="string">'/api/Demo'</span>, <span class="function"><span class="keyword">function</span> (<span class="params">person</span>) </span>&#123;</span><br><span class="line">	$(<span class="string">'#first-name'</span>).val(person.firstName);</span><br><span class="line">	$(<span class="string">'#last-name'</span>).val(person.lastName);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$.getJSON(&#39;/api/Demo&#39;, function (person) {
+    $(&#39;#first-name&#39;).val(person.firstName);
+    $(&#39;#last-name&#39;).val(person.lastName);
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1257,7 +1346,19 @@
 <li><p><code>post</code></p>
 <p>Like getJSON, it also passes the JSON object returned by the server into the parameter for the event handler. And, just like all of the Ajax calls we’ve seen, <code>post</code> also returns a promise.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// get the data we need to send</span></span><br><span class="line"><span class="keyword">var</span> person = &#123; <span class="attr">firstName</span>: <span class="string">'Christopher'</span>, <span class="attr">lastName</span>: <span class="string">'Harrison'</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Call POST</span></span><br><span class="line"></span><br><span class="line">$.post(<span class="string">'URL'</span>, <span class="comment">// Pass in the URL you need to access</span></span><br><span class="line">    person, <span class="comment">// Pass in the data to send via POST</span></span><br><span class="line">    <span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// success event handler</span></span><br><span class="line">        <span class="comment">// parameter contains value returned by server</span></span><br><span class="line">    &#125;</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// get the data we need to send
+var person = { firstName: &#39;Christopher&#39;, lastName: &#39;Harrison&#39; };
+
+// Call POST
+
+$.post(&#39;URL&#39;, // Pass in the URL you need to access
+    person, // Pass in the data to send via POST
+    function(data) {
+        // success event handler
+        // parameter contains value returned by server
+    }
+);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1274,7 +1375,14 @@
 <p><code>ajaxComplete</code> is raised when <strong>each</strong> Ajax call completes, regardless of success or failure.</p>
 <p> <code>ajaxStop</code> is raised when <strong>all</strong> calls are completed.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="built_in">document</span>).ajaxSend(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// raised when a call starts</span></span><br><span class="line">	$(<span class="string">'#status'</span>).append(<span class="string">'&lt;div&gt;Call started&lt;/div&gt;'</span>);</span><br><span class="line">&#125;).ajaxComplete(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// raised when a call completes</span></span><br><span class="line">	$(<span class="string">'#status'</span>).append(<span class="string">'&lt;div&gt;Call completed&lt;/div&gt;'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(document).ajaxSend(function () {
+    // raised when a call starts
+    $(&#39;#status&#39;).append(&#39;&lt;div&gt;Call started&lt;/div&gt;&#39;);
+}).ajaxComplete(function () {
+    // raised when a call completes
+    $(&#39;#status&#39;).append(&#39;&lt;div&gt;Call completed&lt;/div&gt;&#39;);
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1282,11 +1390,13 @@
 <ul>
 <li><p>Loading HTML</p>
 <p><code>load</code> will call the URL provided, obtain the HTML, and place it in the targeted item.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).load(<span class="string">'some-url.html'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;#target&#39;).load(&#39;some-url.html&#39;);
+</code></pre>
 </li>
 <li><p>Loading and executing JavaScript</p>
 <p><code>getScript</code>  downloads <strong>and executes</strong> the script when it’s called.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$.getScript(<span class="string">'some-url.js'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$.getScript(&#39;some-url.js&#39;);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1434,7 +1544,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,523 words</span>
+              <span>1,387 words</span>
             </span>
           
 
@@ -1486,29 +1596,53 @@
 <p>raised when the operation completes successfully.</p>
 <p>accepts one or more event handler functions.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// code to obtain promise object</span></span><br><span class="line">promise.done(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// data will contain the data returned by the operation</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// code to obtain promise object
+promise.done(function(data) {
+    // data will contain the data returned by the operation
+});
+</code></pre>
 </li>
 <li><p><code>fail</code></p>
 <p>raised when the operation has completed with an error.</p>
 <p>accepts one or more event handler functions.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// code to obtain promise object</span></span><br><span class="line">promise.fail(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// data will contain the data returned by the operation</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// code to obtain promise object
+promise.fail(function(data) {
+   // data will contain the data returned by the operation
+});
+</code></pre>
 </li>
 <li><p><code>progress</code></p>
 <p>raised when the operation raises an alert about its current state.</p>
 <p>Not all operations raise <code>progress</code> events.</p>
 <p>accepts one or more event handler functions.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// code to obtain promise object</span></span><br><span class="line">promise.progress(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// data will contain the data returned by the operation</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// code to obtain promise object
+promise.progress(function(data) {
+   // data will contain the data returned by the operation
+});
+</code></pre>
 </li>
 <li><p>Chaining</p>
 <p>add <code>done</code> and <code>fail</code> (and potentially <code>progress</code>) event handlers by chaining the method calls as demonstrated below :</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// code to obtain promise object</span></span><br><span class="line">promise.done(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// success</span></span><br><span class="line">&#125;).fail(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// failure</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// code to obtain promise object
+promise.done(function(data) {
+    // success
+}).fail(function(data) {
+    // failure
+});
+</code></pre>
 </li>
 <li><p><code>then</code></p>
 <p>a single function allowing you to register <code>done</code>, <code>fail</code>, and <code>progress</code> event handlers in one call.</p>
 <p>The sample below is identical to the chaining demonstration above.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// code to obtain promise object</span></span><br><span class="line">promise.then(<span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// success</span></span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// failure</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// code to obtain promise object
+promise.then(function(data) {
+    // success
+}, function(data) {
+    // failure
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1530,7 +1664,14 @@
 <p><code>self</code> : represents the worker. <code>self</code> , has one function named  <code>postMessage</code> and one event <code>message</code>.</p>
 <p><code>postMessage</code>  is used to send data to the calling environment.</p>
 <p><code>message</code> is raised when the calling script has sent a message to the worker.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// send a signal back to the calling script</span></span><br><span class="line">self.postMessage(<span class="string">'hello from the worker!'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Receive a message from the calling environment</span></span><br><span class="line">self.addEventListener(<span class="string">'message'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// the data property will contain the data passed from the calling script</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// send a signal back to the calling script
+self.postMessage(&#39;hello from the worker!&#39;);
+
+// Receive a message from the calling environment
+self.addEventListener(&#39;message&#39;, function(e) {
+    // the data property will contain the data passed from the calling script
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1538,10 +1679,24 @@
 <ul>
 <li><p>calling a web worker</p>
 <p>to check to see if the brower supports web workers</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Test if the browser supports web workers</span></span><br><span class="line"><span class="keyword">if</span>(Worker == <span class="literal">null</span>) &#123;</span><br><span class="line">	alert(<span class="string">'You need to upgrade your browser!'</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	<span class="comment">// do your work here</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Test if the browser supports web workers
+if(Worker == null) {
+    alert(&#39;You need to upgrade your browser!&#39;);
+} else {
+    // do your work here
+}
+</code></pre>
 </li>
 <li><p>creating an instance of the Worker object</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> worker = <span class="keyword">new</span> Worker(<span class="string">'script-location.js'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Register event handler</span></span><br><span class="line">worker.addEventListener(<span class="string">'message'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    $(<span class="string">'#output'</span>).append(<span class="string">'&lt;li&gt;'</span> + e.data + <span class="string">'&lt;/li&gt;'</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">worker.postMessage(<span class="string">'Started!'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var worker = new Worker(&#39;script-location.js&#39;);
+
+// Register event handler
+worker.addEventListener(&#39;message&#39;, function(e) {
+    $(&#39;#output&#39;).append(&#39;&lt;li&gt;&#39; + e.data + &#39;&lt;/li&gt;&#39;);
+});
+
+worker.postMessage(&#39;Started!&#39;);
+</code></pre>
 <p>​</p>
 </li>
 </ul>
@@ -1550,7 +1705,43 @@
 <ul>
 <li><p>creating a web worker that accepts status messages</p>
 <p>Code:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// worker.js</span></span><br><span class="line"></span><br><span class="line">self.addEventListener(<span class="string">'message'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">	<span class="keyword">if</span>(e.data === <span class="string">'START'</span>) &#123;</span><br><span class="line">		<span class="comment">// Start message received.</span></span><br><span class="line">		<span class="comment">// Begin work</span></span><br><span class="line">		startWork();</span><br><span class="line">	&#125; <span class="keyword">else</span> <span class="keyword">if</span> (e.data === <span class="string">'STOP'</span>) &#123;</span><br><span class="line">		<span class="comment">// Stop message received.</span></span><br><span class="line">		<span class="comment">// Perform cleanup and terminate</span></span><br><span class="line">		stopWork();</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">// A different message has been received</span></span><br><span class="line">		<span class="comment">// This is data that needs to be acted upon</span></span><br><span class="line">		processData(e.data);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">startWork</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// code to start performing work here</span></span><br><span class="line">	<span class="comment">// send a message to the calling page</span></span><br><span class="line">	<span class="comment">// worker has started</span></span><br><span class="line">	self.postMessage(<span class="string">'STARTED'</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">stopWork</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// cleanupp code here</span></span><br><span class="line">	<span class="comment">// stop the worker</span></span><br><span class="line">	self.postMessage(<span class="string">'STOPPED'</span>);</span><br><span class="line">	self.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">processData</span>(<span class="params">data</span>) </span>&#123;</span><br><span class="line">	<span class="comment">// perform the work on the data</span></span><br><span class="line">	self.postMessage(<span class="string">'Processed '</span> + data);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// worker.js
+
+self.addEventListener(&#39;message&#39;, function(e) {
+    if(e.data === &#39;START&#39;) {
+        // Start message received.
+        // Begin work
+        startWork();
+    } else if (e.data === &#39;STOP&#39;) {
+        // Stop message received.
+        // Perform cleanup and terminate
+        stopWork();
+    } else {
+        // A different message has been received
+        // This is data that needs to be acted upon
+        processData(e.data);
+    }
+});
+
+function startWork() {
+    // code to start performing work here
+    // send a message to the calling page
+    // worker has started
+    self.postMessage(&#39;STARTED&#39;);
+}
+
+function stopWork() {
+    // cleanupp code here
+    // stop the worker
+    self.postMessage(&#39;STOPPED&#39;);
+    self.close();
+}
+
+function processData(data) {
+    // perform the work on the data
+    self.postMessage(&#39;Processed &#39; + data);
+}
+</code></pre>
 </li>
 <li><p>calling a web worker that accepts messages</p>
 <p>If you were using the worker that’s been designed above, you would use it by following a couple of basic steps.</p>
@@ -1561,7 +1752,36 @@
 <li>When you’re done, send the stop message by calling <code>postMessage(&#39;STOP&#39;);</code></li>
 </ol>
 <p>Code:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// inside of HTML file</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> worker = <span class="keyword">new</span> Worker(<span class="string">'worker.js'</span>);</span><br><span class="line"></span><br><span class="line">worker.addEventListener(<span class="string">'message'</span>, <span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(e.data === <span class="string">'STARTED'</span>) &#123;</span><br><span class="line">        <span class="comment">// worker has been started</span></span><br><span class="line">        <span class="comment">// sample: update the screen to display worker started</span></span><br><span class="line">        $(<span class="string">'#output'</span>).append(<span class="string">'&lt;div&gt;Worker started&lt;/div&gt;'</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(e.data === <span class="string">'STOPPED'</span>) &#123;</span><br><span class="line">        <span class="comment">// worker has been stopped</span></span><br><span class="line">        <span class="comment">// cleanup work (if needed)</span></span><br><span class="line">        <span class="comment">// sample: update the screen to display worker stopped</span></span><br><span class="line">        $(<span class="string">'#output'</span>).append(<span class="string">'&lt;div&gt;Worker stopped&lt;/div&gt;'</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Normal message. Act upon data as needed</span></span><br><span class="line">        <span class="comment">// Sample: display data on screen</span></span><br><span class="line">        $(<span class="string">'#output'</span>).append(<span class="string">'&lt;div&gt;'</span> + e.data + <span class="string">'&lt;/div&gt;'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// When you're ready, send the start message</span></span><br><span class="line">worker.postMessage(<span class="string">'START'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Send data as needed</span></span><br><span class="line">worker.postMessage(<span class="string">'sample data'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Stop worker when you're done</span></span><br><span class="line">worker.postMessage(<span class="string">'STOP'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// inside of HTML file
+
+var worker = new Worker(&#39;worker.js&#39;);
+
+worker.addEventListener(&#39;message&#39;, function(e) {
+    if(e.data === &#39;STARTED&#39;) {
+        // worker has been started
+        // sample: update the screen to display worker started
+        $(&#39;#output&#39;).append(&#39;&lt;div&gt;Worker started&lt;/div&gt;&#39;);
+    } else if(e.data === &#39;STOPPED&#39;) {
+        // worker has been stopped
+        // cleanup work (if needed)
+        // sample: update the screen to display worker stopped
+        $(&#39;#output&#39;).append(&#39;&lt;div&gt;Worker stopped&lt;/div&gt;&#39;);
+    } else {
+        // Normal message. Act upon data as needed
+        // Sample: display data on screen
+        $(&#39;#output&#39;).append(&#39;&lt;div&gt;&#39; + e.data + &#39;&lt;/div&gt;&#39;);
+    }
+});
+
+// When you&#39;re ready, send the start message
+worker.postMessage(&#39;START&#39;);
+
+// Send data as needed
+worker.postMessage(&#39;sample data&#39;);
+
+// Stop worker when you&#39;re done
+worker.postMessage(&#39;STOP&#39;);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1588,7 +1808,33 @@
 <li>Add the appropriate code to detect failure and send the failure signal: deferred.reject()</li>
 <li>Return the promise: return deferred.promise();</li>
 </ol>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">beginProcessing</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// Create deferred object &amp; make sure it's going to be in scope</span></span><br><span class="line">	<span class="keyword">var</span> deferred = <span class="keyword">new</span> $.Deferred();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Create our worker (just like before)</span></span><br><span class="line">	<span class="keyword">var</span> worker = <span class="keyword">new</span> Worker(<span class="string">'./Scripts/deferred.js'</span>);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Register the message event handler</span></span><br><span class="line">	worker.addEventListener(<span class="string">'message'</span>, <span class="function"><span class="keyword">function</span> (<span class="params">e</span>) </span>&#123;</span><br><span class="line">		<span class="comment">// simple messaging - if the worker is ready it'll send a message with READY as the text</span></span><br><span class="line">		<span class="keyword">if</span> (e.data === <span class="string">'READY'</span>) &#123;</span><br><span class="line">			<span class="comment">// No UI code</span></span><br><span class="line">			<span class="comment">// Progress notification</span></span><br><span class="line">			deferred.notify(<span class="string">'Worker started'</span>);</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span>(e.data === <span class="string">'COMPLETED'</span>) &#123;</span><br><span class="line">			<span class="comment">// processing is done</span></span><br><span class="line">			<span class="comment">// No UI code</span></span><br><span class="line">			<span class="comment">// Completed notification</span></span><br><span class="line">			deferred.resolve(<span class="string">'Worker completed'</span>);</span><br><span class="line"></span><br><span class="line">			worker.terminate();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> deferred.promise();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">function beginProcessing() {
+    // Create deferred object &amp; make sure it&#39;s going to be in scope
+    var deferred = new $.Deferred();
+
+    // Create our worker (just like before)
+    var worker = new Worker(&#39;./Scripts/deferred.js&#39;);
+
+    // Register the message event handler
+    worker.addEventListener(&#39;message&#39;, function (e) {
+        // simple messaging - if the worker is ready it&#39;ll send a message with READY as the text
+        if (e.data === &#39;READY&#39;) {
+            // No UI code
+            // Progress notification
+            deferred.notify(&#39;Worker started&#39;);
+        } else if(e.data === &#39;COMPLETED&#39;) {
+            // processing is done
+            // No UI code
+            // Completed notification
+            deferred.resolve(&#39;Worker completed&#39;);
+
+            worker.terminate();
+        }
+    });
+
+    return deferred.promise();
+}
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1740,7 +1986,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,526 words</span>
+              <span>1,291 words</span>
             </span>
           
 
@@ -1787,27 +2033,97 @@
 <li><p><code>prepend</code> and <code>prependTo</code></p>
 <p>Add new content to the <strong>begining</strong> of the contents of a target.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// prepend is called on the target, and accepts the new content as the parameter</span><br><span class="line">$('#target').prepend('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">//or you can use prependTo</span><br><span class="line">// prependTo is called on the new content, and accepts the target as the parameter</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').prependTo('#target');</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p><code>append</code> and <code>appendTo</code></p>
-<p>Add new content to the <strong>end</strong> of the contents of a target.</p>
-<p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// append is called on the target, and accepts the new content as the parameter</span><br><span class="line">$('#target').append('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">// appendTo is called on the new content, and accepts the target as the parameter</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').appendTo('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><code>`</code>Html</p>
+<!-- starting HTML -->
+<div id="target"><br>   <div>existing content</div><br></div>
+
+<p>//executed either of the lines of JavaScript below<br>// prepend is called on the target, and accepts the new content as the parameter<br>$(‘#target’).prepend(‘<div>New content</div>‘);</p>
+<p>//or you can use prependTo<br>// prependTo is called on the new content, and accepts the target as the parameter<br>$(‘<div>New content</div>‘).prependTo(‘#target’);</p>
 </li>
 </ul>
 </li>
+</ul>
+</li>
+</ul>
+<pre><code>  &lt;!-- ending HTML --&gt;
+  &lt;div id=&quot;target&quot;&gt;
+      &lt;div&gt;New content&lt;/div&gt;
+      &lt;div&gt;existing content&lt;/div&gt;
+  &lt;/div&gt;
+  ```
+
+- `append` and `appendTo`
+
+  Add new content to the **end** of the contents of a target.
+
+  Example:
+
+  ```Html
+  &lt;!-- starting HTML --&gt;
+  &lt;div id=&quot;target&quot;&gt;
+      &lt;div&gt;existing content&lt;/div&gt;
+  &lt;/div&gt;
+
+  //executed either of the lines of JavaScript below
+  // append is called on the target, and accepts the new content as the parameter
+  $(&#39;#target&#39;).append(&#39;&lt;div&gt;New content&lt;/div&gt;&#39;);
+
+  // appendTo is called on the new content, and accepts the target as the parameter
+  $(&#39;&lt;div&gt;New content&lt;/div&gt;&#39;).appendTo(&#39;#target&#39;);
+
+  &lt;!-- ending HTML --&gt;
+  &lt;div id=&quot;target&quot;&gt;
+      &lt;div&gt;existing content&lt;/div&gt;
+      &lt;div&gt;New content&lt;/div&gt;
+  &lt;/div&gt;
+  ```
+</code></pre><ul>
 <li><p>External DOM manipulation</p>
 <p><code>after</code>, <code>insertAfter</code>, <code>before</code>, and <code>insertBefore</code></p>
 <ul>
 <li><p><code>after</code> and <code>insertAfter</code></p>
 <p>Add new content after the target.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// after is called on the target, and accepts the new content as a parameter</span><br><span class="line">$('target').after(' New content');</span><br><span class="line"></span><br><span class="line">// insertAfter is called on the new content, and accepts the target as a parameter</span><br><span class="line">$(' New content').insertAfter('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;existing content&lt;/div&gt;
+&lt;/div&gt;
+
+//executed either of the lines of JavaScript below
+// after is called on the target, and accepts the new content as a parameter
+$(&#39;target&#39;).after(&#39; New content&#39;);
+
+// insertAfter is called on the new content, and accepts the target as a parameter
+$(&#39; New content&#39;).insertAfter(&#39;#target&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;existing content&lt;/div&gt;
+&lt;/div&gt;
+&lt;div&gt;New content&lt;/div&gt;
+</code></pre>
 </li>
 <li><p><code>before</code> and <code>insertBefore</code></p>
 <p>Add new content before the target.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//executed either of the lines of JavaScript below</span><br><span class="line">// before is called on the target, and accepts the new content as a parameter</span><br><span class="line">$('target').before('New content');</span><br><span class="line"></span><br><span class="line">// insertBefore is called on the new content, and accepts the target as a parameter</span><br><span class="line">$('New content').insertBefore('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>New content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span>existing content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;existing content&lt;/div&gt;
+&lt;/div&gt;
+
+//executed either of the lines of JavaScript below
+// before is called on the target, and accepts the new content as a parameter
+$(&#39;target&#39;).before(&#39;New content&#39;);
+
+// insertBefore is called on the new content, and accepts the target as a parameter
+$(&#39;New content&#39;).insertBefore(&#39;#target&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div&gt;New content&lt;/div&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;existing content&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1817,22 +2133,72 @@
 <li><p><code>wrap</code></p>
 <p>wraps <strong>each item</strong> with the element passed into the function.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('.demo').wrap('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+$(&#39;.demo&#39;).wrap(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;section&gt;
+        &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
+    &lt;/section&gt;
+    &lt;section&gt;
+        &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
+    &lt;/section&gt;
+&lt;/div&gt;
+</code></pre>
 </li>
 <li><p><code>wrapAll</code></p>
 <p> returned content with one new element.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('.demo').wrapAll('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+$(&#39;.demo&#39;).wrapAll(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;section&gt;
+        &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
+        &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
+    &lt;/section&gt;
+&lt;/div&gt;
+</code></pre>
 </li>
 <li><p><code>wrapInner</code></p>
 <p>Operates on the children of the target, rather than on the target itself.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"demo"</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$('#target').wrapInner('<span class="tag">&lt;<span class="name">section</span>&gt;</span><span class="tag">&lt;/<span class="name">section</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">section</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span>&gt;</span>Item one<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">div</span>&gt;</span>Item two<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">section</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
+    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+$(&#39;#target&#39;).wrapInner(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;section&gt;
+        &lt;div&gt;Item one&lt;/div&gt;
+        &lt;div&gt;Item two&lt;/div&gt;
+    &lt;/section&gt;
+&lt;/div&gt;
+</code></pre>
 </li>
 </ul>
 </li>
 </ul>
-</li>
+<ul>
 <li><p><strong>Animations</strong></p>
 <ul>
 <li><p><code>hide</code>, <code>show</code>, <code>toggle</code></p>
@@ -1841,9 +2207,44 @@
 <p><code>toggle</code>, on the other hand, determines the current status of the item in question and changes it.</p>
 <p> jQuery controls visibility by using the <code>display</code> property in CSS.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span>Show or hide<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"btn-toggle"</span>&gt;</span>Toggle<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#btn-toggle').click(function() &#123;</span><br><span class="line">		// animation will take one second</span><br><span class="line">		$('#target').toggle(1000);</span><br><span class="line">	&#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;Show or hide&lt;/div&gt;
+&lt;button type=&quot;button&quot; id=&quot;btn-toggle&quot;&gt;Toggle&lt;/button&gt;
+
+//JS
+$(function() {
+    $(&#39;#btn-toggle&#39;).click(function() {
+        // animation will take one second
+        $(&#39;#target&#39;).toggle(1000);
+    });
+});
+</code></pre>
 <p>More:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">style</span>&gt;</span><span class="undefined"></span></span><br><span class="line"><span class="css">    <span class="selector-class">.hidden</span> &#123; <span class="attribute">display</span>: none; &#125;</span></span><br><span class="line"><span class="undefined"></span><span class="tag">&lt;/<span class="name">style</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span>Name:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"show-additional-information"</span>&gt;</span></span><br><span class="line">        Show additional information</span><br><span class="line">    <span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"additional-information"</span> <span class="attr">class</span>=<span class="string">"hidden"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span>Additional information:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('#show-additional-information').click(function() &#123;</span><br><span class="line">        $('#additional-information').show(750);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- HTML --&gt;
+&lt;style&gt;
+    .hidden { display: none; }
+&lt;/style&gt;
+&lt;form&gt;
+    &lt;div&gt;
+        &lt;label&gt;Name:&lt;/label&gt;
+        &lt;input type=&quot;text&quot; /&gt;
+    &lt;/div&gt;
+    &lt;button type=&quot;button&quot; id=&quot;show-additional-information&quot;&gt;
+        Show additional information
+    &lt;/button&gt;
+    &lt;div id=&quot;additional-information&quot; class=&quot;hidden&quot;&gt;
+        &lt;label&gt;Additional information:&lt;/label&gt;
+        &lt;input type=&quot;text&quot; /&gt;
+    &lt;/div&gt;
+&lt;/form&gt;
+
+//JS
+$(function() {
+    $(&#39;#show-additional-information&#39;).click(function() {
+        $(&#39;#additional-information&#39;).show(750);
+    });
+});
+</code></pre>
 </li>
 <li><p>fading and sliding</p>
 <ul>
@@ -1868,12 +2269,43 @@
 <p> <code>remove</code> deletes the item you target.</p>
 <p> <code>empty</code> deletes the contents of the item you target.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some more cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">//the resulting HTML would be, well, nothing. The entire contents of the sample are removed</span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#target').remove();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//deletes the contents of the target, so the resulting HTML would be as <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">$(function() &#123;</span><br><span class="line">	$('#target').empty();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;Some cool content&lt;/div&gt;
+    &lt;div&gt;Some more cool content&lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+//the resulting HTML would be, well, nothing. The entire contents of the sample are removed
+$(function() {
+    $(&#39;#target&#39;).remove();
+}
+
+//deletes the contents of the target, so the resulting HTML would be as &lt;div id=&quot;target&quot;&gt;&lt;/div&gt;
+
+$(function() {
+    $(&#39;#target&#39;).empty();
+}
+</code></pre>
 </li>
 <li><p><code>replaceAll</code> and <code>replaceWith</code></p>
 <p> replace existing content with new content.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- starting HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span>&gt;</span>Some more cool content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS. execute either of them</span><br><span class="line">// replaceWith replaces the content on the left with the new content in the parameter</span><br><span class="line">$('#target').replaceWith('<span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>');</span><br><span class="line"></span><br><span class="line">// replaceAll replaces the target in the parameter with the content on the left</span><br><span class="line">$('<span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span>').replaceAll('#target');</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- ending HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span>NEW content<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- starting HTML --&gt;
+&lt;div id=&quot;target&quot;&gt;
+    &lt;div&gt;Some cool content&lt;/div&gt;
+    &lt;div&gt;Some more cool content&lt;/div&gt;
+&lt;/div&gt;
+
+//JS. execute either of them
+// replaceWith replaces the content on the left with the new content in the parameter
+$(&#39;#target&#39;).replaceWith(&#39;&lt;div&gt;NEW content&lt;/div&gt;&#39;);
+
+// replaceAll replaces the target in the parameter with the content on the left
+$(&#39;&lt;div&gt;NEW content&lt;/div&gt;&#39;).replaceAll(&#39;#target&#39;);
+
+&lt;!-- ending HTML --&gt;
+&lt;div&gt;NEW content&lt;/div&gt;
+</code></pre>
 </li>
 </ul>
 </li>
@@ -1884,14 +2316,53 @@
 <p><code>clone</code> allows you to make a copy of jQuery objects.</p>
 <p>Let’s say you were building a page to allow an administrator to create email addresses and passwords. You’d like to ensure the administrator can create as many accounts as they would like on one page, and be able to send up all of the information to the server <strong>in one round trip</strong>, rather than using Ajax calls or submitting the form for each account.</p>
 <p>code:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"add-line"</span>&gt;</span>Add new line<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"user-entry"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">label</span>&gt;</span>Email:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"email"</span> /&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">label</span>&gt;</span>Password:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"password"</span> /&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line"> $(function() &#123;</span><br><span class="line"> 	$userForm = $('.user-entry').clone;</span><br><span class="line">	$('#add-line').click(function() &#123;</span><br><span class="line">		$('#container').append($userForm.clone());</span><br><span class="line">	&#125;);</span><br><span class="line"> &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- HTML --&gt;
+&lt;button type=&quot;button&quot; id=&quot;add-line&quot;&gt;Add new line&lt;/button&gt;
+&lt;div id=&quot;container&quot;&gt;
+    &lt;div class=&quot;user-entry&quot;&gt;
+        &lt;label&gt;Email:&lt;/label&gt;
+        &lt;input type=&quot;email&quot; /&gt;
+        &lt;label&gt;Password:&lt;/label&gt;
+        &lt;input type=&quot;password&quot; /&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+ $(function() {
+     $userForm = $(&#39;.user-entry&#39;).clone;
+    $(&#39;#add-line&#39;).click(function() {
+        $(&#39;#container&#39;).append($userForm.clone());
+    });
+ });
+</code></pre>
 <p><strong>Attention:</strong></p>
 <p>When you’re working with an object, JavaScript passes a reference to the object, not a copy of the object. This would mean that we’ve added in a pointer to the clone we created earlier, <strong>not</strong> a brand new copy. The end result is that if we did not call <code>clone()</code> a second time, we’d be trying to add <strong>the exact same object</strong> into the container again, <strong>not</strong> a brand new copy. By calling <code>clone()</code> again, we pass in a copy of our user form, rather than a pointer to the one we already used.</p>
 <ul>
 <li><p>Cloning and animations</p>
 <p>Combinnig cloning and animations.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"add-line"</span>&gt;</span>Add new line<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"container"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"user-entry"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span>Email:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"email"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span>Password:<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"password"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $userForm = $('.user-entry').clone();</span><br><span class="line">    $userForm.css('display', 'none');</span><br><span class="line">    $('#add-line').click(function() &#123;</span><br><span class="line">        var newUserForm = $userForm.clone();</span><br><span class="line">        $('#container').append($newUserForm);</span><br><span class="line">        newUserForm.show(1000);</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- HTML --&gt;
+&lt;button type=&quot;button&quot; id=&quot;add-line&quot;&gt;Add new line&lt;/button&gt;
+&lt;div id=&quot;container&quot;&gt;
+  &lt;div class=&quot;user-entry&quot;&gt;
+    &lt;label&gt;Email:&lt;/label&gt;
+    &lt;input type=&quot;email&quot; /&gt;
+    &lt;label&gt;Password:&lt;/label&gt;
+    &lt;input type=&quot;password&quot; /&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+//JS
+$(function() {
+    $userForm = $(&#39;.user-entry&#39;).clone();
+    $userForm.css(&#39;display&#39;, &#39;none&#39;);
+    $(&#39;#add-line&#39;).click(function() {
+        var newUserForm = $userForm.clone();
+        $(&#39;#container&#39;).append($newUserForm);
+        newUserForm.show(1000);
+    });
+});
+</code></pre>
 <p>This is  Module2 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
 </li>
 </ul>
@@ -2039,7 +2510,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,232 words</span>
+              <span>1,097 words</span>
             </span>
           
 
@@ -2084,33 +2555,67 @@
 <p>This object can be used to determine additional information, such as where the mouse was when the user performed the operation.</p>
 </blockquote>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Write out the x/y coordinates of the mouse on click</span></span><br><span class="line">$(<span class="string">'button'</span>).click(<span class="function"><span class="keyword">function</span>(<span class="params">e</span>) </span>&#123;</span><br><span class="line">    $(<span class="string">'#output'</span>).text(e.pageX + <span class="string">'x'</span> + e.pageY);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Write out the x/y coordinates of the mouse on click
+$(&#39;button&#39;).click(function(e) {
+    $(&#39;#output&#39;).text(e.pageX + &#39;x&#39; + e.pageY);
+});
+</code></pre>
 <ul>
 <li><p><code>Click</code></p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).click(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; alert(<span class="string">'hello, world!'</span>); &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;#target&#39;).click(function() { alert(&#39;hello, world!&#39;); });
+</code></pre>
 </li>
 <li><p><code>dbclick</code></p>
 <p> raised when the user double clicks on an element.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).dbclick(<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123; alert(<span class="string">'hello, world!'</span>); &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;#target&#39;).dbclick(function(){ alert(&#39;hello, world!&#39;); });
+</code></pre>
 </li>
 <li><p>Forms : blur, change, focus</p>
 <ul>
 <li><p><code>blur</code></p>
 <p>raised when a form element loses what’s known as focus. often used for validation.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).blur(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// retrieve the value using val</span></span><br><span class="line">    <span class="keyword">var</span> value = $(<span class="string">'#target'</span>).val();</span><br><span class="line">    alert(value);</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;#target&#39;).blur(function() {
+    // retrieve the value using val
+    var value = $(&#39;#target&#39;).val();
+    alert(value);
+})
+</code></pre>
 </li>
 <li><p><code>change</code></p>
 <p>raised whenever an element is modified.<strong>limited</strong> to <code>input</code>, <code>textarea</code> and <code>select</code> elements only.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  $(<span class="string">'#parent'</span>).change(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> value = $(<span class="string">'#parent'</span>).val();</span><br><span class="line">    $(<span class="string">'#child'</span>).empty();</span><br><span class="line">    $(<span class="string">'#child'</span>).append(<span class="string">'&lt;option&gt;1 - '</span> + value + <span class="string">'&lt;/option&gt;'</span>);</span><br><span class="line">    $(<span class="string">'#child'</span>).append(<span class="string">'&lt;option&gt;2 - '</span> + value + <span class="string">'&lt;/option&gt;'</span>);</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(function() {
+  $(&#39;#parent&#39;).change(function() {
+    var value = $(&#39;#parent&#39;).val();
+    $(&#39;#child&#39;).empty();
+    $(&#39;#child&#39;).append(&#39;&lt;option&gt;1 - &#39; + value + &#39;&lt;/option&gt;&#39;);
+    $(&#39;#child&#39;).append(&#39;&lt;option&gt;2 - &#39; + value + &#39;&lt;/option&gt;&#39;);
+  })
+});
+</code></pre>
 </li>
 <li><p><code>focus</code></p>
 <p>the opposite of <code>blur</code>. raised when the user clicks, taps, or tabs into a particular control, typically because they want to change its value.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">"phone"</span>&gt;</span>Phone<span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">"text"</span> <span class="attr">id</span>=<span class="string">"phone"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"phone-help"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">// sample JavaScript</span><br><span class="line">$('#phone').focus(function() &#123;</span><br><span class="line">    // Control has focus. Display help</span><br><span class="line">    $('#phone-help').text('Please enter your phone number as all digits');</span><br><span class="line">&#125;).blur(function() &#123;</span><br><span class="line">    // Control lost focus. Clear help</span><br><span class="line">    $('#phone-help').text('');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- sample HTML --&gt;
+&lt;div&gt;
+    &lt;label for=&quot;phone&quot;&gt;Phone&lt;/label&gt;
+    &lt;input type=&quot;text&quot; id=&quot;phone&quot; /&gt;
+    &lt;span id=&quot;phone-help&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+
+// sample JavaScript
+$(&#39;#phone&#39;).focus(function() {
+    // Control has focus. Display help
+    $(&#39;#phone-help&#39;).text(&#39;Please enter your phone number as all digits&#39;);
+}).blur(function() {
+    // Control lost focus. Clear help
+    $(&#39;#phone-help&#39;).text(&#39;&#39;);
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2120,12 +2625,31 @@
 <p><code>mouseenter</code> is raised whenever the user moves their mouse over an element.</p>
 <p><code>mouseleave</code> is raised when the user moves their mouse away from an element.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"target"</span>&gt;</span>Basic data<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">id</span>=<span class="string">"target-help"</span>&gt;</span><span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">// sample JavaScript</span><br><span class="line">$('#target').mouseenter(function() &#123;</span><br><span class="line">	$('#target-help').text('More data');</span><br><span class="line">&#125;).mouseleave(function() &#123;</span><br><span class="line">	$('#target-help').text('');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- sample HTML --&gt;
+&lt;div&gt;
+    &lt;span id=&quot;target&quot;&gt;Basic data&lt;/span&gt;
+    &lt;span id=&quot;target-help&quot;&gt;&lt;/span&gt;
+&lt;/div&gt;
+
+// sample JavaScript
+$(&#39;#target&#39;).mouseenter(function() {
+    $(&#39;#target-help&#39;).text(&#39;More data&#39;);
+}).mouseleave(function() {
+    $(&#39;#target-help&#39;).text(&#39;&#39;);
+});
+</code></pre>
 </li>
 <li><p><code>hover</code></p>
 <p>equivalent to both the <code>mouseenter</code> and <code>mouseleave</code> events. The first parameter <code>hover</code> accepts is for <code>mouseenter</code>, or when the hover begins, and the second parameter is for <code>mouseout</code>.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'#target'</span>).hover(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// mouseenter</span></span><br><span class="line">	$(<span class="string">'#target-help'</span>).text(<span class="string">'More data'</span>);</span><br><span class="line">&#125;, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// mouseleave</span></span><br><span class="line">	$(<span class="string">'#target-help'</span>).text(<span class="string">''</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;#target&#39;).hover(function() {
+    // mouseenter
+    $(&#39;#target-help&#39;).text(&#39;More data&#39;);
+}, function() {
+    // mouseleave
+    $(&#39;#target-help&#39;).text(&#39;&#39;);
+});
+</code></pre>
 <p>​</p>
 </li>
 </ul>
@@ -2138,19 +2662,32 @@
 <ul>
 <li><p><code>val</code></p>
 <p>for read the value, like to say retrieve the value of an input control, you can use <code>val()</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">var value = $(&apos;#some-input-control&apos;).val();</span><br></pre></td></tr></table></figure>
-<p>also, you can set the value. use <code>val(new-value)</code></p>
+<pre><code>var value = $(&#39;#some-input-control&#39;).val();
+</code></pre><p>also, you can set the value. use <code>val(new-value)</code></p>
 <p>Example: set a textbox to a blank value</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Empty a textbox</span></span><br><span class="line">$(<span class="string">'#some-textbox'</span>).val(<span class="string">''</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Empty a textbox
+$(&#39;#some-textbox&#39;).val(&#39;&#39;);
+</code></pre>
 </li>
 <li><p><code>html</code></p>
 <p>you have saw it in Module1.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// write text out to the screen</span></span><br><span class="line"><span class="comment">// this will be displayed as</span></span><br><span class="line"><span class="comment">// &lt;strong&gt;value&lt;/strong&gt;</span></span><br><span class="line"><span class="comment">// the text value will not be bolded</span></span><br><span class="line"></span><br><span class="line">$(<span class="string">'#output'</span>).text(<span class="string">'value'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// write text out to the screen
+// this will be displayed as
+// &lt;strong&gt;value&lt;/strong&gt;
+// the text value will not be bolded
+
+$(&#39;#output&#39;).text(&#39;value&#39;);
+</code></pre>
 </li>
 <li><p><code>text</code></p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// write text out to the screen</span></span><br><span class="line"><span class="comment">// this will be displayed as value</span></span><br><span class="line"><span class="comment">// with the word bolded</span></span><br><span class="line"></span><br><span class="line">$(<span class="string">'#output'</span>).html(<span class="string">'value'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// write text out to the screen
+// this will be displayed as value
+// with the word bolded
+
+$(&#39;#output&#39;).html(&#39;value&#39;);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2171,10 +2708,21 @@
 <p>To retrieve the value of a CSS property,  call <code>css(property)</code>.</p>
 <p>To set a property, call <code>css(property, newValue)</code></p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Retrieve an item's color</span></span><br><span class="line"><span class="keyword">var</span> color = $(<span class="string">'#target'</span>).css(<span class="string">'color'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Change an item's color to red</span></span><br><span class="line">$(<span class="string">'#target'</span>).css(<span class="string">'color'</span>, <span class="string">'red'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Retrieve an item&#39;s color
+var color = $(&#39;#target&#39;).css(&#39;color&#39;);
+
+// Change an item&#39;s color to red
+$(&#39;#target&#39;).css(&#39;color&#39;, &#39;red&#39;);
+</code></pre>
 <p>To set multiple properties,  create a JavaScript object with the property/value pairs, and then pass the object into the <code>css</code> function.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> style = &#123;</span><br><span class="line">	color: <span class="string">'red'</span>,</span><br><span class="line">	backgroundColor: yellow</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">$(<span class="string">'#target'</span>).css(style);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var style = {
+    color: &#39;red&#39;,
+    backgroundColor: yellow
+};
+
+$(&#39;#target&#39;).css(style);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2198,12 +2746,34 @@
 <p>The <code>delegate</code> syntax:</p>
 <p><code>$(selector).delegate(selector, events, eventHandler)</code></p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span>&gt;</span>Click<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"placeholder"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">	// document.ready (on load)</span><br><span class="line"></span><br><span class="line">	// register a click event handler with all button elements, except new button</span><br><span class="line">	//$('button').click(function() &#123; alert('hello'); &#125;);</span><br><span class="line">	// new button will also be raised</span><br><span class="line">	$(document).delegate('button', 'click', function() &#123; alert('hello'); &#125;);</span><br><span class="line"></span><br><span class="line">	// create a new button</span><br><span class="line">	$('#placeholder').html('<span class="tag">&lt;<span class="name">button</span>&gt;</span>New button<span class="tag">&lt;/<span class="name">button</span>&gt;</span>');</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- sample HTML --&gt;
+&lt;button&gt;Click&lt;/button&gt;
+&lt;div id=&quot;placeholder&quot;&gt;&lt;/div&gt;
+
+//JS
+$(function() {
+    // document.ready (on load)
+
+    // register a click event handler with all button elements, except new button
+    //$(&#39;button&#39;).click(function() { alert(&#39;hello&#39;); });
+    // new button will also be raised
+    $(document).delegate(&#39;button&#39;, &#39;click&#39;, function() { alert(&#39;hello&#39;); });
+
+    // create a new button
+    $(&#39;#placeholder&#39;).html(&#39;&lt;button&gt;New button&lt;/button&gt;&#39;);
+});
+</code></pre>
 <p>With jQuery 1.7, <code>delegate</code> is superseded by <code>on</code>.</p>
 <p><strong>One important thing to note</strong> is the order of parameters for <code>on</code> and <code>delegate</code>.</p>
 <p>With <code>on</code>, you list the events first and the selector second. With <code>delegate</code>, it’s selector followed by events.</p>
 <p>Example:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Delegation (note the order of parameters)</span></span><br><span class="line">$(<span class="built_in">document</span>).on(<span class="string">'click'</span>, <span class="string">'button'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;alert(<span class="string">'hello'</span>); &#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Semantically the same as above</span></span><br><span class="line"><span class="comment">// (note the order of parameters)</span></span><br><span class="line">$(<span class="built_in">document</span>).delegate(<span class="string">'button'</span>, <span class="string">'click'</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123; alert(<span class="string">'hello'</span>); &#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Delegation (note the order of parameters)
+$(document).on(&#39;click&#39;, &#39;button&#39;, function() {alert(&#39;hello&#39;); });
+
+// Semantically the same as above
+// (note the order of parameters)
+$(document).delegate(&#39;button&#39;, &#39;click&#39;, function() { alert(&#39;hello&#39;); });
+</code></pre>
 </li>
 <li><p>Single execution</p>
 <ul>
@@ -2211,7 +2781,17 @@
 <p><code>one</code> shares a similar syntax with <code>on</code>, only there is no delegation option.</p>
 <p>The event only execute once.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">id</span>=<span class="string">"single"</span>&gt;</span>This only works once<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"output"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('#single').one('click', function() &#123;</span><br><span class="line">        $('#output').text('You clicked on the button');</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- sample HTML --&gt;
+&lt;button id=&quot;single&quot;&gt;This only works once&lt;/button&gt;
+&lt;div id=&quot;output&quot;&gt;&lt;/div&gt;
+
+//JS
+$(function() {
+    $(&#39;#single&#39;).one(&#39;click&#39;, function() {
+        $(&#39;#output&#39;).text(&#39;You clicked on the button&#39;);
+    });
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2221,7 +2801,32 @@
 <p><code>trigger</code> will execute for <strong>all elements</strong> in the collection,</p>
 <p>while <code>triggerHandler</code> only executes the handler for <strong>the first element</strong>.</p>
 <p>Example:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- sample HTML --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"first"</span>&gt;</span>First button<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"Second"</span>&gt;</span>Second button<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"trigger"</span>&gt;</span>trigger<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">id</span>=<span class="string">"trigger-handler"</span>&gt;</span>triggerHandler<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line"></span><br><span class="line">//JS</span><br><span class="line">$(function() &#123;</span><br><span class="line">    $('button').click(function() &#123;</span><br><span class="line">        // display the id of the button</span><br><span class="line">        alert(this.id);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    $('#trigger').click(function() &#123;</span><br><span class="line">        // Would alert every button's id</span><br><span class="line">        // including the last two</span><br><span class="line">        $('button').trigger('click');</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    // Would alert "first"</span><br><span class="line">    $('#trigger-handler').click(function() &#123;</span><br><span class="line">        // Would alert "first"</span><br><span class="line">        $('button').triggerHandler('click');</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;!-- sample HTML --&gt;
+&lt;button type=&quot;button&quot; id=&quot;first&quot;&gt;First button&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;Second&quot;&gt;Second button&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;trigger&quot;&gt;trigger&lt;/button&gt;
+&lt;button type=&quot;button&quot; id=&quot;trigger-handler&quot;&gt;triggerHandler&lt;/button&gt;
+
+//JS
+$(function() {
+    $(&#39;button&#39;).click(function() {
+        // display the id of the button
+        alert(this.id);
+    });
+
+    $(&#39;#trigger&#39;).click(function() {
+        // Would alert every button&#39;s id
+        // including the last two
+        $(&#39;button&#39;).trigger(&#39;click&#39;);
+    });
+
+    // Would alert &quot;first&quot;
+    $(&#39;#trigger-handler&#39;).click(function() {
+        // Would alert &quot;first&quot;
+        $(&#39;button&#39;).triggerHandler(&#39;click&#39;);
+    });
+});
+</code></pre>
 <p>This is the first three parts of Module2 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
 </li>
 </ul>
@@ -2367,7 +2972,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>975 words</span>
+              <span>894 words</span>
             </span>
           
 
@@ -2407,27 +3012,69 @@
 </li>
 <li><p><strong>Adding jQuery to a page</strong></p>
 <p> a simple example to start:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// you can use either of them:</span></span><br><span class="line"></span><br><span class="line">$(<span class="built_in">document</span>).ready(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// code here</span></span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">$(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">	<span class="comment">// code here</span></span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// you can use either of them:
+
+$(document).ready(function() {
+    // code here
+});
+
+$(function() {
+    // code here
+});
+</code></pre>
 </li>
 <li><p><strong>Using CSS selectors with jQuery</strong></p>
 <ul>
 <li><p>Common CSS selectors</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'h1'</span>) <span class="comment">// selects all h1 elements</span></span><br><span class="line">$(<span class="string">'.class-name'</span>) <span class="comment">// selects all elements with a class of class-name</span></span><br><span class="line">$(<span class="string">'#demo'</span>) <span class="comment">// selects all elements with an id of demo</span></span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;h1&#39;) // selects all h1 elements
+$(&#39;.class-name&#39;) // selects all elements with a class of class-name
+$(&#39;#demo&#39;) // selects all elements with an id of demo
+</code></pre>
 </li>
 <li><p>Attribute based selectors</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// selects all elements with an attribute matching the specified value</span></span><br><span class="line">$(<span class="string">'[demo-attribute="demo-value"]'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// selects all h1 elements with an attribute matching the specified value</span></span><br><span class="line">$(<span class="string">'h1[demo-attribute="demo-value"]'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// If you wish to find all elements where the value **starts** with a string, use the ^= operator.</span></span><br><span class="line">$(<span class="string">'[class^="col"]'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// If you wish to find all elements where the value **contains** a string, use the *= operator.</span></span><br><span class="line">$(<span class="string">'[class*="md"]'</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// selects all elements with an attribute matching the specified value
+$(&#39;[demo-attribute=&quot;demo-value&quot;]&#39;)
+
+// selects all h1 elements with an attribute matching the specified value
+$(&#39;h1[demo-attribute=&quot;demo-value&quot;]&#39;)
+
+// If you wish to find all elements where the value **starts** with a string, use the ^= operator.
+$(&#39;[class^=&quot;col&quot;]&#39;)
+
+// If you wish to find all elements where the value **contains** a string, use the *= operator.
+$(&#39;[class*=&quot;md&quot;]&#39;)
+</code></pre>
 </li>
 <li><p>Positional selectors</p>
 <ul>
 <li><p><strong>Parent/child relationships</strong></p>
 <p>Consider the following script:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Selects all a elements that are direct descendants nav element</span></span><br><span class="line">$(<span class="string">'nav &gt; a'</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// Selects all a elements that are direct descendants nav element
+$(&#39;nav &gt; a&#39;)
+</code></pre>
 <p>In the following HTML, the first link would be selected, but not the second. This is because the first link is a <strong>direct child</strong>, but the second is inside of a <code>div</code>element.</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">nav</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"#"</span>&gt;</span>(First) This will be selected<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"#"</span>&gt;</span>(Second) This will not be selected<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">nav</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">&lt;nav&gt;
+    &lt;a href=&quot;#&quot;&gt;(First) This will be selected&lt;/a&gt;
+    &lt;div&gt;
+        &lt;a href=&quot;#&quot;&gt;(Second) This will not be selected&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+</code></pre>
 </li>
 <li><p><strong>Descendants</strong></p>
 <p>Examples:</p>
-<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">// Selects all a elements that are descendants nav element</span><br><span class="line">// The elements can appear anywhere inside of the element listed first</span><br><span class="line">$('nav a')</span><br><span class="line"></span><br><span class="line">//this is an example to show the difference,if you use $('nav a'), the first and the second will be selected both, if you use $('nav &gt; a'), only the first one will be selected.</span><br><span class="line"><span class="tag">&lt;<span class="name">nav</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"#"</span>&gt;</span>(First) This will be selected<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">"#"</span>&gt;</span>(Second) This will be selected<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">nav</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">// Selects all a elements that are descendants nav element
+// The elements can appear anywhere inside of the element listed first
+$(&#39;nav a&#39;)
+
+//this is an example to show the difference,if you use $(&#39;nav a&#39;), the first and the second will be selected both, if you use $(&#39;nav &gt; a&#39;), only the first one will be selected.
+&lt;nav&gt;
+    &lt;a href=&quot;#&quot;&gt;(First) This will be selected&lt;/a&gt;
+    &lt;div&gt;
+        &lt;a href=&quot;#&quot;&gt;(Second) This will be selected&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/nav&gt;
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2467,14 +3114,25 @@
 <li><p>Selecting items by position</p>
 <ul>
 <li><p>Finding the index of an item</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//index method will return the zero based (ordinal) location of the item, or -1 if the item isn't found.</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> currentElement = $(<span class="string">'some selector'</span>);</span><br><span class="line"><span class="keyword">var</span> parent = $(<span class="string">'some selector'</span>);</span><br><span class="line"><span class="keyword">var</span> index = parent.children().index(currentElement);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">//index method will return the zero based (ordinal) location of the item, or -1 if the item isn&#39;t found.
+
+var currentElement = $(&#39;some selector&#39;);
+var parent = $(&#39;some selector&#39;);
+var index = parent.children().index(currentElement);
+</code></pre>
 </li>
 <li><p>Finding an item by its position</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//using the get method</span></span><br><span class="line"><span class="keyword">var</span> parent = $(<span class="string">'some selector'</span>);</span><br><span class="line"><span class="keyword">var</span> element = parent.children().get(index);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">//using the get method
+var parent = $(&#39;some selector&#39;);
+var element = parent.children().get(index);
+</code></pre>
 <p>One important note about <code>get</code> is it returns a JavaScript DOM object, <strong>not</strong> a jQuery object.</p>
 <p>In order to call jQuery methods on the object, you must convert it to a jQuery object.</p>
 <p>Examples below:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> parent = $(<span class="string">'some selector'</span>);</span><br><span class="line"><span class="keyword">var</span> domobject = parent.children().get(index); <span class="comment">// DOM object</span></span><br><span class="line"><span class="keyword">var</span> jQueryObject = $(parent.children().get(index)); <span class="comment">// jQuery object</span></span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var parent = $(&#39;some selector&#39;);
+var domobject = parent.children().get(index); // DOM object
+var jQueryObject = $(parent.children().get(index)); // jQuery object
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2485,23 +3143,28 @@
 <li><p>Adding and removing classes</p>
 <ul>
 <li><p>Adding a class to an element is just as easy as calling <code>addClass</code></p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">currentElement.addClass(<span class="string">'class-name'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">currentElement.addClass(&#39;class-name&#39;);
+</code></pre>
 </li>
 <li><p>Removing a class from an element is just as easy as calling <code>removeClass</code>. If the element in question was not already decorated with the class you’re trying to remove, the method will simply return.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">currentElement.removeClass(<span class="string">'class-name'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">currentElement.removeClass(&#39;class-name&#39;);
+</code></pre>
 </li>
 </ul>
 </li>
 <li><p>Working with attributes</p>
 <ul>
 <li><p>reading an attribute value</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">alert($(<span class="string">'selector'</span>).attr(<span class="string">'attribute-name'</span>));</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">alert($(&#39;selector&#39;).attr(&#39;attribute-name&#39;));
+</code></pre>
 </li>
 <li><p>modifying an attribute value</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'selector'</span>).attr(<span class="string">'attribute-name'</span>, <span class="string">'new value'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;selector&#39;).attr(&#39;attribute-name&#39;, &#39;new value&#39;);
+</code></pre>
 </li>
 <li><p>removing an attribute value</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(<span class="string">'selector'</span>).removeAttr(<span class="string">'attribute-name'</span>);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">$(&#39;selector&#39;).removeAttr(&#39;attribute-name&#39;);
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2513,7 +3176,12 @@
 </li>
 <li><p>the different between <code>text()</code>  and <code>html()</code> is whether or not it’s gonna allow for HTML.</p>
 <p>Examples:</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// update the text</span></span><br><span class="line">$(item).text(<span class="string">'&lt;h1&gt;Hello, world!!&lt;/h1&gt;'</span>); <span class="comment">//output: &lt;h1&gt;Hello, world!!&lt;/h1&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// update the html</span></span><br><span class="line">$(item).text(<span class="string">'&lt;h1&gt;Hello, world!!&lt;/h1&gt;'</span>);<span class="comment">//output: Hello, world!!</span></span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">// update the text
+$(item).text(&#39;&lt;h1&gt;Hello, world!!&lt;/h1&gt;&#39;); //output: &lt;h1&gt;Hello, world!!&lt;/h1&gt;
+
+// update the html
+$(item).text(&#39;&lt;h1&gt;Hello, world!!&lt;/h1&gt;&#39;);//output: Hello, world!!
+</code></pre>
 <p>you can say that HTML will allow you to modify HTML, Text is going to be for text only.</p>
 </li>
 </ul>
@@ -2521,7 +3189,25 @@
 <li><p>Basic event handlers</p>
 <p>like click event, more details in <a href="https://lupeipei.github.io/2017/10/06/introduction-to-jquery-module2-1/">Module 2</a></p>
 <p>Inside of the event handler code, you can access the object that raised the event by using <code>this</code>.</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//examples</span></span><br><span class="line"><span class="comment">//click event</span></span><br><span class="line"><span class="comment">//raised when the item is clicked</span></span><br><span class="line">$(item).click(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    alert(<span class="string">'clicked!!'</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// hover event</span></span><br><span class="line"><span class="comment">// raised when the user moves their mouse over the item</span></span><br><span class="line">$(item).hover(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    alert(<span class="string">'hover!!'</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="comment">// mouseout</span></span><br><span class="line"><span class="comment">// raised when the user moves their mouse away from an item</span></span><br><span class="line">$(item).mouseout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    alert(<span class="string">'mouse out'</span>);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">//examples
+//click event
+//raised when the item is clicked
+$(item).click(function() {
+    alert(&#39;clicked!!&#39;);
+});
+
+// hover event
+// raised when the user moves their mouse over the item
+$(item).hover(function() {
+    alert(&#39;hover!!&#39;);
+});
+
+// mouseout
+// raised when the user moves their mouse away from an item
+$(item).mouseout(function() {
+    alert(&#39;mouse out&#39;);
+});
+</code></pre>
 </li>
 </ul>
 </li>
@@ -2667,7 +3353,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>539 words</span>
+              <span>472 words</span>
             </span>
           
 
@@ -2706,13 +3392,82 @@
 <li><p>终端运行：<code>rails g controller account::users</code></p>
 </li>
 <li><p>在<code>app/controllers/account/users_controller.eb</code>中，仅有头像和用户名的update：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    @user = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    @user = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">edit</span></span></span><br><span class="line">    @user = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    @user = current_user</span><br><span class="line">    <span class="keyword">if</span> @user.update(user_params)</span><br><span class="line">      redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">"信息更新成功"</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:edit</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Account::UsersController &lt; ApplicationController
+  before_action :authenticate_user!
+
+  def index
+    @user = current_user
+  end
+
+  def show
+    @user = current_user
+  end
+
+  def edit
+    @user = current_user
+  end
+
+  def update
+    @user = current_user
+    if @user.update(user_params)
+      redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+    else
+      render :edit
+    end
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:username, :avatar)
+  end
+end
+</code></pre>
 </li>
+</ul>
+<ul>
 <li><p>在<code>app/views/account/users/show.html.erb</code>中，添加密码修改部分：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">........</span><br><span class="line">&lt;%= simple_form_for [<span class="symbol">:account</span>, @user] <span class="keyword">do</span> <span class="params">|f|</span> %&gt;</span><br><span class="line"> ......</span><br><span class="line">  &lt;div class="my_password"&gt;</span><br><span class="line">    &lt;h4&gt;修改密码： &lt;<span class="regexp">/h4&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :current_password, label: "旧密码：", hint: false, error_html: &#123; id: 'password_error'&#125; %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :password, label: "新密码：", hint: false, error_html: &#123; id: 'password_error'&#125; %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :password_confirmation, label: "密码确认："%&gt;</span></span><br><span class="line"><span class="regexp">  &lt;/div</span>&gt;</span><br><span class="line">  &lt;br&gt;</span><br><span class="line">  .......</span><br><span class="line">  &lt;div class="form-group"&gt;</span><br><span class="line">    &lt;%= f.submit <span class="string">"更新"</span>, <span class="class"><span class="keyword">class</span>: "<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>"%&gt;</span></span><br><span class="line">  &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;% end %&gt;</span></span><br><span class="line"><span class="regexp">.......</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">........
+&lt;%= simple_form_for [:account, @user] do |f| %&gt;
+ ......
+  &lt;div class=&quot;my_password&quot;&gt;
+    &lt;h4&gt;修改密码： &lt;/h4&gt;
+    &lt;%= f.input :current_password, label: &quot;旧密码：&quot;, hint: false, error_html: { id: &#39;password_error&#39;} %&gt;
+    &lt;%= f.input :password, label: &quot;新密码：&quot;, hint: false, error_html: { id: &#39;password_error&#39;} %&gt;
+    &lt;%= f.input :password_confirmation, label: &quot;密码确认：&quot;%&gt;
+  &lt;/div&gt;
+  &lt;br&gt;
+  .......
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;%= f.submit &quot;更新&quot;, class: &quot;btn btn-success&quot;%&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+.......
+</code></pre>
 </li>
 <li><p>在<code>app/controllers/account/users_controller.eb</code>中，做如下修改：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">  @user = current_user</span><br><span class="line">- <span class="keyword">if</span> @user.update(user_params)</span><br><span class="line">-   redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">"信息更新成功"</span></span><br><span class="line">+  <span class="keyword">if</span> @user.update_with_password(user_params)</span><br><span class="line">+     bypass_sign_in(@user)</span><br><span class="line">+     redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">"密码更新成功"</span></span><br><span class="line">+  <span class="keyword">elsif</span> @user.update(user_params)</span><br><span class="line">+     redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">"信息更新成功"</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:edit</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">-	params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>)</span><br><span class="line">+ params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  ......
+  def update
+    @user = current_user
+  - if @user.update(user_params)
+  -   redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+  +  if @user.update_with_password(user_params)
+  +     bypass_sign_in(@user)
+  +     redirect_to account_user_path, notice: &quot;密码更新成功&quot;
+  +  elsif @user.update(user_params)
+  +     redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+    else
+        render :edit
+    end
+  end
+
+  private
+
+  def user_params
+  -    params.require(:user).permit(:username, :avatar)
+  + params.require(:user).permit(:username, :avatar, :password, :password_confirmation)
+  end
+</code></pre>
 </li>
 </ul>
 <p>这样就OK啦，可以在个人中心页面修改密码，保存后退出，重新登陆，会发现密码已经修改了。</p>
@@ -2935,7 +3690,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -3072,5 +3827,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>

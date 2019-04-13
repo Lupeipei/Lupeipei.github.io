@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>830 words</span>
+              <span>804 words</span>
             </span>
           
 
@@ -399,16 +399,28 @@
         <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>用cucumber测试时，有一个需求，就是提取每个step的name，以及对应的scenario和feature的name。</p>
 <p>Google了不少，也试过几个前人提供的方法， 屡屡败北，在坑里挣扎了两天， 发现这方面的资料其实还是挺少的，特别是ruby这块，记录下这趟比较揪心的求解过程，给需要的提供个参考。「我揪心就好了，大伙就别再揪心了。」</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><a href="https://github.com/cucumber/cucumber/wiki/Hooks" target="_blank" rel="noopener">cucumber hooks</a> 中提到了多个hook，包括before，after，但是对于step hooks，只有一个AfterStep， 看AfterStep 的用法：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">AfterStep do |scenario|
+  # Do something after each step.
+end
+</code></pre>
 <p>官方文档是这么写的，可是你会发现根本不是那么回事。「吐槽下：文档没有及时更新让人很是心塞啊」</p>
 <p>在你的<code>feature/support</code>目录下，新建一个文件<code>hooks.rb</code>,  添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># do something before scenario</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">	puts scenario.methods</span><br><span class="line">	puts scenario.<span class="keyword">class</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Before do |scenario|
+  # do something before scenario
+end
+
+AfterStep do |scenario|
+    puts scenario.methods
+    puts scenario.class
+  # Do something after each step.
+end
+</code></pre>
 <p>终端运行<code>cucumber</code>的时候，你会发现AfterStep中根本不是scenario，得到的是这样的结果：</p>
 <p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fn4lejzw3uj30pt06un03.jpg" alt=""></p>
 <p>这里可以看到它的class是<code>Cucumber::Core::Test::Result::Passed</code>， method里面也没有任何name,text之类。那么，每次afterstep后，返回的<code>Cucumber::Core::Test::Result::Passed</code>是个什么鬼？是个step？</p>
 <p>看源码：<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Result/Passed" target="_blank" rel="noopener">Class: Cucumber::Core::Test::Result::Passed</a>,  cucumber中每个step运行后，其实有7种情况：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]</span><br></pre></td></tr></table></figure>
-<p>而passed只是其中的一个type，它不是一个step。看cucumber的doc，可以找到<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Step" target="_blank" rel="noopener">step</a>， 里面的text字段，这正是我们想要的：</p>
+<pre><code>[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]
+</code></pre><p>而passed只是其中的一个type，它不是一个step。看cucumber的doc，可以找到<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Step" target="_blank" rel="noopener">step</a>， 里面的text字段，这正是我们想要的：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4lu77docj30qx0hzack.jpg" alt=""></p>
 <p>可是如何获取到step呢？</p>
 <p>你Google后会发现有一些可能”有用”的解决方法，列出几个我觉得特别的：</p>
@@ -427,10 +439,22 @@
 </ul>
 <p>OK，不废话了，直接上解答：</p>
 <p>在新建好的<code>features/support/hooks.rb</code> 中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  $step_index = <span class="number">0</span></span><br><span class="line">  $stop_count = scenario.test_steps.count</span><br><span class="line">  @scenario = scenario</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|step|</span></span><br><span class="line">  <span class="keyword">if</span> $step_index &lt; $stop_count</span><br><span class="line">    puts <span class="string">"steps: <span class="subst">#&#123;@scenario.test_steps[$step_index].text&#125;</span>\n"</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  $step_index += <span class="number">2</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Before do |scenario|
+  $step_index = 0
+  $stop_count = scenario.test_steps.count
+  @scenario = scenario
+end
+
+AfterStep do |step|
+  if $step_index &lt; $stop_count
+    puts &quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;
+  end
+  $step_index += 2
+end
+</code></pre>
 <p>运行一个feature试试：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cucumber features/xxxx.feature</span><br></pre></td></tr></table></figure>
-<p>每个step之后，都会输出了AfterStep中定义的<code>&quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;</code></p>
+<pre><code>cucumber features/xxxx.feature
+</code></pre><p>每个step之后，都会输出了AfterStep中定义的<code>&quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;</code></p>
 <p>类似这样：</p>
 <p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4n9a82sbj30ey044aaj.jpg" alt=""></p>
 <p>说明：</p>
@@ -725,7 +749,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    192.2k
+    183.1k
   </span>
 
 </div>
@@ -878,5 +902,13 @@
 
   
 
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
 </body>
 </html>
