@@ -273,6 +273,467 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/29/authorize-with-cancancan/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/06/29/authorize-with-cancancan/" itemprop="url">
+                  使用cancancan做权限管理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-29T23:11:26+08:00">
+                2018-06-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/06/29/authorize-with-cancancan/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/06/29/authorize-with-cancancan/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,576 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>cancancan是Rails中的运用较为广泛的权限管理gem，源码：<a href="https://github.com/CanCanCommunity/cancancan/wiki" target="_blank" rel="noopener">GitHub库</a>， <a href="https://github.com/CanCanCommunity/cancancan/wiki" target="_blank" rel="noopener">wiki</a></p>
+<p>目前最新的版本是<a href="https://rubygems.org/search?utf8=%E2%9C%93&amp;query=cancancan" target="_blank" rel="noopener">2.2.0</a>， 安装部分可见文档，这里我记录下自己在定义权限时遇到的问题，同时附上验证权限及Rspec下如何测试Ability。</p>
+<h4 id="定义权限"><a href="#定义权限" class="headerlink" title="定义权限"></a>定义权限</h4><p>cancancan的wiki中<a href="https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities" target="_blank" rel="noopener">Defining Abilities</a>中给到了权限定义的例子：</p>
+<p>较常规的，比如：</p>
+<pre><code class="Ruby">## ability.rb
+class Ability
+  include CanCan::Ability
+
+  def initialize(user)
+    can :read, :all
+    if user.present?
+      can :manage, Post, user_id: user.id
+      can :manage, Comment
+      can :read, Tag, released: true
+    end
+    if user.admin?
+      can :manage, :all
+    end
+  end
+end
+</code></pre>
+<p>简单说一下，<code>can :manage, Post, user_id: user.id</code>, 表明post含有字段user_id，且当前的user.id等于project的user_id，可以理解成对于所有current_user创建的post，都有manage的权限。</p>
+<p>而<code>can :read, Tag, released: true</code>则表明，用户只能阅读已经发布的tag。</p>
+<p>需要注意的是，Ability的初始化，默认是在application_controller中添加了helper method:current_ability， 可以在它的源码module CanCan的定义中看到，调用了钩子方法included，当include CanCan时，这些method会自动引入：</p>
+<pre><code class="Ruby">def self.included(base)
+  base.extend ClassMethods
+  base.helper_method :can?, :cannot?, :current_ability if base.respond_to? :helper_method
+  base.class_attribute :_cancan_skipper
+end
+</code></pre>
+<p>而module CanCan是自动included 到所有的controller的，这样所有的controller都拥有了current_ability 这个helper method。</p>
+<p>我们可以通过在ApplicationController中自定义current_ability来定制权限分配。</p>
+<p>看一个稍微有点不一样的场景：</p>
+<p>现有model: project，user，member，task，其中project与task是一对多的关系，member是连接user与project之间多对多关系的中间表，4个model的表结构如下：</p>
+<pre><code class="Ruby"># Table name: projects
+#
+#  id         :bigint(8)        not null, primary key
+#  name       :string
+
+# Table name: users
+#
+#  id                     :bigint(8)        not null, primary key
+#  email                  :string           default(&quot;&quot;), not null
+#  name                   :string
+#  admin                  :boolean          default(FALSE)
+......[users使用devise创建，其他的attributes省去]
+
+# Table name: task
+#
+#  id           :bigint(8)        not null, primary key
+#  title        :string
+#  content      :text
+#  project_id   :bigint(8)
+
+# Table name: members
+#
+#  id         :bigint(8)        not null, primary key
+#  role       :string           [owner, member]
+#  project_id :bigint(8)
+#  user_id    :bigint(8)
+</code></pre>
+<p>需要定义权限如下：</p>
+<ul>
+<li><p>user是admin时，拥有最高权限，即can :manage, :all</p>
+</li>
+<li><p>User不是admin时，根据user在project中的角色来决定他的权限，比如role为owner时，可以读和改project，manage task，role为member时，则只能读project, manage task。</p>
+<p>这里就相当于initialize ability的时候，user是参数，需要判断是否是admin，另外需要创建一个新的method，将member作为参数传递过去，根据member的role来定义权限。</p>
+<p>我们先来定义从user出发的权限：</p>
+<pre><code class="Ruby">## ability.rb
+class Ability
+  include CanCan::Ability
+
+  def initialize(user)
+    return unless user
+    if user.admin?
+      can :manage, :all
+      return
+    end
+  end
+end
+</code></pre>
+<p>而current_ability的默认定义是这样的：</p>
+<pre><code class="Ruby">def current_ability
+  @current_ability ||= Ability.new(current_user)
+end
+</code></pre>
+<p>这样user的权限是OK了，但是member呢？我们需要基于项目给user授权，同一个user在不同的项目中可能有不同的角色。我们需要重新修改下ability的初始化，把user和member的授权都定义在单独的method中：</p>
+<pre><code class="Ruby">class Ability
+  include CanCan::Ability
+
+  def initialize(&amp;block)
+    block.(self)
+  end
+
+  def apply_user_permissions(user)
+    return unless user
+
+    if user.admin?
+      can :manage, :all
+      return
+    end
+    can :read, Project, members: { user_id: user.id }
+  end
+
+  def apply_member_permissions(member)
+    return unless member
+
+    if member.role.owner?
+      can [:read, :update], member.project
+      can :manage, Task
+    end
+
+    if member.role.member?
+      can :read, member.project
+      can :manage, Task
+    end
+  end
+end
+</code></pre>
+<p>这样权限就定义好了，要如何使用呢？</p>
+<p>在<code>application_controller.rb</code>中，添加current_ability method：</p>
+<pre><code class="Ruby">  def current_ability
+    @current_ability ||= Ability.new { |a| a.apply_user_permissions(current_user) }
+  end
+</code></pre>
+<p>传递给apply_user_permissions的参数是current_user，类似地，调用apply_member_permissions，传递的是current_member，而这个权限的初始化，则在project和task中，遵循着DRY原则，我们新建一个BaseController来定义current_ability， 然后让ProjectsController， TasksController继承它。</p>
+<pre><code class="ruby">def BaseController &lt; ApplicationController
+  def current_ability
+    super.tap { |a| a.apply_member_permissions(current_member) }
+  end
+end
+</code></pre>
+<p>这里，先调用了ApplicationController中的current_ability，判断如果user是admin，则直接manage all，如果不是admin，同时也不是nil，则调用apply_member_permissions来授权，那么current_member如何定义呢？参考<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>, 我们可以这样写：</p>
+<pre><code class="Ruby">def current_member
+  @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
+end
+</code></pre>
+<p>首先找出当前project的所有members，然后在members中找出user_id == current_user.id的那一条member纪录即可。【此处，current_project的定义略去，可参见<a href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/" target="_blank" rel="noopener">define a helper method like devise’s current_user</a>】</p>
+<p>将这个method添加到BaseController中：</p>
+<pre><code class="Ruby">def BaseController &lt; ApplicationController
+  def current_member
+    @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
+  end
+
+  def current_ability
+    super.tap { |a| a.apply_member_permissions(current_member) }
+  end
+end
+</code></pre>
+<p>让ProjectsController， TasksController都继承自BaseController：</p>
+<pre><code class="Ruby">### projects_controller.rb
+class ProjectsController &lt; BaseController
+  ......
+end
+
+### tasks_controller.rb
+class TasksController &lt; BaseController
+  ......
+end
+</code></pre>
+<p>OK!! 下面看看如何验证权限。</p>
+</li>
+</ul>
+<h4 id="验证权限"><a href="#验证权限" class="headerlink" title="验证权限"></a>验证权限</h4><p>验证权限其实比较简单，在view中直接添加if语句即可：</p>
+<pre><code class="Ruby">&lt;%= link_to &quot;New Post&quot;, new_post_path if can? :create, Post %&gt;
+
+&lt;%= link_to &quot;edit Post&quot;, edit_post_path(@post) if can? :edit, @post %&gt;
+
+&lt;%= link_to @post.title, post_path(@post) if can? :read, @post %&gt;
+
+&lt;%= link_to &quot;destroy Post&quot;, post_path(@post), method: :delete if can? :destroy, @post %&gt;
+
+&lt;% if cannot? :destroy, @post %&gt;
+ &lt;span class=&quot;permission-message&quot;&gt;you are not allowed to delete this post&lt;/span&gt;
+&lt;% end %&gt;
+</code></pre>
+<h4 id="加载资源并授权"><a href="#加载资源并授权" class="headerlink" title="加载资源并授权"></a>加载资源并授权</h4><p>非常好用的一个method：<code>load_and_authorize_resource</code>, 顾名思义，就是加载资源并授权，可以拆分成：<code>load_resource</code>, <code>authorize_resource</code>来单独使用。</p>
+<p>看个简单的例子：</p>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  load_and_authorize_resource
+  def show
+  end
+end
+</code></pre>
+<p>等同于：</p>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  def show
+    @post = Post.find(params[:id])
+    authorize! :read, @post
+  end
+end
+</code></pre>
+<p>你也可以按需择取，比如你load_resource的方式不是通过 <code>Post.find(params[:id])</code>，而是自定义了一个current_post的helper method，则可以这样：</p>
+<pre><code class="Ruby">class PostsController &lt; ApplicationController
+  before_action -&gt; { @post = current_post }
+  authorize_resource
+  def show
+  end
+end
+</code></pre>
+<h4 id="有关Rspec"><a href="#有关Rspec" class="headerlink" title="有关Rspec"></a>有关Rspec</h4><p>Rspec部分比较简单，参见<a href="https://github.com/CanCanCommunity/cancancan/wiki/Testing-Abilities#rspec" target="_blank" rel="noopener">test Ability Rspec</a>.</p>
+<p>这里，直接用上面定义的ability为例，来写一写对应的Rspec。</p>
+<p>先写好factories：</p>
+<pre><code class="Ruby">### users.rb
+FactoryBot.define do
+  factory :user do
+    email { Faker::Internet.email }
+    name { Faker::Name.name }
+    password &quot;password&quot;
+    password_confirmation &quot;password&quot;
+
+    trait :admin do
+      admin true
+    end
+  end
+end
+
+### projects.rb
+FactoryBot.define do
+  factory :project do
+    name &quot;My project&quot;
+  end
+end
+
+### members.rb
+FactoryBot.define do
+  factory :member do
+    project
+    user
+
+    trait :admin do
+      role &quot;admin&quot;
+    end
+
+    trait :member do
+      role &quot;member&quot;
+    end
+  end
+end
+</code></pre>
+<p>在<code>spec/models/ability_spec.rb</code>添加如下内容：</p>
+<pre><code class="Ruby">require &#39;rails_helper&#39;
+require &#39;cancan/matchers&#39;
+
+RSpec.describe Ability, type: :model do
+  describe &quot;#apply_user_permissions&quot; do
+    context &quot;admin&quot; do
+      let!(:admin) { create :user, :admin }
+      let!(:project) { create :project }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(admin) } }
+      it {
+        is_expected.to be_able_to(:manage, :all)
+      }
+    end
+
+    context &quot;not admin but a member of a project&quot; do
+      let!(:user) { create :user }
+      let!(:project) { create :project }
+      let!(:member) { create :member, project: project, user: user, role: &quot;member&quot; }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(user) } }
+      it {
+        is_expected.to be_able_to(:read, project)
+      }
+    end
+
+    context &quot;neither admin nor member of a project&quot; do
+      let!(:user) { create :user }
+      let!(:project) { create :project }
+      subject(:ability) { Ability.new { |a| a.apply_user_permissions(user) } }
+      it {
+        is_expected.not_to be_able_to(:read, project)
+      }
+    end
+  end
+
+  describe &quot;#apply_member_permissions&quot; do
+
+    context &quot;admin&quot; do
+      let!(:project) { create :project }
+      let!(:member) { create :member, :admin, project: project }
+      subject(:ability) { Ability.new { |a| a.apply_member_permissions(member) } }
+      it {
+        is_expected.to be_able_to([:read, :update], project)
+        is_expected.to be_able_to(:manage, Task)
+      }
+    end
+
+    context &quot;member&quot; do
+      let!(:project) { create :project }
+      let!(:member) { create :member, :member, project: project }
+      subject(:ability) { Ability.new { |a| a.apply_member_permissions(member) } }
+      it {
+        is_expected.to be_able_to(:read, project)
+        is_expected.to be_able_to(:manage, Task)
+      }
+    end
+  end
+end
+
+</code></pre>
+<p>OK ! 终端跑一下测试，pass！</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/CanCanCommunity/cancancan" target="_blank" rel="noopener">cancancan</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/24/define-a-helper-method-like-devise-current-user/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2569,231 +3030,6 @@ application_record.rb.tt
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/05/20/deep-merge-vs-merge-in-rails/" itemprop="url">
-                  Rails中merge与deep_merge的差异
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-20T23:20:56+08:00">
-                2018-05-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/05/20/deep-merge-vs-merge-in-rails/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/05/20/deep-merge-vs-merge-in-rails/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>776 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>前几天被老大问到merge与deep_merge的区别，一时语塞，试了几个例子，大致get到了两者的区别，但是当时没有记录下来，这里做一下笔记，加深印象。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>merge用法</p>
-<p>在<a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">docs</a>中搜索merge，可以看到有10个名为merge的method，这里我们要对比deep_merge，所以选择继承自Hash的ActiveSupport::HashWithIndifferentAccess下的method merge。</p>
-<blockquote>
-<p>选自ActiveSupport::HashWithdifferentAccess</p>
-<p><strong>merge</strong>(hash, &amp;block)</p>
-<p>This method has the same semantics of <code>update</code>, except it does not modify the receiver but rather returns a new hash with indifferent access with the result of the merge.</p>
-</blockquote>
-<p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p>
-<p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
-h1.merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
-</code></pre>
-<p>你可以通过block来指定merge的规则：</p>
-<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
-h1.merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
-h1.merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-</code></pre>
-</li>
-<li><p>deep_merge用法</p>
-<p>官方给到的解释和例子是这样的：</p>
-<blockquote>
-<p>deep_merge(other_hash, &amp;block)</p>
-<p>Returns a new hash with <code>self</code> and <code>other_hash</code> merged recursively.</p>
-</blockquote>
-<p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p>
-<p>还是以上面的例子为例：</p>
-<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
-h1.deep_merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
-</code></pre>
-<p>同样，你也可以通过block来指定deep_merge的规则：</p>
-<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
-h1.deep_merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
-h1.deep_merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
-</code></pre>
-</li>
-<li><p>二者差异</p>
-<p>从上面的例子看，似乎两者没有什么区别。</p>
-<p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p>
-<p>但是针对nested hash，两者就不一样了。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">h1 = { a: true, b: { c: [1, 2, 3], x: [1, 2, 3] } }
-h2 = { a: false, b: { x: [3, 4, 5] } }
-h1.merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:x=&gt;[3, 4, 5]}}
-h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]}}
-</code></pre>
-<p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p>
-<p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p>
-<p>再看个例子：</p>
-<pre><code class="ruby">h1 = { a: true, b: { c: [1,2,3], x: { y: 1 } } }
-h2 = { a: false, b: { x: { y: 2, z: 1} } }
-h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;{:y=&gt;2, :z=&gt;1}}}
-</code></pre>
-<p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
-<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li>
-<li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p>
-</li>
-<li>针对嵌套的hash： 针对相同的key，merge不会检查，直接处理，根据merge规则返回value，deep_merge则会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">Ruby on Rails API</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2843,7 +3079,7 @@ h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;{:y=&gt
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2976,7 +3212,7 @@ h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;{:y=&gt
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>

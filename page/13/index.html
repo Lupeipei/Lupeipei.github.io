@@ -273,6 +273,208 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/24/using-layer-on-Rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/02/24/using-layer-on-Rails/" itemprop="url">
+                  Rails中使用layer弹窗组件
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-24T21:15:25+08:00">
+                2018-02-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/02/24/using-layer-on-Rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/02/24/using-layer-on-Rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>489 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="layer是什么？"><a href="#layer是什么？" class="headerlink" title="layer是什么？"></a>layer是什么？</h4><p>layer, 一款 web弹窗组件，你可以将它看作bootstrap中的modal， 详情可见：<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网</a>,  <a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>。</p>
+<p>layer是layui的一个内置模块，而layui则是一个前端UI框架，具体可见其<a href="http://www.layui.com/" target="_blank" rel="noopener">官网</a>。</p>
+<h4 id="怎么用？"><a href="#怎么用？" class="headerlink" title="怎么用？"></a>怎么用？</h4><p>由于layer是layui的弹窗组件，所以使用时既可以单独使用，也可以通过layui模块化使用，这里单独使用layer。</p>
+<p>layer的单独使用在其<a href="http://layer.layui.com/hello.html" target="_blank" rel="noopener">快速上手</a>里面有相关说明，这里记录下如何在Rails中使用layer。</p>
+<ul>
+<li><p>下载layer文件包</p>
+<p>layer<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>，点击<strong>绿色下载layer</strong>，或者去<a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>上下载，下载后解压。</p>
+<p>目前的版本是3.1.1：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1forbutw4b2j30uf03574z.jpg" alt=""></p>
+</li>
+<li><p>将文件放入项目的public目录下</p>
+<p>将解压后的layer文件包，放入项目的public目录下</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1forbxearurj308g03nmx4.jpg" alt=""></p>
+<p>​</p>
+</li>
+<li><p>使用</p>
+<p>引入layer前，需要引入jQuery， 鉴于rails默认引入了jQuery，这里直接引入layer即可。</p>
+<p>在需要使用弹窗的页面对应的layout中，比如<code>application.html.erb</code>，添加：</p>
+<pre><code class="Html">......
+&lt;head&gt;
+......
+&lt;%= javascript_include_tag &#39;application&#39; %&gt;
++ &lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;
+&lt;/head&gt;
+</code></pre>
+<p><strong>请务必将<code>&lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;</code>置于<code>&lt;%= javascript_include_tag &#39;application&#39; %&gt;</code>之后。</strong></p>
+<p>测试一下是否可以正常使用。在任何一个页面最后，比如landing page着陆页，添加：</p>
+<pre><code class="javascript">......
+&lt;div id=&quot;for_test&quot; class=&quot;btn btn-lg btn-danger&quot;&gt;test&lt;/div&gt;
+&lt;script&gt;
+  $(&#39;#for_test&#39;).on(&#39;click&#39;, function(){
+      layer.msg(&#39;hello world&#39;);
+  });
+&lt;/script&gt;
+</code></pre>
+<p>此时点击该页面的test按钮，会弹出一个含有“hello world”的弹窗，说明可以正常使用了。</p>
+<p>它的弹窗使用有多种，可以在<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>玩一下，还是蛮酷的，此外，文档写的也蛮有趣的，可以读读。</p>
+<p>另：如果你使用layer.photos(options) - 相册层时，使用了JSON传入的方式【layer的photos有两种实现方式：JSON传入和直接读取页面图片】，不想肉眼检查自己的JSON文件格式是否正确，推荐使用这个在线json解析和格式验证的网站： <a href="https://www.json.cn/" target="_blank" rel="noopener">JSON.cn</a>。</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://layer.layui.com/" target="_blank" rel="noopener">layer官网</a></p>
+<p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹出层 layer</a></p>
+<p><a href="http://fly.layui.com/" target="_blank" rel="noopener">FLY 社区</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/17/why-I-choose-to-be-a-programmer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2468,163 +2670,6 @@ driver.find_element(:class, &quot;btn&quot;).click # Cancel link
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/21/the-age-of-mark/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/01/21/the-age-of-mark/" itemprop="url">
-                  观《英雄本色》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-21T08:23:26+08:00">
-                2018-01-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Film/" itemprop="url" rel="index">
-                    <span itemprop="name">Film</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>909 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>再看吴宇森1986年的黑帮片《英雄本色》，因为喜欢听原版发音，挑了粤语版。</p>
-<p>厮杀不离兄弟情，江湖不离一个“义”字，来扯扯几个印象深刻的场景。</p>
-<p>影片开始后的一个片段，小马哥Mark跟豪哥，阿成三人在酒吧一起喝酒，豪哥提到自己准备收手，小马哥随后说起自己如何拿下第一单生意，这段台词比较多，很考验演技，涉及面部表情，眼神，连带着手的动作，搭配着嚼火柴棍，最后说到“那是我第一次流眼泪”时，小马哥眼眶泛红，整个过程收放自如，特别自然，厉害啊，不愧是影帝。后面多处也有精彩表现，整个片子里，小马哥不是唯一的主角，可却是最出彩的那个。</p>
-<p>豪哥出狱，找了份出租车司机的工作后，去看了昔日的兄弟小马哥，看到他穿着旧旧的工作服，跛着腿在擦洗车子，妈呀，hold不住，这一幕竟然看哭了……随后，阿成出场，小马哥给阿成开车门，被侮辱，车开走后，捡起散落在地的钞票【这里，在捡起钞票之前，小马哥还朝左右“不经意”地看了下，这个细节处理得真好】，想起《刀锋1937》里面区十四也是跛着腿，忍辱负重在一家酒店打杂，等着自己的老大庞德出狱后东山再起，剧中这个情节的设计莫不是借鉴了这里？</p>
-<p>身为阿sir的弟弟阿杰在酒吧外面盘问豪哥，豪哥转过脸，然后转回来，咬着嘴唇【为什么我觉得他这个咬嘴唇的动作是为了憋住不让自己笑出来？】，说了句： “阿SIR，我没有当大哥已经很久了。“ 说完“阿SIR”，看豪哥的表情，好像那憋住的笑已经从脸上跑出来了，哈哈，原谅我，听完他这一句，笑喷了……</p>
-<p>最后渡口一战，小马哥开船离开，开到半路，折返，在船上开火，浓烟滚滚，不得不说，此时贴着绑带的小马哥好帅啊！</p>
-<p>后面有一个镜头，我觉得有点奇怪，渡口那场枪战，小马哥在教训阿杰的时候，说出那句：“做兄弟的……”，然后被枪射中，小马哥回身，被打成了筛子，那时候阿杰有枪的呀，他竟然不开枪，看到小马哥被杀，第一反应不是立马拿起枪对准阿成吗？估计是吓傻了？豪哥跑过去，抱起倒下的小马哥，看了眼弟弟，呃，阿杰此时竟然头一耷拉，是想要表现出自己误会了哥哥，不好意思直视哥哥，内心纠结？嗯，大概因为开枪是个体力活，他八成是打累了要休息会？毕竟张国荣哥哥那时候还很嫩，而演技是个技术活。</p>
-<p>另外，谁能告诉我，为什么他们都不知道穿防弹衣啊！！！</p>
-<p>此外，影片中有几处枪战，很多人都会被中间小马哥在酒家的那场圈粉，确实精彩，可是我觉得比起杜琪峰《放逐》中最后的那一幕旅馆枪战，还是觉得杜的更好看，BGM更是惊艳。不过高手就是高手，都能把枪战拍得如此华丽富有美感，看着特别畅快。</p>
-<p>BTW， 《英雄本色》的英译竟然是 A better tomorrow， 挺特别的。</p>
-<p>以上，一个二逼的观影扯淡。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2674,7 +2719,7 @@ driver.find_element(:class, &quot;btn&quot;).click # Cancel link
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2807,7 +2852,7 @@ driver.find_element(:class, &quot;btn&quot;).click # Cancel link
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>

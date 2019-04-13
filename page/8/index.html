@@ -273,6 +273,231 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/20/deep-merge-vs-merge-in-rails/" itemprop="url">
+                  Rails中merge与deep_merge的差异
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-20T23:20:56+08:00">
+                2018-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/20/deep-merge-vs-merge-in-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/20/deep-merge-vs-merge-in-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>776 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>前几天被老大问到merge与deep_merge的区别，一时语塞，试了几个例子，大致get到了两者的区别，但是当时没有记录下来，这里做一下笔记，加深印象。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>merge用法</p>
+<p>在<a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">docs</a>中搜索merge，可以看到有10个名为merge的method，这里我们要对比deep_merge，所以选择继承自Hash的ActiveSupport::HashWithIndifferentAccess下的method merge。</p>
+<blockquote>
+<p>选自ActiveSupport::HashWithdifferentAccess</p>
+<p><strong>merge</strong>(hash, &amp;block)</p>
+<p>This method has the same semantics of <code>update</code>, except it does not modify the receiver but rather returns a new hash with indifferent access with the result of the merge.</p>
+</blockquote>
+<p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p>
+<p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
+</code></pre>
+<p>你可以通过block来指定merge的规则：</p>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
+h1.merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+</code></pre>
+</li>
+<li><p>deep_merge用法</p>
+<p>官方给到的解释和例子是这样的：</p>
+<blockquote>
+<p>deep_merge(other_hash, &amp;block)</p>
+<p>Returns a new hash with <code>self</code> and <code>other_hash</code> merged recursively.</p>
+</blockquote>
+<p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p>
+<p>还是以上面的例子为例：</p>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.deep_merge(h2) #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300}
+</code></pre>
+<p>同样，你也可以通过block来指定deep_merge的规则：</p>
+<pre><code class="Ruby">h1 = { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+h2 = { &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 }
+h1.deep_merge(h2) {|k,v1,v2| v1+v2} #=&gt; {&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300}
+h1.deep_merge(h2) {|k,v1,v2| v1} #=&gt; { &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 }
+</code></pre>
+</li>
+<li><p>二者差异</p>
+<p>从上面的例子看，似乎两者没有什么区别。</p>
+<p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p>
+<p>但是针对nested hash，两者就不一样了。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">h1 = { a: true, b: { c: [1, 2, 3], x: [1, 2, 3] } }
+h2 = { a: false, b: { x: [3, 4, 5] } }
+h1.merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:x=&gt;[3, 4, 5]}}
+h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]}}
+</code></pre>
+<p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p>
+<p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p>
+<p>再看个例子：</p>
+<pre><code class="ruby">h1 = { a: true, b: { c: [1,2,3], x: { y: 1 } } }
+h2 = { a: false, b: { x: { y: 2, z: 1} } }
+h1.deep_merge(h2) #=&gt; {:a=&gt;false, :b=&gt;{:c=&gt;[1, 2, 3], :x=&gt;{:y=&gt;2, :z=&gt;1}}}
+</code></pre>
+<p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li>
+<li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p>
+</li>
+<li>针对嵌套的hash： 针对相同的key，merge不会检查，直接处理，根据merge规则返回value，deep_merge则会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://api.rubyonrails.org/" target="_blank" rel="noopener">Ruby on Rails API</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/19/usage-of-activestorage-on-rails5dot2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2409,323 +2634,6 @@ config.status: creating po/Makefile
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/26/notes-of-the-little-redis/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/26/notes-of-the-little-redis/" itemprop="url">
-                  读《The Little Redis Book》
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-26T19:14:02+08:00">
-                2018-04-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Reading/" itemprop="url" rel="index">
-                    <span itemprop="name">Reading</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/26/notes-of-the-little-redis/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/26/notes-of-the-little-redis/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,586 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h4><p><a href="https://github.com/karlseguin" target="_blank" rel="noopener">Karl Seguin</a>的一本小册子，很短，边读边实作，发现这把瑞士小军刀挺特别，哈哈。</p>
-<p>戳<a href="https://github.com/karlseguin/the-little-redis-book" target="_blank" rel="noopener">这里</a> 获取小册子的最新版。</p>
-<p>整本小册子主要介绍了五种数据结构String,  Hash, List, Set, SortedSet 以其基本用法，一些更为高级的主题如Big O Notation, Transaction和一些重要的命令如expirt, sort，最后提到了有关配置configuration，验证authentication，备份backups，Redis集群cluster等等内容。</p>
-<p>我们先安装，然后来看看五个主要的数据结构具体都是怎么玩的。</p>
-<p>【以下均以Mac OSX上的操作为例】</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>官方下载地址：<a href="https://redis.io/download" target="_blank" rel="noopener">https://redis.io/download</a></p>
-<p>官方给到的安装命令：</p>
-<pre><code>wget http://download.redis.io/releases/redis-4.0.9.tar.gz
-tar xzf redis-4.0.9.tar.gz
-cd redis-4.0.9
-make
-</code></pre><p>如果你的Mac OSX裝了homebrew的话，直接:</p>
-<pre><code>brew install redis
-</code></pre><p>装好后，根目录下执行 <code>redis-server</code>, 就跑起来了。</p>
-<p>开另一个窗口，执行<code>redis-cli</code> ， 进入redis的console， 可以通过<code>info</code>命令来查看更多服务器相关信息。</p>
-<p>好了，准备工作完成，来看看这五种数据结构。</p>
-<h4 id="Strings"><a href="#Strings" class="headerlink" title="Strings"></a>Strings</h4><p>基本用法：</p>
-<pre><code class="Redis">set users:leto &quot;{name: leto, planet: dune, likes: [spice]}&quot;
-get users:leto
-strlen users:leto
-getrange users:leto 1 9
-append users:leto hello
-get users:leto
-incr stats:page:about
-incrby rating:video:12333 5
-</code></pre>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqpvulp6obj30k00afdh2.jpg" alt=""></p>
-<p>简单说一下：</p>
-<p><code>set &lt;key&gt; &lt;value&gt;</code> : 存储key-value</p>
-<p><code>get &lt;key&gt;</code> : 获取key</p>
-<p><code>strlen &lt;key&gt;</code>: 获取value的长度</p>
-<p><code>getrange &lt;key&gt; &lt;start&gt; &lt;end&gt;</code> : 获取指定起始与终止位置的value子串</p>
-<p><code>append &lt;key&gt; &lt;new_value&gt;</code> : 给key对应的value追加new_value</p>
-<p><code>incr &lt;key&gt;</code>:  value自动加1，没有设置value时，value默认是0</p>
-<p><code>incrbr &lt;key&gt; &lt;num&gt;</code>: 给value加上num</p>
-<p>Redis的所有命令可以查阅这里：<a href="https://redis.io/commands" target="_blank" rel="noopener">https://redis.io/commands</a></p>
-<p>此外，可以使用<code>flushdb</code> 清空所有数据。</p>
-<h4 id="Hashes"><a href="#Hashes" class="headerlink" title="Hashes"></a>Hashes</h4><p>类似Strings的set，get, Hash中使用<code>hset</code>, <code>hget</code>, <code>hmset</code>, <code>hmget</code>.</p>
-<p>基本用法：</p>
-<pre><code>hset users:goku powerlevel 900
-hget users:goku powerlevel
-hmset users:goku race cool age 20
-hmget users:goku race powerlevel
-hgetall users:goku
-hkeys users:goku
-hdel users:goku age
-del users:goku
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq3ku5aohj30h10en3zl.jpg" alt=""></p>
-<p>看输出其实就知道这些命令都是干嘛的，这里还是简单说一下：</p>
-<p>【这里的field，指的就是hash中的key，为了便于区分，用field来代替。】</p>
-<p><code>mset &lt;key&gt; &lt;field1&gt; &lt;value1&gt; &lt;field2&gt; &lt;value2&gt;...</code>： set多个field-value，value默认是string类型</p>
-<p><code>mget &lt;key&gt; &lt;field1&gt; &lt;field2&gt;...</code>: get多个field对应的value</p>
-<p><code>hgetall &lt;key&gt;</code> : 获取所有的field-value</p>
-<p><code>hkeys &lt;key&gt;</code> : 获取所有的fields</p>
-<p><code>hdel &lt;key&gt; &lt;field&gt;</code>： 删除某个field</p>
-<p><code>del &lt;key&gt;</code> : 删除所有的fileds</p>
-<p>第四章提到了keys Anti-Pattern, 给到的例子就是用Hashes来CRUD每个账户的bug信息。</p>
-<h4 id="Lists"><a href="#Lists" class="headerlink" title="Lists"></a>Lists</h4><p>基本用法：</p>
-<pre><code>rpush newusers goku
-rpush newusers tom
-ltrim newusers 0 10
-lrange newusers 0 3
-lrange newusers 2 10
-</code></pre><p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq515sib9j30cu05874m.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>rpush &lt;list&gt; &lt;item&gt;</code> : push一个item到list， 例子中是在newusers的list中push了一个user goku</p>
-<p><code>ltrim &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : trim成指定的长度，例子中是到0~10</p>
-<p><code>lrange &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : 获取指定长度的list,上面的例子中，newusers这个list中有goku, tom，对应的index是0，1，所以<code>lrange newuser 0 3</code>输出了goku, tom, 而<code>lrange newuser 2 10</code>则为空。</p>
-<p>书中提到了sets的一些场景，可用于存储logs或者跟踪用户浏览网站的足迹。</p>
-<h4 id="Sets"><a href="#Sets" class="headerlink" title="Sets"></a>Sets</h4><p>sets用来存储唯一值，同时提供一系列以集合为基础的运算，比如并集，交集。</p>
-<p>一些基本用法：</p>
-<pre><code>sadd friends:leto paul tom jessica
-sadd friends:duncan paul jessica alia
-sismember friends:leto jessica
-sismember friends:leto alia
-sinter friends:leto friends:duncan
-sinterstore friends:leto_duncan friends:leto friends:duncan
-smembers friends:leto_duncan
-</code></pre><p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq5q2vcmrj30in07lt9i.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>sadd &lt;set&gt; &lt;member1&gt; &lt;member2&gt; ....</code> : 给集合添加members</p>
-<p><code>sismember &lt;set&gt; &lt;member&gt;</code> : 判断member是不是set中的元素， 1代表是，0代表不是。</p>
-<p><code>sinter &lt;set1&gt; &lt;set2&gt;</code>:  求两个集合的交集</p>
-<p><code>sinterstore &lt;set1&gt; &lt;set2&gt; &lt;new_set&gt;</code>:将两个集合的交集存储在一个新的集合new_set中</p>
-<p><code>smembers &lt;set&gt;</code> ： 查看set的members</p>
-<h4 id="Sorted-Sets"><a href="#Sorted-Sets" class="headerlink" title="Sorted Sets"></a>Sorted Sets</h4><p>Sorted Sets可以看成是带有score的sets。</p>
-<p>基本用法：</p>
-<pre><code>zadd friends:leto 100 paul 90 tom 98 jessica 80 chani
-zcount friends:leto 90 100
-zrevrank friends:leto chani
-zrank friends:leto chani
-zrangebyscore friends:leto -inf +inf
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq6a6h7xgj30ht06774s.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>zadd &lt;set&gt; &lt;score1&gt; &lt;member1&gt; &lt;score2&gt; &lt;member2&gt;....</code> : 给set的members添加上score</p>
-<p><code>zcount &lt;set&gt; &lt;score_start&gt; &lt;score_end&gt;</code> : set中score在score_start ～ score_end之间的member个数</p>
-<p><code>zrevrank &lt;set&gt; &lt;member&gt;</code> : 降序排序后member的位置</p>
-<p><code>zrank &lt;set&gt; &lt;member&gt;</code> ：升序排序后member的位置【Redis的默认排序是升序】</p>
-<p> <code>zrangebyscore &lt;set&gt; -inf +inf</code> : 输出sorted set</p>
-<p>sorted set的一个比较常用的场景是用来追踪以时间为纬度的事件。好吧，我没用过，这里就不举例子了。</p>
-<h4 id="其他一些好玩的命令"><a href="#其他一些好玩的命令" class="headerlink" title="其他一些好玩的命令"></a>其他一些好玩的命令</h4><ul>
-<li><p>Expire</p>
-<p>用来设置key的过期时间。</p>
-<p>看个例子：</p>
-<pre><code>set pages:about 30
-get pages:about
-expire pages:about 20 # 设置过期为20秒后
-ttl pages:about # 查看还剩多少秒过期
-persist pages:about # 取消过期设置
-get pages:about
-expire pages:about 5
-get pages:about # 此时pages:about过期，值变成了nil
-setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More details, 30秒后过期
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7braobij30h808ngm9.jpg" alt=""></p>
-<p>​</p>
-</li>
-<li><p>Publication and subscriptions</p>
-<p>可以订阅channel，取消channel，publish message，很cool！</p>
-<p>玩一下。</p>
-<p>在一个window上跑<code>redis-cli</code>, 执行<code>subscribe warnings</code>, 另开一个window跑<code>redis-cli</code>, 执行：<code>publish warnings &quot;hi,Redis~&quot;</code></p>
-<p>你会看到第一个window中的warnings channel接受到了信息“hi,Redis~”。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fqq7pb02wxj30fg04ajrj.jpg" alt=""></p>
-</li>
-<li><p>Monitor</p>
-<p>好用的debugging 工具，可以清晰看到你的所有历史操作。</p>
-<p>直接上图感受下：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqq7npsw9cj30ol08k40y.jpg" alt=""></p>
-</li>
-<li><p>Sort</p>
-<p>sort可以用来给list，set， sorted set进行排序。</p>
-<p>可以用limit来限定哪些records需要排序，用by指定排序依据。</p>
-<p>看个例子感受下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7vfvj2wj30l50c9t9r.jpg" alt=""></p>
-<p>​</p>
-</li>
-</ul>
-<h4 id="Something-else"><a href="#Something-else" class="headerlink" title="Something else"></a>Something else</h4><ul>
-<li><p>pipelining</p>
-<blockquote>
-<p>Normally when a client sends a request to Redis it waits for the reply before sending the next request. With pipelining you can send a number of requests without waiting for their responses. This reduces the networking overhead and can result in significant performance gains.</p>
-<p>正常情况下，当客户端发送请求给到redis时，它需要得到回复后才可能发送下一条请求。但是通过pipelining， 你可以在不需要等待回复的情况下，向Redis发送大量的请求。这减少了网络开支，显著提升了性能。</p>
-<p>没用过，先记着。</p>
-</blockquote>
-</li>
-<li><p>Transaction</p>
-<blockquote>
-<p>每个Redis的命令都是原子性的，当使用多个命令时，Redis同样支持transaction。</p>
-<p>Redis is actually single-threaded, which is how every command is guaranteed to be atomic. While one command is executing, no other command will run.</p>
-<p>Redis如何保证translation? 即原子性，一致性，隔离性，持久性？</p>
-<ul>
-<li>The commands will be executed in order</li>
-<li>The commands will be executed as a single atomic operation (without another client’s command being executed halfway through)</li>
-<li>That either all or none of the commands in the transaction will be executed</li>
-</ul>
-</blockquote>
-</li>
-</ul>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>读技术类书籍果然不比一般书籍，得跟着实作才有感觉，真想向天再借500年……</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2775,7 +2683,7 @@ setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More 
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2908,7 +2816,7 @@ setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More 
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>

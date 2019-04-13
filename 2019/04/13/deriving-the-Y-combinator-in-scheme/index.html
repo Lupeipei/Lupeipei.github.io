@@ -1,0 +1,1192 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Scheme," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="写在前面《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起…… 鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。 不过在推导前，先来看看Y combinator 是什么。 Y combinatorwiki上的解释  fixed-point combinator  是这样的：  fix, when">
+<meta name="keywords" content="Scheme">
+<meta property="og:type" content="article">
+<meta property="og:title" content="scheme中有关Y combinator 的推导">
+<meta property="og:url" content="http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="写在前面《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起…… 鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。 不过在推导前，先来看看Y combinator 是什么。 Y combinatorwiki上的解释  fixed-point combinator  是这样的：  fix, when">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://lupeipei.github.io/Users/lucia/Library/Application%20Support/typora-user-images/image-20190413134612322.png">
+<meta property="og:image" content="https://ws4.sinaimg.cn/large/006tNc79gy1g20zc49bf6j317q0c4ta9.jpg">
+<meta property="og:image" content="https://ws2.sinaimg.cn/large/006tNc79gy1g20zkh1gz2j314c0ei75t.jpg">
+<meta property="og:updated_time" content="2019-04-13T07:09:27.404Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="scheme中有关Y combinator 的推导">
+<meta name="twitter:description" content="写在前面《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起…… 鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。 不过在推导前，先来看看Y combinator 是什么。 Y combinatorwiki上的解释  fixed-point combinator  是这样的：  fix, when">
+<meta name="twitter:image" content="http://lupeipei.github.io/Users/lucia/Library/Application%20Support/typora-user-images/image-20190413134612322.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/"/>
+
+
+
+
+
+  <title> scheme中有关Y combinator 的推导 | Lucia </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                scheme中有关Y combinator 的推导
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-13T15:07:47+08:00">
+                2019-04-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/04/13/deriving-the-Y-combinator-in-scheme/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2019/04/13/deriving-the-Y-combinator-in-scheme/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="page-pv">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-eye"></i>
+            </span>
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,725 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起……</p>
+<p>鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。</p>
+<p>不过在推导前，先来看看Y combinator 是什么。</p>
+<h4 id="Y-combinator"><a href="#Y-combinator" class="headerlink" title="Y combinator"></a>Y combinator</h4><p>wiki上的解释  <a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator </a> 是这样的：</p>
+<blockquote>
+<p>fix, when applied to an arbitrary function f, yields the same result as f applied to the result of applying fix to f.</p>
+</blockquote>
+<p>细节部分太复杂了。Google 到这篇 <a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a>， 发现作者的解释看起来清楚多了，可参阅。</p>
+<p>简单而言, 一个公式：</p>
+<blockquote>
+<p>fix f = f (fix f) for all f</p>
+</blockquote>
+<p>对于任意的函数f,  fix 接受参数 f，返回(fix f)，将 f 作用于 (fix f)，得到的结果仍为(fix f)。</p>
+<p>在scheme中，Y 的定义如下：</p>
+<pre><code class="scheme">(define Y
+  (lambda (le)
+    ((lambda (f)
+      (f f))
+      (lambda (f)
+        (le (lambda (x)
+              ((f f) x)))))))
+</code></pre>
+<p>或者这样：</p>
+<pre><code class="scheme">(define Y
+ (lambda (F)
+   (let ((W (lambda (x)
+              (F (lambda arg (apply (x x) arg))))))
+     (W W))))
+</code></pre>
+<p>两者其实是一样的。</p>
+<p>来看一个调用Y的实例：</p>
+<p>定义一个函数 Fi，用来计算斐波那契数列：【 F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)（n&gt;=3) 】</p>
+<pre><code class="scheme">(define Fi
+  (lambda (func-arg)
+    (lambda (n)
+      (cond
+        ((zero? (sub1 n)) 1)
+        ((zero? (- n 2)) 1)
+        (else (+ (func-arg (sub1 n)) (func-arg (- n 2))))))))
+</code></pre>
+<p>然后执行：</p>
+<pre><code class="scheme">((Y Fi) 10)
+;Value: 55
+
+((Fi (Y Fi)) 10)
+;Value: 55
+</code></pre>
+<p>两次调用的输出结果相同。</p>
+<h4 id="推导过程"><a href="#推导过程" class="headerlink" title="推导过程"></a>推导过程</h4><p>以书中定义的length函数为例：</p>
+<p>先定义一个永远不会有值输出，死循环的函数：eternity</p>
+<pre><code class="scheme">(define eternity
+  (lambda (x)
+    (eternity x)))
+</code></pre>
+<p>length的定义如下：</p>
+<pre><code class="scheme">(define length
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+</code></pre>
+<p>这里，我们定义了一个函数，命名为length，而且在该函数内部调用了它自己。</p>
+<p>现在问题来了，如果不允许使用define来定义函数，不给函数命名，如果实现length？</p>
+<p>我们先从最简单的 length0 开始，当 list 为空时，<code>(length l)</code>为 0.</p>
+<p>先来看 length0:</p>
+<pre><code class="scheme">; length0
+;
+(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else (add1 (eternity (cdr l))))))
+</code></pre>
+<p>调用时， 也很简单：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else (add1 (eternity (cdr l)))))) (quote ()))
+;Value: 0
+</code></pre>
+<p>由此，继续定义 length&lt;=1 ：</p>
+<pre><code class="scheme">; length&lt;=1
+;
+(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+           (cond
+             ((null? l) 0)
+             (else (add1 (eternity (cdr l))))))
+        (cdr l))))))
+</code></pre>
+<p>调用  length&lt;=1 ：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+           (cond
+             ((null? l) 0)
+             (else (add1 (eternity (cdr l))))))
+        (cdr l)))))) (quote (hello)))
+;Value: 1
+</code></pre>
+<p>类推 length&lt;=2：</p>
+<pre><code class="scheme">(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else
+              (add1 (
+                (lambda (l)
+                   (cond
+                     ((null? l) 0)
+                     (else (add1 (eternity (cdr l))))))
+                (cdr l))))))
+          (cdr l))))))
+</code></pre>
+<p>调用  length&lt;=2 ：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else
+              (add1 (
+                (lambda (l)
+                   (cond
+                     ((null? l) 0)
+                     (else (add1 (eternity (cdr l))))))
+                (cdr l))))))
+          (cdr l)))))) (quote (hello scheme)))
+;Value: 2
+</code></pre>
+<p>按照这个规律，我们可以一直定义下去，length&lt;=n, n 为无穷大……</p>
+<p>但这显然不是一个函数该有的样子，所以我们换一种方式，来重新定义下 length0:</p>
+<pre><code class="scheme">; redefine length0
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  eternity)
+</code></pre>
+<p>这里重新定义了一个函数，这个函数接受一个参数length，返回结果是一个lambda函数。</p>
+<p>上面这段代码，调用了该函数，并将 eternity 作为参数值传递进去。与我们先前定义的 length0 没有区别，仅仅是写法不同而已。</p>
+<p>用这种方式，可以类推出 length&lt;=1, length&lt;=2:</p>
+<pre><code class="scheme">; rewrite length&lt;=1 in the same style
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  ((lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))) eternity))
+;
+; rewrite length&lt;=2 in the same style
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  ((lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))) eternity)))
+</code></pre>
+<p>顺着这个思路，再一次进行抽象提取，重新定义 length0:</p>
+<pre><code class="scheme">; mk-length for length0
+;
+((lambda (mk-length)
+    (mk-length eternity))
+    (lambda (length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，是将整个 length 的定义，作为 mk-length 的参数值：</p>
+<p><img src="/Users/lucia/Library/Application Support/typora-user-images/image-20190413134612322.png" alt="image-20190413134612322"></p>
+<p>它其实是同我们第二次定义的 length0 是一样的：</p>
+<p>只是这里调用了两次，一次将整个 length 的定义，作为 mk-length 的参数值，第二次将 eternity 作为 length 的参数值。</p>
+<p>由此可以类推出length&lt;=1, length&lt;=2:</p>
+<pre><code class="scheme">; mk-length for length&lt;=1
+;
+((lambda (mk-length)
+    (mk-length
+      (mk-length eternity)))
+  (lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))))
+;
+; mk-length for length&lt;=2
+;
+((lambda (mk-length)
+  (mk-length
+    (mk-length
+      (mk-length eternity))))
+  (lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，eternity 扮演的是参数值的角色，它本身是一个函数，我们使用 mk-length 来替换掉 eternity，当然也是可以的，重新看一下替换掉eternity后的 length0 :</p>
+<pre><code class="scheme">; replace eternity with mk-length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，length也不过是一个参数名，自然也是可以换成mk-length的。</p>
+<pre><code class="scheme">; using mk-length instead of length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (mk-length (cdr l))))))))
+</code></pre>
+<p>现在，调用上面这个函数，将eternity作为参数值，我们可以得到 length&lt;=1:</p>
+<pre><code class="scheme">; apply mk-length to get length&lt;=1
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length eternity) (cdr l))))))))
+</code></pre>
+<p>这里稍稍有点绕，截个图就明白了：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1g20zc49bf6j317q0c4ta9.jpg" alt=""></p>
+<p>调用一次试试看：</p>
+<pre><code class="scheme">(((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length eternity) (cdr l)))))))) (quote (apple)))
+;Value: 1
+</code></pre>
+<p>结果无误。</p>
+<p>现在，我们再将上面 length&lt;=1定义中 的 eternity 替换成 mk-length:</p>
+<pre><code class="scheme">; replace eternity with mk-length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length mk-length) (cdr l))))))))
+</code></pre>
+<p>鉴于<code>(f x)</code> 与 <code>(lambda (x) (f x))</code> 是一样的，所以我们使用<code>((lambda (x) ((mk-length mk-length) x)) (cdr l))</code> 来替换掉<code>((mk-length mk-length) (cdr l))</code>。</p>
+<p>替换后的结果如下：</p>
+<pre><code class="scheme">((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((lambda (x) ((mk-length mk-length) x)) (cdr l))))))))
+</code></pre>
+<p>再来一次抽取，将<code>(lambda (x) ((mk-length mk-length) x))</code> 作为参数值提取出来：</p>
+<pre><code class="scheme">((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      ((lambda (length)
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else (add1 (length (cdr l)))))))
+        (lambda (x) ((mk-length mk-length) x)))))
+</code></pre>
+<p>你会发现最初定义length的那段代码已经完整浮现了：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1g20zkh1gz2j314c0ei75t.jpg" alt=""></p>
+<p>最后一次，将整块length的定义作为参数值，提取出来：</p>
+<pre><code class="scheme">((lambda (le)
+  ((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x)
+            ((mk-length mk-length) x))))))
+ (lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这段代码中，将：</p>
+<pre><code class="scheme"> (lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+</code></pre>
+<p>作为了le的参数值。</p>
+<p>现在，我们移除掉这个参数值，得到如下代码：</p>
+<pre><code class="scheme">(lambda (le)
+  ((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x)
+            ((mk-length mk-length) x))))))
+</code></pre>
+<p>好了，我们可以撒花🎉啦。</p>
+<p>用 f 替换 mk-length，Y combinator 登场：</p>
+<pre><code class="scheme">; Y combinator
+;
+(define Y
+  (lambda (le)
+    ((lambda (f)
+      (f f))
+      (lambda (f)
+        (le (lambda (x)
+              ((f f) x)))))))
+</code></pre>
+<p>整个推导过程结束。</p>
+<p>另，<a href="https://github.com/pkrumins" target="_blank" rel="noopener">Peter Krumins</a> 有一篇文章也详细演示了Y combinator的推导过程，可参阅 <a href="https://catonmat.net/derivation-of-ycombinator" target="_blank" rel="noopener">Deriving the Y-Combinator</a>。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator</a>.  </p>
+<p><a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a></p>
+<p><a href="https://mitpress.mit.edu/books/little-scheme-fourth-edition" target="_blank" rel="noopener">《The little schemer》</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Scheme/" rel="tag"># Scheme</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/04/11/understanding-collector-in-scheme/" rel="next" title="对scheme中collector的一点理解">
+                <i class="fa fa-chevron-left"></i> 对scheme中collector的一点理解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="Lucia" />
+          <p class="site-author-name" itemprop="name">Lucia</p>
+           
+              <p class="site-description motion-element" itemprop="description">曲肱而枕</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">189</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">53</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#写在前面"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Y-combinator"><span class="nav-number">2.</span> <span class="nav-text">Y combinator</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#推导过程"><span class="nav-number">3.</span> <span class="nav-text">推导过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    184.8k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+    
+      <script id="dsq-count-scr" src="https://https-luciaca-cn.disqus.com/count.js" async></script>
+    
+
+    
+      <script type="text/javascript">
+        var disqus_config = function () {
+          this.page.url = 'http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/';
+          this.page.identifier = '2019/04/13/deriving-the-Y-combinator-in-scheme/';
+          this.page.title = 'scheme中有关Y combinator 的推导';
+        };
+        var d = document, s = d.createElement('script');
+        s.src = 'https://https-luciaca-cn.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      </script>
+    
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

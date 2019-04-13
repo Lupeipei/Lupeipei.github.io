@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2019-04-13T01:58:59.706Z</updated>
+  <updated>2019-04-13T07:09:27.404Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>scheme中有关Y combinator 的推导</title>
+    <link href="http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/"/>
+    <id>http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/</id>
+    <published>2019-04-13T07:07:47.000Z</published>
+    <updated>2019-04-13T07:09:27.404Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起……</p><p>鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。</p><p>不过在推导前，先来看看Y combinator 是什么。</p><h4 id="Y-combinator"><a href="#Y-combinator" class="headerlink" title="Y combinator"></a>Y combinator</h4><p>wiki上的解释  <a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator </a> 是这样的：</p><blockquote><p>fix, when applied to an arbitrary function f, yields the same result as f applied to the result of applying fix to f.</p></blockquote><p>细节部分太复杂了。Google 到这篇 <a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a>， 发现作者的解释看起来清楚多了，可参阅。</p><p>简单而言, 一个公式：</p><blockquote><p>fix f = f (fix f) for all f</p></blockquote><p>对于任意的函数f,  fix 接受参数 f，返回(fix f)，将 f 作用于 (fix f)，得到的结果仍为(fix f)。</p><p>在scheme中，Y 的定义如下：</p><pre><code class="scheme">(define Y  (lambda (le)    ((lambda (f)      (f f))      (lambda (f)        (le (lambda (x)              ((f f) x)))))))</code></pre><p>或者这样：</p><pre><code class="scheme">(define Y (lambda (F)   (let ((W (lambda (x)              (F (lambda arg (apply (x x) arg))))))     (W W))))</code></pre><p>两者其实是一样的。</p><p>来看一个调用Y的实例：</p><p>定义一个函数 Fi，用来计算斐波那契数列：【 F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)（n&gt;=3) 】</p><pre><code class="scheme">(define Fi  (lambda (func-arg)    (lambda (n)      (cond        ((zero? (sub1 n)) 1)        ((zero? (- n 2)) 1)        (else (+ (func-arg (sub1 n)) (func-arg (- n 2))))))))</code></pre><p>然后执行：</p><pre><code class="scheme">((Y Fi) 10);Value: 55((Fi (Y Fi)) 10);Value: 55</code></pre><p>两次调用的输出结果相同。</p><h4 id="推导过程"><a href="#推导过程" class="headerlink" title="推导过程"></a>推导过程</h4><p>以书中定义的length函数为例：</p><p>先定义一个永远不会有值输出，死循环的函数：eternity</p><pre><code class="scheme">(define eternity  (lambda (x)    (eternity x)))</code></pre><p>length的定义如下：</p><pre><code class="scheme">(define length  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))</code></pre><p>这里，我们定义了一个函数，命名为length，而且在该函数内部调用了它自己。</p><p>现在问题来了，如果不允许使用define来定义函数，不给函数命名，如果实现length？</p><p>我们先从最简单的 length0 开始，当 list 为空时，<code>(length l)</code>为 0.</p><p>先来看 length0:</p><pre><code class="scheme">; length0;(lambda (l)  (cond    ((null? l) 0)    (else (add1 (eternity (cdr l))))))</code></pre><p>调用时， 也很简单：</p><pre><code class="scheme">((lambda (l)  (cond    ((null? l) 0)    (else (add1 (eternity (cdr l)))))) (quote ()));Value: 0</code></pre><p>由此，继续定义 length&lt;=1 ：</p><pre><code class="scheme">; length&lt;=1;(lambda (l)  (cond    ((null? l) 0)    (else      (add1 (        (lambda (l)           (cond             ((null? l) 0)             (else (add1 (eternity (cdr l))))))        (cdr l))))))</code></pre><p>调用  length&lt;=1 ：</p><pre><code class="scheme">((lambda (l)  (cond    ((null? l) 0)    (else      (add1 (        (lambda (l)           (cond             ((null? l) 0)             (else (add1 (eternity (cdr l))))))        (cdr l)))))) (quote (hello)));Value: 1</code></pre><p>类推 length&lt;=2：</p><pre><code class="scheme">(lambda (l)  (cond    ((null? l) 0)    (else      (add1 (        (lambda (l)          (cond            ((null? l) 0)            (else              (add1 (                (lambda (l)                   (cond                     ((null? l) 0)                     (else (add1 (eternity (cdr l))))))                (cdr l))))))          (cdr l))))))</code></pre><p>调用  length&lt;=2 ：</p><pre><code class="scheme">((lambda (l)  (cond    ((null? l) 0)    (else      (add1 (        (lambda (l)          (cond            ((null? l) 0)            (else              (add1 (                (lambda (l)                   (cond                     ((null? l) 0)                     (else (add1 (eternity (cdr l))))))                (cdr l))))))          (cdr l)))))) (quote (hello scheme)));Value: 2</code></pre><p>按照这个规律，我们可以一直定义下去，length&lt;=n, n 为无穷大……</p><p>但这显然不是一个函数该有的样子，所以我们换一种方式，来重新定义下 length0:</p><pre><code class="scheme">; redefine length0;((lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))  eternity)</code></pre><p>这里重新定义了一个函数，这个函数接受一个参数length，返回结果是一个lambda函数。</p><p>上面这段代码，调用了该函数，并将 eternity 作为参数值传递进去。与我们先前定义的 length0 没有区别，仅仅是写法不同而已。</p><p>用这种方式，可以类推出 length&lt;=1, length&lt;=2:</p><pre><code class="scheme">; rewrite length&lt;=1 in the same style;((lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))  ((lambda (length)    (lambda (l)      (cond        ((null? l) 0)        (else (add1 (length (cdr l))))))) eternity));; rewrite length&lt;=2 in the same style;((lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))((lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))  ((lambda (length)    (lambda (l)      (cond        ((null? l) 0)        (else (add1 (length (cdr l))))))) eternity)))</code></pre><p>顺着这个思路，再一次进行抽象提取，重新定义 length0:</p><pre><code class="scheme">; mk-length for length0;((lambda (mk-length)    (mk-length eternity))    (lambda (length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 (length (cdr l))))))))</code></pre><p>这里，是将整个 length 的定义，作为 mk-length 的参数值：</p><p><img src="/Users/lucia/Library/Application Support/typora-user-images/image-20190413134612322.png" alt="image-20190413134612322"></p><p>它其实是同我们第二次定义的 length0 是一样的：</p><p>只是这里调用了两次，一次将整个 length 的定义，作为 mk-length 的参数值，第二次将 eternity 作为 length 的参数值。</p><p>由此可以类推出length&lt;=1, length&lt;=2:</p><pre><code class="scheme">; mk-length for length&lt;=1;((lambda (mk-length)    (mk-length      (mk-length eternity)))  (lambda (length)    (lambda (l)      (cond        ((null? l) 0)        (else (add1 (length (cdr l))))))));; mk-length for length&lt;=2;((lambda (mk-length)  (mk-length    (mk-length      (mk-length eternity))))  (lambda (length)    (lambda (l)      (cond        ((null? l) 0)        (else (add1 (length (cdr l))))))))</code></pre><p>这里，eternity 扮演的是参数值的角色，它本身是一个函数，我们使用 mk-length 来替换掉 eternity，当然也是可以的，重新看一下替换掉eternity后的 length0 :</p><pre><code class="scheme">; replace eternity with mk-length;((lambda (mk-length)    (mk-length mk-length))    (lambda (length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 (length (cdr l))))))))</code></pre><p>这里，length也不过是一个参数名，自然也是可以换成mk-length的。</p><pre><code class="scheme">; using mk-length instead of length;((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 (mk-length (cdr l))))))))</code></pre><p>现在，调用上面这个函数，将eternity作为参数值，我们可以得到 length&lt;=1:</p><pre><code class="scheme">; apply mk-length to get length&lt;=1;((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 ((mk-length eternity) (cdr l))))))))</code></pre><p>这里稍稍有点绕，截个图就明白了：</p><p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1g20zc49bf6j317q0c4ta9.jpg" alt=""></p><p>调用一次试试看：</p><pre><code class="scheme">(((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 ((mk-length eternity) (cdr l)))))))) (quote (apple)));Value: 1</code></pre><p>结果无误。</p><p>现在，我们再将上面 length&lt;=1定义中 的 eternity 替换成 mk-length:</p><pre><code class="scheme">; replace eternity with mk-length;((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 ((mk-length mk-length) (cdr l))))))))</code></pre><p>鉴于<code>(f x)</code> 与 <code>(lambda (x) (f x))</code> 是一样的，所以我们使用<code>((lambda (x) ((mk-length mk-length) x)) (cdr l))</code> 来替换掉<code>((mk-length mk-length) (cdr l))</code>。</p><p>替换后的结果如下：</p><pre><code class="scheme">((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (lambda (l)        (cond          ((null? l) 0)          (else (add1 ((lambda (x) ((mk-length mk-length) x)) (cdr l))))))))</code></pre><p>再来一次抽取，将<code>(lambda (x) ((mk-length mk-length) x))</code> 作为参数值提取出来：</p><pre><code class="scheme">((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      ((lambda (length)        (lambda (l)          (cond            ((null? l) 0)            (else (add1 (length (cdr l)))))))        (lambda (x) ((mk-length mk-length) x)))))</code></pre><p>你会发现最初定义length的那段代码已经完整浮现了：</p><p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1g20zkh1gz2j314c0ei75t.jpg" alt=""></p><p>最后一次，将整块length的定义作为参数值，提取出来：</p><pre><code class="scheme">((lambda (le)  ((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (le (lambda (x)            ((mk-length mk-length) x)))))) (lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l))))))))</code></pre><p>这段代码中，将：</p><pre><code class="scheme"> (lambda (length)  (lambda (l)    (cond      ((null? l) 0)      (else (add1 (length (cdr l)))))))</code></pre><p>作为了le的参数值。</p><p>现在，我们移除掉这个参数值，得到如下代码：</p><pre><code class="scheme">(lambda (le)  ((lambda (mk-length)    (mk-length mk-length))    (lambda (mk-length)      (le (lambda (x)            ((mk-length mk-length) x))))))</code></pre><p>好了，我们可以撒花🎉啦。</p><p>用 f 替换 mk-length，Y combinator 登场：</p><pre><code class="scheme">; Y combinator;(define Y  (lambda (le)    ((lambda (f)      (f f))      (lambda (f)        (le (lambda (x)              ((f f) x)))))))</code></pre><p>整个推导过程结束。</p><p>另，<a href="https://github.com/pkrumins" target="_blank" rel="noopener">Peter Krumins</a> 有一篇文章也详细演示了Y combinator的推导过程，可参阅 <a href="https://catonmat.net/derivation-of-ycombinator" target="_blank" rel="noopener">Deriving the Y-Combinator</a>。</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator</a>.  </p><p><a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a></p><p><a href="https://mitpress.mit.edu/books/little-scheme-fourth-edition" target="_blank" rel="noopener">《The little schemer》</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h4 id=&quot;写在前面&quot;&gt;&lt;a href=&quot;#写在前面&quot; class=&quot;headerlink&quot; title=&quot;写在前面&quot;&gt;&lt;/a&gt;写在前面&lt;/h4&gt;&lt;p&gt;《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起……&lt;/p&gt;
+&lt;p&gt;鉴于
+      
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Scheme" scheme="http://lupeipei.github.io/tags/Scheme/"/>
+    
+  </entry>
   
   <entry>
     <title>对scheme中collector的一点理解</title>
@@ -509,34 +535,6 @@
     
     
       <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Vue中使用moment格式化时间</title>
-    <link href="http://lupeipei.github.io/2018/12/05/config-moment-in-vue/"/>
-    <id>http://lupeipei.github.io/2018/12/05/config-moment-in-vue/</id>
-    <published>2018-12-05T10:43:40.000Z</published>
-    <updated>2019-03-15T10:36:52.751Z</updated>
-    
-    <content type="html"><![CDATA[<h4 id="引入-moment"><a href="#引入-moment" class="headerlink" title="引入 moment"></a>引入 moment</h4><ul><li><p>安装</p><p>yarn:</p><pre><code>yarn add moment</code></pre><p>npm:</p><pre><code>npm i moment</code></pre></li><li><p>配置</p><p>在plugins目录下，新建文件：<code>moment.js</code>，放入以下内容：</p><pre><code class="js">import Vue from &#39;vue&#39;import moment from &#39;moment&#39;Vue.filter(&#39;moment&#39;, function(value, pattern = &#39;YYYY-MM-DD HH:mm:ss&#39;) {  if (!value) { return null }  return moment(value).format(pattern)})</code></pre><p>这里设置了默认的时间样式是YYYY-MM-DD HH:mm:ss。</p><p>最后，在<code>nuxt.config.js</code>文件的plugins中添加：</p><pre><code>plugins: [  &#39;xxxx&#39;,   // 引入我们刚刚新增的文件moment.js  &#39;~/plugins/moment&#39;]</code></pre></li></ul><p>OK ,重启后就可以开始用了。</p><h4 id="全局设置多种格式"><a href="#全局设置多种格式" class="headerlink" title="全局设置多种格式"></a>全局设置多种格式</h4><p>比如需要配置两种格式，日期型和时间型。</p><p>修改<code>plugins/moment.js</code>:</p><pre><code class="js">import Vue from &#39;vue&#39;import moment from &#39;moment&#39;const formats = {  &quot;date&quot;: &quot;YYYY-MM-DD&quot;,  &quot;datetime&quot;: &quot;YYYY-MM-DD hh:mm:ss&quot;}Vue.filter(&#39;moment&#39;, function(value, format=&#39;date&#39;) {  if (!value) { return null }  const pattern = formats[format]  return moment(value).format(pattern)})</code></pre><p>这里，设置默认为日期格式。</p><h4 id="页面使用"><a href="#页面使用" class="headerlink" title="页面使用"></a>页面使用</h4><p>比如需要显示商品创建时间：</p><pre><code>{{ product.created_at | moment('datetime') }}// 或者仅仅显示日期{{ product.created_at | moment('date') }}{{ product.created_at | moment }}</code></pre><p>因为设置了参数format默认是date, 当moment内不传参数时，则采用日期样式。</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://forum.vuejs.org/t/how-to-format-date-for-display/3586" target="_blank" rel="noopener">how to format date for display</a></p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h4 id=&quot;引入-moment&quot;&gt;&lt;a href=&quot;#引入-moment&quot; class=&quot;headerlink&quot; title=&quot;引入 moment&quot;&gt;&lt;/a&gt;引入 moment&lt;/h4&gt;&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;安装&lt;/p&gt;
-&lt;p&gt;yarn:&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;ya
-      
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Vue" scheme="http://lupeipei.github.io/tags/Vue/"/>
     
   </entry>
   

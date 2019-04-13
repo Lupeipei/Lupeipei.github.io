@@ -273,6 +273,205 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/31/ruby-metaprogramming-part6-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/31/ruby-metaprogramming-part6-rails/" itemprop="url">
+                  读《Ruby元编程》之Rails源代码赏析
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-31T09:14:03+08:00">
+                2018-03-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/31/ruby-metaprogramming-part6-rails/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/31/ruby-metaprogramming-part6-rails/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>710 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《Ruby元编程》part 2 说的是rails中的元编程，相比part 1 ，这部分的篇幅少了很多。</p>
+<p>主要说了这四块：</p>
+<ul>
+<li>ActiveRecord的组成</li>
+<li>ActiveSupport的concern模块</li>
+<li>alias_method_chain</li>
+<li>属性方法</li>
+</ul>
+<p>来逐一看看。</p>
+<h4 id="ActiveRecord的组成"><a href="#ActiveRecord的组成" class="headerlink" title="ActiveRecord的组成"></a>ActiveRecord的组成</h4><ul>
+<li>是什么？</li>
+</ul>
+<p>ActiveRecord是一个库，用来将Ruby对象映射到数据库中，然后你就可以直接对model进行操作，使用类的对象与数据库交互，不需要通过传统的SQL语句，rails会帮你转化成SQL语句。</p>
+<ul>
+<li>依赖和组成</li>
+</ul>
+<p>ActiveRecord依赖ActiveSupport，ActiveModel，并且使用ActiveSupport::Autoload来扩展了类。</p>
+<p>ActiveRecord::Base是它最重要的类，由一堆模块组装起来，通过extend，include 多个module，获得了大量的实例方法和类方法。</p>
+<h4 id="ActiveSupport的concern模块"><a href="#ActiveSupport的concern模块" class="headerlink" title="ActiveSupport的concern模块"></a>ActiveSupport的concern模块</h4><p>concern模块是一个最小依赖管理系统，它的诞生，是为了解决包含并扩展类中链式包含的问题。</p>
+<p>书中较详细地说明了concern的实现机制，通过覆写内核方法append_features来决定module是否进入祖先链 ,不过这段的代码真不好理解。</p>
+<h4 id="alias-method-chain"><a href="#alias-method-chain" class="headerlink" title="alias_method_chain"></a>alias_method_chain</h4><p>它的兴起是为了处理别名机制，你可以把它看成是环绕别名的构建器，而这也是它消亡的原因。颇有“成也萧何，败也萧何”的味道。</p>
+<p>既然它已经逐渐退出舞台，那么用什么来解决给原方法增加新功能的问题呢？</p>
+<p>在第五章中提到的prepend，成了它的替代品。</p>
+<h4 id="属性方法"><a href="#属性方法" class="headerlink" title="属性方法"></a>属性方法</h4><ul>
+<li><p>是什么？</p>
+<p>自动创建的访问器。比如你创建了一个类Student，它有name， age字段，可以通过Student.new创建对象，直接对其name， age读写。</p>
+<pre><code class="Ruby">s = Student.new
+s.name = &quot;Tom&quot;
+s.age = 18
+s.save
+s.name #=&gt; Tom
+</code></pre>
+<p>这里<code>name =</code>， <code>name</code>， <code>age=</code>, <code>age</code>等方法，就是属性方法，都是ActiveRecord通过查看students表的字段进行创建的。</p>
+</li>
+<li><p>发展历史</p>
+<p>Rails1.0时，通过幽灵方法来实现属性方法，由于幽灵方法并不是真正的方法，调用时要先完整搜过一遍祖先链，所以Rails2.0时，对属性方法的实现进行了改进。大致的思路是：第一次访问属性时，这个属性是个幽灵方法，ActiveRecord::Base#method_missing会在这时把这个幽灵方法转化为真实的方法，同时method_missing还动态地为数据库中的其他字段创建读，写，查询访问器，下一次再访问时，就会有一个真实的方法器可供访问，不再进入method_missing方法。</p>
+</li>
+</ul>
+<h4 id="一点感触"><a href="#一点感触" class="headerlink" title="一点感触"></a>一点感触</h4><p>刚开始看元编程的时候，很激动，像是发现了宝似的，现在看完了，平静了很多。借用书中的一句话：元编程的目的不是为了让代码变得更聪明，而是让代码变得更灵活。</p>
+<p>Happy metaprogramming!</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3390,198 +3589,6 @@ demo.write(&#39;demo.png&#39;)
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/" itemprop="url">
-                  使用Chrome console快速获取及检验你的xpath, cssSelector
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-17T08:31:53+08:00">
-                2018-03-17
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>833 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写过一篇有关<a href="http://luciaca.cn/2018/01/24/learning-selenium-webdriver-ruby-version/" target="_blank" rel="noopener">Selenium webdriver</a> 的学习笔记，这里再补充个小技巧。</p>
-<p>Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。</p>
-<p>这里以能造轮子会拍照的Kenneth Reitz的<a href="https://github.com/kennethreitz" target="_blank" rel="noopener">github</a>主页为例，来看看如何快速获取及检验你的xpath，cssSelector。</p>
-<p>BTW，定位元素的方法有很多，我在学习笔记也有记录，能用id尽量用id，这里仅仅说一下如何借助console来完成xpath, cssSelector的定位，并不代表元素定位就这两种方式。</p>
-<h4 id="如何获取？"><a href="#如何获取？" class="headerlink" title="如何获取？"></a>如何获取？</h4><p>假定我们希望对页面中unfollow这个按钮进行click的操作， 那么首先得要找到它。</p>
-<p>chrome浏览器下，选中该元素，查看<strong>inspect</strong>，打开developer tool，然后右键，选择<strong>copy</strong>，就可以看到copy  selector, copy xpath两个选项了。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif" alt=""></p>
-<p>针对你需要的copy即可。不过提醒下，这里一般copy下来的cssSelector都特别长，你可以自行做一下删减。</p>
-<p>比如上面这个，得到的selector：</p>
-<pre><code>#js-pjax-container &gt; div &gt; div.h-card.col-3.float-left.pr-3 &gt; div.user-profile-following-container.js-user-profile-following-toggle.mb-3 &gt; span &gt; span.unfollow &gt; form &gt; button
-</code></pre><p>得到的xpath是这样：</p>
-<pre><code>//*[@id=&quot;js-pjax-container&quot;]/div/div[1]/div[5]/span/span[2]/form/button
-</code></pre><p>Xpath不算太长，还能接受，不过xpath会将页面的所有元素进行扫描以完成定位，比较耗时，所以能用cssSelector的话，还是选择cssSelector。</p>
-<p>那么上面那个太长了，怎么简化？把它的class复制下来：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdaob6bnfj311m0axaeb.jpg" alt=""></p>
-<p>改成这样：</p>
-<pre><code>button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target
-</code></pre><p>那要如何确定自己写的这个selector是否正确呢？看下面👇：</p>
-<h4 id="如何检测？"><a href="#如何检测？" class="headerlink" title="如何检测？"></a>如何检测？</h4><p>在developer tool的console中，<strong>使用$$(“xxx”)来检查cssSelector， 使用$x(“xxxx”)来检查xpath</strong>。</p>
-<p>这里有两处console可供使用，一般直接用element下面的，方便直接查看定位到的元素。</p>
-<p>来检查一下刚刚的selector是否正确。</p>
-<p>输入后<code>$$(&quot;button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target&quot;)</code>，发现找到了两个元素，第一个是follow的按钮，第二个才是我们要的unfollow。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpdbb108vig30yw0k24qp.gif" alt=""></p>
-<p>发现定位到了两个元素，这样怎么破？</p>
-<p>仔细看，会发现这是一个Ajax的交互，点击unfollow后，向服务器发出unfollow的请求，执行user controller中对应的unfollow action，页面渲染，随后出现follow按钮。</p>
-<p>鉴于这两个按钮的cssSelector一模一样，这种情况下，建议换成xpath。</p>
-<p>用刚刚获取的xpath来检测一下：</p>
-<p>如果你输入有语法错误，它会报错，这里注意双引号的使用。在双引号中嵌套了其他双引号，换成单引号。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpfi6bihaxg30yw0k2gz5.gif" alt=""></p>
-<p>发现用xpath来定位时，只有一个。OK，完成定位。</p>
-<p>PS.这里cssSelector的这个例子举的不是很好，但用法基本就是这么玩的。</p>
-<h4 id="推荐"><a href="#推荐" class="headerlink" title="推荐"></a>推荐</h4><p>在Google selenium相关测试中，找到了这篇文章<a href="http://yizeng.me/2014/03/23/evaluate-and-validate-xpath-css-selectors-in-chrome-developer-tools/" target="_blank" rel="noopener">Evaluate and validate XPath/CSS selectors in Chrome Developer Tools</a>，作者写的很详细，看完让我有种感觉：“人家都写的这么好了，我还写个啥？”……</p>
-<p>当然，最终我还是决定要写写，加深印象:  P</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3631,7 +3638,7 @@ demo.write(&#39;demo.png&#39;)
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3764,7 +3771,7 @@ demo.write(&#39;demo.png&#39;)
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>

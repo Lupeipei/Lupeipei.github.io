@@ -273,6 +273,465 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/31/web-api-practice/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/12/31/web-api-practice/" itemprop="url">
+                  Rails：Web API接口实作
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-31T10:43:45+08:00">
+                2017-12-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/12/31/web-api-practice/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/12/31/web-api-practice/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,399 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>话说，好记性不如烂笔头「当然，主要是自己笨」，趁着假期，实作了一个简单的API接口，主要是CRUD + auth 认证部分，以加强对API接口部分的理解。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>以用户对一个event活动进行CRUD操作的功能实现为例：</p>
+<p>主要按如下步骤走：</p>
+<ul>
+<li><p>建model event，含字段title, description</p>
+</li>
+<li><p>设置路由，实作event的get, post, patch ,delete接口</p>
+</li>
+<li><p>添加认证API</p>
+</li>
+</ul>
+<p><strong>最后的效果是：</strong></p>
+<blockquote>
+<p> 用户可以通过API接口来新建，修改，查看，删除event</p>
+<p>用户在发出新建，修改，删除请求时，需要认证</p>
+</blockquote>
+<p>P.S：其实可以加个 rspec测试，不过这里我用postman直接测了，省去rspec部分，以免篇幅过长「主要还是因为，呃，你懂的，懒……」</p>
+<p>好，开搞吧。</p>
+<h5 id="一、新建一个project-event-api"><a href="#一、新建一个project-event-api" class="headerlink" title="一、新建一个project event_api"></a>一、新建一个project event_api</h5><pre><code>rails new event_api
+cd event_api
+git init
+</code></pre><p>生成如下文件：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fmz03kpvxxj30970ba74o.jpg" alt=""></p>
+<h5 id="二、建event-model，实作CRUD接口"><a href="#二、建event-model，实作CRUD接口" class="headerlink" title="二、建event model，实作CRUD接口"></a>二、建event model，实作CRUD接口</h5><ul>
+<li><p>建event model,  终端输入：</p>
+<pre><code>git checkout -b event # 切换分支，做烂了可以再开个
+rails g model event title:string description:text uuid:string
+rake db:migrate
+</code></pre><p>「为了安全性，给event加上一个uuid的字段」</p>
+<p>在<code>app/models/event.rb</code>中，给title加上有效性验证，并在创建时自动生成uuid：</p>
+<pre><code class="Ruby">class Event &lt; ApplicationRecord
+  validates_presence_of :title
+  before_validation :generate_uuid, :only =&gt; :create
+  def to_param
+      self.uuid
+  end
+
+  protected
+
+  def generate_uuid
+    self.uuid = SecureRandom.uuid
+  end
+end
+</code></pre>
+</li>
+<li><p>设置路由，在<code>config/routes.rb</code>中添加如下路由：</p>
+<pre><code class="Ruby">  namespace :api, :defaults =&gt; {:format =&gt; :json } do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+    end
+  end
+</code></pre>
+</li>
+<li><p>产生API controller，终端输入：</p>
+<pre><code>rails g controller api --no-assets
+</code></pre><p>修改<code>app/controllers/api_controller.rb</code>:</p>
+<pre><code class="Ruby">- class ApiController &lt; ApplicationController
++ class ApiController &lt; ActionController::Base
+end
+</code></pre>
+<p>改成继承自ActionController::Base，因为API 不需要 <code>protect_from_forgery with: :exception</code> 这一行的 CSRF 浏览器安全检查。</p>
+</li>
+<li><p>实作event的get, post, patch, delete</p>
+<p>终端执行：</p>
+<pre><code>rails g controller api::v1::events --no-assets
+</code></pre><p>在<code>app/controllers/api/v1/events_controller.rb</code>中，填入以下内容：</p>
+<pre><code class="Ruby">class Api::V1::EventsController &lt; ApiController
+
+  def index
+    @events = Event.all
+    render :json =&gt; {
+        :data =&gt; @events.map {|event|
+        {
+            :id =&gt; event.id,
+            :uuid =&gt; event.uuid,
+            :title =&gt; event.title,
+            :event_url =&gt; api_v1_event_url(event.id)
+        }}
+    }
+  end
+
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    if @event.save
+      render :json =&gt; {
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      }
+    else
+      render :json =&gt; {
+          :message =&gt; &quot;创建event失败&quot;, :errors =&gt; @event.errors
+      }, :status =&gt; 400
+    end
+  end
+
+  def show
+    @event = Event.find_by_uuid!(params[:id])
+    render :json =&gt; {
+        :id =&gt; @event.id,
+        :uuid =&gt; @event.uuid,
+        :title =&gt; @event.title,
+        :description =&gt; @event.description
+    }
+  end
+
+  def update
+    @event = Event.find_by_uuid!(params[:id])
+    @event.update(:title =&gt; params[:title],
+                  :description =&gt; params[:description])
+    render :json =&gt; {:message =&gt; &quot;更新event成功&quot;}
+  end
+
+  def destroy
+    @event = Event.find_by_uuid!(params[:id])
+    @event.destroy
+    render :json =&gt; {:message =&gt; &quot;删除event成功&quot;}
+  end
+end
+</code></pre>
+<p>注意，将EventsController 修改为继承自ApiController</p>
+<p>启服务器，<code>rails s</code>, 用postman测试看看：</p>
+<p>create</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fmz1uqgyb4j30ms0d2abh.jpg" alt=""></p>
+<p>index</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fmz1vk7e8oj30mi0fmmyj.jpg" alt=""></p>
+<p>show：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fmz1wfaul9j30ms0bs3zj.jpg" alt=""></p>
+<p>Update:</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fmz1x60l41j30mn0c8jsm.jpg" alt=""></p>
+<p>发出get请求，看到event的详情中已经修改了title：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fmz1yceghkj30mn0bsq41.jpg" alt=""></p>
+<p>destroy：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fmz1yvtjybj30mt0a4t9l.jpg" alt=""></p>
+<p>看event的list, 发现event2018_updated已经删除：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fmz213gb40j30mn0de3zp.jpg" alt=""></p>
+<p>OK！！</p>
+</li>
+</ul>
+<h5 id="三、添加认证API"><a href="#三、添加认证API" class="headerlink" title="三、添加认证API"></a>三、添加认证API</h5><p>这里做event的API时候，都不需要认证的，让我们加上认证部分。</p>
+<ul>
+<li><p>装上devise</p>
+<p>编辑 <code>Gemfile</code> 加上 <code>gem &quot;devise&quot;</code></p>
+<p>终端运行：<code>bundle</code>, 重启服务器，终端执行：</p>
+<pre><code>rails g devise:install
+rails g devise user
+rake db:migrate
+</code></pre></li>
+<li><p>给event和user挂上关系</p>
+<p>在<code>app/models/user.rb</code>加上：</p>
+<pre><code>has_many :events
+</code></pre><p>在<code>app/models/event.rb</code> 加上：</p>
+<pre><code>belongs_to :user
+</code></pre><p> 将user_id添加到event中，终端执行：</p>
+<pre><code>rails g migration add_user_id_to_events user_id:integer
+rake db:migrate
+</code></pre><p>修改<code>app/controllers/api/v1/events_controller.rb</code>， 在create部分填上@event.user = current_user</p>
+<pre><code class="Ruby">......
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    @event.user = current_user
+    if @event.save
+      render :json =&gt; {
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      }
+    else
+      render :json =&gt; {
+          :message =&gt; &quot;活动创建失败&quot;, :errors =&gt; @event.errors
+      }, :status =&gt; 400
+    end
+  end
+  ......
+</code></pre>
+<p>这里也可以设置一下show，index部分，添加上creator的字段，显示是谁创建这个event的。「此处略去，不是重点」</p>
+</li>
+<li><p>给user加上token字段</p>
+<p>终端运行：</p>
+<pre><code>rails g migration add_auth_token_to_users
+</code></pre><p>编辑文件<code>XXXX_add_auth_token_to_users.rb</code>文件:</p>
+<pre><code class="Ruby">class AddAuthTokenToUsers &lt; ActiveRecord::Migration[5.1]
+  def change
+    + add_column :users, :auth_token, :string
+    + add_index :users, :auth_token, :unique =&gt; true
+  end
+end
+</code></pre>
+<p>终端运行：</p>
+<pre><code>rake db:migrate
+</code></pre><p>编辑<code>app/models/user.rb</code>， 给user加上token:</p>
+<pre><code class="Ruby">class User &lt; ApplicationRecord
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable
+
+  has_many :events
+
+  before_create :generate_authentication_token
+
+  def generate_authentication_token
+    self.auth_token = Devise.friendly_token
+  end
+
+end
+</code></pre>
+</li>
+<li><p>实作注册，登录，登出的API</p>
+<p>在 <code>config/routes.rb</code> 加上路由：</p>
+<pre><code class="Ruby">......
+  namespace :api, :defaults =&gt; {:format =&gt; :json } do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+     + post &quot;/signup&quot; =&gt; &quot;auth#signup&quot;
+     + post &quot;/login&quot; =&gt; &quot;auth#login&quot;
+     + post &quot;/logout&quot; =&gt; &quot;auth#logout&quot;
+    end
+  end
+......  
+</code></pre>
+<p>生成auth的controller：</p>
+<pre><code>rails g controller api::v1::auth --no-assets
+</code></pre><p>编辑它：</p>
+<pre><code class="Ruby">class Api::V1::AuthController &lt; ApiController
+  before_action :authenticate_user!, :only =&gt; [:logout]
+
+  def signup
+    user = User.new(:email =&gt; params[:email], :password =&gt; params[:password])
+
+    if user.save
+      render :json =&gt; {:user_id =&gt; user.id }
+    else
+      render :json =&gt; {:message =&gt; &quot;Failed&quot;, :errors =&gt; user.errors}, :status =&gt; 400
+    end
+  end
+
+  def login
+    if params[:email] &amp;&amp; params[:password]
+      user = User.find_by_email(params[:email])
+    end
+    if user &amp;&amp; user.valid_password?(params[:password])
+      render :json =&gt; {
+          :message =&gt; &quot;ok&quot;,
+          :auth_token =&gt; user.auth_token,
+          :user_id =&gt; user.id
+      }
+    else
+      render :json =&gt; {:message =&gt; &quot;Email or Password is wrong&quot;}, :status =&gt; 400
+    end
+  end
+
+  def logout
+    current_user.generate_authentication_token
+    current_user.save!
+    render :json =&gt; {:message =&gt; &quot;logout successful&quot;}
+  end
+end
+</code></pre>
+<p>编辑<code>app/controllers/api_controller.rb</code>， 添加如下验证：</p>
+<pre><code class="Ruby">  before_action :authenticate_user_from_token!
+
+  def authenticate_user_from_token!
+    if params[:auth_token]
+      user = User.find_by_auth_token(params[:auth_token])
+      sign_in(user, store: false) if user
+    end
+  end
+</code></pre>
+<p>这里可以改成将auth_token放在了header中传递，看这篇<a href="https://lupeipei.github.io/2017/12/29/pass-auth-token-through-header-rails-api/">如何将auth token放入headers进行传递？</a></p>
+<p>重启服务器，用postman测试看看：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fmz38xhtclj30mq0b3t9m.jpg" alt=""></p>
+<p>login ,获取auth_token</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fmz3xbnayjj30n10c40tv.jpg" alt=""></p>
+<p>logout, 传递auth_token</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fmz3y7tr8nj30mr0acdgs.jpg" alt=""></p>
+</li>
+</ul>
+<ul>
+<li><p>最后，给event添加上认证，修改<code>app/controllers/api/v1/events_controller.rb</code>中，添加：</p>
+<pre><code class="Ruby">......
+before_action :authenticate_user!, :only =&gt; [:create, :update, :destroy]
+....
+</code></pre>
+<p>用postman测试看看，现在新建event需要传递一个auth_token才行：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fmz45zlkyej30mn0bydgy.jpg" alt=""></p>
+<p> 添加上auth_token， 创建成功：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fmz48dnhi8j30mo0dnjsp.jpg" alt=""></p>
+<p>Patch, delete同理，可以用postman 进行测试看看，这里就不细看了。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>我这边列出来的都是非常基础的API接口，其他复杂点的都是可以按照这个方式来做的，比如你可以在这个的基础上，添加comment，让用户通过接口给event做评论，点赞，自定义like method等等。</p>
+<p>对于routes的写法，上面我用了rails自身的resource方式：<code>resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]</code>， 也用了较易于理解的逐条列出路径的方式：<code>post &quot;/signup&quot; =&gt; &quot;auth#signup&quot;</code>, 可根据实际情况自行选择.</p>
+<p>Happy coding! : )</p>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/29/pass-auth-token-through-header-rails-api/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2501,204 +2960,6 @@ RestClient.get(URI::encode(url))
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/11/21/read-the-body-of-400-response-with-ruby-exception-handling/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/11/21/read-the-body-of-400-response-with-ruby-exception-handling/" itemprop="url">
-                  使用ruby的异常处理来读取rest client中的bad request
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-21T20:35:58+08:00">
-                2017-11-21
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/11/21/read-the-body-of-400-response-with-ruby-exception-handling/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/11/21/read-the-body-of-400-response-with-ruby-exception-handling/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>349 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>我们在使用rest-client去发出请求时，result code是200 固然很好，但有时候我们也希望能读取到Exceptions， 例如读取result code是400bad request的response内容，怎么做？</p>
-<p>看个例子。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>场景：用户A想要通过接口获取到个人信息，代码如下：</p>
-<pre><code class="JSON"> respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#{access_token}&#39;
- profile_response = JSON.parse(respoonse.body)
-</code></pre>
-<p>其中，如果<code>access_token</code>过期或者无效，用户希望得到这样的结果：</p>
-<ul>
-<li>返回 400 Bad Request</li>
-<li>返回一个JSON格式的reponse body ，内容像这样：</li>
-</ul>
-<pre><code class="JSON">{          
-   &quot;code&quot;: 400,
-   &quot;error&quot;: {
-      &quot;message&quot;: &quot;The access token could not be decrypted&quot;,
-      &quot;type&quot;: &quot;OAuthException&quot;
-   }
-}
-</code></pre>
-<p>这时，如果你的<code>access_token</code>是过期或者无效的，终端运行的时候，会报错400 Bad Request ，但是却没有返回对应的response。</p>
-<p>如何解决？</p>
-<p>其实，如果你熟悉ruby的异常处理，就会发现很简单，把上述的代码改成如下：</p>
-<pre><code class="JSON">body = begin
-  respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#{access_token}&#39;
-  response.body
-rescue RestClient::ExceptionWithResponse  =&gt; e
-  e.response.body
-end
-
-profile_response = JSON.parse(body)
-</code></pre>
-<p>这里，使用了<code>rescue RestClient::ExceptionWithResponse  =&gt; e</code> 获取异常对象，并赋给了变量e，通过<code>e.response.body</code>来回传需要的error信息。</p>
-<p>大功告成。</p>
-<p>其实，看到这里，你就明白，不仅仅是 400bad request的response内容可以读取，其他如403 Forbidden，404 not found 等的response内容也是可以依葫芦画瓢来做的。：P</p>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>参考：</p>
-<ul>
-<li><a href="https://stackoverflow.com/questions/23623330/reading-the-body-of-a-400-response" target="_blank" rel="noopener">Reading the body of a 400 response?</a></li>
-<li><a href="https://stackoverflow.com/questions/23623330/reading-the-body-of-a-400-response" target="_blank" rel="noopener">Response callbacks, error handing</a></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2748,7 +3009,7 @@ profile_response = JSON.parse(body)
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2881,7 +3142,7 @@ profile_response = JSON.parse(body)
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>

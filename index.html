@@ -273,6 +273,518 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/13/deriving-the-Y-combinator-in-scheme/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/04/13/deriving-the-Y-combinator-in-scheme/" itemprop="url">
+                  scheme中有关Y combinator 的推导
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-13T15:07:47+08:00">
+                2019-04-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/04/13/deriving-the-Y-combinator-in-scheme/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2019/04/13/deriving-the-Y-combinator-in-scheme/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,725 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《the little schemer》中的第9章，可以换一个开头：故事从一个没有名字的递归开始说起……</p>
+<p>鉴于理解的过程蛮苦逼，记录下整个Y combinator 的推导过程，便于下次失忆的时候能迅速回忆。</p>
+<p>不过在推导前，先来看看Y combinator 是什么。</p>
+<h4 id="Y-combinator"><a href="#Y-combinator" class="headerlink" title="Y combinator"></a>Y combinator</h4><p>wiki上的解释  <a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator </a> 是这样的：</p>
+<blockquote>
+<p>fix, when applied to an arbitrary function f, yields the same result as f applied to the result of applying fix to f.</p>
+</blockquote>
+<p>细节部分太复杂了。Google 到这篇 <a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a>， 发现作者的解释看起来清楚多了，可参阅。</p>
+<p>简单而言, 一个公式：</p>
+<blockquote>
+<p>fix f = f (fix f) for all f</p>
+</blockquote>
+<p>对于任意的函数f,  fix 接受参数 f，返回(fix f)，将 f 作用于 (fix f)，得到的结果仍为(fix f)。</p>
+<p>在scheme中，Y 的定义如下：</p>
+<pre><code class="scheme">(define Y
+  (lambda (le)
+    ((lambda (f)
+      (f f))
+      (lambda (f)
+        (le (lambda (x)
+              ((f f) x)))))))
+</code></pre>
+<p>或者这样：</p>
+<pre><code class="scheme">(define Y
+ (lambda (F)
+   (let ((W (lambda (x)
+              (F (lambda arg (apply (x x) arg))))))
+     (W W))))
+</code></pre>
+<p>两者其实是一样的。</p>
+<p>来看一个调用Y的实例：</p>
+<p>定义一个函数 Fi，用来计算斐波那契数列：【 F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)（n&gt;=3) 】</p>
+<pre><code class="scheme">(define Fi
+  (lambda (func-arg)
+    (lambda (n)
+      (cond
+        ((zero? (sub1 n)) 1)
+        ((zero? (- n 2)) 1)
+        (else (+ (func-arg (sub1 n)) (func-arg (- n 2))))))))
+</code></pre>
+<p>然后执行：</p>
+<pre><code class="scheme">((Y Fi) 10)
+;Value: 55
+
+((Fi (Y Fi)) 10)
+;Value: 55
+</code></pre>
+<p>两次调用的输出结果相同。</p>
+<h4 id="推导过程"><a href="#推导过程" class="headerlink" title="推导过程"></a>推导过程</h4><p>以书中定义的length函数为例：</p>
+<p>先定义一个永远不会有值输出，死循环的函数：eternity</p>
+<pre><code class="scheme">(define eternity
+  (lambda (x)
+    (eternity x)))
+</code></pre>
+<p>length的定义如下：</p>
+<pre><code class="scheme">(define length
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+</code></pre>
+<p>这里，我们定义了一个函数，命名为length，而且在该函数内部调用了它自己。</p>
+<p>现在问题来了，如果不允许使用define来定义函数，不给函数命名，如果实现length？</p>
+<p>我们先从最简单的 length0 开始，当 list 为空时，<code>(length l)</code>为 0.</p>
+<p>先来看 length0:</p>
+<pre><code class="scheme">; length0
+;
+(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else (add1 (eternity (cdr l))))))
+</code></pre>
+<p>调用时， 也很简单：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else (add1 (eternity (cdr l)))))) (quote ()))
+;Value: 0
+</code></pre>
+<p>由此，继续定义 length&lt;=1 ：</p>
+<pre><code class="scheme">; length&lt;=1
+;
+(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+           (cond
+             ((null? l) 0)
+             (else (add1 (eternity (cdr l))))))
+        (cdr l))))))
+</code></pre>
+<p>调用  length&lt;=1 ：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+           (cond
+             ((null? l) 0)
+             (else (add1 (eternity (cdr l))))))
+        (cdr l)))))) (quote (hello)))
+;Value: 1
+</code></pre>
+<p>类推 length&lt;=2：</p>
+<pre><code class="scheme">(lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else
+              (add1 (
+                (lambda (l)
+                   (cond
+                     ((null? l) 0)
+                     (else (add1 (eternity (cdr l))))))
+                (cdr l))))))
+          (cdr l))))))
+</code></pre>
+<p>调用  length&lt;=2 ：</p>
+<pre><code class="scheme">((lambda (l)
+  (cond
+    ((null? l) 0)
+    (else
+      (add1 (
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else
+              (add1 (
+                (lambda (l)
+                   (cond
+                     ((null? l) 0)
+                     (else (add1 (eternity (cdr l))))))
+                (cdr l))))))
+          (cdr l)))))) (quote (hello scheme)))
+;Value: 2
+</code></pre>
+<p>按照这个规律，我们可以一直定义下去，length&lt;=n, n 为无穷大……</p>
+<p>但这显然不是一个函数该有的样子，所以我们换一种方式，来重新定义下 length0:</p>
+<pre><code class="scheme">; redefine length0
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  eternity)
+</code></pre>
+<p>这里重新定义了一个函数，这个函数接受一个参数length，返回结果是一个lambda函数。</p>
+<p>上面这段代码，调用了该函数，并将 eternity 作为参数值传递进去。与我们先前定义的 length0 没有区别，仅仅是写法不同而已。</p>
+<p>用这种方式，可以类推出 length&lt;=1, length&lt;=2:</p>
+<pre><code class="scheme">; rewrite length&lt;=1 in the same style
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  ((lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))) eternity))
+;
+; rewrite length&lt;=2 in the same style
+;
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+((lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+  ((lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))) eternity)))
+</code></pre>
+<p>顺着这个思路，再一次进行抽象提取，重新定义 length0:</p>
+<pre><code class="scheme">; mk-length for length0
+;
+((lambda (mk-length)
+    (mk-length eternity))
+    (lambda (length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，是将整个 length 的定义，作为 mk-length 的参数值：</p>
+<p><img src="/Users/lucia/Library/Application Support/typora-user-images/image-20190413134612322.png" alt="image-20190413134612322"></p>
+<p>它其实是同我们第二次定义的 length0 是一样的：</p>
+<p>只是这里调用了两次，一次将整个 length 的定义，作为 mk-length 的参数值，第二次将 eternity 作为 length 的参数值。</p>
+<p>由此可以类推出length&lt;=1, length&lt;=2:</p>
+<pre><code class="scheme">; mk-length for length&lt;=1
+;
+((lambda (mk-length)
+    (mk-length
+      (mk-length eternity)))
+  (lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))))
+;
+; mk-length for length&lt;=2
+;
+((lambda (mk-length)
+  (mk-length
+    (mk-length
+      (mk-length eternity))))
+  (lambda (length)
+    (lambda (l)
+      (cond
+        ((null? l) 0)
+        (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，eternity 扮演的是参数值的角色，它本身是一个函数，我们使用 mk-length 来替换掉 eternity，当然也是可以的，重新看一下替换掉eternity后的 length0 :</p>
+<pre><code class="scheme">; replace eternity with mk-length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这里，length也不过是一个参数名，自然也是可以换成mk-length的。</p>
+<pre><code class="scheme">; using mk-length instead of length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 (mk-length (cdr l))))))))
+</code></pre>
+<p>现在，调用上面这个函数，将eternity作为参数值，我们可以得到 length&lt;=1:</p>
+<pre><code class="scheme">; apply mk-length to get length&lt;=1
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length eternity) (cdr l))))))))
+</code></pre>
+<p>这里稍稍有点绕，截个图就明白了：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1g20zc49bf6j317q0c4ta9.jpg" alt=""></p>
+<p>调用一次试试看：</p>
+<pre><code class="scheme">(((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length eternity) (cdr l)))))))) (quote (apple)))
+;Value: 1
+</code></pre>
+<p>结果无误。</p>
+<p>现在，我们再将上面 length&lt;=1定义中 的 eternity 替换成 mk-length:</p>
+<pre><code class="scheme">; replace eternity with mk-length
+;
+((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((mk-length mk-length) (cdr l))))))))
+</code></pre>
+<p>鉴于<code>(f x)</code> 与 <code>(lambda (x) (f x))</code> 是一样的，所以我们使用<code>((lambda (x) ((mk-length mk-length) x)) (cdr l))</code> 来替换掉<code>((mk-length mk-length) (cdr l))</code>。</p>
+<p>替换后的结果如下：</p>
+<pre><code class="scheme">((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (lambda (l)
+        (cond
+          ((null? l) 0)
+          (else (add1 ((lambda (x) ((mk-length mk-length) x)) (cdr l))))))))
+</code></pre>
+<p>再来一次抽取，将<code>(lambda (x) ((mk-length mk-length) x))</code> 作为参数值提取出来：</p>
+<pre><code class="scheme">((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      ((lambda (length)
+        (lambda (l)
+          (cond
+            ((null? l) 0)
+            (else (add1 (length (cdr l)))))))
+        (lambda (x) ((mk-length mk-length) x)))))
+</code></pre>
+<p>你会发现最初定义length的那段代码已经完整浮现了：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1g20zkh1gz2j314c0ei75t.jpg" alt=""></p>
+<p>最后一次，将整块length的定义作为参数值，提取出来：</p>
+<pre><code class="scheme">((lambda (le)
+  ((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x)
+            ((mk-length mk-length) x))))))
+ (lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l))))))))
+</code></pre>
+<p>这段代码中，将：</p>
+<pre><code class="scheme"> (lambda (length)
+  (lambda (l)
+    (cond
+      ((null? l) 0)
+      (else (add1 (length (cdr l)))))))
+</code></pre>
+<p>作为了le的参数值。</p>
+<p>现在，我们移除掉这个参数值，得到如下代码：</p>
+<pre><code class="scheme">(lambda (le)
+  ((lambda (mk-length)
+    (mk-length mk-length))
+    (lambda (mk-length)
+      (le (lambda (x)
+            ((mk-length mk-length) x))))))
+</code></pre>
+<p>好了，我们可以撒花🎉啦。</p>
+<p>用 f 替换 mk-length，Y combinator 登场：</p>
+<pre><code class="scheme">; Y combinator
+;
+(define Y
+  (lambda (le)
+    ((lambda (f)
+      (f f))
+      (lambda (f)
+        (le (lambda (x)
+              ((f f) x)))))))
+</code></pre>
+<p>整个推导过程结束。</p>
+<p>另，<a href="https://github.com/pkrumins" target="_blank" rel="noopener">Peter Krumins</a> 有一篇文章也详细演示了Y combinator的推导过程，可参阅 <a href="https://catonmat.net/derivation-of-ycombinator" target="_blank" rel="noopener">Deriving the Y-Combinator</a>。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus" target="_blank" rel="noopener">fixed-point combinator</a>.  </p>
+<p><a href="https://docs.huihoo.com/homepage/shredderyin/wiki/SchemeYcombinator.html" target="_blank" rel="noopener">Y Combinator的scheme 实现</a></p>
+<p><a href="https://mitpress.mit.edu/books/little-scheme-fourth-edition" target="_blank" rel="noopener">《The little schemer》</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/11/understanding-collector-in-scheme/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2493,295 +3005,6 @@ curl --trace trace.txt https://github.com
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/02/24/usage-of-qs/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/02/24/usage-of-qs/" itemprop="url">
-                  qs用法小结
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-02-24T22:46:05+08:00">
-                2019-02-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2019/02/24/usage-of-qs/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2019/02/24/usage-of-qs/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>745 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>使用axios发请求传参时，需要对参数进行处理，用到了qs，第一次接触，懵逼，刷了遍文档，简单记录下qs的使用。</p>
-<h4 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h4><p><a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">qs</a>: a querystring parse with nesting support.</p>
-<p>主要方法：parse, stringily.</p>
-<pre><code class="js">const qs = require(&#39;qs&#39;);
-
-qs.parse(string, [options]);
-
-qs.stringily(object, [options])
-</code></pre>
-<p>最新版本：6.6.0，示例代码以6.5.2为主， 所有代码参考其<a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">github主页</a>。</p>
-<h4 id="parse"><a href="#parse" class="headerlink" title="parse"></a>parse</h4><p>可供设置的options及默认options：<a href="https://github.com/ljharb/qs/blob/d33a369e50f45d7d80c8dec4cc87fb9ad4cfd995/lib/parse.js#L7" target="_blank" rel="noopener">default</a>.</p>
-<p>看几个简单的例子：</p>
-<pre><code class="js">const qs = require(&#39;qs&#39;);
-
-console.log(qs.parse(&#39;foo[bar]=baz&#39;));
-// 输出： foo: { bar: &#39;baz&#39; } }
-
-// 最多可以解析到5个子层
-const fiveChilden = qs.parse(&#39;a[b][c][d][e][f][g][h][i]=j&#39;)
-console.log(fiveChilden);
-/* 输出：
-{ a: { b: { c: [Object] } } }
-如果你的输出也是这样，别着急，是console的问题： console.log() is invariably limited to 2 levels.
-*/
-
-
-// 使用util.inspect再输出
-const util = require(&#39;util&#39;);
-console.log(util.inspect(fiveChilden, {showHidden: false, depth: null}))
-// 输出： { a: { b: { c: { d: { e: { f: { &#39;[g][h][i]&#39;: &#39;j&#39; } } } } } } }
-
-
-// 带 ?
-
-console.log(qs.parse(&#39;?a=b&amp;c=d&#39;));
-// 输出： { &#39;?a&#39;: &#39;b&#39;, c: &#39;d&#39; }
-
-console.log(qs.parse(&#39;?a=b&amp;c=d&#39;, { ignoreQueryPrefix: true }));
-// 输出： { a: &#39;b&#39;, c: &#39;d&#39; }
-
-// 不带 ?
-console.log(qs.parse(&#39;a=b&amp;c=d&#39;));
-// 输出： { a: &#39;b&#39;, c: &#39;d&#39; }
-
-// 带.
-console.log(qs.parse(&#39;a.b=c&#39;));
-// 输出： { &#39;a.b&#39;: &#39;c&#39; }
-
-console.log(qs.parse(&#39;a.b=c&#39;, { allowDots: true }));
-// 输出： { a: { b: &#39;c&#39; } }
-
-// 带有 ,与文档中的comma设置输出不一致
-console.log(qs.parse(&#39;a=b,c&#39;, { comma: true }));
-// 输出：  { a: &#39;b,c&#39; }
-
-
-// parse 数组
-
-console.log(qs.parse(&#39;a[]=b&amp;a[]=c&#39;));
-// 输出： { a: [ &#39;b&#39;, &#39;c&#39; ] }
-
-//带索引，索引 &lt;= 20 才能正确解析
-console.log(qs.parse(&#39;a[1]=b&amp;a[2]=c&#39;));
-// 输出： { a: [ &#39;b&#39;, &#39;c&#39; ] }
-
-console.log(qs.parse(&#39;a[20]=b&#39;));
-// 输出： { a: [ &#39;b&#39; ] }
-
-console.log(qs.parse(&#39;a[200]=b&#39;));
-// 输出： { a: { &#39;200&#39;: &#39;b&#39; } }
-
-// 数据有空值
-console.log(qs.parse(&#39;a[]=&amp;a[]=b&#39;));
-// 输出： { a: [ &#39;&#39;, &#39;b&#39; ] }
-
-// 数组对象
-console.log(qs.parse(&#39;a[][b]=c&#39;));
-// 输出： { a: [ { b: &#39;c&#39; } ] }
-
-// 传递null, 可设置 strictNullHandling true
-console.log(qs.parse(&#39;a&amp;b=&#39;));
-// 输出： { a: &#39;&#39;, b: &#39;&#39; }
-
-console.log(qs.parse(&#39;a&amp;b=&#39;, { strictNullHandling: true }));
-// 输出： { a: null, b: &#39;&#39; }
-</code></pre>
-<p>这里有些奇怪的是comma部分，跟文档输出不一致，stringily也出现了同样的问题。去看了issues，发现已经有人提出来了，详见<a href="https://github.com/ljharb/qs/issues/299" target="_blank" rel="noopener">issue299</a>， 等新版本修复发布。</p>
-<h4 id="stringily"><a href="#stringily" class="headerlink" title="stringily"></a>stringily</h4><p>可供设置的options及默认options：<a href="https://github.com/ljharb/qs/blob/d33a369e50f45d7d80c8dec4cc87fb9ad4cfd995/lib/stringify.js#L28" target="_blank" rel="noopener">default</a>.</p>
-<p>直接上代码：</p>
-<pre><code class="javascript">const qs = require(&#39;qs&#39;);
-
-// 对象
-console.log(qs.stringify({ a: { b: &#39;c&#39; } }));
-// 输出： a%5Bb%5D=c
-
-console.log(qs.stringify({ a: { b: &#39;c&#39; } }, { encode: false }));
-// 输出： a[b]=c
-
-// 数组，默认 indices true
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;, &#39;d&#39;] }, { encode: false }));
-// 输出： a[0]=b&amp;a[1]=c&amp;a[2]=d
-
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;, &#39;d&#39;] }, { indices: false }));
-// 输出： a=b&amp;a=c&amp;a=d
-
-// 使用 arrayFormat 来决定输出的Array样式
-
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;indices&#39;, encode: false }));
-// 输出： a[0]=b&amp;a[1]=c
-
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;brackets&#39;, encode: false }));
-// 输出： a[]=b&amp;a[]=c
-
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;repeat&#39;, encode: false }));
-// 输出： a=b&amp;a=c
-
-// 与文档中的comma设置输出不一致
-console.log(qs.stringify({ a: [&#39;b&#39;, &#39;c&#39;] }, { arrayFormat: &#39;comma&#39;, encode: false }));
-// 输出： a[0]=b&amp;a[1]=c
-
-// null 被当成空值处理
-console.log(qs.stringify({ a: null, b: &#39;&#39; }));
-// 输出： a=&amp;b=
-
-// 跳过值为null的key
-console.log(qs.stringify({ a: &#39;b&#39;, c: null}, { skipNulls: true }));
-// 输出： a=b
-
-</code></pre>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/ljharb/qs" target="_blank" rel="noopener">qs</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2831,7 +3054,7 @@ console.log(qs.stringify({ a: &#39;b&#39;, c: null}, { skipNulls: true }));
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">188</span>
+                <span class="site-state-item-count">189</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2964,7 +3187,7 @@ console.log(qs.stringify({ a: &#39;b&#39;, c: null}, { skipNulls: true }));
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    183.1k
+    184.8k
   </span>
 
 </div>
