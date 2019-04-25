@@ -273,6 +273,193 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/TDD-with-RSpec-integration-test/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/23/TDD-with-RSpec-integration-test/" itemprop="url">
+                  TDD with RSpec出错集之Integration测试篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-23T09:51:06+08:00">
+                2017-10-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/23/TDD-with-RSpec-integration-test/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/23/TDD-with-RSpec-integration-test/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>424 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>本场测试的star是 Capybara。</p>
+<p>考虑到自己写的method还是挺多的，就没有一一integration test了。</p>
+<p>实作了简单的首页测试，用户注册，用户登录，用户退出。</p>
+<p>记录下遇到的问题，顺带加入了debug的部分。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><strong>Capybara::ElementNotFound: Unable to find visible link or button “ 登出”</strong></li>
+</ul>
+<p>做登录，登出的测试时，终端报出如下错误：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrwabt60oj30mn0783z9.jpg" alt=""></p>
+<p>报错显示页面找不到“ 登出”这个link 或者button，对应的测试文件长这样：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fkrwac5bn8j30en0f440o.jpg" alt=""></p>
+<p><strong>怎么破？</strong></p>
+<p>第一想法就是查看一下用户登录后，点击”Hi!, #{user.username}”，页面这时候是长啥样，是不是真的没有“ 登出”这个link 或者button。</p>
+<p>怎么做呢？好办，加入<code>save_and_open_page</code>, 注释掉报错的代码，像这样👇：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkrwhk5kaqj30ds0g176e.jpg" alt=""></p>
+<p>终端再次运行案例，得到这样的一串网址：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrwkc51ljj30ny05z758.jpg" alt=""></p>
+<p>终端输入：<code>open tmp/capybara/capybara-201710230848216776109515.html</code>, 浏览器便会打开这个网址了。</p>
+<p>我的是这样子：</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkrwltsrhcj30oe0hi40b.jpg" alt=""></p>
+<p><strong>有登出呢！</strong>为什么显示Unable to find visible link or button ？那只能说明这不是一个link or button？Google后，发现在stackoverflow上有个非常相似的案例：<a href="https://stackoverflow.com/questions/11269724/how-to-use-capybara-in-rspec-to-click-on-a-dropdown-option" target="_blank" rel="noopener">How to use capybara in rspec to click on a dropdown option</a></p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrx3y3ul4j30kl06lgms.jpg" alt=""></p>
+<p>试试把<code>click_on&quot; 登出&quot;</code>换成<code>page.find(:xpath, &quot;//a[@href=&#39;/users/sign_out&#39;]&quot;).click</code>, 终端再次运行案例，Pass！！</p>
+<p>but ,xpath是啥？XPath 是一门在 XML 文档中查找信息的语言，用于在 XML 文档中通过元素和属性进行导航。</p>
+<p>了解更多可以看看W3school的教程<a href="http://www.w3school.com.cn/xpath/index.asp" target="_blank" rel="noopener">xpath</a>。</p>
+<p>在capybara中为什么要这么用？戳这里<a href="https://github.com/teamcapybara/capybara#xpath-css-and-selectors" target="_blank" rel="noopener">capybara XPath, CSS and selectors</a> .</p>
+<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p><strong>capybara</strong> 中，操作页面的方法除了visit，click外，还有很多比如fill_in， check，choose等等，很强大。</p>
+<p>详见：<a href="https://github.com/teamcapybara/capybara" target="_blank" rel="noopener">capybara</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/22/TDD-with-RSpec-errors-recording/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3100,387 +3287,6 @@ $(function() {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/05/introduction-to-jQuery-module1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/05/introduction-to-jQuery-module1/" itemprop="url">
-                  Introduction to jQuery_1
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-05T10:17:44+08:00">
-                2017-10-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/05/introduction-to-jQuery-module1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/05/introduction-to-jQuery-module1/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>894 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="Before-Start"><a href="#Before-Start" class="headerlink" title="Before Start"></a>Before Start</h4><p>The following contents are the notes I took when learning  jQuery on Edx.</p>
-<p>Mainly for  front-End Web developers, check <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">here</a> to get more details.</p>
-<p>BTW, This class is supported by Microsoft. If you are a Linux fan, hope it would not make you uncomfortable( cause I am a little uncomfortable about it at first.) : D</p>
-<h4 id="CONTENTS"><a href="#CONTENTS" class="headerlink" title="CONTENTS"></a>CONTENTS</h4><p>Three parts:</p>
-<ul>
-<li>Adding jQuery to web pages</li>
-<li><a href="https://lupeipei.github.io/2017/10/06/introduction-to-jquery-module2-1/">Managing content, events and effects</a></li>
-<li><a href="https://lupeipei.github.io/2017/10/08/introduction-to-jquery-module3-1/">Asynchronous operations and Ajax calls</a></li>
-</ul>
-<p>DOM: Document Object Model.</p>
-<p>jQuery : the most popular javaScript library. designed to bring additional power to JS.</p>
-<p>Let’s start!</p>
-<h4 id="Module1-Adding-jQuery-to-web-pages"><a href="#Module1-Adding-jQuery-to-web-pages" class="headerlink" title="Module1 : Adding jQuery to web pages"></a>Module1 : Adding jQuery to web pages</h4><ul>
-<li><p><strong>Getting started with jQuery</strong></p>
-<ul>
-<li>use Visual Studio</li>
-<li>getting started with <a href="https://code.visualstudio.com" target="_blank" rel="noopener">Visual Studio Code</a></li>
-</ul>
-</li>
-<li><p><strong>Adding jQuery to a page</strong></p>
-<p> a simple example to start:</p>
-<pre><code class="javascript">// you can use either of them:
-
-$(document).ready(function() {
-    // code here
-});
-
-$(function() {
-    // code here
-});
-</code></pre>
-</li>
-<li><p><strong>Using CSS selectors with jQuery</strong></p>
-<ul>
-<li><p>Common CSS selectors</p>
-<pre><code class="javascript">$(&#39;h1&#39;) // selects all h1 elements
-$(&#39;.class-name&#39;) // selects all elements with a class of class-name
-$(&#39;#demo&#39;) // selects all elements with an id of demo
-</code></pre>
-</li>
-<li><p>Attribute based selectors</p>
-<pre><code class="javascript">// selects all elements with an attribute matching the specified value
-$(&#39;[demo-attribute=&quot;demo-value&quot;]&#39;)
-
-// selects all h1 elements with an attribute matching the specified value
-$(&#39;h1[demo-attribute=&quot;demo-value&quot;]&#39;)
-
-// If you wish to find all elements where the value **starts** with a string, use the ^= operator.
-$(&#39;[class^=&quot;col&quot;]&#39;)
-
-// If you wish to find all elements where the value **contains** a string, use the *= operator.
-$(&#39;[class*=&quot;md&quot;]&#39;)
-</code></pre>
-</li>
-<li><p>Positional selectors</p>
-<ul>
-<li><p><strong>Parent/child relationships</strong></p>
-<p>Consider the following script:</p>
-<pre><code class="javascript">// Selects all a elements that are direct descendants nav element
-$(&#39;nav &gt; a&#39;)
-</code></pre>
-<p>In the following HTML, the first link would be selected, but not the second. This is because the first link is a <strong>direct child</strong>, but the second is inside of a <code>div</code>element.</p>
-<pre><code class="Html">&lt;nav&gt;
-    &lt;a href=&quot;#&quot;&gt;(First) This will be selected&lt;/a&gt;
-    &lt;div&gt;
-        &lt;a href=&quot;#&quot;&gt;(Second) This will not be selected&lt;/a&gt;
-    &lt;/div&gt;
-&lt;/nav&gt;
-</code></pre>
-</li>
-<li><p><strong>Descendants</strong></p>
-<p>Examples:</p>
-<pre><code class="Html">// Selects all a elements that are descendants nav element
-// The elements can appear anywhere inside of the element listed first
-$(&#39;nav a&#39;)
-
-//this is an example to show the difference,if you use $(&#39;nav a&#39;), the first and the second will be selected both, if you use $(&#39;nav &gt; a&#39;), only the first one will be selected.
-&lt;nav&gt;
-    &lt;a href=&quot;#&quot;&gt;(First) This will be selected&lt;/a&gt;
-    &lt;div&gt;
-        &lt;a href=&quot;#&quot;&gt;(Second) This will be selected&lt;/a&gt;
-    &lt;/div&gt;
-&lt;/nav&gt;
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Navigating the DOM with jQuery</strong></p>
-<ul>
-<li><p>Parent /child relationships</p>
-<p>Four methods: <code>children</code> ,<code>find</code>, <code>parent</code>, <code>parents</code></p>
-<ul>
-<li>with<code>children</code>, it’s gonna be just the direct children.</li>
-<li><code>find</code> will walk the entire hierarchy down, but it needs a selector.</li>
-<li><code>parent</code> will be the immediate parent.</li>
-<li>And <code>parents</code>, plural, will walk up the entire chain.</li>
-</ul>
-</li>
-<li><p>Siblings</p>
-<ul>
-<li><p><code>prev</code> and <code>next</code></p>
-<blockquote>
-<p><code>prev()</code>: To move to the prior element</p>
-<p><code>next()</code>: To move to the next element</p>
-</blockquote>
-</li>
-<li><p><code>prevAll</code> and <code>nextAll</code></p>
-<blockquote>
-<p><code>prevAll</code> and <code>nextAll</code> will select all siblings prior or after the element. Both methods also accept a CSS selector to limit the items.</p>
-</blockquote>
-</li>
-<li><p><code>prevUntil</code> and <code>nextUntil</code></p>
-<blockquote>
-<p><code>prevUntil</code> and <code>nextUntil</code> select all prior or following elements up to, but <strong>not including</strong> the element that matches the selector.</p>
-</blockquote>
-</li>
-</ul>
-</li>
-<li><p>Selecting items by position</p>
-<ul>
-<li><p>Finding the index of an item</p>
-<pre><code class="javascript">//index method will return the zero based (ordinal) location of the item, or -1 if the item isn&#39;t found.
-
-var currentElement = $(&#39;some selector&#39;);
-var parent = $(&#39;some selector&#39;);
-var index = parent.children().index(currentElement);
-</code></pre>
-</li>
-<li><p>Finding an item by its position</p>
-<pre><code class="javascript">//using the get method
-var parent = $(&#39;some selector&#39;);
-var element = parent.children().get(index);
-</code></pre>
-<p>One important note about <code>get</code> is it returns a JavaScript DOM object, <strong>not</strong> a jQuery object.</p>
-<p>In order to call jQuery methods on the object, you must convert it to a jQuery object.</p>
-<p>Examples below:</p>
-<pre><code class="javascript">var parent = $(&#39;some selector&#39;);
-var domobject = parent.children().get(index); // DOM object
-var jQueryObject = $(parent.children().get(index)); // jQuery object
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Getting started with DOM manipulation</strong></p>
-<ul>
-<li><p>Adding and removing classes</p>
-<ul>
-<li><p>Adding a class to an element is just as easy as calling <code>addClass</code></p>
-<pre><code class="javascript">currentElement.addClass(&#39;class-name&#39;);
-</code></pre>
-</li>
-<li><p>Removing a class from an element is just as easy as calling <code>removeClass</code>. If the element in question was not already decorated with the class you’re trying to remove, the method will simply return.</p>
-<pre><code class="javascript">currentElement.removeClass(&#39;class-name&#39;);
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>Working with attributes</p>
-<ul>
-<li><p>reading an attribute value</p>
-<pre><code class="javascript">alert($(&#39;selector&#39;).attr(&#39;attribute-name&#39;));
-</code></pre>
-</li>
-<li><p>modifying an attribute value</p>
-<pre><code class="javascript">$(&#39;selector&#39;).attr(&#39;attribute-name&#39;, &#39;new value&#39;);
-</code></pre>
-</li>
-<li><p>removing an attribute value</p>
-<pre><code class="javascript">$(&#39;selector&#39;).removeAttr(&#39;attribute-name&#39;);
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>Modifying content</p>
-<ul>
-<li><p><code>text()</code>: get to replace the existing text in an element</p>
-</li>
-<li><p><code>html()</code>: get to replace the existing HTML in an element</p>
-</li>
-<li><p>the different between <code>text()</code>  and <code>html()</code> is whether or not it’s gonna allow for HTML.</p>
-<p>Examples:</p>
-<pre><code class="javascript">// update the text
-$(item).text(&#39;&lt;h1&gt;Hello, world!!&lt;/h1&gt;&#39;); //output: &lt;h1&gt;Hello, world!!&lt;/h1&gt;
-
-// update the html
-$(item).text(&#39;&lt;h1&gt;Hello, world!!&lt;/h1&gt;&#39;);//output: Hello, world!!
-</code></pre>
-<p>you can say that HTML will allow you to modify HTML, Text is going to be for text only.</p>
-</li>
-</ul>
-</li>
-<li><p>Basic event handlers</p>
-<p>like click event, more details in <a href="https://lupeipei.github.io/2017/10/06/introduction-to-jquery-module2-1/">Module 2</a></p>
-<p>Inside of the event handler code, you can access the object that raised the event by using <code>this</code>.</p>
-<pre><code class="javascript">//examples
-//click event
-//raised when the item is clicked
-$(item).click(function() {
-    alert(&#39;clicked!!&#39;);
-});
-
-// hover event
-// raised when the user moves their mouse over the item
-$(item).hover(function() {
-    alert(&#39;hover!!&#39;);
-});
-
-// mouseout
-// raised when the user moves their mouse away from an item
-$(item).mouseout(function() {
-    alert(&#39;mouse out&#39;);
-});
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-<p>This is Module1 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3530,7 +3336,7 @@ $(item).mouseout(function() {
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">189</span>
+                <span class="site-state-item-count">190</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3663,7 +3469,7 @@ $(item).mouseout(function() {
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    184.8k
+    186.3k
   </span>
 
 </div>
