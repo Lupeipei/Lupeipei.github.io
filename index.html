@@ -273,6 +273,330 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/26/nested-slot-usage/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/04/26/nested-slot-usage/" itemprop="url">
+                  Vue中嵌套slot的使用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-04-26T17:06:09+08:00">
+                2019-04-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/04/26/nested-slot-usage/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2019/04/26/nested-slot-usage/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>698 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>源于工作中一次组件的重构，这里重新写一个例子来练习下嵌套 slot 的使用。</p>
+<p>嵌套 slot 需要使用到 v-slot 命令，使用该命令需要确保Vue 版本为 2.6.0 +。</p>
+<p>完整的代码可见：<a href="https://gist.github.com/Lupeipei/6175463e9c36eac662ec8261ae969963" target="_blank" rel="noopener">TodoExamples</a>.</p>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><h5 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h5><p>现有一个 ToDoList 组件，其子组件 ToDoItem， 组件内容分别如下：</p>
+<pre><code class="vue">&lt;!-- ToDoItem.vue --&gt;
+
+&lt;template&gt;
+  &lt;li&gt;
+    &lt;span class=&quot;text-muted mr-1&quot;&gt;{{ item.id }}.&lt;/span&gt; {{ item.title }}
+  &lt;/li&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  props: [ &#39;item&#39; ]
+}
+&lt;/script&gt;
+
+&lt;!-- ToDoList.vue --&gt;
+
+&lt;template&gt;
+  &lt;ul&gt;
+    &lt;ToDoItem v-for=&quot;item in items&quot; :key=&quot;item.id&quot; :item=&quot;item&quot; /&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import ToDoItem from &#39;./ToDoItem&#39;
+
+export default {
+  components: { ToDoItem },
+  props: [ &#39;items&#39; ]
+}
+&lt;/script&gt;
+</code></pre>
+<p>在 schedule 中调用 ToDoList 组件：</p>
+<pre><code class="vue">&lt;!-- schedule.vue --&gt;
+
+&lt;template&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;div class=&quot;col-md-6 offset-md-3&quot;&gt;
+        &lt;ToDoList :items=&quot;items&quot; /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import ToDoList from &#39;~/components/ToDoList&#39;
+import _ from &#39;lodash&#39;
+
+export default {
+  components: { ToDoList },
+  data() {
+    return {
+      items: [
+        { id: 1, title: &#39;todo item 1&#39; },
+        { id: 2, title: &#39;todo item 2&#39; },
+        { id: 3, title: &#39;todo item 3&#39; },
+        { id: 4, title: &#39;todo item 4&#39; }
+      ],
+      finished: [ 4, 2 ]
+    }
+  }
+}
+&lt;/script&gt;
+</code></pre>
+<p>页面效果如下：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1g2fosn7ml9j314u0fm3yz.jpg" alt=""></p>
+<p>在 schedule 中，有一个数组 finished，里面存放了已经完成的 item 的 ID，现在需要在已经完成的 item 后打上☑️。</p>
+<p>实现如下效果：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g2fouo0ugpj30ug0fcmxk.jpg" alt=""></p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>要实现上述效果，有多个方法，这里采用嵌套 slot 的方式来解决。</p>
+<p>主要思路：通过在 slot 上绑定属性， 让 schedule 层可以访问到 ToDoItem 中的 item，然后通过判断 item 是否在 finished 中出现，决定是否将☑️插入到组件 ToDoItem 中。</p>
+<p>具体操作如下：</p>
+<ul>
+<li><p>给ToDoItem 添加具名插槽 after，同时将组件中的 item 作为 slot 的一个特性绑定上去：</p>
+<p>【将 item 绑定在 slot 上，是为了让父级组件 ToDoList 中的插槽可以访问到该组件中的 item】</p>
+<pre><code class="vue">&lt;!-- ToDoItem.vue --&gt;
+
+&lt;template&gt;
+  &lt;li&gt;
+    &lt;span class=&quot;text-muted mr-1&quot;&gt;{{ item.id }}.&lt;/span&gt; {{ item.title }}
+    &lt;slot name=&quot;after&quot; :item=&quot;item&quot; /&gt;
+  &lt;/li&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  props: [ &#39;item&#39; ]
+}
+&lt;/script&gt;
+</code></pre>
+</li>
+<li><p>在 ToDoList 组件中，引用 ToDoItem 的地方，嵌套 slot，修改 <code>ToDoList.vue</code> 如下：</p>
+<pre><code class="vue">&lt;!-- ToDoList.vue --&gt;
+
+&lt;template&gt;
+  &lt;ul&gt;
+    &lt;ToDoItem v-for=&quot;item in items&quot; :key=&quot;item.id&quot; :item=&quot;item&quot;&gt;
+      &lt;template v-slot:after=&quot;{ item }&quot;&gt;
+        &lt;slot name=&quot;todo-item-after&quot; :item=&quot;item&quot; /&gt;
+      &lt;/template&gt;
+    &lt;/ToDoItem&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import ToDoItem from &#39;./ToDoItem&#39;
+
+export default {
+  components: { ToDoItem },
+  props: [ &#39;items&#39; ]
+}
+&lt;/script&gt;
+</code></pre>
+<p>这里给 ToDoList 添加了一个具名插槽：todo-item-after，同时将 子组件 ToDoItem 中的具名插槽 after 所绑定的特性 item 绑定到 todo-item-after 上，这样外层的 schedule 就可以访问到 ToDoItem 中的 item了。</p>
+</li>
+<li><p>修改 <code>schedule.vue</code>，添加函数 isFinished 用于判断是否需要显示☑️：</p>
+<pre><code class="vue">&lt;!-- schedule.vue --&gt;
+
+&lt;template&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;div class=&quot;col-md-6 offset-md-3&quot;&gt;
+        &lt;ToDoList :items=&quot;items&quot;&gt;
+          &lt;template v-slot:todo-item-after=&quot;{ item }&quot;&gt;
+            &lt;i v-if=&quot;isFinished(item)&quot; class=&quot;fas fa-check&quot; /&gt;
+          &lt;/template&gt;
+        &lt;/ToDoList&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import ToDoList from &#39;~/components/ToDoList&#39;
+import _ from &#39;lodash&#39;
+
+export default {
+  components: { ToDoList },
+  data() {
+    return {
+      items: [
+        { id: 1, title: &#39;todo item 1&#39; },
+        { id: 2, title: &#39;todo item 2&#39; },
+        { id: 3, title: &#39;todo item 3&#39; },
+        { id: 4, title: &#39;todo item 4&#39; }
+      ],
+      finished: [ 4, 2 ]
+    }
+  },
+  methods: {
+    isFinished(item) {
+      return _.includes(this.finished, item.id)
+    }
+  }
+}
+&lt;/script&gt;
+</code></pre>
+<p>如此，便完成了。</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://cn.vuejs.org/v2/guide/components-slots.html" target="_blank" rel="noopener">插槽</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/04/25/compare-the-difference-between-y-bang-and-y/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3103,200 +3427,11 @@ curl --trace trace.txt https://github.com
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/03/03/create-access-token-for-github-api/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/03/03/create-access-token-for-github-api/" itemprop="url">
-                  创建Access token以访问GitHub接口
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-03T12:54:17+08:00">
-                2019-03-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2019/03/03/create-access-token-for-github-api/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2019/03/03/create-access-token-for-github-api/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>389 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>访问GitHub接口时，除了通过用户名和密码来实现基本的授权外，还可以通过OAuth2 token的方式。不过后一种方式需要你先生成ACCESS TOKEN。</p>
-<p>GitHub的help中有一篇文章<a href="https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line" target="_blank" rel="noopener">create a personal access token for the command line</a>提到了如何生成token，这里记录下实际操作的过程。</p>
-<h4 id="创建你的token"><a href="#创建你的token" class="headerlink" title="创建你的token"></a>创建你的token</h4><p>登录GitHub，点击页面右上角你的头像，弹出的菜单栏中，有settings选项，点击进入settings页面。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1g0pgc8fwptj30kg0pmdi5.jpg" alt=""></p>
-<p>在左边的菜单栏中选择Developer settings：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g0pgdkpi4cj30g812gwgn.jpg" alt=""></p>
-<p>在Developer settings主页中，选择 <strong>Personal access tokens</strong>，点击 <strong>Generate new token</strong> 按钮。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1g0pgg6x00bj31re0iu42l.jpg" alt=""></p>
-<p>在token的生成界面，输入token的描述，并选择可以访问的信息范围，比如允许访问我的repos，notifications，gist.</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g0pgneg94kj310n0u00z8.jpg" alt=""></p>
-<p>点击下方的Generate token按钮，便会生成token【这里隐去我自己的……】。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1g0pgqxidemj31om0isae6.jpg" alt=""></p>
-<p>呃，以上步骤也可以简化成一句：直接访问<a href="https://github.com/settings/tokens，登录，按照指示创建token。" target="_blank" rel="noopener">https://github.com/settings/tokens，登录，按照指示创建token。</a></p>
-<h4 id="使用token"><a href="#使用token" class="headerlink" title="使用token"></a>使用token</h4><p>好了，拿到access token后，就可以在终端使用啦。</p>
-<p>输入：</p>
-<pre><code>curl -H &quot;Authorization: token YourToken&quot; https://api.github.com
-</code></pre><p>或者：</p>
-<pre><code>curl https://api.github.com/?access_token=YourToken
-</code></pre><p>将「 YourToken 替换成 刚刚生成的token 」</p>
-<p>会得到如下的response：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1g0pgulbufrj31jw0u0k1z.jpg" alt=""></p>
-<p>鉴于每次访问其他接口时，都需要把token放在header中，可以将token设置成环境变量，这样每次用起来就不用copy一大坨的字符了。</p>
-<p>设置：</p>
-<pre><code class="shell">export GITHUB_ACCESS_TOKEN=YourToken
-</code></pre>
-<p>请求你的个人信息:</p>
-<pre><code class="shell">curl -v -H &quot;Authorization: token $GITHUB_ACCESS_TOKEN&quot; https://api.github.com/user
-</code></pre>
-<p>简直完美！</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://help.github.com/en/articles/creating-a-personal-access-token-for-the-command-line" target="_blank" rel="noopener">create a personal access token for the command line</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/20/">20</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -3341,7 +3476,7 @@ curl --trace trace.txt https://github.com
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">190</span>
+                <span class="site-state-item-count">191</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3474,7 +3609,7 @@ curl --trace trace.txt https://github.com
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    186.3k
+    187.0k
   </span>
 
 </div>

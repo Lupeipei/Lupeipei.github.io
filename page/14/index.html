@@ -273,6 +273,608 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="url">
+                  Ubuntu16.04下, 使用Nginx和Unicorn部署Rails App
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-27T18:30:42+08:00">
+                2018-01-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/27/deploy-rails-app-with-nginx-and-unicorn-on-ubuntu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2,149 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前用过Nginx  + Passengers来部署Rails 应用， 这次换Nginx  + Unicorn部署了Rails App，过程虽有些波折，但结果还是蛮赞的。【其实折腾了大半天，最后终于重新从坑里爬出来了，还多亏老大帮忙看了下……】</p>
+<p>下面以一个简单的rails项目的部署为例，来感受下Nginx + Unicorn。</p>
+<p>【如果你也和我一样是枚小白，补充下，这里，Unicorn是一个HTTP server，类似Passenger或者puma。由于Unicorn不能直接被用户访问，使用Nginx作为反向代理，来缓冲用户与Rails应用之间的请求与响应。】</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><h5 id="1、准备Rails-App"><a href="#1、准备Rails-App" class="headerlink" title="1、准备Rails App"></a>1、准备Rails App</h5><ul>
+<li><p>本地新建一个rails项目recipes</p>
+<pre><code class="Shell">rails new recipes
+cd recipes
+git init
+git add .
+git commit -m &quot;new project recipes&quot;
+# 将recipes托管到第三方代码库，这里选GitHub
+git remote add origin https://github.com/XXXXX/recipes.git
+git push -u origin master
+rails g scaffold topic title:string description:text
+rake db:migrate
+git add .
+git commit -m &quot;create topic model&quot;
+rails s
+</code></pre>
+<p>修改<code>config/routes.rb</code>,把主页设定成topic的index, 添加<code>root &quot;topics#index&quot;</code>：</p>
+<pre><code class="Ruby">Rails.application.routes.draw do
+  resources :topics
+ + root &quot;topics#index&quot;
+end
+</code></pre>
+<p>这时，在浏览器打开<a href="http://localhost:3000/，画风是这样的：" target="_blank" rel="noopener">http://localhost:3000/，画风是这样的：</a></p>
+<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fnv0kthg2xj30og06874g.jpg" alt=""></p>
+<pre><code class="Shell">git add .
+git commit -m &quot;update routes&quot;
+git push
+</code></pre>
+</li>
+<li><p>添加gem： unicorn, foreman, dotenv-rails</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcly1fnv3oaphuhj30k50g9abf.jpg" alt=""></p>
+<p>终端运行：</p>
+<pre><code>bundler install
+</code></pre><p>添加<code>config/deploy.rb</code>， 内容如下：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4da7cvhj30m50k040q.jpg" alt=""></p>
+<p>【repo_url 换成你自己的URL】</p>
+<p>根目录下添加Procfile 文件，内容如下：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnv4nzvr2mj30mw095t9v.jpg" alt=""></p>
+<pre><code class="Shell">git add .
+git commit -m &quot;add unicorn to project&quot;
+git push
+</code></pre>
+<p>将所有进度push至remote， 好，我们开始部署！</p>
+</li>
+</ul>
+<h5 id="2、安装套件"><a href="#2、安装套件" class="headerlink" title="2、安装套件"></a>2、安装套件</h5><p>这里以Ubuntu16.04为例，假定你已经添加一个免密登陆的用户deploy，我们将项目部署在home/deploy下。</p>
+<ul>
+<li><p>登陆服务器，更新，升级：</p>
+<pre><code class="Shell">sudo apt-get update -y
+sudo apt-get upgrade -y
+</code></pre>
+</li>
+<li><p>裝套件，这些是Ruby on Rails 需要的：</p>
+<pre><code class="Shell">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev
+</code></pre>
+<p>如果安装的nodejs版本低，尝试这样：</p>
+<pre><code class="Shell">#nodejs v9
+curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
+sudo apt-get install -y nodejs
+</code></pre>
+</li>
+<li><p>裝Ruby</p>
+<p>检查版本：</p>
+<pre><code class="shell">ruby --version
+</code></pre>
+<p>如果有旧的版本，比如1.8/1.9， 卸载掉:</p>
+<pre><code class="Shell">sudo apt-get remove -y ruby1.8 ruby1.9
+</code></pre>
+<p>下载，解压，编译，安装：</p>
+<pre><code class="shell">mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby
+wget https://cache.ruby-lang.org/pub/ruby/ruby-2.4.0.tar.gz
+tar -xzvf ruby-2.4.0.tar.gz
+cd ruby-2.4.0/
+./configure --prefix=/usr
+make
+sudo make install
+
+ruby -v
+
+# 处理SSL问题，加入国内gems镜像
+gem sources --add http://gems.ruby-china.org/ --remove https://rubygems.org/
+# 如果报错：uninitialized constant Gem::RemoteFetcher::Zlib， 则执行：sudo apt-get install zlib1g-dev
+
+gem sources -l
+
+sudo gem install bundler --no-ri --no-rdoc --source https://gems.ruby-china.org
+</code></pre>
+<p>戳这里<a href="http://cache.ruby-lang.org/pub/ruby/" target="_blank" rel="noopener">pub ruby</a> 查看ruby最新版本。</p>
+</li>
+<li><p>装 foreman gems:</p>
+<pre><code class="Shell">sudo gem install rake bundler foreman --no-ri --no-rdoc
+</code></pre>
+</li>
+<li><p>装runit：</p>
+<pre><code class="Shell">sudo apt-get install runit
+</code></pre>
+</li>
+<li><p>裝SQL：</p>
+<pre><code class="Shell">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server
+</code></pre>
+<p>执行过程中会让你配置一个数据库的 root 密码， 记下来，设定rails的数据库时会用到。</p>
+<p>建新的数据库：</p>
+<p>执行<code>mysql -u root -p</code> 进入console, 输入：</p>
+<pre><code class="Sql">CREATE DATABASE recipes CHARACTER SET utf8mb4;
+</code></pre>
+<p>创建user deploy，并给user分配数据库 recipes的权限, 把$password 替换成你自己设置的密码：</p>
+<pre><code class="sql">CREATE USER &#39;deploy&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;$password&#39;;
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES ON `recipes`.* TO &#39;deploy&#39;@&#39;localhost&#39;;
+exit
+</code></pre>
+<p>退出SQL的session后，尝试连接一下数据库：</p>
+<pre><code class="Shell">sudo mysql -u deploy -p -D recipes
+</code></pre>
+<p>这时会让你输入密码，输入刚刚替换$password的密码即可。</p>
+</li>
+</ul>
+<h5 id="3、部署项目"><a href="#3、部署项目" class="headerlink" title="3、部署项目"></a>3、部署项目</h5><ul>
+<li><p>clone项目到服务器</p>
+<p>deploy身份登陆，执行：</p>
+<pre><code class="Shell">sudo git clone //github.com/XXXXX/recipes.git recipes
+cd recipes
+ls -la
+</code></pre>
+<p>如果recipes下面文件的owner不是deploy，执行：</p>
+<pre><code class="Shell">sudo chown deploy:deploy . -R
+</code></pre>
+<p><strong>确保deploy对recipes下的文件拥有读写权限，不然后面部署时会失败</strong>。</p>
+<p>配置文件：</p>
+<pre><code class="Shell">sudo mkdir -p log tmp/pids tmp/sockets
+sudo chown -R deploy log/ tmp/
+sudo chmod -R u+rwX,go-w log/ tmp/
+sudo chmod -R u+rwX,go-w log/
+sudo chmod -R u+rwX tmp/
+touch .env
+touch config/unicorn.rb
+</code></pre>
+<p>配置.env:</p>
+<pre><code class="Shell"># ==== Required configuration settings  ====
+
+# Replace the following with the output from &quot;rake secret&quot;
+APP_SECRET_TOKEN=REPLACE_ME_NOW!
+
+############################
+#      Database Setup      #
+############################
+
+DATABASE_ADAPTER=mysql2
+DATABASE_ENCODING=utf8
+DATABASE_RECONNECT=true
+DATABASE_NAME=recipes
+DATABASE_POOL=20
+DATABASE_USERNAME=deploy
+DATABASE_PASSWORD=&quot;your_password&quot;
+#DATABASE_HOST=your-domain-here.com
+#DATABASE_PORT=3306
+#DATABASE_SOCKET=/tmp/mysql.sock
+
+# MySQL only: If you are running a MySQL server &gt;=5.5.3, you should
+# set DATABASE_ENCODING to utf8mb4 instead of utf8 so that the
+# database can hold 4-byte UTF-8 characters like emoji.
+#DATABASE_ENCODING=utf8mb4
+
+# ==== Additional required production settings ====
+
+# Configure Rails environment.  This should only be needed in production and may cause errors in development.
+RAILS_ENV=production
+
+# Should Rails force all requests to use SSL?
+FORCE_SSL=false
+# 设置SECRET_KEY_BASE，config/secrets.yml中有用到，用development的secret_key_base即可
+SECRET_KEY_BASE= your_devlopment_secret_key_base
+</code></pre>
+<p>配置<code>config/unicorn.rb</code>：</p>
+<pre><code class="Ruby">wd = File.expand_path(File.join(File.dirname(__FILE__), &#39;..&#39;))
+
+app_path = wd
+
+worker_processes 2
+preload_app true
+timeout 180
+listen &quot;#{wd}/tmp/sockets/unicorn.socket&quot;
+
+working_directory app_path
+
+rails_env = ENV[&#39;RAILS_ENV&#39;] || &#39;production&#39;
+
+# Log everything to one file
+stderr_path &quot;log/unicorn.log&quot;
+stdout_path &quot;log/unicorn.log&quot;
+
+# Set master PID location
+pid &quot;#{wd}/tmp/pids/unicorn.pid&quot;
+
+before_fork do |server, worker|
+  ActiveRecord::Base.connection.disconnect!
+  old_pid = &quot;#{server.config[:pid]}.oldbin&quot;
+  if File.exist?(old_pid) &amp;&amp; server.pid != old_pid
+    begin
+      Process.kill(&quot;QUIT&quot;, File.read(old_pid).to_i)
+    rescue Errno::ENOENT, Errno::ESRCH
+      # someone else did our job for us
+    end
+  end
+end
+
+after_fork do |server, worker|
+  ActiveRecord::Base.establish_connection
+end
+</code></pre>
+<p>安装gems：</p>
+<pre><code class="shell">sudo bundle install --deployment --without development test
+</code></pre>
+<p>migrate 数据库：</p>
+<pre><code class="shell">sudo bundle exec rake db:migrate RAILS_ENV=production
+</code></pre>
+<p>编译assets：</p>
+<pre><code class="Shell">sudo bundle exec rake assets:precompile RAILS_ENV=production
+</code></pre>
+<p>修改Procfile：</p>
+<pre><code class="shell">sudo vi Procfile
+</code></pre>
+<p>注释掉Procfile这两行：</p>
+<pre><code>web: bundle exec rails server -p ${PORT-3000} -b ${IP-0.0.0.0}
+jobs: bundle exec rails runner bin/threaded.rb
+</code></pre><p>同时取消对Procfile这两行的注释：</p>
+<pre><code># web: bundle exec unicorn -c config/unicorn.rb
+# jobs: bundle exec rails runner bin/threaded.rb
+</code></pre><p>创建Unicorn的初始脚本：</p>
+<p>终端输入：</p>
+<pre><code class="shell">sudo vi /etc/init.d/unicorn_recipes
+</code></pre>
+<p>然后在文件中放入以下内容：</p>
+<pre><code class="shell">#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          unicorn
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the unicorn app server
+# Description:       starts unicorn using start-stop-daemon
+### END INIT INFO
+
+set -e
+
+USAGE=&quot;Usage: $0 &lt;start|stop|restart|upgrade|rotate|force-stop&gt;&quot;
+
+# app settings
+USER=&quot;deploy&quot;
+APP_NAME=&quot;recipes&quot;
+APP_ROOT=&quot;/home/$USER/$APP_NAME&quot;
+ENV=&quot;production&quot;
+
+# environment settings
+PATH=&quot;/home/$USER/.rbenv/shims:/home/$USER/.rbenv/bin:$PATH&quot;
+CMD=&quot;cd $APP_ROOT &amp;&amp; bundle exec unicorn -c config/unicorn.rb -E $ENV -D&quot;
+PID=&quot;$APP_ROOT/tmp/pids/unicorn.pid&quot;
+OLD_PID=&quot;$PID.oldbin&quot;
+
+# make sure the app exists
+cd $APP_ROOT || exit 1
+
+sig () {
+  test -s &quot;$PID&quot; &amp;&amp; kill -$1 `cat $PID`
+}
+
+oldsig () {
+  test -s $OLD_PID &amp;&amp; kill -$1 `cat $OLD_PID`
+}
+
+case $1 in
+  start)
+    sig 0 &amp;&amp; echo &gt;&amp;2 &quot;Already running&quot; &amp;&amp; exit 0
+    echo &quot;Starting $APP_NAME&quot;
+    su - $USER -c &quot;$CMD&quot;
+    ;;
+  stop)
+    echo &quot;Stopping $APP_NAME&quot;
+    sig QUIT &amp;&amp; exit 0
+    echo &gt;&amp;2 &quot;Not running&quot;
+    ;;
+  force-stop)
+    echo &quot;Force stopping $APP_NAME&quot;
+    sig TERM &amp;&amp; exit 0
+    echo &gt;&amp;2 &quot;Not running&quot;
+    ;;
+  restart|reload|upgrade)
+    sig USR2 &amp;&amp; echo &quot;reloaded $APP_NAME&quot; &amp;&amp; exit 0
+    echo &gt;&amp;2 &quot;Couldn&#39;t reload, starting &#39;$CMD&#39; instead&quot;
+    $CMD
+    ;;
+  rotate)
+    sig USR1 &amp;&amp; echo rotated logs OK &amp;&amp; exit 0
+    echo &gt;&amp;2 &quot;Couldn&#39;t rotate logs&quot; &amp;&amp; exit 1
+    ;;
+  *)
+    echo &gt;&amp;2 $USAGE
+    exit 1
+    ;;
+esac
+</code></pre>
+<p>更改权限，并设置可以在boot上启动：</p>
+<pre><code class="shell">sudo chmod 755 /etc/init.d/unicorn_recipes
+sudo update-rc.d unicorn_recipes defaults
+</code></pre>
+<p>开启：</p>
+<pre><code class="shell">sudo /etc/init.d/unicorn_recipes start
+</code></pre>
+<p>检查unicorn的状态：</p>
+<pre><code class="Shell">sudo service unicorn status
+</code></pre>
+<p>设置logrotate：</p>
+<pre><code class="shell">sudo vi /etc/logrotate.d/recipes
+</code></pre>
+<p>内容如下：</p>
+<pre><code class="Shell">/home/deploy/recipes/log/*.log {
+  daily
+  missingok
+  rotate 180
+  # must use with delaycompress below
+  compress
+  dateext
+
+  # this is important if using &quot;compress&quot; since we need to call
+  # the &quot;lastaction&quot; script below before compressing:
+  delaycompress
+
+  # note the lack of the evil &quot;copytruncate&quot; option in this
+  # config.  Unicorn supports the USR1 signal and we send it
+  # as our &quot;lastaction&quot; action:
+  lastaction
+    pid=/home/deploy/recipes/tmp/pids/unicorn.pid
+    test -s $pid &amp;&amp; kill -USR1 &quot;$(cat $pid)&quot;
+  endscript
+}
+</code></pre>
+<p>如果提示readonly, 无法写入，使用chmod或者chown来获取读写权限。</p>
+</li>
+<li><p>安装Ngnix</p>
+<pre><code class="Shell">sudo apt-get install -y nginx
+</code></pre>
+<p>查看版本：</p>
+<pre><code class="Shell">nginx -v
+</code></pre>
+<p>在/etc/nginx/sites-available下，新增recipes文件：</p>
+<pre><code class="Shell">sudo vi /etc/nginx/sites-available/recipes
+</code></pre>
+<p>内容如下：</p>
+<pre><code class="Shell">###################################
+##         configuration         ##
+###################################
+##
+## See installation.md#using-https for additional HTTPS configuration details.
+
+upstream recipes {
+  server unix:/home/deploy/recipes/tmp/sockets/unicorn.socket fail_timeout=0;
+}
+
+## Normal HTTP host
+server {
+  listen 0.0.0.0:80 default_server;
+  listen [::]:80 ipv6only=on default_server;
+  server_name 101.132.151.71; ## 这里填域名，如果没有，填服务器 IP 位置
+  server_tokens off; ## Don&#39;t show the nginx version number, a security best practice
+  root /home/deploy/recipes/public;
+
+  ## Increase this if you want to upload large attachments
+  client_max_body_size 20m;
+
+  ## Individual nginx logs for vhost
+  access_log  /var/log/nginx/recipes_access.log;
+  error_log   /var/log/nginx/recipes_error.log;
+
+  location / {
+    ## Serve static files from defined root folder.
+    ## @huginn is a named location for the upstream fallback, see below.
+    try_files $uri $uri/index.html $uri.html @recipes;
+  }
+
+  ## If a file, which is not found in the root folder is requested,
+  ## then the proxy passes the request to the upsteam (huginn unicorn).
+  location @recipes {
+    ## If you use HTTPS make sure you disable gzip compression
+    ## to be safe against BREACH attack.
+    # gzip off;
+
+    proxy_read_timeout      300;
+    proxy_connect_timeout   300;
+    proxy_redirect          off;
+
+    proxy_set_header    Host                $http_host;
+    proxy_set_header    X-Real-IP           $remote_addr;
+    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+    proxy_set_header    X-Forwarded-Proto   $scheme;
+    proxy_set_header    X-Frame-Options     SAMEORIGIN;
+
+    proxy_pass http://recipes;
+  }
+
+  ## Enable gzip compression as per rails guide:
+  ## http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression
+  ## WARNING: If you are using relative urls remove the block below
+  ## See config/application.rb under &quot;Relative url support&quot; for the list of
+  ## other files that need to be changed for relative url support
+  location ~ ^/(assets)/ {
+    root /home/deploy/recipes/public;
+    gzip_static on; # to serve pre-gzipped version
+    expires max;
+    add_header Cache-Control public;
+  }
+
+  error_page 502 /502.html;
+}
+</code></pre>
+<p>建立links:</p>
+<pre><code class="Shell">sudo ln -s /etc/nginx/sites-available/recipes /etc/nginx/sites-enabled/recipes
+</code></pre>
+<p>删除default：</p>
+<pre><code class="shell">sudo rm /etc/nginx/sites-enabled/default
+</code></pre>
+<p>测试设置：</p>
+<pre><code class="Shell">sudo nginx -t
+</code></pre>
+<p>会弹出syntax is ok 和test is successful的信息，终端运行：</p>
+<pre><code class="Shell">sudo service nginx restart
+</code></pre>
+</li>
+</ul>
+<p>最后的效果：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fnvasde46qj30o809rjrn.jpg" alt=""></p>
+<p>「终于出来了，太不容易了……」</p>
+<p>P.S</p>
+<p>如果<code>sudo service nginx restart</code>没有任何反应，可以检查以下路径的log：</p>
+<pre><code class="Shell">cd /var/log/nginx
+cd recipes/log
+</code></pre>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.digitalocean.com/community/tutorials/how-to-deploy-a-rails-app-with-unicorn-and-nginx-on-ubuntu-14-04" target="_blank" rel="noopener">How To Deploy a Rails App with Unicorn and Nginx on Ubuntu 14.04</a></p>
+<p><a href="https://linode.com/docs/development/ror/use-unicorn-and-nginx-on-ubuntu-14-04/" target="_blank" rel="noopener">Use Unicorn and Nginx to Configure Ruby on Rails Applications on Ubuntu 14.04</a></p>
+<p><a href="https://github.com/huginn/huginn/blob/master/doc/manual/installation.md" target="_blank" rel="noopener">Huginn install guide for Ubuntu/Debian</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/24/learning-selenium-webdriver-ruby-version/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2171,240 +2773,11 @@ end
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/04/how-to-get-step-name-in-cucumber/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/01/04/how-to-get-step-name-in-cucumber/" itemprop="url">
-                  如何获取cucumber中step的name？
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-04T16:26:32+08:00">
-                2018-01-04
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/01/04/how-to-get-step-name-in-cucumber/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/01/04/how-to-get-step-name-in-cucumber/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>804 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>用cucumber测试时，有一个需求，就是提取每个step的name，以及对应的scenario和feature的name。</p>
-<p>Google了不少，也试过几个前人提供的方法， 屡屡败北，在坑里挣扎了两天， 发现这方面的资料其实还是挺少的，特别是ruby这块，记录下这趟比较揪心的求解过程，给需要的提供个参考。「我揪心就好了，大伙就别再揪心了。」</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><a href="https://github.com/cucumber/cucumber/wiki/Hooks" target="_blank" rel="noopener">cucumber hooks</a> 中提到了多个hook，包括before，after，但是对于step hooks，只有一个AfterStep， 看AfterStep 的用法：</p>
-<pre><code class="Ruby">AfterStep do |scenario|
-  # Do something after each step.
-end
-</code></pre>
-<p>官方文档是这么写的，可是你会发现根本不是那么回事。「吐槽下：文档没有及时更新让人很是心塞啊」</p>
-<p>在你的<code>feature/support</code>目录下，新建一个文件<code>hooks.rb</code>,  添加如下内容：</p>
-<pre><code class="Ruby">Before do |scenario|
-  # do something before scenario
-end
-
-AfterStep do |scenario|
-    puts scenario.methods
-    puts scenario.class
-  # Do something after each step.
-end
-</code></pre>
-<p>终端运行<code>cucumber</code>的时候，你会发现AfterStep中根本不是scenario，得到的是这样的结果：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fn4lejzw3uj30pt06un03.jpg" alt=""></p>
-<p>这里可以看到它的class是<code>Cucumber::Core::Test::Result::Passed</code>， method里面也没有任何name,text之类。那么，每次afterstep后，返回的<code>Cucumber::Core::Test::Result::Passed</code>是个什么鬼？是个step？</p>
-<p>看源码：<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Result/Passed" target="_blank" rel="noopener">Class: Cucumber::Core::Test::Result::Passed</a>,  cucumber中每个step运行后，其实有7种情况：</p>
-<pre><code>[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]
-</code></pre><p>而passed只是其中的一个type，它不是一个step。看cucumber的doc，可以找到<a href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Step" target="_blank" rel="noopener">step</a>， 里面的text字段，这正是我们想要的：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4lu77docj30qx0hzack.jpg" alt=""></p>
-<p>可是如何获取到step呢？</p>
-<p>你Google后会发现有一些可能”有用”的解决方法，列出几个我觉得特别的：</p>
-<ul>
-<li>最奇葩的解答：<a href="https://stackoverflow.com/questions/29952911/how-can-i-access-a-cucumber-step-name-in-the-step-definition" target="_blank" rel="noopener">How can I access a Cucumber step name in the step definition?</a></li>
-</ul>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fn4mmez9oej30j008jjsl.jpg" alt=""></p>
-<p>​    「竟然直接在step definition里面添加argument，然后在每个step里面添加一行代码 ‘puts step_name ‘, 且            不说这种方法能不能正常运行，你这样每个step都加，成千上万的steps，手都要断吧？」</p>
-<ul>
-<li><p>有坑的解答：<a href="https://groups.google.com/forum/#!topic/cukes/TQLcKQqLsjw" target="_blank" rel="noopener">Get current step within step</a></p>
-<p><a href="https://groups.google.com/forum/#!topic/cukes/TQLcKQqLsjw" target="_blank" rel="noopener">Cukes</a> 上，一个叫Marc Divins的人也遇到这个问题，未解决，身为cucumber backers之一的Matt Wynneg给出了custom formatter的解决建议,  这方法已试过，failed。</p>
-</li>
-<li><p>版本问题的坑：<a href="https://asyoulook.com/computers%20&amp;%20internet/ruby-get-current-step-form-scenario-outline/1394372" target="_blank" rel="noopener">get current step from scenario outline</a></p>
-<p>这里面用到了Cucumber::Ast::Scenario， 这个在cucumber3.0下运行会报错，无法识别，这是其一，其二是在AfterStep中调用的scenario并没有定义，会报错。</p>
-</li>
-</ul>
-<p>OK，不废话了，直接上解答：</p>
-<p>在新建好的<code>features/support/hooks.rb</code> 中，添加如下内容：</p>
-<pre><code class="Ruby">Before do |scenario|
-  $step_index = 0
-  $stop_count = scenario.test_steps.count
-  @scenario = scenario
-end
-
-AfterStep do |step|
-  if $step_index &lt; $stop_count
-    puts &quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;
-  end
-  $step_index += 2
-end
-</code></pre>
-<p>运行一个feature试试：</p>
-<pre><code>cucumber features/xxxx.feature
-</code></pre><p>每个step之后，都会输出了AfterStep中定义的<code>&quot;steps: #{@scenario.test_steps[$step_index].text}\n&quot;</code></p>
-<p>类似这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fn4n9a82sbj30ey044aaj.jpg" alt=""></p>
-<p>说明：</p>
-<p>代码上的<code>$step_index += 2</code>， 给step_index累加了2，而不是1， 是因为每输出一个step，后面会跟一个<code>aferstep hook</code>，为了不输出<code>aferstep hook</code>字段，所以累加2。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考阅读：</p>
-<p><a href="https://github.com/cucumber/cucumber-ruby/issues/450" target="_blank" rel="noopener">add step to AfterStep</a></p>
-<p><a href="https://zsoltfabok.com/blog/2012/09/cucumber-jvm-hooks/" target="_blank" rel="noopener">cucumber JVM:Hooks</a></p>
-<p>P.S.</p>
-<p>这次的求解过程，更深刻地感受到一句话的正确性：<strong>不要盯着锁找答案，钥匙在别处</strong>。</p>
-<p>P.P.S</p>
-<p>Happy coding  and bye bug  : )</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/19/">19</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/page/13/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/">13</a><span class="page-number current">14</span><a class="page-number" href="/page/15/">15</a><span class="space">&hellip;</span><a class="page-number" href="/page/20/">20</a><a class="extend next" rel="next" href="/page/15/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2449,7 +2822,7 @@ end
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">190</span>
+                <span class="site-state-item-count">191</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2582,7 +2955,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    186.3k
+    187.0k
   </span>
 
 </div>

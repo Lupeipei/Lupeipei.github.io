@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2019-04-25T11:02:41.987Z</updated>
+  <updated>2019-04-26T09:12:36.792Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Vue中嵌套slot的使用</title>
+    <link href="http://lupeipei.github.io/2019/04/26/nested-slot-usage/"/>
+    <id>http://lupeipei.github.io/2019/04/26/nested-slot-usage/</id>
+    <published>2019-04-26T09:06:09.000Z</published>
+    <updated>2019-04-26T09:12:36.792Z</updated>
+    
+    <content type="html"><![CDATA[<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>源于工作中一次组件的重构，这里重新写一个例子来练习下嵌套 slot 的使用。</p><p>嵌套 slot 需要使用到 v-slot 命令，使用该命令需要确保Vue 版本为 2.6.0 +。</p><p>完整的代码可见：<a href="https://gist.github.com/Lupeipei/6175463e9c36eac662ec8261ae969963" target="_blank" rel="noopener">TodoExamples</a>.</p><h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><h5 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h5><p>现有一个 ToDoList 组件，其子组件 ToDoItem， 组件内容分别如下：</p><pre><code class="vue">&lt;!-- ToDoItem.vue --&gt;&lt;template&gt;  &lt;li&gt;    &lt;span class=&quot;text-muted mr-1&quot;&gt;{{ item.id }}.&lt;/span&gt; {{ item.title }}  &lt;/li&gt;&lt;/template&gt;&lt;script&gt;export default {  props: [ &#39;item&#39; ]}&lt;/script&gt;&lt;!-- ToDoList.vue --&gt;&lt;template&gt;  &lt;ul&gt;    &lt;ToDoItem v-for=&quot;item in items&quot; :key=&quot;item.id&quot; :item=&quot;item&quot; /&gt;  &lt;/ul&gt;&lt;/template&gt;&lt;script&gt;import ToDoItem from &#39;./ToDoItem&#39;export default {  components: { ToDoItem },  props: [ &#39;items&#39; ]}&lt;/script&gt;</code></pre><p>在 schedule 中调用 ToDoList 组件：</p><pre><code class="vue">&lt;!-- schedule.vue --&gt;&lt;template&gt;  &lt;div class=&quot;container&quot;&gt;    &lt;div class=&quot;row&quot;&gt;      &lt;div class=&quot;col-md-6 offset-md-3&quot;&gt;        &lt;ToDoList :items=&quot;items&quot; /&gt;      &lt;/div&gt;    &lt;/div&gt;  &lt;/div&gt;&lt;/template&gt;&lt;script&gt;import ToDoList from &#39;~/components/ToDoList&#39;import _ from &#39;lodash&#39;export default {  components: { ToDoList },  data() {    return {      items: [        { id: 1, title: &#39;todo item 1&#39; },        { id: 2, title: &#39;todo item 2&#39; },        { id: 3, title: &#39;todo item 3&#39; },        { id: 4, title: &#39;todo item 4&#39; }      ],      finished: [ 4, 2 ]    }  }}&lt;/script&gt;</code></pre><p>页面效果如下：</p><p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1g2fosn7ml9j314u0fm3yz.jpg" alt=""></p><p>在 schedule 中，有一个数组 finished，里面存放了已经完成的 item 的 ID，现在需要在已经完成的 item 后打上☑️。</p><p>实现如下效果：</p><p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1g2fouo0ugpj30ug0fcmxk.jpg" alt=""></p><h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>要实现上述效果，有多个方法，这里采用嵌套 slot 的方式来解决。</p><p>主要思路：通过在 slot 上绑定属性， 让 schedule 层可以访问到 ToDoItem 中的 item，然后通过判断 item 是否在 finished 中出现，决定是否将☑️插入到组件 ToDoItem 中。</p><p>具体操作如下：</p><ul><li><p>给ToDoItem 添加具名插槽 after，同时将组件中的 item 作为 slot 的一个特性绑定上去：</p><p>【将 item 绑定在 slot 上，是为了让父级组件 ToDoList 中的插槽可以访问到该组件中的 item】</p><pre><code class="vue">&lt;!-- ToDoItem.vue --&gt;&lt;template&gt;  &lt;li&gt;    &lt;span class=&quot;text-muted mr-1&quot;&gt;{{ item.id }}.&lt;/span&gt; {{ item.title }}    &lt;slot name=&quot;after&quot; :item=&quot;item&quot; /&gt;  &lt;/li&gt;&lt;/template&gt;&lt;script&gt;export default {  props: [ &#39;item&#39; ]}&lt;/script&gt;</code></pre></li><li><p>在 ToDoList 组件中，引用 ToDoItem 的地方，嵌套 slot，修改 <code>ToDoList.vue</code> 如下：</p><pre><code class="vue">&lt;!-- ToDoList.vue --&gt;&lt;template&gt;  &lt;ul&gt;    &lt;ToDoItem v-for=&quot;item in items&quot; :key=&quot;item.id&quot; :item=&quot;item&quot;&gt;      &lt;template v-slot:after=&quot;{ item }&quot;&gt;        &lt;slot name=&quot;todo-item-after&quot; :item=&quot;item&quot; /&gt;      &lt;/template&gt;    &lt;/ToDoItem&gt;  &lt;/ul&gt;&lt;/template&gt;&lt;script&gt;import ToDoItem from &#39;./ToDoItem&#39;export default {  components: { ToDoItem },  props: [ &#39;items&#39; ]}&lt;/script&gt;</code></pre><p>这里给 ToDoList 添加了一个具名插槽：todo-item-after，同时将 子组件 ToDoItem 中的具名插槽 after 所绑定的特性 item 绑定到 todo-item-after 上，这样外层的 schedule 就可以访问到 ToDoItem 中的 item了。</p></li><li><p>修改 <code>schedule.vue</code>，添加函数 isFinished 用于判断是否需要显示☑️：</p><pre><code class="vue">&lt;!-- schedule.vue --&gt;&lt;template&gt;  &lt;div class=&quot;container&quot;&gt;    &lt;div class=&quot;row&quot;&gt;      &lt;div class=&quot;col-md-6 offset-md-3&quot;&gt;        &lt;ToDoList :items=&quot;items&quot;&gt;          &lt;template v-slot:todo-item-after=&quot;{ item }&quot;&gt;            &lt;i v-if=&quot;isFinished(item)&quot; class=&quot;fas fa-check&quot; /&gt;          &lt;/template&gt;        &lt;/ToDoList&gt;      &lt;/div&gt;    &lt;/div&gt;  &lt;/div&gt;&lt;/template&gt;&lt;script&gt;import ToDoList from &#39;~/components/ToDoList&#39;import _ from &#39;lodash&#39;export default {  components: { ToDoList },  data() {    return {      items: [        { id: 1, title: &#39;todo item 1&#39; },        { id: 2, title: &#39;todo item 2&#39; },        { id: 3, title: &#39;todo item 3&#39; },        { id: 4, title: &#39;todo item 4&#39; }      ],      finished: [ 4, 2 ]    }  },  methods: {    isFinished(item) {      return _.includes(this.finished, item.id)    }  }}&lt;/script&gt;</code></pre><p>如此，便完成了。</p></li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://cn.vuejs.org/v2/guide/components-slots.html" target="_blank" rel="noopener">插槽</a></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h4 id=&quot;写在前面&quot;&gt;&lt;a href=&quot;#写在前面&quot; class=&quot;headerlink&quot; title=&quot;写在前面&quot;&gt;&lt;/a&gt;写在前面&lt;/h4&gt;&lt;p&gt;源于工作中一次组件的重构，这里重新写一个例子来练习下嵌套 slot 的使用。&lt;/p&gt;
+&lt;p&gt;嵌套 slot 需要使用到 v-
+      
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Vue" scheme="http://lupeipei.github.io/tags/Vue/"/>
+    
+  </entry>
   
   <entry>
     <title>对比scheme中的Y-bang和Y</title>
@@ -507,32 +533,6 @@
       <category term="Rails" scheme="http://lupeipei.github.io/tags/Rails/"/>
     
       <category term="API" scheme="http://lupeipei.github.io/tags/API/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《Javascript DOM 编程艺术》</title>
-    <link href="http://lupeipei.github.io/2019/01/09/notes-of-dom-scripting/"/>
-    <id>http://lupeipei.github.io/2019/01/09/notes-of-dom-scripting/</id>
-    <published>2019-01-09T14:21:42.000Z</published>
-    <updated>2019-03-15T11:10:22.408Z</updated>
-    
-    <content type="html"><![CDATA[<p>看的是第二版，全书共12章，除前面几章涉及历史及语法外，剩下的8章都是通过实例来学习，非常喜欢这种实战型的学习方式。</p><p>距离第二版出版（出版于2011年）已经过去了将近8年了，原书中给到的代码参考网站<a href="http://www.friendsofed.com/" target="_blank" rel="noopener">friendsofed</a> 已经无法访问，示例代码中有些地方还是有坑的，比如chapter11中的视频部分，我照着书中的示例代码，重敲了一遍，详见<a href="https://github.com/Lupeipei/DOM_Scripting" target="_blank" rel="noopener">DOM Scripting</a>，所有的功能都可以正常运行，图片视频等素材简单在Google上找了下，如果你也在学它，也许可以做个参考。</p><p>书比较薄，而且主要的篇幅集中在示例上，就简单梳理下书中的要点以备忘。</p><p>文档其实是一堆nodes的集合，基本操作：新增，修改，查找，或者删除node。</p><p>node的三个基本类型：</p><blockquote><p>元素节点，文本节点，属性节点。</p></blockquote><p>DOM提供的使用最为频繁的方法：</p><blockquote><p>getElementById</p><p>getElementsByTagName</p><p>getElementsByClassName</p><p>getAttribute</p><p>setAttribute</p></blockquote><p>最佳实践需要记住：</p><blockquote><p>平稳退化：让访问者可以在浏览器不支持Javascript的情况下，仍能顺利浏览网站。</p><p>渐进增强：用一些额外的信息去包裹原始数据，其目的是分离Javascript，让结构和行为分离。</p></blockquote><p>要记住的知识点并不多，个人感觉主要的收获来源实践，跟着书中内容敲一遍，不花多少时间，但是感觉非常好，“用餐”很愉快，五星推荐。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;看的是第二版，全书共12章，除前面几章涉及历史及语法外，剩下的8章都是通过实例来学习，非常喜欢这种实战型的学习方式。&lt;/p&gt;
-&lt;p&gt;距离第二版出版（出版于2011年）已经过去了将近8年了，原书中给到的代码参考网站&lt;a href=&quot;http://www.friendsofed
-      
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
     
   </entry>
   
