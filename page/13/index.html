@@ -273,6 +273,243 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/03/implement-Rails-API-filtering/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/03/implement-Rails-API-filtering/" itemprop="url">
+                  用has_scope实现Rails API筛选
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-03T11:16:45+08:00">
+                2018-03-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/03/implement-Rails-API-filtering/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/03/implement-Rails-API-filtering/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>326 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
+<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
+<pre><code class="ruby">Table name products
+
+id          :integer
+title       :string
+description :string
+price       :float
+category_id :integer
+
+Table name  categories
+id          :integer
+title       :string
+</code></pre>
+<p><code>app/models/product.rb</code>中：</p>
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+  ......
+end
+</code></pre>
+<p><code>app/models/category.rb</code>中：</p>
+<pre><code class="ruby">class Category &lt; ActiveRecord::Base
+  has_many :products
+  ......
+end
+</code></pre>
+<p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+# GET /api/v1/products
+  def index
+    @products = Product.all
+    render json: @products
+  end
+end
+</code></pre>
+<p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
+<p>如何实现？</p>
+<p>试试<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
+<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>三步走</p>
+<ul>
+<li><p>安装<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a> gem</p>
+<p>gemfile中添加：</p>
+<pre><code class="Ruby">gem &#39;has_scope&#39;
+</code></pre>
+<p>终端bundle，服务器重启。</p>
+</li>
+<li><p>在model中添加scope</p>
+<p>修改<code>app/models/product.rb</code>：</p>
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+
+ + scope :category, -&gt; (category_id) { where(category_id: category_id) }
+ + scope :price, -&gt; (from, to) { where(&quot;price &gt;= ? AND price &lt;= ?&quot;, from, to) }
+  ......
+
+end
+</code></pre>
+</li>
+<li><p>在controller中添加has_scope</p>
+<p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+  + has_scope :category, only: :index
+  + has_scope :price, using: [:from, :to], only: :index
+
+# GET /api/v1/products
+  def index
+  -  @products = Product.all
+  +  @products = apply_scopes(Product).includes(:category).all
+      # using includes(:category), fix N+1 query problem
+    render json: @products
+  end
+end
+</code></pre>
+<p>好，大功告成，用postman测试下，确认正常，cool！</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://gist.github.com/mamantoha/9c0aec7958c7636cebef" target="_blank" rel="noopener">Rails API Filtering and Sorting</a></p>
+<p><a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/01/skinny-controller-with-jbuilder/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2235,203 +2472,6 @@ end
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/02/01/footer-always-on-the-buttom-with-flex/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/02/01/footer-always-on-the-buttom-with-flex/" itemprop="url">
-                  用flex置底footer
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-02-01T15:23:19+08:00">
-                2018-02-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/02/01/footer-always-on-the-buttom-with-flex/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/02/01/footer-always-on-the-buttom-with-flex/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>195 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>看过别人写的一些footer置底的文章，试了一些，发现了一个特别简单的置底方式，不用考虑footer的高度，也不用设置padding-bottom啥的，用flex，两步即可。</p>
-<p>以下以Rails为例：</p>
-<h5 id="一、设置html部分"><a href="#一、设置html部分" class="headerlink" title="一、设置html部分"></a>一、设置html部分</h5><p><code>application.html.erb</code>中的内容：</p>
-<pre><code class="Html">&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-  &lt;head&gt;
-    .....
-  &lt;/head&gt;
-
-  &lt;body&gt;
-    &lt;div class=&quot;content&quot;&gt;
-      &lt;div class=&quot;container-fluid&quot;&gt;
-        &lt;div class=&quot;row&quot;&gt;
-          &lt;%= render &quot;common/navbar&quot;%&gt;
-          &lt;%= yield %&gt;
-        &lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-    &lt;%= render &quot;common/footer&quot;%&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<h4 id="二、设置CSS部分"><a href="#二、设置CSS部分" class="headerlink" title="二、设置CSS部分"></a>二、设置CSS部分</h4><p><code>application.scss</code>中填入：</p>
-<pre><code class="Css">html {
-    height: 100%;
-}
-body {
-  min-height: 100%;                                   // footer固定底部
-  display: flex;                                      // footer固定底部
-  flex-direction: column;                             // footer固定底部                       
-}
-.content {
- flex: 1;
-}
-</code></pre>
-<p>OK！不管你的footer样式如何，高度几许，都可以完美实现置底。</p>
-<p>另，推荐<a href="https://segmentfault.com/" target="_blank" rel="noopener">segmentfault</a>上很实用的一篇置底文章：</p>
-<p><a href="https://segmentfault.com/a/1190000004453249" target="_blank" rel="noopener">将footer固定在页面底部的实现方法</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2481,7 +2521,7 @@ body {
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2614,7 +2654,7 @@ body {
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>

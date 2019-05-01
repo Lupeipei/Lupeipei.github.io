@@ -273,6 +273,214 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/04/upgrade-wget-on-ubuntu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/05/04/upgrade-wget-on-ubuntu/" itemprop="url">
+                  漏洞处理-GNU Wget缓冲区错误漏洞on Ubuntu
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-04T22:15:20+08:00">
+                2018-05-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/05/04/upgrade-wget-on-ubuntu/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/05/04/upgrade-wget-on-ubuntu/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>389 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>登录阿里云，看到醒目的红色警报，点开是主机上存在漏洞： <strong>GNU Wget缓冲区错误漏洞</strong>，给到的参考链接: <a href="https://securitytracker.com/id/1039661?spm=5176.2020520154.sas.66.528f79d6yN4eC4" target="_blank" rel="noopener">securitytracker.com</a>显示要升级到版本1.19.2。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqzfuo5h2mj30cw01cdfu.jpg" alt=""></p>
+<p>升级过程中，遇到了点问题，Google后解决，记录下整个升级步骤。</p>
+<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>查看版本</p>
+<pre><code>wget -V
+</code></pre><p>显示是<code>GNU Wget 1.17.1 built on linux-gnu.</code></p>
+<p>删掉旧版本：</p>
+<pre><code>apt-get remove wget
+</code></pre><p>安装1.19.2或者更高版本，见<a href="http://ftp.gnu.org/gnu/wget/，" target="_blank" rel="noopener">http://ftp.gnu.org/gnu/wget/，</a> 目前最新版本是1.19.4</p>
+<pre><code>wget http://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.gz
+tar -zxvf wget-1.19.4.tar.gz
+cd wget-1.19.4
+./configure --with-ssl=openssl
+</code></pre><p>执行完<code>./configure</code> 后报错：</p>
+<pre><code>configure: error: The pkg-config script could not be found or is too old.  Make sure it
+is in your PATH or set the PKG_CONFIG environment variable to the full
+path to pkg-config.
+
+Alternatively, you may set the environment variables XMEDCON_GLIB_CFLAGS
+and XMEDCON_GLIB_LIBS to avoid the need to call pkg-config.
+See the pkg-config man page for more details.
+</code></pre><p>装pkg-config:</p>
+<pre><code>apt-get install -y pkg-config
+</code></pre><p>再次执行：</p>
+<pre><code>./configure --with-ssl=openssl
+</code></pre><p>成功的话，会发现最后生成了Makefile：</p>
+<pre><code>config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating doc/Makefile
+config.status: creating util/Makefile
+config.status: creating po/Makefile.in
+config.status: creating tests/Makefile
+config.status: creating lib/Makefile
+config.status: creating testenv/Makefile
+config.status: creating tests/certs/interca.conf
+config.status: creating tests/certs/rootca.conf
+config.status: creating src/config.h
+config.status: executing depfiles commands
+config.status: executing po-directories commands
+config.status: creating po/POTFILES
+config.status: creating po/Makefile
+</code></pre><p>此时，执行：</p>
+<pre><code>make &amp;&amp; make install
+</code></pre><p>查看版本：</p>
+<pre><code>wget -V
+</code></pre><p>显示：<br>GNU Wget 1.19.4 built on linux-gnu.</p>
+<p>OK!</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://blog.csdn.net/baidu_38083619/article/details/79948272" target="_blank" rel="noopener">GNU Wget缓冲区溢出漏洞</a></p>
+<p><a href="https://stackoverflow.com/questions/23202146/cannot-find-pkg-config-error" target="_blank" rel="noopener">cannot find pkg-config-error</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/01/travels-of-huihang-ancient-road/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2529,187 +2737,6 @@ end
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/12/import-sql-file-to-rails-database/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/04/12/import-sql-file-to-rails-database/" itemprop="url">
-                  将sql文件导入rails数据库中
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-12T07:51:54+08:00">
-                2018-04-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/04/12/import-sql-file-to-rails-database/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/04/12/import-sql-file-to-rails-database/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>342 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>虽然这是个很小白的问题，但还是决定写下来，毕竟还是在坑里折腾了些时间。</p>
-<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>如题所诉，现有一份sql文件，需要导入了rails中，比如你新建好了model user ,但是对应的数据表是空的，</p>
-<p>数据库用的是mysql， 要求导入sql文件后，进入rails console，查询User.all， 会出现导入的数据。</p>
-<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>拿到数据库的时候，直接Google，很快就可以看到各种解答，有些走rails console， 或者使用task来执行。</p>
-<p>类似这样，运行sql文件：</p>
-<pre><code>ActiveRecord::Base.connection.execute(IO.read(&quot;your_sql_file.sql&quot;))
-</code></pre><p>我便沿着这个坑开始走，不过奇怪的是，运行时没报错，但进入rails console，执行 User.count, 得到的结果却是0，根本没有导入数据。</p>
-<p>最后发现其实很简单，不走rails console的路线，直接通过mysql导入即可。</p>
-<p>进入mysql:</p>
-<pre><code>mysql -u user_name -p
-</code></pre><p>user_name是你的用户名，然后它会让你输入密码。如果想要免密码，比如你忘记了密码，可以这样：</p>
-<pre><code>mysql.server stop
-mysql.server start --skip-grant-tables
-</code></pre><p>然后进入mysql:</p>
-<pre><code>mysql
-</code></pre><p>选择你的数据库：</p>
-<pre><code>use your_database_name;
-</code></pre><p>导入：</p>
-<pre><code>source /path/to/your_sql_file.sql
-</code></pre><p>OK!!</p>
-<p>可以进入rails console检查一下你的数据是否已经导入到指定的数据库中。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/48211032/import-sql-file-into-rails-database" target="_blank" rel="noopener">Import SQL file into Rails database</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2759,7 +2786,7 @@ mysql.server start --skip-grant-tables
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2892,7 +2919,7 @@ mysql.server start --skip-grant-tables
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>

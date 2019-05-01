@@ -273,6 +273,240 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/28/trouble-with-validates-presence-of/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/08/28/trouble-with-validates-presence-of/" itemprop="url">
+                  踩坑之validates_presence_of
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-28T07:26:44+08:00">
+                2018-08-28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/28/trouble-with-validates-presence-of/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/08/28/trouble-with-validates-presence-of/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>500 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>记录下踩过的一个坑：</p>
+<p>类A与类B存在一对多关系，需要校验在创建b时，a存在，分别使用validates_presence_of :a 与 validates_presence_of :a_id，会发现当a尚未保存时，前者会成功创建b，后者则不行。</p>
+<p>看个简单的例子：</p>
+<p>group 与post 之间是一对多关系， post含字段group_id。</p>
+<pre><code class="Ruby">### app/models/post.rb
+class Post &lt; ApplicationRecord
+  belongs_to :group, optional: true
+  ## 为了方便找出两者的差异，这里使用optional: true，post创建时，group_id可为nil
+
+  validates :content, presence: true
+end
+
+#### app/models/group.rb
+class Group &lt; ApplicationRecord
+  belongs_to :user
+  has_many :posts
+
+  validates :title, presence: true
+end
+</code></pre>
+<p>此时，在终端执行：</p>
+<pre><code class="Ruby">post = Post.new(content: &quot;this is a post&quot;)
+post.save
+
+# =&gt; true
+</code></pre>
+<p>接下来分别<code>validates_presence_of :group_id</code>和<code>validates_presence_of :group</code>来给post添加有效性校验，要求group必须存在。</p>
+<ul>
+<li><p>在post.rb中添加<code>validates_presence_of :group_id</code></p>
+<p>进入console，执行如下代码：</p>
+<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
+
+post.save
+
+#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
+
+group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
+
+post = Post.new(content: &quot;my post&quot;)
+
+post.group = group
+
+post.save
+
+#=&gt; rollback, 返回false
+
+post.save!
+
+#=&gt; rollback, 显示 Validation failed: Group can&#39;t be blank
+</code></pre>
+<p>第一次创建post，没有给到group，无法新建，正常。</p>
+<p>第二次创建post，使用post.group = group  给post的group赋值， 但是，你会发现虽然post.group有记录，不为nil， 但是post.group_id 依然为nil，保存时，校验group_id，为nil, 报错。</p>
+</li>
+<li><p>在post.rb中添加<code>validates_presence_of :group</code></p>
+<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
+
+post.save
+
+#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
+
+group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
+
+post = Post.new(content: &quot;my post&quot;)
+
+post.group = group
+
+post.save
+
+#=&gt; 返回true, 依次在Group，Post中插入了一条新的记录
+</code></pre>
+<p>第一次创建post，没有给到group，无法新建，正常，同<code>validates_presence_of :group_id</code> 的效果一样。</p>
+<p>第二次创建post，使用post.group = group  给post的group赋值，此时，虽然post.group_id 依然为nil，但是由于post.group不为nil，检验通过，group存在，成功创建。</p>
+<p>很显然，当我们创建post时，需要检验group必须存在，并不要求此时group已经创建，后者才是我们需要的校验方式。</p>
+</li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/25/metadata-in-RSpec/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2726,198 +2960,6 @@ export default class extends Controller {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" itemprop="url">
-                  Postgresql the database system is starting up
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-07T18:12:53+08:00">
-                2018-08-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>282 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>执行<code>rake db: migrate</code>时，中断，再次执行<code>rake db: migrate</code>时，报错：</p>
-<pre><code>psql: could not connect to server: Connection refused
-    Is the server running on host &quot;localhost&quot; (::1) and accepting
-    TCP/IP connections on port 5432?
-</code></pre><h4 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h4><p>重启posgresql：</p>
-<pre><code>brew services restart postgresql
-</code></pre><p>显示：</p>
-<pre><code>Stopping `postgresql`... (might take a while)
-==&gt; Successfully stopped `postgresql` (label: homebrew.mxcl.postgresql)
-==&gt; Successfully started `postgresql` (label: homebrew.mxcl.postgresql)
-</code></pre><p>再次运行：</p>
-<pre><code>rake db:migrate
-</code></pre><p>报错：</p>
-<pre><code>psql: could not connect to server: Connection refused
-    Is the server running on host &quot;localhost&quot; (::1) and accepting
-    TCP/IP connections on port 5432?
-</code></pre><p>改成手动启动：</p>
-<pre><code>postges -D /usr/local/var/postgres/
-</code></pre><p>报错：</p>
-<pre><code>FATAL:  pre-existing shared memory block (key 5432001, ID 65536) is still in use
-HINT:  If you&#39;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.
-</code></pre><p>切换到/usr/local/var/postgres 下，删除postmaster.pid 文件，然后重启：</p>
-<pre><code class="postgresql">postgres -D /usr/local/var/postgres/
-</code></pre>
-<p>重启后，再次运行：</p>
-<pre><code class="rail">rake db:migrate
-</code></pre>
-<p>报错：</p>
-<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
-</code></pre><p>Google后，尝试修改了postgresql.conf文件，将hot_standby 设置为on，重启Postgresql，继续执行<code>rake db:migrate</code>, 依然报错：</p>
-<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
-</code></pre><p><strong>最后的解决方法：</strong></p>
-<p>简单粗暴：删除文件夹 /usr/local/var/postgres，卸载并重装PostgreSQL，重新导入数据。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2967,7 +3009,7 @@ HINT:  If you&#39;re sure there are no old server processes still running, remov
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3100,7 +3142,7 @@ HINT:  If you&#39;re sure there are no old server processes still running, remov
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>

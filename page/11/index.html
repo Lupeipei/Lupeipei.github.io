@@ -273,6 +273,250 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/04/common-idioms-in-ruby/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/04/04/common-idioms-in-ruby/" itemprop="url">
+                  Ruby中的一些惯用技巧
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-04T08:12:31+08:00">
+                2018-04-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/04/04/common-idioms-in-ruby/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/04/04/common-idioms-in-ruby/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>778 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>说三个自己也用过的技巧，没用过的也写不出来。</p>
+<h4 id="空指针保护"><a href="#空指针保护" class="headerlink" title="空指针保护"></a>空指针保护</h4><p>这个非常常见。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">a ||= []
+## 上面的|| 是逻辑操作符或，相当于 a || (a = [])
+</code></pre>
+<p>上面这个方法的好处在于，它可以保证a不为nil，这种惯用方法称为<strong>空指针保护</strong>。</p>
+<p>空指针保护常常用于初始化实例变量。比如下面的例子：</p>
+<pre><code class="Ruby">class C
+  def data
+    @data ||= {}
+  end
+
+  def data?
+    @data.present?
+  end
+end
+</code></pre>
+<h4 id="Tap"><a href="#Tap" class="headerlink" title="Tap"></a>Tap</h4><p>《ruby元编程》里面提到了tap，使用tap，可以在方法链中插入中间操作，比如：</p>
+<pre><code class="Ruby">temp = [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift
+puts temp #=&gt; a
+x = temp.upcase.next
+</code></pre>
+<p> 上诉的代码显得很不ruby，使用tap改进下，可以这么写：</p>
+<pre><code class="Ruby">[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift.tap {|x| puts x}.upcase.next #=&gt; a
+</code></pre>
+<p>其实tap在方法定义中也很常见。比如<a href="https://github.com/glebm/i18n-tasks" target="_blank" rel="noopener">i18n-tasks</a>的源代码中，就多次出现了tap的身影：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fpzts3u39sj30mb064wey.jpg" alt=""></p>
+<p>举一个简单的例子感受下：</p>
+<pre><code class="Ruby"># source是一个Array，存放文件路径
+# get_all_files 可以获取指定的单个或多个路径下所有的文件
+def get_all_files(source)
+  files = []
+  source.map do |path|
+    path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
+    group = Dir.glob(&quot;#{path}**/**&quot;)
+    files &lt;&lt; group.reject { |x| File.directory?(x) }
+  end
+end
+</code></pre>
+<p>如果换成tap，则可以这样定义：</p>
+<pre><code class="Ruby">def get_all_files(source)
+  [].tap do |files|
+    source.map do |path|
+      path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
+      group = Dir.glob(&quot;#{path}**/**&quot;)
+      files &lt;&lt; group.reject { |x| File.directory?(x) }
+    end
+  end
+end
+</code></pre>
+<h4 id="Symbol-to-proc"><a href="#Symbol-to-proc" class="headerlink" title="Symbol#to_proc"></a>Symbol#to_proc</h4><p>这个在rubyist高手中算是比较流行的一种技巧了。</p>
+<p>看个常用的数组求和：</p>
+<pre><code class="Ruby">a = [1,2,3,4]
+a.reduce(&amp;:+) #= &gt; 10
+a.inject(0,&amp;:+) #= &gt; 10
+</code></pre>
+<p>「reduce 和inject 是alias的关系, 两者可以互用。我依然记得第一次看到数组求和<code>[1,2,3,4].reduce(&amp;:+)</code> 这个例子时，一脸懵逼……」</p>
+<p>这种带有<code>&amp;:+</code>的标记的，就是Symbol#to_proc。</p>
+<p>上面的求和，如果不用Symbol#to_proc， 则可以这样写：</p>
+<pre><code class="Ruby">a = [1,2,3,4]
+a.reduce{|sum, x| sum + x } #= &gt; 10
+a.inject(0){|sum, x| sum + x } #= &gt; 10
+</code></pre>
+<p>对于Symbol#to_proc 的方法的使用，要注意一点，那就是<code>&amp;:method</code>中的method，必须是对象可以调用的无参method，比如上面的<code>&amp;:+</code>，+ 是1，2，3，4都可以调用的<strong>无参实例方法</strong>。</p>
+<p>看个例子感觉下：</p>
+<pre><code class="Ruby">b = [&#39;hi&#39;,&#39;ruby&#39;,&#39;hello&#39;]
+b.map(&amp;:capitalize) #= &gt; [&quot;Hi&quot;, &quot;Ruby&quot;, &quot;Hello&quot;]
+b.map(&amp;:nil?) #= &gt; [false, false, false]
+b.map(&amp;:concat(&#39;world&#39;)) #= &gt; raise: syntax error
+</code></pre>
+<p>b中的每一个元素都是String对象，可以成功调用无参的实例方法capitalize，nil?等，但是当调用带有参数的concat方法时就会报错，为什么？</p>
+<p>原来在Symbol类中有一个to_proc方法，用于把符号转化为一个Proc对象：</p>
+<pre><code class="Ruby">class Symbol
+  def to_proc
+    Proc.new {|x| x.send(self)} # 动态派发，调用self这个method的
+  end
+end
+</code></pre>
+<p>上面的<code>b.map(&amp;:capitalize)</code> 等价于<code>b.map(&amp;:capitalize.to_proc)</code>, 由于&amp;可以调用对象的to_proc方法把对象转为一个proc，所以可以简写成<code>b.map(&amp;:capitalize)</code> ， 也就是说，<code>b.map(&amp;:capitalize)</code> 等同于<code>b.map{|x|x.send(:capitalize)}</code>。</p>
+<p>注意到Symbol类中定义的to_proc方法是不带参数的。</p>
+<p>当然，如果你想要调用带参数的method，可以自定义一个method或者考虑给to_proc打个猴子补丁。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">《ruby元编程第二版》</a></p>
+<p><a href="https://medium.com/aviabird/ruby-tap-that-method-90c8a801fd6a" target="_blank" rel="noopener">Ruby: Tap that method</a></p>
+<p><a href="https://www.brianstorti.com/understanding-ruby-idiom-map-with-symbol/" target="_blank" rel="noopener">Understanding Ruby’s idiom: array.map(&amp;:method)</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/03/rails5-requires-ruby-2-or-newer/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3268,213 +3512,6 @@ C.new.public_method
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/24/deal-with-hidden-element-selenium/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/24/deal-with-hidden-element-selenium/" itemprop="url">
-                  selenium webdriver中有关隐藏元素的处理
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-24T08:34:57+08:00">
-                2018-03-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/24/deal-with-hidden-element-selenium/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/24/deal-with-hidden-element-selenium/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>555 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在某些场景下，UI界面需要隐藏某些元素，这些元素对用户来说不可见，但是依然存在HTML中，当然，对用户不可见的元素，对于selenium也是不可见的，因为selenium基本就是在模拟着用户的页面行为。</p>
-<p>被隐藏的元素，会带有类似如下的CSS值：</p>
-<pre><code>style=”Display:none;&quot;
-style=&quot;visibility:hidden;&quot;
-type=”hidden”
-……
-</code></pre><p>针对这种情况，解决的思路有两个：</p>
-<ul>
-<li><strong>使用Selenium WebDriver 中driver的execute_script method直接对元素进行操作，比如click</strong></li>
-<li><strong>使用selenium WebDriver 中driver的execute_script method修改元素的属性，让它可见，然后再进行操作</strong></li>
-</ul>
-<p>第二种显得有点绕弯了，而且第二种在某些情况下并不适用，比如：</p>
-<p>看这段HTML代码：</p>
-<pre><code class="Html">&lt;div class=&quot;ant-time-picker-panel-select&quot;&gt;
-  &lt;ul&gt;
-    &lt;li&gt;09&lt;/li&gt;
-    &lt;li&gt;10&lt;/li&gt;
-    &lt;li&gt;11&lt;/li&gt;
-    &lt;li&gt;12&lt;/li&gt;
-    &lt;li&gt;13&lt;/li&gt;
-    &lt;li&gt;14&lt;/li&gt;
-    &lt;li&gt;15&lt;/li&gt;
-    &lt;li&gt;16&lt;/li&gt;
-    &lt;li class=&quot;ant-time-picker-panel-select-option-selected&quot;&gt;17&lt;/li&gt;
-  &lt;/ul&gt;
-&lt;/div&gt;
-</code></pre>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpgmneyklij30so08gdh8.jpg" alt=""></p>
-<p>这里其实并没有给元素添加一些不可见的CSS设置，即使你给13对应的li tag添加<code>style=&quot;visibility:visible;&quot;</code> 也没有效果，依然是不可见。</p>
-<p>通常的用户行为是将光标放在17的位置，然后鼠标滑动到最上方，让所有选项可见，然后再选择，为了不让问题过于复杂，针对隐藏元素，建议直接采用第一种解决方法。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>直接以上面的问题为例，假定我们需要选择13，先定位到13，采用cssSelector方式【戳这里了解<a href="using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">如何快速获取xpath和cssSelector</a>】：</p>
-<pre><code class="Ruby">element = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li:nth-child(5)&quot;)
-</code></pre>
-<p>然后调用execute_script：</p>
-<pre><code class="Ruby">driver.execute_script(&quot;arguments[0].click();&quot;, element )
-</code></pre>
-<p>完成。</p>
-<p>这里如果选定的值是一个变量呢？可以直接封装起来：</p>
-<pre><code class="Ruby">def select_hour(driver, hour)
-  hour_list = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li&quot;)
-  target = hour_list.select {|x| x.text == hour }
-  driver.execute_script(&quot;arguments[0].click();&quot;, target.first ) if target != []
-end
-</code></pre>
-<p>OK，大功告成。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://seleniumwithjavapython.wordpress.com/selenium-with-python/intermediate-topics/playing-with-javascript-and-javascript-executor/hidden-elements-in-javascript/" target="_blank" rel="noopener">Hidden Elements In HTML Page</a></p>
-<p><a href="http://www.rubydoc.info/gems/selenium-webdriver/0.0.28/Selenium/WebDriver/Driver" target="_blank" rel="noopener">docs for Selenium::WebDriver::Driver</a></p>
-<p>PS. 还有一些麻烦的定位，比如从日期选择器中选定特定日期，可以参考<a href="https://www.guru99.com/handling-date-time-picker-using-selenium.html" target="_blank" rel="noopener">How to Select Date from DatePicker in Selenium Webdriver</a>，不过日期选择这种还是要具体问题具体分析。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3524,7 +3561,7 @@ end
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3657,7 +3694,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>

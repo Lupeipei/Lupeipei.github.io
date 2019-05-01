@@ -273,6 +273,201 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/24/test-concepts-about-stub/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2017/10/24/test-concepts-about-stub/" itemprop="url">
+                  测试概念之stub篇
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-24T21:47:23+08:00">
+                2017-10-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2017/10/24/test-concepts-about-stub/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2017/10/24/test-concepts-about-stub/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>768 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>学习测试的时候，一直不大懂stub，后来刷多了课程，感觉好像不那么懵逼了。</p>
+<p>决定结合自己的学习与思考，说说stub到底是个啥。</p>
+<p>BTW，if  you want to be a rocking unit tester, you must know stub and mock.：P</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先来看一个问题：</p>
+<p>你准备测试method A，method A 依赖于method B，比如method A要调用远端的API，而你只想测试method A有没有被正确调用，method B 存在与否，是不是返回了预期的结果，你并不care， 那么要怎么做才能保证测试的独立性？</p>
+<p>这样的测试，就要用到stub。</p>
+<p>下面以一个movie model来说明一下如何使用stub。</p>
+<p>设想一个简单的movie影片查询情景：</p>
+<p>用户在TMDb页面中输入影片名称，点击查询按钮，这时MoviesController 中对应的 search_tmdb method会去调用movie model里面真正执行search行为的method，这个method在数据库中进行搜索匹配，最后返回搜索结果，随后controller的 search_tmdb会render到搜索结果的页面，用户看到搜索结果，这样整个的搜索动作才算完成。</p>
+<p>现在的情况是，movie model里面没有定义任何执行search 行为的method，而我们只想要验证controller的search_tmdb 调用了model里面执行search的method，不管这个method的存不存在，有没有返回预期结果，我们不care, 我们只想确定controller的search_tmdb做了正确的事，怎么破？</p>
+<p>用stub来打破依赖。用一个伪造的method去替代，确保这个伪造的method被调用即可。</p>
+<p>你的<code>movies_controller.rb</code>中定义了一个search_tmdb,但是里面啥也没有：</p>
+<pre><code class="Ruby">def search_tmdb
+end
+</code></pre>
+<p>你的test文件长这样：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fktni1u9gaj30df05o3z5.jpg" alt=""></p>
+<p>这时运行测试文件，会报错，因为你的search_tmdb并没有说让Movie去调用这个find_in_tmdb，如何让测试通过？</p>
+<p>在<code>movies_controller.rb</code>中修改search_tmdb method，使它长这样：</p>
+<pre><code class="Ruby">def search_tmdb
++ Movie.find_in_tmdb(params[:search_terms])
+end
+</code></pre>
+<p>再次运行测试文件，通过！！</p>
+<p>这里值得注意的是，你的movie model中，<strong>根本就没有find_in_tmdb这个method</strong>，很神奇是不是？</p>
+<p>事实上，为了打破method之间的依赖，保证测试的独立性，这里伪造了一个针对find_in_tmdb的调用，<strong>即使这个find_in_tmdb本身存在model中，也会被忽视，overriding it</strong>。</p>
+<p>这就是Stub了，很特别是不是？我第一次接触的时候，觉得很special。</p>
+<p>看第二个测试： <strong>selects the Search Results template for rendering</strong></p>
+<p>这里我们要确认controller的search_tmdb在调用find_in_tmdb后，是否render到了特定的template，即<code>search_tmdb.html.erb</code>。由于find_in_tmdb并没有定义，故这里也要用stub。怎么写呢？</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fkuj2c03kjj30h606qgmv.jpg" alt=""></p>
+<p>[这里用了matchers: render_template, response.]</p>
+<p><code>Movie.stub(:find_in_tmbd)</code>： 假定执行了find_in_tmdb</p>
+<p><code>expect(response).to render_template</code>:  验证最后的结果，是否render到了search_tmbd.html.erb这个template</p>
+<p>运行测试文件，pass。</p>
+<p>这里要注意，如果测试失败了，请检查一下你的app/views/movies/下是否存在search_tmbd.html.erb，如果不存在，新建，不然这个测试是无法通过的。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>记住一句话，有助于理解stub： The code you wish you had。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/23/passenger-deploy-rails/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2484,530 +2679,6 @@ worker.postMessage(&#39;STOP&#39;);
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/10/07/introduction-to-jquery-module2-2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/10/07/introduction-to-jquery-module2-2/" itemprop="url">
-                  Introduction to jQuery_3
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-07T06:34:37+08:00">
-                2017-10-07
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/10/07/introduction-to-jquery-module2-2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/10/07/introduction-to-jquery-module2-2/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,291 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="Before-Start"><a href="#Before-Start" class="headerlink" title="Before Start"></a>Before Start</h4><p>The following contents are the notes I took when learning  jQuery on Edx.</p>
-<p>Mainly for  front-End Web developers, check <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">here</a> to get more details.</p>
-<h4 id="CONTENTS"><a href="#CONTENTS" class="headerlink" title="CONTENTS"></a>CONTENTS</h4><p>Three parts:</p>
-<ul>
-<li><a href="https://lupeipei.github.io/2017/10/05/introduction-to-jQuery-module1/">Adding jQuery to web pages</a></li>
-<li>Managing content, events and effects</li>
-<li><a href="https://lupeipei.github.io/2017/10/08/introduction-to-jquery-module3-1/">Asynchronous operations and Ajax calls</a></li>
-</ul>
-<h4 id="Module2-Managing-content-events-and-effects"><a href="#Module2-Managing-content-events-and-effects" class="headerlink" title="Module2 : Managing content, events and effects"></a>Module2 : Managing content, events and effects</h4><p>Module2 includes six parts:</p>
-<ul>
-<li>Event handlers</li>
-<li>Modifying elements</li>
-<li>Registering event handlers</li>
-<li>Adding new elements</li>
-<li>Animations</li>
-<li>Removing, replacing and cloning</li>
-</ul>
-<p>Let’s get to know something about the last three parts of Module2.</p>
-<ul>
-<li><p><strong>Adding new elements</strong></p>
-<ul>
-<li><p>Internal DOM manipulation</p>
-<p><code>append</code>, <code>appendTo</code>, <code>prepend</code> and <code>prependTo</code>.</p>
-<p>Remember that the element you target will become the <strong>container</strong> for the new element. So using <code>append</code> will add a new element <strong>inside</strong> the target, not after the element.</p>
-<ul>
-<li><p><code>prepend</code> and <code>prependTo</code></p>
-<p>Add new content to the <strong>begining</strong> of the contents of a target.</p>
-<p>Example:</p>
-<p><code>`</code>Html</p>
-<!-- starting HTML -->
-<div id="target"><br>   <div>existing content</div><br></div>
-
-<p>//executed either of the lines of JavaScript below<br>// prepend is called on the target, and accepts the new content as the parameter<br>$(‘#target’).prepend(‘<div>New content</div>‘);</p>
-<p>//or you can use prependTo<br>// prependTo is called on the new content, and accepts the target as the parameter<br>$(‘<div>New content</div>‘).prependTo(‘#target’);</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<pre><code>  &lt;!-- ending HTML --&gt;
-  &lt;div id=&quot;target&quot;&gt;
-      &lt;div&gt;New content&lt;/div&gt;
-      &lt;div&gt;existing content&lt;/div&gt;
-  &lt;/div&gt;
-  ```
-
-- `append` and `appendTo`
-
-  Add new content to the **end** of the contents of a target.
-
-  Example:
-
-  ```Html
-  &lt;!-- starting HTML --&gt;
-  &lt;div id=&quot;target&quot;&gt;
-      &lt;div&gt;existing content&lt;/div&gt;
-  &lt;/div&gt;
-
-  //executed either of the lines of JavaScript below
-  // append is called on the target, and accepts the new content as the parameter
-  $(&#39;#target&#39;).append(&#39;&lt;div&gt;New content&lt;/div&gt;&#39;);
-
-  // appendTo is called on the new content, and accepts the target as the parameter
-  $(&#39;&lt;div&gt;New content&lt;/div&gt;&#39;).appendTo(&#39;#target&#39;);
-
-  &lt;!-- ending HTML --&gt;
-  &lt;div id=&quot;target&quot;&gt;
-      &lt;div&gt;existing content&lt;/div&gt;
-      &lt;div&gt;New content&lt;/div&gt;
-  &lt;/div&gt;
-  ```
-</code></pre><ul>
-<li><p>External DOM manipulation</p>
-<p><code>after</code>, <code>insertAfter</code>, <code>before</code>, and <code>insertBefore</code></p>
-<ul>
-<li><p><code>after</code> and <code>insertAfter</code></p>
-<p>Add new content after the target.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;existing content&lt;/div&gt;
-&lt;/div&gt;
-
-//executed either of the lines of JavaScript below
-// after is called on the target, and accepts the new content as a parameter
-$(&#39;target&#39;).after(&#39; New content&#39;);
-
-// insertAfter is called on the new content, and accepts the target as a parameter
-$(&#39; New content&#39;).insertAfter(&#39;#target&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;existing content&lt;/div&gt;
-&lt;/div&gt;
-&lt;div&gt;New content&lt;/div&gt;
-</code></pre>
-</li>
-<li><p><code>before</code> and <code>insertBefore</code></p>
-<p>Add new content before the target.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;existing content&lt;/div&gt;
-&lt;/div&gt;
-
-//executed either of the lines of JavaScript below
-// before is called on the target, and accepts the new content as a parameter
-$(&#39;target&#39;).before(&#39;New content&#39;);
-
-// insertBefore is called on the new content, and accepts the target as a parameter
-$(&#39;New content&#39;).insertBefore(&#39;#target&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div&gt;New content&lt;/div&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;existing content&lt;/div&gt;
-&lt;/div&gt;
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>Wrapping content</p>
-<p>To manipulate the DOM by surrounding existing content with a new element.</p>
-<ul>
-<li><p><code>wrap</code></p>
-<p>wraps <strong>each item</strong> with the element passed into the function.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
-&lt;/div&gt;
-
-//JS
-$(&#39;.demo&#39;).wrap(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;section&gt;
-        &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
-    &lt;/section&gt;
-    &lt;section&gt;
-        &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
-    &lt;/section&gt;
-&lt;/div&gt;
-</code></pre>
-</li>
-<li><p><code>wrapAll</code></p>
-<p> returned content with one new element.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
-&lt;/div&gt;
-
-//JS
-$(&#39;.demo&#39;).wrapAll(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;section&gt;
-        &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
-        &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
-    &lt;/section&gt;
-&lt;/div&gt;
-</code></pre>
-</li>
-<li><p><code>wrapInner</code></p>
-<p>Operates on the children of the target, rather than on the target itself.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item one&lt;/div&gt;
-    &lt;div class=&quot;demo&quot;&gt;Item two&lt;/div&gt;
-&lt;/div&gt;
-
-//JS
-$(&#39;#target&#39;).wrapInner(&#39;&lt;section&gt;&lt;/section&gt;&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;section&gt;
-        &lt;div&gt;Item one&lt;/div&gt;
-        &lt;div&gt;Item two&lt;/div&gt;
-    &lt;/section&gt;
-&lt;/div&gt;
-</code></pre>
-</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><p><strong>Animations</strong></p>
-<ul>
-<li><p><code>hide</code>, <code>show</code>, <code>toggle</code></p>
-<p><code>hide</code> causes something to disappear from the screen;</p>
-<p><code>show</code> causes something to appear;</p>
-<p><code>toggle</code>, on the other hand, determines the current status of the item in question and changes it.</p>
-<p> jQuery controls visibility by using the <code>display</code> property in CSS.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;Show or hide&lt;/div&gt;
-&lt;button type=&quot;button&quot; id=&quot;btn-toggle&quot;&gt;Toggle&lt;/button&gt;
-
-//JS
-$(function() {
-    $(&#39;#btn-toggle&#39;).click(function() {
-        // animation will take one second
-        $(&#39;#target&#39;).toggle(1000);
-    });
-});
-</code></pre>
-<p>More:</p>
-<pre><code class="Html">&lt;!-- HTML --&gt;
-&lt;style&gt;
-    .hidden { display: none; }
-&lt;/style&gt;
-&lt;form&gt;
-    &lt;div&gt;
-        &lt;label&gt;Name:&lt;/label&gt;
-        &lt;input type=&quot;text&quot; /&gt;
-    &lt;/div&gt;
-    &lt;button type=&quot;button&quot; id=&quot;show-additional-information&quot;&gt;
-        Show additional information
-    &lt;/button&gt;
-    &lt;div id=&quot;additional-information&quot; class=&quot;hidden&quot;&gt;
-        &lt;label&gt;Additional information:&lt;/label&gt;
-        &lt;input type=&quot;text&quot; /&gt;
-    &lt;/div&gt;
-&lt;/form&gt;
-
-//JS
-$(function() {
-    $(&#39;#show-additional-information&#39;).click(function() {
-        $(&#39;#additional-information&#39;).show(750);
-    });
-});
-</code></pre>
-</li>
-<li><p>fading and sliding</p>
-<ul>
-<li><p><code>fadeIn</code>, <code>fadeOut</code>, <code>fadeToggle</code></p>
-<p>The fading functions perform their work by both modifying the CSS <code>display</code> property, and animates the item by modifying its <code>opacity</code>.</p>
-<p><code>fadeIn</code> and <code>fadeOut</code> will display and hide an item respectively.</p>
-<p><code>fadeToggle</code> will reverse the current state of the item.</p>
-</li>
-<li><p><code>slideDown</code>, <code>slideUp</code> , <code>slideToggle</code></p>
-<p>The sliding functions perform their work by both modifying the CSS <code>display</code> property, and animates the item by modifying its <code>position</code>.</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><p><strong>Removing, replacing and cloning</strong></p>
-<ul>
-<li><p>Removing and replacing items</p>
-<ul>
-<li><p><code>remove</code> and <code>empty</code></p>
-<p>Both completely delete items from the DOM.</p>
-<p> <code>remove</code> deletes the item you target.</p>
-<p> <code>empty</code> deletes the contents of the item you target.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;Some cool content&lt;/div&gt;
-    &lt;div&gt;Some more cool content&lt;/div&gt;
-&lt;/div&gt;
-
-//JS
-//the resulting HTML would be, well, nothing. The entire contents of the sample are removed
-$(function() {
-    $(&#39;#target&#39;).remove();
-}
-
-//deletes the contents of the target, so the resulting HTML would be as &lt;div id=&quot;target&quot;&gt;&lt;/div&gt;
-
-$(function() {
-    $(&#39;#target&#39;).empty();
-}
-</code></pre>
-</li>
-<li><p><code>replaceAll</code> and <code>replaceWith</code></p>
-<p> replace existing content with new content.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- starting HTML --&gt;
-&lt;div id=&quot;target&quot;&gt;
-    &lt;div&gt;Some cool content&lt;/div&gt;
-    &lt;div&gt;Some more cool content&lt;/div&gt;
-&lt;/div&gt;
-
-//JS. execute either of them
-// replaceWith replaces the content on the left with the new content in the parameter
-$(&#39;#target&#39;).replaceWith(&#39;&lt;div&gt;NEW content&lt;/div&gt;&#39;);
-
-// replaceAll replaces the target in the parameter with the content on the left
-$(&#39;&lt;div&gt;NEW content&lt;/div&gt;&#39;).replaceAll(&#39;#target&#39;);
-
-&lt;!-- ending HTML --&gt;
-&lt;div&gt;NEW content&lt;/div&gt;
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>Cloning</p>
-<ul>
-<li><code>clone</code></li>
-</ul>
-<p><code>clone</code> allows you to make a copy of jQuery objects.</p>
-<p>Let’s say you were building a page to allow an administrator to create email addresses and passwords. You’d like to ensure the administrator can create as many accounts as they would like on one page, and be able to send up all of the information to the server <strong>in one round trip</strong>, rather than using Ajax calls or submitting the form for each account.</p>
-<p>code:</p>
-<pre><code class="Html">&lt;!-- HTML --&gt;
-&lt;button type=&quot;button&quot; id=&quot;add-line&quot;&gt;Add new line&lt;/button&gt;
-&lt;div id=&quot;container&quot;&gt;
-    &lt;div class=&quot;user-entry&quot;&gt;
-        &lt;label&gt;Email:&lt;/label&gt;
-        &lt;input type=&quot;email&quot; /&gt;
-        &lt;label&gt;Password:&lt;/label&gt;
-        &lt;input type=&quot;password&quot; /&gt;
-    &lt;/div&gt;
-&lt;/div&gt;
-
-//JS
- $(function() {
-     $userForm = $(&#39;.user-entry&#39;).clone;
-    $(&#39;#add-line&#39;).click(function() {
-        $(&#39;#container&#39;).append($userForm.clone());
-    });
- });
-</code></pre>
-<p><strong>Attention:</strong></p>
-<p>When you’re working with an object, JavaScript passes a reference to the object, not a copy of the object. This would mean that we’ve added in a pointer to the clone we created earlier, <strong>not</strong> a brand new copy. The end result is that if we did not call <code>clone()</code> a second time, we’d be trying to add <strong>the exact same object</strong> into the container again, <strong>not</strong> a brand new copy. By calling <code>clone()</code> again, we pass in a copy of our user form, rather than a pointer to the one we already used.</p>
-<ul>
-<li><p>Cloning and animations</p>
-<p>Combinnig cloning and animations.</p>
-<p>Example:</p>
-<pre><code class="Html">&lt;!-- HTML --&gt;
-&lt;button type=&quot;button&quot; id=&quot;add-line&quot;&gt;Add new line&lt;/button&gt;
-&lt;div id=&quot;container&quot;&gt;
-  &lt;div class=&quot;user-entry&quot;&gt;
-    &lt;label&gt;Email:&lt;/label&gt;
-    &lt;input type=&quot;email&quot; /&gt;
-    &lt;label&gt;Password:&lt;/label&gt;
-    &lt;input type=&quot;password&quot; /&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-
-//JS
-$(function() {
-    $userForm = $(&#39;.user-entry&#39;).clone();
-    $userForm.css(&#39;display&#39;, &#39;none&#39;);
-    $(&#39;#add-line&#39;).click(function() {
-        var newUserForm = $userForm.clone();
-        $(&#39;#container&#39;).append($newUserForm);
-        newUserForm.show(1000);
-    });
-});
-</code></pre>
-<p>This is  Module2 all about. More <a href="https://courses.edx.org/courses/course-v1:Microsoft+DEV208x+4T2017/course/" target="_blank" rel="noopener">details</a>.</p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3057,7 +2728,7 @@ $(function() {
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3190,7 +2861,7 @@ $(function() {
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>

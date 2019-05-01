@@ -273,6 +273,213 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/24/deal-with-hidden-element-selenium/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/03/24/deal-with-hidden-element-selenium/" itemprop="url">
+                  selenium webdriver中有关隐藏元素的处理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-24T08:34:57+08:00">
+                2018-03-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/24/deal-with-hidden-element-selenium/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/24/deal-with-hidden-element-selenium/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>555 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在某些场景下，UI界面需要隐藏某些元素，这些元素对用户来说不可见，但是依然存在HTML中，当然，对用户不可见的元素，对于selenium也是不可见的，因为selenium基本就是在模拟着用户的页面行为。</p>
+<p>被隐藏的元素，会带有类似如下的CSS值：</p>
+<pre><code>style=”Display:none;&quot;
+style=&quot;visibility:hidden;&quot;
+type=”hidden”
+……
+</code></pre><p>针对这种情况，解决的思路有两个：</p>
+<ul>
+<li><strong>使用Selenium WebDriver 中driver的execute_script method直接对元素进行操作，比如click</strong></li>
+<li><strong>使用selenium WebDriver 中driver的execute_script method修改元素的属性，让它可见，然后再进行操作</strong></li>
+</ul>
+<p>第二种显得有点绕弯了，而且第二种在某些情况下并不适用，比如：</p>
+<p>看这段HTML代码：</p>
+<pre><code class="Html">&lt;div class=&quot;ant-time-picker-panel-select&quot;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;09&lt;/li&gt;
+    &lt;li&gt;10&lt;/li&gt;
+    &lt;li&gt;11&lt;/li&gt;
+    &lt;li&gt;12&lt;/li&gt;
+    &lt;li&gt;13&lt;/li&gt;
+    &lt;li&gt;14&lt;/li&gt;
+    &lt;li&gt;15&lt;/li&gt;
+    &lt;li&gt;16&lt;/li&gt;
+    &lt;li class=&quot;ant-time-picker-panel-select-option-selected&quot;&gt;17&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpgmneyklij30so08gdh8.jpg" alt=""></p>
+<p>这里其实并没有给元素添加一些不可见的CSS设置，即使你给13对应的li tag添加<code>style=&quot;visibility:visible;&quot;</code> 也没有效果，依然是不可见。</p>
+<p>通常的用户行为是将光标放在17的位置，然后鼠标滑动到最上方，让所有选项可见，然后再选择，为了不让问题过于复杂，针对隐藏元素，建议直接采用第一种解决方法。</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>直接以上面的问题为例，假定我们需要选择13，先定位到13，采用cssSelector方式【戳这里了解<a href="using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">如何快速获取xpath和cssSelector</a>】：</p>
+<pre><code class="Ruby">element = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li:nth-child(5)&quot;)
+</code></pre>
+<p>然后调用execute_script：</p>
+<pre><code class="Ruby">driver.execute_script(&quot;arguments[0].click();&quot;, element )
+</code></pre>
+<p>完成。</p>
+<p>这里如果选定的值是一个变量呢？可以直接封装起来：</p>
+<pre><code class="Ruby">def select_hour(driver, hour)
+  hour_list = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li&quot;)
+  target = hour_list.select {|x| x.text == hour }
+  driver.execute_script(&quot;arguments[0].click();&quot;, target.first ) if target != []
+end
+</code></pre>
+<p>OK，大功告成。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://seleniumwithjavapython.wordpress.com/selenium-with-python/intermediate-topics/playing-with-javascript-and-javascript-executor/hidden-elements-in-javascript/" target="_blank" rel="noopener">Hidden Elements In HTML Page</a></p>
+<p><a href="http://www.rubydoc.info/gems/selenium-webdriver/0.0.28/Selenium/WebDriver/Driver" target="_blank" rel="noopener">docs for Selenium::WebDriver::Driver</a></p>
+<p>PS. 还有一些麻烦的定位，比如从日期选择器中选定特定日期，可以参考<a href="https://www.guru99.com/handling-date-time-picker-using-selenium.html" target="_blank" rel="noopener">How to Select Date from DatePicker in Selenium Webdriver</a>，不过日期选择这种还是要具体问题具体分析。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/21/create-your-first-rubygem/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2302,243 +2509,6 @@ end
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/03/implement-Rails-API-filtering/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/03/03/implement-Rails-API-filtering/" itemprop="url">
-                  用has_scope实现Rails API筛选
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-03T11:16:45+08:00">
-                2018-03-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/03/03/implement-Rails-API-filtering/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/03/03/implement-Rails-API-filtering/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>326 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
-<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
-<pre><code class="ruby">Table name products
-
-id          :integer
-title       :string
-description :string
-price       :float
-category_id :integer
-
-Table name  categories
-id          :integer
-title       :string
-</code></pre>
-<p><code>app/models/product.rb</code>中：</p>
-<pre><code class="ruby">class Product &lt; ActiveRecord::Base
-  belongs_to :category
-  ......
-end
-</code></pre>
-<p><code>app/models/category.rb</code>中：</p>
-<pre><code class="ruby">class Category &lt; ActiveRecord::Base
-  has_many :products
-  ......
-end
-</code></pre>
-<p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
-<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
-# GET /api/v1/products
-  def index
-    @products = Product.all
-    render json: @products
-  end
-end
-</code></pre>
-<p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
-<p>如何实现？</p>
-<p>试试<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>三步走</p>
-<ul>
-<li><p>安装<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a> gem</p>
-<p>gemfile中添加：</p>
-<pre><code class="Ruby">gem &#39;has_scope&#39;
-</code></pre>
-<p>终端bundle，服务器重启。</p>
-</li>
-<li><p>在model中添加scope</p>
-<p>修改<code>app/models/product.rb</code>：</p>
-<pre><code class="ruby">class Product &lt; ActiveRecord::Base
-  belongs_to :category
-
- + scope :category, -&gt; (category_id) { where(category_id: category_id) }
- + scope :price, -&gt; (from, to) { where(&quot;price &gt;= ? AND price &lt;= ?&quot;, from, to) }
-  ......
-
-end
-</code></pre>
-</li>
-<li><p>在controller中添加has_scope</p>
-<p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
-<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
-  + has_scope :category, only: :index
-  + has_scope :price, using: [:from, :to], only: :index
-
-# GET /api/v1/products
-  def index
-  -  @products = Product.all
-  +  @products = apply_scopes(Product).includes(:category).all
-      # using includes(:category), fix N+1 query problem
-    render json: @products
-  end
-end
-</code></pre>
-<p>好，大功告成，用postman测试下，确认正常，cool！</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://gist.github.com/mamantoha/9c0aec7958c7636cebef" target="_blank" rel="noopener">Rails API Filtering and Sorting</a></p>
-<p><a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2588,7 +2558,7 @@ end
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">191</span>
+                <span class="site-state-item-count">192</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2721,7 +2691,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    187.0k
+    188.3k
   </span>
 
 </div>
