@@ -273,6 +273,274 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/05/10/install-ss-server-on-google-cloud-platform/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2019/05/10/install-ss-server-on-google-cloud-platform/" itemprop="url">
+                  用GCP搭建SSserver
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-10T15:38:08+08:00">
+                2019-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/05/10/install-ss-server-on-google-cloud-platform/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2019/05/10/install-ss-server-on-google-cloud-platform/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>920 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>翻墙小白一枚，按照网上的这篇<a href="http://godjose.com/2017/06/14/new-article/" target="_blank" rel="noopener">用Google Cloud Platform搭建Shadowsocks服务教程</a> 来搭建小飞机服务，但是操作的过程中踩了点坑，这里记录下在服务器上搭建的详细过程， 以备下次少踩点坑。</p>
+<p>有关申请GCP和创建实例的步骤，这里略去，以下操作步骤基于Ubuntu 18.04.2，主要的命令语句参考<a href="http://godjose.com/2017/06/14/new-article/" target="_blank" rel="noopener">用Google Cloud Platform搭建Shadowsocks服务教程</a>。</p>
+<h4 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h4><p>创建实例后，点击VM实例页面中的SSH按钮，连接到服务器。</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1g2u38httrvj31g00f0mzc.jpg" alt=""></p>
+<p>登录服务器后，先获取 root 权限：</p>
+<pre><code>sudo -i
+</code></pre><p>更新系统：</p>
+<pre><code>apt update
+apt upgrade
+</code></pre><h4 id="启用BBR"><a href="#启用BBR" class="headerlink" title="启用BBR"></a>启用BBR</h4><p>BBR 由 Google 开发，供 Linux 内核的 TCP 协议栈使用，具体我也不甚了解，可以简单理解为它能加速网络传输速度。</p>
+<p>好了，启用吧。</p>
+<p>写入配置：</p>
+<pre><code>echo &quot;net.core.default_qdisc=fq&quot; &gt;&gt; /etc/sysctl.conf
+
+echo &quot;net.ipv4.tcp_congestion_control=bbr&quot; &gt;&gt; /etc/sysctl.conf
+</code></pre><p>配置生效：</p>
+<pre><code>sysctl -p
+</code></pre><p>校验：</p>
+<pre><code>lsmod | grep bbr
+</code></pre><p>看到输出类似<code>tcp_bbr  20480</code> 这样的内容，则表明启用成功了。</p>
+<h4 id="搭建SS-Server"><a href="#搭建SS-Server" class="headerlink" title="搭建SS Server"></a>搭建SS Server</h4><p>SS Server的安装可以参考官方文档：<a href="https://github.com/shadowsocks/shadowsocks/blob/master/README.md" target="_blank" rel="noopener">shadowsocks</a>.</p>
+<p>更新软件包：</p>
+<pre><code>apt-get update
+</code></pre><p>安装python-pip：</p>
+<pre><code>apt-get install python-pip
+</code></pre><p>使用 pip 安装 SS server：</p>
+<pre><code>pip install shadowsocks
+</code></pre><p>安装成功后，创建配置文件：</p>
+<pre><code>vi /etc/shadowsocks.json
+</code></pre><p>在文件中添加以下内容：</p>
+<pre><code>{
+    &quot;server&quot;:&quot;0.0.0.0&quot;,
+    &quot;server_port&quot;:8388,
+    &quot;local_address&quot;: &quot;127.0.0.1&quot;,
+    &quot;local_port&quot;:1080,
+    &quot;password&quot;:&quot;password&quot;,
+    &quot;timeout&quot;:300,
+    &quot;method&quot;:&quot;aes-256-cfb&quot;
+}
+</code></pre><p>这里：server_port， password对应的是之后你在Shadowsocks客户端上配置的端口和密码，请自定义。</p>
+<p>保存文件后，启动SS server：</p>
+<pre><code>ssserver -c /etc/shadowsocks.json -d start
+</code></pre><p>看到输出started，则表示启动成功。</p>
+<p>但是很不幸，我执行这一步时，启动报错，显示：</p>
+<blockquote>
+<p>undefined symbol EVP_CIPHER_CTX_cleanup shadowsocks start failed</p>
+</blockquote>
+<p>参考这篇<a href="http://tplove.info/post/21/" target="_blank" rel="noopener">ShadowSocks2.8.2启动报错”undefined symbol EVP_CIPHER_CTX_cleanup”</a>， 作者指出是由于openssl升级导致，按照文章指示，做了如下操作：</p>
+<p>编辑<code>/usr/local/lib/python2.7/dist-packages/shadowsocks/crypto/openssl.py</code> 文件：</p>
+<p>【这里文件地址可能不大一样，你可以使用find找到<code>shadowsocks/crypto/openssl.py</code>文件】</p>
+<p>使用 vi 打开文件，将文件中所有<strong>EVP_CIPHER_CTX_cleanup</strong>都修改为<strong>EVP_CIPHER_CTX_reset</strong>。</p>
+<p>作者在文中很贴心的指出共有两处，在第52行和111行，感谢作者的分享。</p>
+<p>修改完成后，重新启动SS server即可。</p>
+<p>更多SS server相关命令，参考<a href="https://github.com/shadowsocks/shadowsocks/wiki" target="_blank" rel="noopener">shadowsocks wiki</a>.</p>
+<h4 id="设置开机自启"><a href="#设置开机自启" class="headerlink" title="设置开机自启"></a>设置开机自启</h4><p>创建脚本文件：</p>
+<pre><code>vi /etc/init.d/shadowsocks
+</code></pre><p>添加如下内容：</p>
+<pre><code class="shell">#!/bin/sh
+
+start(){
+　　　ssserver -c /etc/shadowsocks.json -d start
+}
+stop(){
+　　　ssserver -c /etc/shadowsocks.json -d stop
+}
+case &quot;$1&quot; in
+start)
+　　　start
+　　　;;
+stop)
+　　　stop
+　　　;;
+reload)
+　　　stop
+　　　start
+　　　;;
+*)
+      echo &quot;Usage: $0 {start|reload|stop}&quot;
+      exit 1
+　　　;;
+esac
+</code></pre>
+<p>为该文件添加可执行权限：</p>
+<pre><code>chmod +x /etc/init.d/shadowsocks
+</code></pre><p>新建shadowsocks.conf:</p>
+<pre><code>vi /etc/init/shadowsocks.conf
+</code></pre><p>添加如下内容：</p>
+<pre><code>start on (runlevel [2345])stop on (runlevel [016])pre-start script
+/etc/init.d/shadowsocks start
+end script
+
+post-stop script
+/etc/init.d/shadowsocks stop
+end script
+</code></pre><p>执行：</p>
+<pre><code>update-rc.d shadowsocks defaults
+</code></pre><p>开机自启设置完成。</p>
+<p>如果开机自启没有成功，请检查下<code>/etc/init.d/shadowsocks</code> 文件，确保脚本中不存在语法错误，比如中文符号。</p>
+<h4 id="防火墙配置"><a href="#防火墙配置" class="headerlink" title="防火墙配置"></a>防火墙配置</h4><p>写这个是因为当时按照教程搭建完SS server后，发现还是翻不了墙，又不知道哪里出了问题，领导帮忙debug了下，修改了防火墙规则，问题解决。</p>
+<p>在GCP 主页中，选择菜单 <strong>VPC 网络</strong> =&gt;<strong>防火墙规则</strong>， <strong>创建防火墙规则</strong>:</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1g2utgj3mtaj30u00zwdkd.jpg" alt=""></p>
+<h4 id="查看日志"><a href="#查看日志" class="headerlink" title="查看日志"></a>查看日志</h4><pre><code>less /var/log/shadowsocks.log
+</code></pre><p>如果日志上没有访问记录，可以考虑查看防火墙状态：</p>
+<pre><code>nfw status
+</code></pre><p>或者查看端口情况：</p>
+<pre><code>netstat -anp
+</code></pre><p>判断问题出在哪里。</p>
+<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="http://godjose.com/2017/06/14/new-article/" target="_blank" rel="noopener">用Google Cloud Platform搭建Shadowsocks服务教程</a></p>
+<p><a href="http://tplove.info/post/21/" target="_blank" rel="noopener">ShadowSocks2.8.2启动报错”undefined symbol EVP_CIPHER_CTX_cleanup”</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/05/01/notes-of-tianlongbabu/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2858,458 +3126,6 @@ export default {
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/03/08/custom-audio-player-component-in-nuxt/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2019/03/08/custom-audio-player-component-in-nuxt/" itemprop="url">
-                  nuxt中自定义音频播放组件
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-03-08T13:51:25+08:00">
-                2019-03-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2019/03/08/custom-audio-player-component-in-nuxt/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2019/03/08/custom-audio-player-component-in-nuxt/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,353 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在nuxt中自定义音频播放组件，遇到了一个问题：当存在多个音频播放器时，一次只允许播放一个音频。Google了大半天，写出来的效果并不好，后面老大出手解决了，觉得他的这个方式很精巧，记录下以备忘。</p>
-<h4 id="最终效果"><a href="#最终效果" class="headerlink" title="最终效果"></a>最终效果</h4><p>做一个最简单的自定义音频播放组件AudioPlayer，props中只有一个参数：文件的source地址。</p>
-<p>效果图：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1g0ufeelegdg30uz06iaba.gif" alt=""></p>
-<h4 id="实现细节"><a href="#实现细节" class="headerlink" title="实现细节"></a>实现细节</h4><p>为了实现这个效果，需要将功能拆分下：</p>
-<p>1、获取音频文件的时长duration，这个可以通过audio的<strong>canplay</strong>事件。</p>
-<p>2、获取音频的currentTime， 这个可以通过audio的<strong>timeupdate</strong>事件</p>
-<p>3、用变量state来显示audio的三种状态：paused, playing, stopped，并分别定义三种状态下的方法: play(), pause(), stop()，根据用户操作来调用不同的方法。</p>
-<p>4、定义numberToStardardMinuteSecond函数，将currentTime，duration处理成时间，这里引入库<a href="https://numbrojs.com/" target="_blank" rel="noopener">numbro</a>来做这件事。</p>
-<p>5、自定义进度条，添加click事件处理函数seek，通过获取点击位置占整个长度的百分比，换算出此时audio的currentTime，设置audio的currentTime</p>
-<p>6、使用eventbus进行组件间的通信，在audio play之前，触发beforeplay事件，同时在AuidoPlay组件中监听beforeplay事件。</p>
-<p>分步来：</p>
-<p>先布局出音频播放组件的模子：</p>
-<pre><code class="vue">&lt;template&gt;
-  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
-    &lt;div class=&quot;audio-player mr-2&quot;&gt;
-      &lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; /&gt;
-      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
-      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;w-100&quot;&gt;
-      &lt;span class=&quot;float-right text-muted small&quot;&gt;{{ currentTime }} / {{ mediaDuration }}&lt;/span&gt;
-      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
-      &lt;div class=&quot;progress&quot;&gt;
-        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
-
-&lt;script&gt;
-import numbro from &#39;numbro&#39;
-
-export default {
-  props: [ &#39;src&#39; ],
-  data() {
-    return {
-      currentTime: 0,
-      mediaDuration: 0,
-      state: &#39;stopped&#39;
-    }
-  },
-  computed: {
-    currentPercentage() {
-      if (this.mediaDuration === 0) {
-        return numbro(this.mediaDuration).format({ output: &#39;percent&#39;, mantissa: 0 })
-      } else {
-        return numbro(this.currentTime / this.mediaDuration ).format({ output: &#39;percent&#39;, mantissa: 0 })
-      }
-    }
-  }
-}
-&lt;/script&gt;
-</code></pre>
-<p>Step1: 获取duration</p>
-<p>在audio上添加事件监听@canplay，在methods中定义对应的处理函数onCanplay。</p>
-<pre><code class="vue">&lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; @canplay=&quot;onCanplay&quot; /&gt;
-
-.....
-
-    onCanplay(event) {
-      const audio = event.target
-      this.mediaDuration = parseInt(audio.duration)
-    }
-</code></pre>
-<p>Step2: 获取currentTime</p>
-<p>在audio上添加事件监听@timeupdate，在methods中定义对应的处理函数onTimeupdate. 这里调用的stop函数，会在下一步定义。</p>
-<pre><code class="vue">&lt;audio :src=&quot;src&quot; @canplay=&quot;onCanplay&quot; @timeupdate=&quot;onTimeupdate&quot; ref=&quot;audio&quot; /&gt;
-.......
-    onTimeupdate(event) {
-      const audio = event.target
-      if (audio.currentTime &gt;= this.mediaDuration) {
-        this.currentTime = this.mediaDuration
-        this.stop()
-      } else {
-        this.currentTime = audio.currentTime
-      }
-    }
-</code></pre>
-<p>Step3: 在methods中，定义play, pause, stop函数，用以处理audio的状态。</p>
-<pre><code class="javascript">    play() {
-      const audio = this.$refs.audio
-      if (this.state === &#39;stopped&#39;) {
-        audio.currentTime = 0
-      }
-      if (audio.paused) {
-        audio.play()
-      }
-      this.state = &#39;playing&#39;
-    },
-    pause() {
-      const audio = this.$refs.audio
-      if (!audio.paused) {
-        audio.pause()
-      }
-      this.state = &#39;paused&#39;
-    },
-
-    stop() {
-      const audio = this.$refs.audio
-      if (!audio.paused) {
-        audio.pause()
-      }
-      this.state = &#39;stopped&#39;
-    }
-</code></pre>
-<p>Step4: 定义numberToStardardMinuteSecond函数，将currentTime，duration转化为时间。</p>
-<p>引入numbro.</p>
-<pre><code class="shell">yarn add numbro
-</code></pre>
-<p>在methods中定义numberToStardardMinuteSecond：</p>
-<pre><code class="javascript">    numberToStardardMinuteSecond(num) {
-      const number = parseInt(num)
-      const time = numbro(number).format({ output: &#39;time&#39; })
-
-      if (time.substr(0, 1) === &#39;0&#39;) {
-        return time.substr(2, time.length - 2)
-      } else {
-        return time
-      }
-    }
-</code></pre>
-<p>Step5: 在进度条上监听click事件，在methods中定义seek函数来处理click事件。</p>
-<pre><code class="vue">&lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
-  &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
-&lt;/div&gt;
-
-......
-
-    seek(event) {
-      const $this = $(event.target)
-
-      const widthclicked = event.pageX - $this.offset().left
-      const totalWidth = $this.width()
-
-      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
-    }
-</code></pre>
-<p>为了使progress可以点击，需要在style中给progress设置pointer-events。</p>
-<pre><code class="css">.progress {
-  pointer-events: auto;
-}
-</code></pre>
-<p>Step6: 使用eventbus进行组件间的通信，实现一次只播放一个视频。</p>
-<p>在audio play之前，$emit一个事件beforeplay， 同时将audio作为参数传出去。</p>
-<p>修改play函数，添加事件派发：</p>
-<pre><code class="javascript">    play() {
-      const audio = this.$refs.audio
-      if (this.state === &#39;stopped&#39;) {
-        audio.currentTime = 0
-      }
-      if (audio.paused) {
-        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
-        audio.play()
-      }
-      this.state = &#39;playing&#39;
-    }
-</code></pre>
-<p>任何其他的组件都可以监听这个beforeplay事件，当然也包括AudioPlayer组件。</p>
-<p>在AudioPlayer组件添加对beforeplay的监听：</p>
-<pre><code class="javascript">  created() {
-    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; {
-      if (player === this.$refs.audio) {
-        return
-      }
-      if (this.state === &#39;playing&#39;) {
-        this.pause()
-      }
-    })
-  }
-</code></pre>
-<p>这里判断传过来的参数，如果是自身emit了这个事件，就跳过，如果是其他audio，同时自身还在播放，则自身停止播放。</p>
-<p>OK，大功告成。</p>
-<p>最终的完整代码：</p>
-<pre><code class="vue">&lt;template&gt;
-  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
-    &lt;div class=&quot;audio-player mr-2&quot;&gt;
-      &lt;audio :src=&quot;src&quot; @timeupdate=&quot;onTimeupdate&quot; @canplay=&quot;onCanplay&quot; ref=&quot;audio&quot; /&gt;
-      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
-      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;w-100&quot;&gt;
-      &lt;span class=&quot;float-right text-muted small&quot;&gt;{{ numberToStardardMinuteSecond(currentTime) }} / {{ numberToStardardMinuteSecond(mediaDuration) }}&lt;/span&gt;
-      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
-      &lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
-        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: ${currentPercentage}`&quot;&gt;&lt;/div&gt;
-      &lt;/div&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
-
-&lt;script&gt;
-import $ from &#39;jquery&#39;
-import numbro from &#39;numbro&#39;
-
-export default {
-  props: [ &#39;src&#39; ],
-  data() {
-    return {
-      currentTime: 0,
-      mediaDuration: 0,
-      state: &#39;stopped&#39;
-    }
-  },
-  created() {
-    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; {
-      if (player === this.$refs.audio) {
-        return
-      }
-      if (this.state === &#39;playing&#39;) {
-        this.pause()
-      }
-    })
-  },
-  computed: {
-    currentPercentage() {
-      if (this.mediaDuration === 0) {
-        return numbro(this.mediaDuration).format({ output: &#39;percent&#39;, mantissa: 0 })
-      } else {
-        const progress = this.currentTime / this.mediaDuration
-        return numbro(progress).format({ output: &#39;percent&#39;, mantissa: 0 })
-      }
-    }
-  },
-  methods: {
-    play() {
-      const audio = this.$refs.audio
-      if (this.state === &#39;stopped&#39;) {
-        audio.currentTime = 0
-      }
-      if (audio.paused) {
-        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
-        audio.play()
-      }
-      this.state = &#39;playing&#39;
-    },
-
-    pause() {
-      const audio = this.$refs.audio
-      if (!audio.paused) {
-        audio.pause()
-      }
-      this.state = &#39;paused&#39;
-    },
-
-    stop() {
-      const audio = this.$refs.audio
-      if (!audio.paused) {
-        audio.pause()
-      }
-      this.state = &#39;stopped&#39;
-    },
-
-    onTimeupdate(event) {
-      const audio = event.target
-      if (audio.currentTime &gt;= this.mediaDuration) {
-        this.currentTime = this.mediaDuration
-        this.stop()
-      } else {
-        this.currentTime = audio.currentTime
-      }
-    },
-
-    seek(event) {
-      const $this = $(event.target)
-
-      const widthclicked = event.pageX - $this.offset().left
-      const totalWidth = $this.width()
-
-      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
-    },
-
-    onCanplay(event) {
-      const audio = event.target
-      this.mediaDuration = parseInt(audio.duration)
-    },
-
-    numberToStardardMinuteSecond(num) {
-      const number = parseInt(num)
-      const time = numbro(number).format({ output: &#39;time&#39; })
-
-      if (time.substr(0, 1) === &#39;0&#39;) {
-        return time.substr(2, time.length - 2)
-      } else {
-        return time
-      }
-    }
-  }
-}
-&lt;/script&gt;
-</code></pre>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events" target="_blank" rel="noopener">Media events</a></p>
-<p><a href="https://medium.com/@Shardik/eventbus-for-nuxt-js-components-46660ae54f2d" target="_blank" rel="noopener">EventBus for Nuxt.js components</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3359,7 +3175,7 @@ export default {
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">192</span>
+                <span class="site-state-item-count">193</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3381,7 +3197,7 @@ export default {
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">53</span>
+                <span class="site-state-item-count">54</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -3492,7 +3308,7 @@ export default {
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.3k
+    189.2k
   </span>
 
 </div>

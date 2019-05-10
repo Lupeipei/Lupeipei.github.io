@@ -273,6 +273,207 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/08/capture-full-page-with-capybara/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/08/capture-full-page-with-capybara/" itemprop="url">
+                  headless_chrome下，使用capybara截取整个网页
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-08T21:22:40+08:00">
+                2018-01-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/08/capture-full-page-with-capybara/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/08/capture-full-page-with-capybara/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>627 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做cucumber测试时，使用capybara来截取整个网页，掉进了一个坑，记录下，也附上最终的解决方法。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>默认情况下，capybara截取的图片大小尺寸是由自己设置的window.size来决定的，如果你想截取全屏怎么办？</p>
+<p>这样的需求肯定不是你第一个提出来，所以Google下， how to get full page screenshot with capybara ，会得到一些相关的链接，比如这条：</p>
+<p><a href="https://stackoverflow.com/questions/16695075/is-it-possible-to-take-a-screenshot-of-the-whole-page-with-selenium-capybara" target="_blank" rel="noopener">Is it possible to take a screenshot of the whole page with Selenium/Capybara?</a></p>
+<p>看解答，很简单，窃喜，这么快就解决了：</p>
+<pre><code>page.save_screenshot(&#39;screen.png&#39;, full: true)
+</code></pre><p>连提问者本人都对这个解答很满意，亲测有效，立马试试。</p>
+<p>然后你会发现，根本没有任何效果，截取的仍然不是整个网页，只是一部分页面，这时候，可以去看源码<a href="http://www.rubydoc.info/github/jnicklas/capybara/Capybara%2FSession:save_screenshot" target="_blank" rel="noopener">Capybara::Session#save_screenshot</a>, 发现确实有option的选项：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fn9bsxoifmj30n00drgo3.jpg" alt=""></p>
+<p>这样看，应该没错啊，然后你会怀疑是不是自己代码敲错了，符号敲的不对，还是哪里没有设置好……</p>
+<p>这个地方真的是个坑。</p>
+<p>为什么坑？因为你没注意看这个解答中提到的driver是Selenium，而它通常的搭档browser是Firefox, 不是chrome，所以只能说是你的粗心给自个挖了个坑……</p>
+<p>这里，你会想问，为什么是headerless_chrome时就不行了呢？</p>
+<p>还是stack overflow：【强大的stack！】</p>
+<p>看这个<a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
+<p>这里，Thomas Walpole的解答非常清楚，忍不住想点赞。【可惜我的reputations还不到15……】</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9c9khgxbj30im09c41f.jpg" alt=""></p>
+<p>查看selenium的<a href="https://github.com/SeleniumHQ/selenium/blob/master/rb/lib/selenium/webdriver/common/driver_extensions/takes_screenshot.rb#L34" target="_blank" rel="noopener">takes_screenshot</a>， save_screenshot的定义中，参数只有一个path：</p>
+<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fn9fzei9h1j30mo058dge.jpg" alt=""></p>
+<p>所以，剩下的就简单了，去resize window即可。</p>
+<p>好，不废话了，直接上货：</p>
+<p>在<code>features/support</code>下新建文件<code>screenshot.rb</code>, 放入以下内容：</p>
+<pre><code class="Ruby">def full_page_screenshot(file_name = nil)
+  width  = Capybara.page.execute_script(&quot;return Math.max(document.body.scrollWidth, document.body.offsetWidth);&quot;)
+  height = Capybara.page.execute_script(&quot;return Math.max(document.body.scrollHeight, document.body.offsetHeight);&quot;)
+  window = Capybara.current_session.driver.browser.manage.window
+  window.resize_to(width, height)
+  file = Capybara.page.save_screenshot(file_name)
+  return file
+end
+</code></pre>
+<p>上图看清楚点：</p>
+<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fnack5oeqyj30o303l74z.jpg" alt=""></p>
+<p>这里，width，height是调用脚本来运行得到的，也就是借助JS获取了当前打开页面的长宽值。</p>
+<p>参数方面，file_name我用了nil作为默认值，这样更灵活，既可以用capybara默认生成的文件名，也可以自定义。</p>
+<p>调用的时候，直接调用full_page_screenshot就好了。</p>
+<p>上个效果图：【截取了codepen主页】</p>
+<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fn9gikub5fj31ig2xze7f.jpg" alt=""></p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
+<p><a href="https://testingrepository.com/full-page-screenshot-with-selenium/" target="_blank" rel="noopener">Full page screenshot with selenium</a></p>
+<p><a href="https://stackoverflow.com/questions/43254247/cucumber-capybara-save-screenshotpath-full-true-is-not-capturing-the-full-b" target="_blank" rel="noopener">save_screenshot(path, full: true) is not capturing the full browser?</a></p>
+<p><a href="http://yizeng.me/2014/02/23/how-to-get-window-size-resize-or-maximize-window-using-selenium-webdriver/" target="_blank" rel="noopener">How to get window size, resize or maximize window using Selenium WebDriver</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/05/encode-uuid-as-base58/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2627,435 +2828,6 @@ gem &#39;simple-navigation-bootstrap&#39;
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/13/methods-of-Array-in-Ruby/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/13/methods-of-Array-in-Ruby/" itemprop="url">
-                  Ruby中Array 的一些常用方法
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-13T17:11:08+08:00">
-                2017-12-13
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/13/methods-of-Array-in-Ruby/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/13/methods-of-Array-in-Ruby/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,212 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>工作中常常要处理Array，索性把ruby 中Array的一些常用方法小结一下，加深印象。</p>
-<p>先来看看Array中除去继承自Object之外的，有多少public methods</p>
-<pre><code class="Ruby">(Array.instance_methods - Object.instance_methods).count
-# 输出:
-120
-# ruby版本为 2.3.1
-</code></pre>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>建立空数组：</p>
-<pre><code class="Ruby">[]
-Array.new
-</code></pre>
-</li>
-<li><p>使用%w, %i 创建非空数组</p>
-<p><strong>创建不包含空白的字符串数组，可用%w</strong></p>
-<pre><code class="Ruby">%w(Ruby Python Scheme)
-# 输出:
-[&quot;Ruby&quot;, &quot;Python&quot;, &quot;Scheme&quot;]
-</code></pre>
-<p><strong>创建元素为符号的数组，可用%i</strong></p>
-<pre><code class="Ruby">%i(Ruby Python Scheme)
-# 输出:
-[:Ruby, :Python, :Scheme]
-</code></pre>
-</li>
-<li><p>数组的大小</p>
-<pre><code class="Ruby">[4, 8, 15, 16, 23, 42].count
-[4, 8, 15, 16, 23, 42].size
-[4, 8, 15, 16, 23, 42].length
-# 输出:
-6
-6
-6
-</code></pre>
-</li>
-<li><p>将string转化为array</p>
-<p> split</p>
-<pre><code class="Ruby">&quot;a, b, c, d&quot;.split(&quot;, &quot;)
-# 输出:
-[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]
-</code></pre>
-</li>
-<li><p>将array转化为string</p>
-<p>join</p>
-<pre><code class="Ruby">[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;].join(&quot;, &quot;)
-# 输出:
-&quot;a, b, c, d&quot;
-</code></pre>
-</li>
-<li><p>将hash 转化为array</p>
-<p>to_a</p>
-<pre><code class="Ruby">table = {:&quot;color1&quot; =&gt; &quot;blue&quot;, :&quot;color2&quot; =&gt; &quot;red&quot;}
-table.to_a
-# 输出:
-[[:color1, &quot;blue&quot;], [:color2, &quot;red&quot;]]
-
-table.to_a.flatten
-# 输出:
-[:color1, &quot;blue&quot;, :color2, &quot;red&quot;]
-</code></pre>
-</li>
-<li><p>在数组中提取元素</p>
-<p>index从0开始，index为正时，从array的第一个元素开始，index为负时，从最后一个元素开始</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5][2]
-# 输出:
-3
-
-[1, 2, 3, 4, 5][-1]
-# 输出:
-5
-</code></pre>
-</li>
-<li><p>给数组添加元素</p>
-<p>在尾部添加&lt;&lt;  or push</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5] &lt;&lt; &quot;woot&quot;
-# 输出: [1, 2, 3, 4, 5, &quot;woot&quot;]
-
-[1, 2, 3, 4, 5].push(&quot;woot&quot;)
-# 输出: [1, 2, 3, 4, 5, &quot;woot&quot;]
-</code></pre>
-<p>在开头添加 unshift</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].unshift(0)
-# 输出:
-[0, 1, 2, 3, 4, 5]
-</code></pre>
-</li>
-<li><p>连接数组concat ／ +</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].concat([6, 7])
-# 输出:
-[1, 2, 3, 4, 5, 6, 7]
-
-[1, 2, 3, 4, 5] + [6, 7]
-# 输出:
-[1, 2, 3, 4, 5, 6, 7]
-</code></pre>
-</li>
-<li><p>数组转换map, collect</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].map {|x| x * 3}
-# 输出:
-[3, 6, 9, 12, 15]
-
-[1, 2, 3, 4, 5].collect {|x| x + 2 }
-# 输出:
-[3, 4, 5, 6, 7]
-</code></pre>
-</li>
-<li><p>获取分散的数组values_at</p>
-<pre><code class="Ruby">[1,2,3,4,5,6].values_at(1,2,4)
-# 输出:
-[2, 3, 5]
-</code></pre>
-</li>
-<li><p>筛选特定的元素 select</p>
-<pre><code class="Ruby">[1,2,3,4,5,6].select {|number| number % 2 == 0}
-# 输出:
-[2, 4, 6]
-</code></pre>
-</li>
-<li><p>删除元素 delete</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.delete(5) # 注意这里delete的参数是元素，不是index
-# 输出:
-5
-
-a
-# 输出:
-[1, 3, 4, 6, 7]
-</code></pre>
-<p>删除指定index的元素delete_at 【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.delete_at(5)
-# 输出:
-7
-
-a
-# 输出:
-[1,3,5,4,6]
-</code></pre>
-<p>删除符合要求的delete_if【破坏性修改】, reject</p>
-<pre><code class="Ruby">[1,2,3,4,5,6,7,8,9].delete_if{|x| x % 2 == 0}
-# 输出:
-[1, 3, 5, 7, 9]
-
-[1,2,3,4,5,6,7,8,9].reject{|x| x % 2 == 0}
-# 输出:
-[1, 3, 5, 7, 9]
-</code></pre>
-<p>删除所有nil元素compact</p>
-<pre><code class="Ruby">a = [nil, 4, nil, 8, 15, 16, nil, 23, 42, nil]
-a.compact
-# 输出:
-[4, 8, 15, 16, 23, 42]
-</code></pre>
-<p>删除指定部分slice</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.slice(1,2)
-# 输出:
-[3, 5]
-
-a.slice!(1,2)
-# 输出:
-[3, 5]
-
-a
-# 输出:
-[1, 4, 6, 7]
-</code></pre>
-<p>删除第X个元素shift, 默认是第一个【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.shift
-# 输出:
-1
-
-a
-# 输出:
-[2, 3, 4, 5, 6, 7, 8, 9]
-
-a.shift(2)
-# 输出:
-[2, 3]
-
-a
-# 输出:
-[ 4, 5, 6, 7, 8, 9]
-</code></pre>
-<p>删除最后X个元素pop ，默认是最后一个【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.pop
-# 输出:
-9
-
-a
-# 输出:
-[1,2,3,4,5,6,7,8]
-
-a.pop(3)
-# 输出:
-[6,7,8]
-
-a
-# 输出:
-[1,2,3,4,5]
-</code></pre>
-<p>ruby中method后面带有！符号的都是具有破坏性的修改, 但是那些没有带！尾巴的也不是那么友好，比如上面的shift， pop。 那么可有办法保护我们的array？有滴，上freeze</p>
-<p>freeze可以禁止具有破坏性的方法来修改对象。</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.freeze
-a.pop
-# 输出:
-# can&#39;t modify frozen Array
-
-a
-# 输出:
-[1,2,3,4,5,6,7,8,9]
-</code></pre>
-</li>
-<li><p>去除重复元素uniq</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7,1,3,7]
-a.uniq
-# 输出:
-[1, 3, 5, 4, 6, 7]
-</code></pre>
-</li>
-<li><p>平坦化数组flatten</p>
-<p>前面出现过，再多看些例子：</p>
-<pre><code class="Ruby">[4, [8], [15], [16, [23, 42]]].flatten
-# 输出:
-[4, 8, 15, 16, 23, 42]
-</code></pre>
-<p>不传递参数时，默认是完全平坦化，传递参数，则平坦化层级X，例如：</p>
-<pre><code class="Ruby">[4, [8], [15], [16, [23, [42, 43]]]].flatten(1)
-# 输出:
-[4, 8, 15, 16, [23, [42, 43]]]
-
-[4, [8], [15], [16, [23, [42, 43]]]].flatten(2)
-# 输出:
-[4, 8, 15, 16, 23, [42, 43]]
-
-[4, [8], [15], [16, [23, [42, 43]]]].flatten(3)
-# 输出:
- [4, 8, 15, 16, 23, 42, 43]
-</code></pre>
-</li>
-<li><p>获取某个元素的出现次数count</p>
-<p>count前面已经出现过，用于计算数组的长度，不带参数，如果传递参数给到count，则返回该元素在数组中出现的次数。</p>
-<pre><code class="Ruby">[42, 8, 15, 16, 23, 42].count(42)
-# 输出:
-2
-</code></pre>
-</li>
-<li><p>排序sort</p>
-<pre><code class="Ruby">a = [1, 3, 5, 4, 6, 7]
-a.sort
-# 输出:
- [1, 3, 4, 5, 6, 7]
-</code></pre>
-<p>使用块来指定排序规则：</p>
-<pre><code class="Ruby">a = [&quot;ruby&quot;, &quot;python&quot;, &quot;C&quot;, &quot;C++&quot;, &quot;java&quot;]
-a.sort
-# 输出:
-[&quot;C&quot;, &quot;C++&quot;, &quot;java&quot;, &quot;python&quot;, &quot;ruby&quot;]    # 默认按照首字母排序
-
-a.sort {|a, b| a.length &lt;=&gt; b.length}
-# 输出:
-[&quot;C&quot;, &quot;C++&quot;, &quot;ruby&quot;, &quot;java&quot;, &quot;python&quot;]   # 按照字符长度来排序
-</code></pre>
-<p>同样的，sort！方法具有破坏性。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>先整这么多，用到新的再补上，嘿哈</p>
-</li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3105,7 +2877,7 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">192</span>
+                <span class="site-state-item-count">193</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3127,7 +2899,7 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">53</span>
+                <span class="site-state-item-count">54</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
@@ -3238,7 +3010,7 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    188.3k
+    189.2k
   </span>
 
 </div>
