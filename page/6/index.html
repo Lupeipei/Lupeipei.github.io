@@ -273,6 +273,285 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/11/explain-true-function-in-load/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/08/11/explain-true-function-in-load/" itemprop="url">
+                  有关load中的参数true
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-11T22:22:02+08:00">
+                2018-08-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/11/explain-true-function-in-load/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/08/11/explain-true-function-in-load/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>923 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Ruby中的load method用来加载文件，也就是将另一个ruby文件中的代码加载进来了。</p>
+<p>《Ruby元编程》中提到，使用load时，可能会出现<strong>常量</strong>污染当前程序的命名空间的问题，添加了true这个参数后，Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的<strong>所有常量</strong>，从而避免污染的问题，但是书中并没有给出例子来详细说明。</p>
+<p>来看两个例子感受下：</p>
+<p>同一个目录下，存在两个文件，a.rb, b.rb，a中加载了b.rb文件。</p>
+<pre><code class="ruby"># b.rb
+## 只定义了一个普通的常量Y
+Y = &quot;hello&quot;
+</code></pre>
+<p>a.rb中加载b.rb</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+Y = &quot;hi&quot;
+
+p Y
+#=&gt; warning: already initialized constant Y
+</code></pre>
+<p>此时，执行a.rb，会报错，显示：warning: already initialized constant Y</p>
+<p>也就是加载进来的常量Y与a.rb中的常量Y重了，系统报错显示已经初始化了Y。</p>
+<p>如果添加了true，则输出”hi”。</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+Y = &quot;hi&quot;
+
+p Y
+#=&gt; hi
+</code></pre>
+<p>这里Y是一个常规的常量，ruby中类名，模块名也是常量，如果加载同名的类／模块会出现什么情况？</p>
+<p>修改下b.rb文件：</p>
+<pre><code class="Ruby"># b.rb
+module Mymodule
+    def hi
+        p &quot;method hi in b.rb&quot;
+    end
+end
+</code></pre>
+<p>修改下a.rb文件：</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+class Mymodule
+    def hello
+        p &quot;hello&quot;
+    end
+end
+
+Mymodule.new.hello
+
+#=&gt; Mymodule is not a class
+</code></pre>
+<p>可以看到，加载后，执行a.rb时，报错，显示Mymodule is not a class，因为此时加载进来了一个同名的Mymodule，它是一个module，而a.rb文件中，定义了一个同名的Mymodule类，这个类其实并没有创建成功，这里稍微提一下，执行a.rb时，报错不是发生在执行Mymodule.new.hello时，而是在定义Mymodule这个类的地方报错。</p>
+<p>如果添加上true，就正常了。</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+class Mymodule
+    def hello
+        p &quot;hello&quot;
+    end
+end
+
+Mymodule.new.hello
+
+#=&gt; hello
+</code></pre>
+<p>这里，你可能会疑惑，添加了true之后，原本来自b.rb中那个Y，module Mymodule去了哪里？书中提到，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>，也就是等同于他们根本就没有加载进来了？怎么知道它们真的没有加载进来？</p>
+<p>可以通过<strong>Module的类方法constants</strong>来判断，该方法返回当前顶层程序中的所有常量。</p>
+<p>修改下b.rb ，改回原来的样子：</p>
+<pre><code class="Ruby"># b.rb
+
+Y = &quot;hello&quot;
+</code></pre>
+<p>修改下 a.rb:</p>
+<pre><code class="Ruby"># a.rb
+# 未加载b.rb
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 117
+
+p Module.constants.include? :Y
+#=&gt; false
+</code></pre>
+<p>加载b.rb，无true：</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 118
+
+p Module.constants.include? :Y
+#=&gt; true
+</code></pre>
+<p>此时<strong>Y</strong>加载进来了，常量总数加1。</p>
+<p>加载b.rb，有true：</p>
+<pre><code class="Ruby"># a.rb
+load &#39;./b.rb&#39;, true
+
+p Module.constants
+
+#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
+
+p Module.constants.count
+#=&gt; 117
+
+p Module.constants.include? :Y
+#=&gt; false
+</code></pre>
+<p>输出结果与未加载b.rb完全一致。</p>
+<p>也就是书中说的那样，添加true后，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>。</p>
+<p>等同于<strong>load添加true后，所有的常量都没有加载进来</strong>。当然这里的常量，包括类名，模块名。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">Ruby元编程(第2版)</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/09/beauty-input-file-and-preview-image/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2611,211 +2890,6 @@ p reorder(a, b4, -1)
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/07/10/custom-iterm2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/07/10/custom-iterm2/" itemprop="url">
-                  配置iTerm2
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-10T20:52:30+08:00">
-                2018-07-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/10/custom-iterm2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/07/10/custom-iterm2/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>301 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="配置后的效果"><a href="#配置后的效果" class="headerlink" title="配置后的效果"></a>配置后的效果</h4><p>按照之前课程里的指导，配置了下iTerm2，最终的效果长这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1ft3lwlla7oj317u0aejup.jpg" alt=""></p>
-<p>稍稍整理了下参考的内容，简化了一些步骤，5步完成配置。</p>
-<h4 id="将bash改为zsh"><a href="#将bash改为zsh" class="headerlink" title="将bash改为zsh"></a>将bash改为zsh</h4><p>打开安装好的iTerm, 终端输入：</p>
-<pre><code>chsh -s /bin/zsh
-</code></pre><h4 id="安装-oh-my-zsh"><a href="#安装-oh-my-zsh" class="headerlink" title="安装 oh-my-zsh"></a>安装 oh-my-zsh</h4><p>终端继续输入：</p>
-<pre><code>cd ~/
-git clone git://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
-cp ~/.zshrc ~/.zshrc.orig
-cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
-</code></pre><h4 id="修改主题"><a href="#修改主题" class="headerlink" title="修改主题"></a>修改主题</h4><ul>
-<li><p>编辑.zshrc文件，将主题修改为agnoster：</p>
-<p>终端输入：</p>
-<pre><code>vi .zshrc
-</code></pre><p>将 <code>ZSH_THEME=&quot;robbyrussell</code> 修改为：<code>ZSH_THEME=&quot;agnoster&quot;</code></p>
-<p>保存退出。</p>
-</li>
-<li><p>修改agnoster主题的源代码</p>
-<p>终端输入：</p>
-<pre><code>vi  ~/.oh-my-zsh/themes/agnoster.zsh-theme
-</code></pre><p>在打开的agnoster.zsh-theme文件中，把内容替换成：</p>
-<p><a href="https://gist.githubusercontent.com/agnoster/3712874/raw/c3107c06c04fb42b0ca27b0a81b15854819969c6/agnoster.zsh-theme中的内容。" target="_blank" rel="noopener">https://gist.githubusercontent.com/agnoster/3712874/raw/c3107c06c04fb42b0ca27b0a81b15854819969c6/agnoster.zsh-theme中的内容。</a></p>
-<p>保存退出。</p>
-</li>
-</ul>
-<h4 id="替换字体"><a href="#替换字体" class="headerlink" title="替换字体"></a>替换字体</h4><ul>
-<li><p>安装字体</p>
-<p>去该<a href="https://gist.github.com/qrush/1595572" target="_blank" rel="noopener">网站</a>下载字体：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1ft3mgsvi3aj31kw09yjtg.jpg" alt=""></p>
-</li>
-</ul>
-<p>  点击<strong>download ZIP</strong>下载后，解压，会看到有三个字体文件，双击安装。</p>
-<p>  <img src="https://ws3.sinaimg.cn/large/006tNc79gy1ft3mhsvn7tj30oa05mwf2.jpg" alt=""></p>
-<ul>
-<li><p>替换iTerm字体</p>
-<p>打开iTerm的Preferences，修改Text：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1ft3mkw6lh4j31eq118tgp.jpg" alt=""></p>
-</li>
-</ul>
-<h4 id="替换布景"><a href="#替换布景" class="headerlink" title="替换布景"></a>替换布景</h4><p>下载<a href="http://ethanschoonover.com/solarized/files/solarized.zip" target="_blank" rel="noopener">solarized</a>，下载后，解压。</p>
-<p>打开iTerm的Preferences，修改Colors，导入solarized：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1ft3mqmocnyj31eq11swm1.jpg" alt=""></p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1ft3ms087whj31kw19hth8.jpg" alt=""></p>
-<p>导入后，点击Color Presets， 选择Solarized Dark即可。</p>
-<p> command＋q 退出 iTerm ， 重新打开， OK！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://docs.qzy.camp/docs/iterm2" target="_blank" rel="noopener">配置iTerm2</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2865,7 +2939,7 @@ cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">193</span>
+                <span class="site-state-item-count">194</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -2998,7 +3072,7 @@ cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    189.2k
+    190.4k
   </span>
 
 </div>
