@@ -273,6 +273,377 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/11/25/send-password-reset-when-create-new-user/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/11/25/send-password-reset-when-create-new-user/" itemprop="url">
+                  给新建用户发送密码重置邮件
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-25T13:50:44+08:00">
+                2018-11-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/11/25/send-password-reset-when-create-new-user/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/11/25/send-password-reset-when-create-new-user/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,282 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>用devise做用户登录，遇到的一个问题，记录下场景和leader指导出的解决方法。</p>
+<h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>添加项目成员member时，需要管理员新增用户user。</p>
+<ul>
+<li>管理员在新增用户页面中输入邮箱；</li>
+<li>管理员提交表单，用户的初始密码随机生成，随后给新建的用户发送一份账户激活的邮件；</li>
+<li>新增用户登录注册的邮箱，点击邮件中的链接【看似激活，实则为重置密码的链接】；</li>
+<li>用户重置密码完成，自动登录。</li>
+</ul>
+<p>这里只涉及devise如何发送重置密码的邮件。</p>
+<h4 id="准备工作："><a href="#准备工作：" class="headerlink" title="准备工作："></a>准备工作：</h4><p>三个model：</p>
+<p>对应的表结构：</p>
+<pre><code class="ruby"># == Schema Information
+#
+# Table name: members
+#
+#  id         :integer          not null, primary key
+#  user_id    :integer
+#  project_id :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+
+# Table name: projects
+#
+#  id         :integer          not null, primary key
+#  title      :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string           default(&quot;&quot;), not null
+#  encrypted_password     :string           default(&quot;&quot;), not null
+#  reset_password_token   :string
+#  reset_password_sent_at :datetime
+#  remember_created_at    :datetime
+#  sign_in_count          :integer          default(0), not null
+#  current_sign_in_at     :datetime
+#  last_sign_in_at        :datetime
+#  current_sign_in_ip     :string
+#  last_sign_in_ip        :string
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+</code></pre>
+<h4 id="解决："><a href="#解决：" class="headerlink" title="解决："></a>解决：</h4><p>使用devise自带的sessions。在<code>routes.rb</code>中做如下修改：</p>
+<pre><code class="ruby">### config/routes.rb
+
+devise_for :users, path: &quot;&quot;, controllers: {
+    sessions: &quot;sessions&quot;
+  }
+</code></pre>
+<p>新建一个sessionscontroller：<code>rails g controller sessions</code></p>
+<p> 继承<code>Devise::SessionsController</code>.</p>
+<pre><code class="ruby">### app/controllers/sessions_controller.rb
+
+class SessionsController &lt; Devise::SessionsController
+end
+</code></pre>
+<p>如果希望root页面就是显示注册的页面，可以在<code>routes.rb</code>中添加如下代码：</p>
+<pre><code class="ruby">### config/routes.rb
+
+ devise_scope :user do
+    get &quot;/&quot;, controller: :sessions, action: :new
+  end
+</code></pre>
+<p>激活账户涉及confirmable模块，使用<code>rails g devise user</code> 创建user时，默认没有confirmable的，需要自己手动添加，请在创建user时，确保含有以下字段：</p>
+<pre><code class="ruby">t.string   :confirmation_token
+t.datetime :confirmed_at
+t.datetime :confirmation_sent_at
+t.string   :unconfirmed_email # Only if using reconfirmable
+</code></pre>
+<p>「如果已经创建，使用rail g migration，给user添加上这些字段，同时迁移数据，给现有用户的confirmed_at赋值，不然无法登录。」</p>
+<p>修改<code>user.rb</code>, 添加上模块：<code>:confirmable</code></p>
+<pre><code class="ruby">### app/models/user.rb
+
+class User &lt; ApplicationRecord
+  devise :database_authenticatable, :rememberable, :validatable, :recoverable, :confirmable
+  ......
+end
+</code></pre>
+<p>同时在新增成员的表单中，允许输入用户的邮箱，如果邮箱存在，则直接添加该用户到项目成员中，如果邮箱不存在，则给该邮箱发送确认的邮件。</p>
+<p>修改member.rb, 添加：</p>
+<pre><code class="ruby">### app/models/member.rb
+
+arr_accessor :email
+</code></pre>
+<p>这样member的new.html.erb中就可以使用<code>f.input :email</code>，随后在controller的create action中，通过传过来的email来判断用户是否已经存在。修改create中原来的@member.save，改成@member.submit， 在<code>member.rb</code>中添加submit 函数：</p>
+<pre><code class="ruby">### app/models/member.rb
+
+  def submit(email)
+    password = SecureRandom.hex(4)
+    user = User.where(email: email).first_or_initialize(password: password, password_confirmation: password)
+    user.save
+    self.user = user
+    self.save
+    errors.empty?
+  end
+
+### 这里省略了errors的delegate，如果email是无效的，需要将user的error delegate给member。
+</code></pre>
+<p>在members_controller中，修改create action：</p>
+<pre><code class="ruby">#### app/controllers/projects/members_controller.rb
+
+ def create
+    if @member.submit(member_params[:email])
+      @user = @member.user
+      @user.send_activation_instructions unless @user.confirmed?
+    end
+  end
+</code></pre>
+<p>而对于send_activation_instructions，发送确认邮件的method，可以参考<code>send_devise_notification</code> 在 devise 中的定义：</p>
+<pre><code class="ruby">### app/models/authenticatable.rb
+
+def send_devise_notification(notification, *args)
+  message = devise_mailer.send(notification, self, *args)
+  # Remove once we move to Rails 4.2+ only.
+  if message.respond_to?(:deliver_now)
+    message.deliver_now
+  else
+    message.deliver
+  end
+end
+</code></pre>
+<p>这里<code>message = devise_mailer.send(notification, self, *args)</code>，devise_mailer使用send，调用参数notification传过来的方法名。</p>
+<p>看Devise::Mailer，里面定义了5个methods, 用于发送不同类型的邮件需求:</p>
+<pre><code class="ruby">#### app/mailers/devise/mailer.rb
+
+## 以下是confirmation_instructions。
+
+def confirmation_instructions(record, token, opts={})
+  @token = token
+  devise_mail(record, :confirmation_instructions, opts)
+end
+
+.......
+</code></pre>
+<p>参考这个，我们可以写出activation_instructions。</p>
+<p>在 user.rb中，定义: send_activation_instructions。</p>
+<pre><code class="ruby">### app/models/user.rb
+
+def send_activation_instructions
+  token = set_reset_password_token ## 生成 reset_password_token,赋给token变量
+  send_devise_notification(:activation_instructions, token, {})
+end
+</code></pre>
+<p>新增一个mailer： UserMailer，继承 devise_mailer, 定义 activation_instructions。</p>
+<pre><code class="ruby">### app/mailers/user_mailer.rb
+
+class UserMailer &lt; Devise::Mailer
+
+  def activation_instructions(record, token, opts = {})
+    @token = token
+    devise_mail(record, :activation_instructions, opts)
+  end
+end
+</code></pre>
+<p>修改<code>user.rb</code>，添加：</p>
+<pre><code class="ruby">### app/models/user.rb
+
+def devise_mailer
+  UserMailer
+end
+</code></pre>
+<p>同时，设置 reconfirmable 为false：</p>
+<pre><code class="ruby">### app/models/user.rb
+  devise :database_authenticatable, :rememberable, :trackable, :validatable, :recoverable, :confirmable, reconfirmable: false
+  ......
+
+</code></pre>
+<p>这样在member调用submit时，user.save就不会抛出异常，要求confirm这个账户了。</p>
+<p>在user_mailer的添加activation_instructions.html.erb 文件，文件内容可参考devise的<code>confirmation_instructions.html.erb</code>.</p>
+<pre><code class="ruby">### app/views/user_mailer/activation_instructions.html.erb
+
+&lt;p&gt;&lt;%= t(&#39;.greeting&#39;, recipient: @resource.name) %&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;%= t(&#39;.instruction&#39;) %&gt;&lt;/p&gt;
+&lt;p&gt;&lt;%= link_to t(&#39;.action&#39;), edit_reset_password_url(reset_password_token: @token) %&gt;&lt;/p&gt;
+
+</code></pre>
+<p>这里注意把<code>confirmation_instructions.html.erb</code>中，confirmation_url替换成 edit_reset_password_url，因为我们希望的是用户点击这个链接，跳转到密码修改的页面。</p>
+<p>最后，把reset_password这个功能添加进来。</p>
+<ul>
+<li><p>修改routes.rb，跳过devise自带的confirmations和passwords，用reset_password来完成验证邮箱和密码重置的功能，添加：</p>
+<pre><code class="ruby">### config/routes.rb
+
+  devise_for :users, path: &quot;&quot;, controllers: {
+    sessions: &quot;sessions&quot;
+  }, skip: [ :confirmations, :passwords ]
+
+  devise_scope :user do
+    resource :reset_password
+  end
+</code></pre>
+</li>
+<li><p>新建controller，继承自devise的passwordsController:</p>
+<pre><code class="ruby">class ResetPasswordsController &lt; Devise::PasswordsController
+
+  def update
+    super do |resource|
+      resource.confirm if resource.errors.empty? &amp;&amp; !resource.confirmed?
+    end
+  end
+end
+</code></pre>
+<p>这里重新定义了update, 调用super时，传递了一个block，如果user 没有confirmed过，同时更新密码成功，就调用confirm。在修改密码的同时，完成了用户的邮箱验证。</p>
+</li>
+<li><p>在app/views/reset_passwords下，添加edit.html.erb，用户收到邮件时，点击“确认我的账户”时，会跳转到该页面，在该页面进行密码重置。具体页面内容，此处略。</p>
+</li>
+</ul>
+<p>BTW，有关邮箱的配置，可以参考rails的官方文档。在开发环境下，推荐安装 <a href="https://github.com/ryanb/letter_opener" target="_blank" rel="noopener">letter_opener</a>这个gem, 就可以很轻松地查看是否正确发送了邮件了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/plataformatec/devise" target="_blank" rel="noopener">devise</a></p>
+<p><a href="https://guides.rubyonrails.org/action_mailer_basics.html" target="_blank" rel="noopener">Action Mailer Basics</a></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/11/11/Load-resource-in-cancancan/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -3582,271 +3953,6 @@ end
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/09/05/when-using-undef-method-with-rails-attribute-methods/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2018/09/05/when-using-undef-method-with-rails-attribute-methods/" itemprop="url">
-                  当undef_method遇上method_missing
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-05T20:28:55+08:00">
-                2018-09-05
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/09/05/when-using-undef-method-with-rails-attribute-methods/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2018/09/05/when-using-undef-method-with-rails-attribute-methods/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>692 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用undef_method， 遇到的一个问题，想不明白rails是如何处理的。最后在rubyChina上<a href="https://ruby-china.org/topics/37438" target="_blank" rel="noopener">发帖</a>求助，没成想得到了很耐心的解答，贴上，以期可飨同惑者。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先看一段调用undef_method的代码：</p>
-<pre><code class="ruby">module MyModule
-  def my_value
-    &quot;my_value in MyModule&quot;
-  end
-end
-
-class MyClass
-  attr_accessor :my_value
-
-  def initialize(value)
-    @my_value = value
-  end
-end
-
-class MySubClass &lt; MyClass
-  include MyModule
-  undef_method :my_value
-end
-
-object = MySubClass.new(20)
-puts object.my_value
-</code></pre>
-<p>执行，很明显，会报错，抛出<strong>NoMethodError</strong></p>
-<pre><code>undefined method `my_value&#39; for #&lt;MySubClass:0x007fbdc4065818 @my_value=20&gt;
-</code></pre><p> 没毛病，正常，ruby 2.5中对<a href="https://ruby-doc.org/core-2.5.0/Module.html#method-i-undef_method" target="_blank" rel="noopener">undef_method</a> 的定义就是这样的，prevents the current class from responding to calls to the named methods。</p>
-<p>But，你会发现rails中有一个神奇的地方，以一个简单的user model为例：</p>
-<p>user model含有字段name， 同时include了一个module UserAddon，使用undef_method来禁止调用引入的name方法，按照undef_method的定义， 此时User的对象调用name时，应该会报错，但是进入终端后，发现没有，反而返回了正确的结果。</p>
-<p>代码如下：</p>
-<pre><code class="ruby">## app/models/user.rb
-
-# == Schema Information
-#
-# Table name: users
-#
-#  id                          :integer          not null, primary key
-#  email                       :string(254)
-#  name                        :string(254)
-#  password_digest             :string(254)
-#  created_at                  :datetime         not null
-#  updated_at                  :datetime         not null
-
-class User &lt; ActiveRecord
-  include UserAddon
-  undef_method :name
-end
-
-## app/models/users_addon.rb
-module UserAddon
-  def name
-    &quot;hello&quot;
-  end
-end
-</code></pre>
-<p>这时，rails c 进入console：</p>
-<pre><code class="ruby">user = User.first
-
-# =&gt; #&lt;User id: 1, name: &quot;admin&quot;, email: &quot;test@gmail.com&quot;, created_at:……&gt;
-
-user.methods.include?(:name)
-# =&gt; false
-
-user.name
-
-# =&gt; &quot;admin&quot;
-
-$ user.name
-
-# =&gt; Couldn&#39;t locate a definition for user.name
-
-user.respond_to?(:name)
-# =&gt; true
-</code></pre>
-<p>使用pry的$ ，找不到user.name的定义，但是执行user.name却返回了正确的结果，此时一定调用了method_missing。但是，如何查看rails是如何实现的呢？</p>
-<p>ruby元编程中在有关 rails的属性方法中曾经提到，当第一次访问一个属性时，这个属性是一个幽灵方法，ActiveRecord::Base # method_missing() 会把它转换成一个真实的方法，同时创建出读，写，查询方法，比如上面的name，会创建name, name=, name?，这样下次就可以直接调用。</p>
-<p>但是，这里很显然，user.methods.include?(:name)返回了false，这里并没有创建name这个方法，那么rails是如何让user.name 返回了”admin”的呢？</p>
-<p>这里附上来自<a href="https://ruby-china.org/IChou" target="_blank" rel="noopener">IChou</a> 大神的解答：</p>
-<p>使用undef_method :name后，调用user.name, 它会落入下面的 method_missing 方法中:</p>
-<pre><code class="ruby"># lib/active_model/attribute_methods.rb:425
-
-def method_missing(method, *args, &amp;block)
-  if respond_to_without_attributes?(method, true) # =&gt;  这里是 false
-    super
-  else
-    match = matched_attribute_method(method.to_s)
-    #&lt;struct ActiveModel::AttributeMethods::ClassMethods::AttributeMethodMatcher::AttributeMethodMatch target=&quot;attribute&quot;, attr_name=&quot;name&quot;, method_name=&quot;name&quot;&gt;
-    match ? attribute_missing(match, *args, &amp;block) : super
-  end
-end
-
-def attribute_missing(match, *args, &amp;block)
-  __send__(match.target, match.attr_name, *args, &amp;block)
-  # match.target =&gt; &quot;attribute&quot;， 这里调用了自身的 attribute 方法
-end
-
-# lib/active_record/attribute_methods/read.rb:76
-def _read_attribute(attr_name) # :nodoc:
-  @attributes.fetch_value(attr_name.to_s) { |n| yield n if block_given? }
-end
-alias :attribute :_read_attribute
-private :attribute
-</code></pre>
-<p>「也就是最后调用@attributes.fetch_value(attr_name.to_s) ，user.name的返回了正确的结果，而不是如预期所想的那样抛出NoMethodError。」</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/rails/rails/blob/master/activemodel/lib/active_model/attribute_methods.rb" target="_blank" rel="noopener">rails attribute methods</a></p>
-<p><a href="https://apidock.com/ruby/Module/undef_method" target="_blank" rel="noopener">undef method</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -3896,7 +4002,7 @@ private :attribute
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">194</span>
+                <span class="site-state-item-count">195</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -4029,7 +4135,7 @@ private :attribute
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.4k
+    190.7k
   </span>
 
 </div>

@@ -273,6 +273,223 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/" itemprop="url">
+                  获取cucumber中每一个step的logger信息
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-01-12T15:08:48+08:00">
+                2018-01-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/01/12/how-to-get-logger-info-of-every-step-in-cucumber/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>696 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>此文承接上一个<a href="https://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">cucumber does not go to afterstep when the step failed</a>中提到的，不管step的result是什么，都执行某个操作，那么，如果想要输出每个step的logger信息，怎么办？</p>
+<blockquote>
+<p>你可能会问，cucumber执行时，会输出每一步的执行情况，为什么还要获取这些logger？应用的场景其实还是有的，比如你需要将每一步的logger保存到指定文件然后进行汇总统计，又或者调用这些logger信息新建实例等等。</p>
+</blockquote>
+<p>具体实现方面，我用了一个比较笨的方法，拼接了各种信息，最终的效果是这样子的：</p>
+<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fncl1wcxojj30q706qtah.jpg" alt=""></p>
+<blockquote>
+<ul>
+<li><p>当step通过时，输出step的name，含关键字：Given/When/Then；</p>
+</li>
+<li><p>当step未通过时，输出提示信息；</p>
+<p>你可以看到我输出的logger info，与cucumber自带的输出内容是一样的。</p>
+</li>
+</ul>
+</blockquote>
+<p>当然，我相信这个问题一定有更好的解决方法，但目前全网搜索，没找到特别惊喜的解答。</p>
+<p>先附上我小白式的破解方法。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>依然采用了test step finished event。</p>
+<p>在<code>features/support</code>下新建<code>event.rb</code>文件，放入以下内容：</p>
+<pre><code class="Ruby">require &#39;logger&#39;
+$logger = Logger.new(STDOUT)
+
+AfterConfiguration do |config|
+  config.on_event :test_step_finished do |event|
+    name = event.test_step.text
+    if name != &quot;AfterStep hook&quot; &amp;&amp; name != &quot;Before hook&quot; &amp;&amp; name != &quot;After hook&quot;
+      keyword = event.test_step.source.last.keyword
+      status = event.result.to_sym.to_s
+      step = keyword + name
+
+      # logger info
+      if status == &quot;passed&quot;
+        $logger.info(&quot;\n&quot; +  step + &quot;\n&quot;)
+      else
+        exception_message = event.attributes.last.exception.message
+        exception_class =  event.attributes.last.exception.class
+        file_line = event.attributes.last.exception.backtrace[-2]
+        # 用sub将出错的文件地址转化为相对地址
+        file_line.sub! Dir.pwd, &quot;.&quot;
+        step_line = event.attributes.last.exception.backtrace.last
+        message =  step + &quot;\n&quot; + exception_message + &quot;(&quot; + exception_class.to_s + &quot;)\n&quot; +  file_line + &quot;\n&quot; + step_line
+        $logger.info(&quot;\n&quot; + message + &quot;\n&quot; )
+      end
+    end
+  end
+end
+</code></pre>
+<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fnclx8jwzaj30ni0bymyp.jpg" alt=""></p>
+<p>这里，分步走。</p>
+<ul>
+<li>先获取step的name，根据name筛选出我们需要的step，比如点击登陆选项，输入邮箱密码等，然后获取关键字keyword【Given/When/Then】，组成完整的一个step描述。同时获取step的状态，也就是result。</li>
+<li>根据step的status来确定logger的内容，passed则输出keyword + name即可，不是passed，则获取出错的信息message，出错的类型class，出错的文件地址，出错的step 地址，然后输出信息即可。</li>
+</ul>
+<p>【这里，我给$logger.info传递了换行符”\n”，仅仅是为了输出的时候好看点而已，可以忽略。】</p>
+<p>OK,很简单是不是？但是整个的求解过程还是比较纠结的，主要这方面的资料并不多，戳这里可以了解下cucumber 的<a href="http://www.rubydoc.info/gems/cucumber/1.3.19/Cucumber/Ast/Step#exception-instance_method" target="_blank" rel="noopener">step exception</a>。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>stack overflow上只找到了<a href="https://stackoverflow.com/questions/29146107/how-can-i-have-ruby-logger-log-for-each-line-of-execution" target="_blank" rel="noopener">How can I have ruby logger log for each line of execution?</a></p>
+<p>提问者接受了这个答案，抱歉，我是真的没看懂通过这个答案要怎么去解决那个问题。</p>
+<p>如果有看懂解答的，请吱个声，下方留言或<a href="https://stackoverflow.com/questions/29146107/how-can-i-have-ruby-logger-log-for-each-line-of-execution" target="_blank" rel="noopener">这里走一走</a>。</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/01/10/cucumber-does-not-go-to-afterstep-when-step-failed/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2414,416 +2631,6 @@ git submodule update
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/25/concepts-in-howitzer/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2017/12/25/concepts-in-howitzer/" itemprop="url">
-                  有关Howitzer中的几个概念
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-25T20:03:42+08:00">
-                2017-12-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2017/12/25/concepts-in-howitzer/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count disqus-comment-count"
-                        data-disqus-identifier="2017/12/25/concepts-in-howitzer/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>1,331 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="http://howitzer-framework.io/" target="_blank" rel="noopener">howitzer</a>是一个基于ruby脚本的web验收测试框架， 初学时，对这个新伙伴是不甚了解，按照老规矩，看doc，看API。看完后，结合自己的理解，简单过一下里面几个重要的概念。</p>
-<p>基本思路：</p>
-<blockquote>
-<ul>
-<li>是什么？</li>
-<li>怎么用？</li>
-<li>用的时候要注意什么？</li>
-</ul>
-</blockquote>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>Driver</p>
-<blockquote>
-<p>是一个针对多个浏览器进行测试的通用界面，所有的Driver可以分成两类：</p>
-<ul>
-<li>Headless testing: 没有用户操作界面的模拟浏览器</li>
-<li>real browser testing: 通过扩展程序或者插件来与真实的浏览器进行集成</li>
-</ul>
-</blockquote>
-<p>Howitzer使用Capybara来对driver进行管理和设置，可以在<code>config/default.yml</code>中进行设置</p>
-</li>
-<li><p>Pages</p>
-<p>介绍pages之前，介绍一下Page Object Model。</p>
-<p>Page Object Model是一个自动化测试模版，创建用于测试的用户界面的抽象实体。可以将网站的每个page看作是一个类，然后通过调用这些类的实例来进行测试，而每个页面的元素可以看作是一个page的method，通过调用这些method来对该页面的元素进行调用。</p>
-<p>这样，page就很好理解了。</p>
-<p>Page是用于描述真实页面的类，比如在<code>web/pages</code>目录下，建立主页的文件，可以这样写：</p>
-<pre><code class="Ruby">class Homepage &lt; Howitzer::Web::Page
-path &#39;/&#39;
-end
-HomePage.open #打开主页
-</code></pre>
-<p>当然，这里的前提是你在<code>config/default.yml</code>中已经设置好了app_host</p>
-<p>再比如：</p>
-<pre><code class="Ruby">class ProductPage &lt; Howitzer::Web::Page
-  path &#39;/products{/id}&#39;
-end
-ProductPage.open(id: 1) #=&gt; 访问 /products/1
-</code></pre>
-<p>如果要指定特定的host，可以这样：</p>
-<pre><code class="Ruby">class AuthPage &lt; Howitzer::Web::Page
-    site &#39;https://example.com&#39;
-    path &#39;/auth&#39;
-end
-</code></pre>
-<p><strong>Pages的验证：</strong></p>
-<p>其实就是用于区分每个page的anchor，有三种不同的类型：</p>
-<p><strong>URL，title，element</strong></p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  path &#39;/&#39;
-  validate :url, /\A(?:.*?:\/\/)?[^\/]*\/?\z/
-end
-</code></pre>
-<p>使用<code>.displayed?</code>可以去判断一个页面的所有验证是否都通过。</p>
-<p>用这个可以检查特定的页面成功打开，比如：</p>
-<pre><code class="Ruby">class AccountPage &lt; Howitzer::Web::Page
-  path &#39;/accounts/{id}&#39;
- end
- AccountPage.open(id: 22)
- expect(AccountPage).to be_displayed
-</code></pre>
-</li>
-<li><p>Elements</p>
-<p>页面的元素，可以是单个元素，比如搜索栏，也可以是元素集合，比如菜单中的选项集。</p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  element :test_name1, &#39;.foo&#39;                         #css locator, default
-  element :test_name2, :css, &#39;.foo&#39;                   #css locator
-  element :test_name3, :xpath, &#39;//div[@value=&quot;bar&quot;]&#39;  #xpath locator
-
-  element :test_link1, :link, &#39;Foo&#39;                   #link locator by &#39;Foo&#39; text
-  element :test_link2, :link, &#39;bar&#39;                   #link locator by &#39;bar&#39; id
-
-  element :test_field1, :fillable_field, &#39;Foo&#39;        #field locator by &#39;Foo&#39; text
-  element :test_field2, :fillable_field, &#39;bar&#39;        #field locator by &#39;bar&#39; id
-  element :test_field3, :fillable_field, &#39;baz&#39;        #field locator by &#39;baz&#39; name
-end
-</code></pre>
-<p>这里要注意，不能通过page类直接调用element，需要在page类中定义一个method来调用element。</p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  element :new_button, :xpath, &quot;.//*[@name=&#39;New&#39;]&quot;
-
-  def start_new_project
-    new_button_element.click
-  end
-end
-
-HomePage.on { new_button_element.click } # 不正确的用法
-HomePage.on { start_new_project } # 正确的打开方式
-</code></pre>
-</li>
-<li><p>Sections</p>
-<p>在howitzer中，有一个Howitzer::Web::Section类。</p>
-<p>section的使用场景：当多个页面中出现相同的部分时，或者某部分在一个页面中频繁出现，类似rails中的公用表单。</p>
-<p>使用<code>&lt;section_name&gt;_section</code>来生成一个section的实例,  这里使用一个特别的me方法，通过参数指定section，比如：</p>
-<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
-  me &quot;#gbx3&quot; #section的父元素
-end
-</code></pre>
-<p>使用的时候，这么用：</p>
-<pre><code class="Ruby"># 定义section:
-
-class MenuSection &lt; Howitzer::Web::Section
-  me &quot;#gbx3&quot;
-end
-
-# 包含menusection的页面:
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu
-end
-
-# 页面调用section:
-
-HomePage.on { menu_section }
-</code></pre>
-<p>当两个页面有相同的section，但是跟节点不同时，可以这么用：</p>
-<pre><code class="Ruby"># 定义section
-
-class MenuSection &lt; Howitzer::Web::Section
-  me &#39;#gbx3&#39;
-end
-
-# 定义两个page类，都包含有menu这个section
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu # 使用默认的selector
-end
-
-class SearchResultsPage &lt; Howitzer::Web::Page
-  section :menu, &quot;#gbx48&quot; # 覆盖了默认的selector
-end
-</code></pre>
-<p>测试section是否存在某个页面：</p>
-<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
-  me &#39;#gbx3&#39;
-  element :search, &quot;a.search&quot;
-end
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu
-end
-
-HomePage.on { has_menu_section? } #=&gt; returns true or false
-</code></pre>
-<p>多层级section的使用，看一个登陆的例子，结合了cucumber 的step定义：</p>
-<pre><code class="Ruby"># define a page that contains an area that contains a section for both logging in and registration, then modeling each of the sub sections separately
-
-class LoginSection &lt; Howitzer::Web::Section
-  me &quot;div.login-area&quot;
-  element :username, &quot;#username&quot;
-  element :password, &quot;#password&quot;
-  element :sign_in, &quot;button&quot;
-
-  def login(username, password)
-    username_element.set username
-    password_element.set password
-    sign_in_element.click
-  end  
-end
-
-class RegistrationSection &lt; Howitzer::Web::Section
-  me &quot;div.reg-area&quot;
-  element :first_name, &quot;#first_name&quot;
-  element :last_name, &quot;#last_name&quot;
-  element :next_step, &quot;button.next-reg-step&quot;
-
-  def sign_up(first_name, last_name)
-    first_name_element.set first_name
-    first_name_element.set last_name
-    next_step_element.click
-  end
-end
-
-class LoginRegistrationFormSection &lt; Howitzer::Web::Section
-  me &quot;div.login-registration&quot;
-  section :login
-  section :registration  
-end
-
-class HomePage &lt; Howitzer::Web::Page
-  section :login_and_registration
-end
-
-# how to login (fatuous, but demonstrates the point):
-Then /^I sign in$/ do
-  HomePage.open
-  HomePage.on do
-    is_expected.to have_login_and_registration_section
-    login_and_registration_section.login_section.login(&#39;bob&#39;, &#39;p4ssw0rd&#39;)
-  end  
-end
-
-# how to sign up:
-
-When /^I enter my name into the home page&#39;s registration form$/ do
-  HomePage.open
-  HomePage.on do
-    expect(login_and_registration_section.registration_section).to have_first_name
-    expect(login_and_registration_section.registration_section).to have_last_name
-    login_and_registration_section.registration_section.signup(&#39;Bob&#39;, &#39;Arum&#39;)
-  end  
-end
-</code></pre>
-</li>
-<li><p>IFrames</p>
-<p>IFrames 在howitzer中被声明为一个 <code>Howitzer::Web::Page</code>类，通过包含该frame 的section或者page来引用，比如：</p>
-<p>创建一个frame实例，在DashboardPage中引用它，测试该frame是否在DashboardPage中存在。</p>
-<pre><code class="Ruby">class FbPage &lt; Howitzer::Web::Page
-  element :some_text_field, &quot;input.username&quot;
-end
-
-class DashboardPage &lt; Howitzer::Web::Page
-  iframe :fb, &quot;#fb&quot;
-end
-
-DashboardPage.open
-DashboardPage.on { is_expected.to have_fb_iframe }
-</code></pre>
-<p>与iframe中的元素进行交互, 这里用了cucumber login的step definition来说明：</p>
-<pre><code class="Ruby"># Howitzer::Web::Page representing the iframe
-class LoginPage &lt; Howitzer::Web::Page
-  element :username, &quot;input.username&quot;
-  element :password, &quot;input.password&quot;
-
-  def login(username, password)
-    username_element.set username
-    password_element.set password
-  end  
-end
-
-# Howitzer::Web::Page representing the page that contains the iframe
-class HomePage &lt; Howitzer::Web::Page
-  iframe :login, &quot;#login_and_registration&quot;
-end
-
-# cucumber step that performs login
-When /^I log in$/ do
-  HomePage.open
-  HomePage.on do
-    login_iframe do |frame|
-      #`frame` is an instance of the `LoginPage` class
-      frame.login(&#39;admin&#39;, &#39;p4ssword&#39;)
-    end
-  end  
-end
-</code></pre>
-</li>
-</ul>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
-<p><a href="http://docs.howitzer-framework.io/" target="_blank" rel="noopener">howitzer doc</a></p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -2873,7 +2680,7 @@ end
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">194</span>
+                <span class="site-state-item-count">195</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -3006,7 +2813,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.4k
+    190.7k
   </span>
 
 </div>
