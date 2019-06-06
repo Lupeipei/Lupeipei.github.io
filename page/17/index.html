@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>927 words</span>
+              <span>923 words</span>
             </span>
           
 
@@ -387,115 +387,14 @@
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用cucumber 实作了个小小的例子，来感受一下小黄瓜的魅力：P。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>做了一个用于计算的专案，名为calculator。</p>
-<p>calculator会做这样的事情：</p>
-<pre><code>如果你输入了：
-2+2
-那么它会输出4
-如果你输入了：
-3*3
-那么它会输出9
-……
-</code></pre><p>其实就是一个简单的计算器。</p>
-<p>好，我们开始吧。</p>
-<p>终端运行:</p>
-<pre><code>rails new calculator
-cd calculator
-</code></pre><p>建立专案calculator, 安装cucumber。参考：<a href="https://github.com/cucumber/cucumber-rails/blob/master/README.md" target="_blank" rel="noopener">Cucumber-Rails</a></p>
-<p>在gemfile文件中添加 cucumber-rails：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl533xnblyj30fm037t90.jpg" alt=""></p>
-<p>database_cleaner这个gem是用来清理测试数据的，可加可不加，不过建议添加。</p>
-<p>终端运行：</p>
-<pre><code>bundle install
-rails g cucumber:install
-</code></pre><p>会自动生成一些文件：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fl53d5jnsaj30oq06ota5.jpg" alt=""></p>
-<p>它帮我们生成好了features文件夹， 还有step_definitions.</p>
-<p>让我们删除rails自带的test:</p>
-<pre><code>rm -rf test
-</code></pre><p>终端输入cucumber试试：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl53j79w13j30st072gng.jpg" alt=""></p>
-<p>显示Deprecated了，针对这个问题我 Google了一下，你可以在cucumber-rails的<a href="https://github.com/cucumber/cucumber-rails/issues/346" target="_blank" rel="noopener">issues346</a>中看到, 但是没有找到解答，如果你留意，你会发现config文件下的<code>cucumber.yml</code>里面确实有<code>~@wip</code>, 如果你尝试着把所有的<code>~@wip</code> 替换成<code>not @tag</code> 会出现报错，鉴于它并不影响测试，所以你可以选择无视这些Deprecated：P</p>
-<p>好，我们继续添加测试文件吧！新增<code>adding.feature</code>文件：</p>
-<pre><code>touch features/adding.feature
-</code></pre><p><code>adding.feature</code>文件的内容如下：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl54cns0dnj30fx04aaab.jpg" alt=""></p>
-<p>终端运行cucumber，显示如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54f04mr0j30zk0k9tdg.jpg" alt=""></p>
-<p>会发现报错了，我们并没有定义step_definitions来告诉cucumber如何将这些直白的英文转换成专案中具体的action。但是，你也会发现小黄瓜贴心的地方，它告诉你step definitions里面要加一些snippets。</p>
-<p>新建<code>features/step_definitions/calculator_steps.rb</code> 文件，文件内容如下：</p>
-<p>【其实就是复制了它告诉我们的代码：P】</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fl54onlhmaj30g605rmy1.jpg" alt=""></p>
-<p>再次运行cucumber试试：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54qokbosj30j807kjse.jpg" alt=""></p>
-<p>显示一个pending，2个skipped了，我们来修改一下<code>calculator_steps.rb</code>，让第一个step可以pass。</p>
-<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
-  @input = string
-end
-
-When(&quot;the calculator is run&quot;) do
-  pending # Write code here that turns the phrase above into concrete actions
-end
-
-Then(&quot;the output should be {string}&quot;) do |string|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-</code></pre>
-<p>运行cucumber，step1 pass.</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl54vc0mf4j30kk07g3zj.jpg" alt=""></p>
-<p>第二个step pending，Oops，我们继续。</p>
-<p>这里可以梳理一下，第一步是input，最后是output，所以第二步应当是调用了method进行计算。好，我们添加一个ruby文件: calc.rb, 修改<code>calculator_steps.rb</code>，如下：</p>
-<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
-  @input = string
-end
-
-When(&quot;the calculator is run&quot;) do
-  @output = `ruby calc.rb #{@input}`
-end
-
-Then(&quot;the output should be {string}&quot;) do |string|
-  pending # Write code here that turns the phrase above into concrete actions
-end
-</code></pre>
-<p>运行cucumber，step2 pass.</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fl56z0meapj30ma07jq43.jpg" alt=""></p>
-<p>注意到这里<code>calc.rb</code>还只是一个空文件，而且需要注意<code>calc.rb</code>是在根目录下。</p>
-<p>继续修改<code>calculator_steps.rb</code>, 让第三个step pass：</p>
-<pre><code class="Ruby">Given(&quot;the input {string}&quot;) do |string|
-  @input = string
-end
-
-When(&quot;the calculator is run&quot;) do
-  @output = `ruby calc.rb #{@input}`
-end
-
-Then(&quot;the output should be {string}&quot;) do |string|
-  expect(@output).to eq string
-end
-</code></pre>
-<p>在<code>calc.rb</code>中加入一行，使得output等于预期:</p>
-<pre><code>print eval (ARGV[0])
-</code></pre><p>不了解eval的用法？👉戳这里<a href="https://ruby-hacking-guide.github.io/anyeval.html" target="_blank" rel="noopener">Dynamic evaluation</a></p>
-<p>简单来说，这里input是”2 + 2”，那么eval(input)就是会4.</p>
-<p>这时继续运行cucumber，出现这样的报错：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fl5763tsrqj30mg084jsm.jpg" alt=""></p>
-<p>显示except是undefined method，那是由于没有安装RSpec，在gemfile中加入</p>
-<pre><code>gem &#39;rspec-rails&#39;
-</code></pre><p>然后<code>bundle install</code>，再次运行<code>cucumber</code>，Pass！</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fl579bi1l5j30mf04r3yx.jpg" alt=""></p>
-<p>整个流程算是走完了。</p>
-<p>以上就是一个cucumber测试的基本流程了。</p>
-<p>cucumber的整个语法结构有个名字叫做<a href="https://github.com/cucumber/cucumber/wiki/Gherkin" target="_blank" rel="noopener">Gherkin</a>，例子中我们的<code>add.feature</code>就是遵守着Gherkin的语法。</p>
-<p>Gherkin的大致结构类似这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fl57tq18wej30av03474i.jpg" alt=""></p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>实作的时候还是踩了些坑的，看报错却又找不到哪里出问题，看stack overflow也是一脸懵逼，这里略去一万字的吐糟……</p>
-<p>推荐：</p>
-<p><a href="https://forums.pragprog.com/forums/166" target="_blank" rel="noopener">the cucumber book‘s forums</a></p>
-<p><a href="https://book.douban.com/subject/24843412/" target="_blank" rel="noopener">Cucumber：行为驱动开发指南</a></p>
-
-          
+          <p>使用cucumber 实作了个小小的例子，来感受一下小黄瓜的魅力：P。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/03/cucumber-first-try/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -634,7 +533,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>884 words</span>
+              <span>882 words</span>
             </span>
           
 
@@ -652,95 +551,14 @@ end
 
       
         
-          
-            <h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p><a href="https://cucumber.io/" target="_blank" rel="noopener">Cucumber</a>是BDD测试中的明星。</p>
-<h4 id="关键字"><a href="#关键字" class="headerlink" title="关键字"></a>关键字</h4><p>Csucumber中的几个关键字：</p>
-<p><strong>feature, scenario, given, when, then,  and,  but</strong></p>
-<p>简单说说这些关键字的含义。</p>
-<p>Feature：你可以把它看作是一个user story</p>
-<p>scenario用于描述一个简单的场景。</p>
-<p>一个feature可以有1个或者多个scenario。</p>
-<p>一个scenario可以有3～8个steps。</p>
-<p>其中，steps的定义类似于Ruby中method的定义。</p>
-<p>step中的5个关键字：</p>
-<ul>
-<li>Given : 表示事件发生之前的状态， preconditions。</li>
-<li>When： 表示事件本身，比如用户push 了一个button</li>
-<li>Then：表示事件发生后的预期结果，比如push了一个button，要跳转到某个特定的页面</li>
-<li>And &amp; But：用来延续之前的steps</li>
-</ul>
-<h4 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h4><p>看个例子：</p>
-<pre><code class="Ruby">Feature: user can manually add movie
-
-Scenario: Add a movie
-    Given I am on the RottenPotatoes home page
-    When I follow &quot;Add new movie&quot;
-    Then I should be on the Create New Movie page
-    when I fill in &quot;Title&quot; with &quot;Men In Black&quot;
-    And I select &quot;PG-13&quot; from &quot;Rating&quot;
-    And I press &quot;Save changes&quot;
-    Then I shoud be on the RottenPotatoes home page
-    And I should see &quot;Men in Black&quot;
-</code></pre>
-<p>这里测试一个feature，用户可以手动添加电影，添加的电影会在首页显示，表明添加成功。</p>
-<p>具体的steps是这样的：</p>
-<p>Given：用户在烂番茄主页，<strong>这是precondition</strong></p>
-<p>When：用户点击新增电影，<strong>这是事件本身</strong></p>
-<p>Then：用户应该会跳转到新建电影的页面，<strong>这是事件发生后的预期结果</strong></p>
-<p>When：电影有title字段，用户将“Men in Black” 填入到title中，<strong>这是事件本身</strong></p>
-<p>And：用户在星级中选择了“PG-13”，<strong>这是上一步的延续</strong></p>
-<p>And：用户按下“保存”，<strong>继续延续上一步</strong></p>
-<p>Then：用户应该跳转回烂番茄首页，<strong>这是事件发生后的预期结果</strong></p>
-<p>And：用户应该看到“Men in Black”，<strong>这是上一步结果的延续</strong></p>
-<p>此外，用cucumber去测试的一个好处是，它会提示你如何做可以让测试通过。</p>
-<p>再看一个实例，看看如何DRY：P。</p>
-<p>用户在TMDb首页搜索movie，可能出现的两种结果: 搜索到该影片(happy path)，没有搜索到(bad path)</p>
-<p>测试文件长这样：</p>
-<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
-    Database(TMDb)
-    As a movie fan
-    so that I can add new movies without manual tedium
-    I want to add movies by looking up their details in TMDb
-Scenario: Try to add nonexistent movie(sad path)
-    Given I am on the RottenPotatoes home page
-    Then I should see &quot;Search TMDb for a movie&quot;
-    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
-    And I press &quot;Search TMDb&quot;
-    Then I should be on the RottenPotatoes home page
-    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
-Scenario: Try to add nonexistent movie(happy path)
-    Given I am on the RottenPotatoes home page
-    Then I should see &quot;Search TMDb for a movie&quot;
-    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
-    And I press &quot;Search TMDb&quot;
-    Then I should be on the RottenPotatoes home page
-    And I should see &quot;Inception&quot;
-</code></pre>
-<p>其中，sad path ，happy path都有6个 steps，两者的前两个steps是一样的，how to DRY it?</p>
-<p>这里用到<strong>background</strong>，我的理解是background类似于RSpec中的before。</p>
-<p>我们重构一下：</p>
-<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
-    Database(TMDb)
-    As a movie fan
-    so that I can add new movies without manual tedium
-    I want to add movies by looking up their details in TMDb
-Background: Start from the Search form on the home page
-            Given I am on the RottenPotatoes home page
-            Then I should see &quot;Search TMDb for a movie&quot;
-Scenario: Try to add nonexistent movie(sad path)
-    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
-    And I press &quot;Search TMDb&quot;
-    Then I should be on the RottenPotatoes home page
-    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
-Scenario: Try to add nonexistent movie(happy path)
-    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
-    And I press &quot;Search TMDb&quot;
-    Then I should be on the RottenPotatoes home page
-    And I should see &quot;Inception&quot;
-</code></pre>
-<p>OK，大功告成。</p>
-
-          
+          <p><a href="https://cucumber.io/" target="_blank" rel="noopener">Cucumber</a>是BDD测试中的明星。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/02/cucumber-intro-1/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -879,7 +697,7 @@ Scenario: Try to add nonexistent movie(happy path)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>455 words</span>
+              <span>451 words</span>
             </span>
           
 
@@ -897,36 +715,14 @@ Scenario: Try to add nonexistent movie(happy path)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>接上一篇，这篇说说mock是啥。</p>
-<p>呃，看了一些别人写的文章，似乎对于mocks，stubs，doubles没什么特别的限制，随便用的感觉。新手对此表示很懵逼。</p>
-<p>以下内容属于小白对mock的理解，如有误人子弟的嫌疑，非常欢迎拍砖：P</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>说mock前，先来说说double。</p>
-<p>Double在英文中有替身的含义。当你double一个真实的对象时，相当于给这个对象创建了一个替身。</p>
-<p>mocks 和stubs有时候也被称之为doubles。</p>
-<p>那mocks 和stub有什么区别？</p>
-<p>看到一篇文章<a href="http://www.jianshu.com/p/c5aca7d672c5" target="_blank" rel="noopener">RSpec, Test Double, Mock, and Stub</a>， 上面提到<strong>Mock是对象层面的</strong>，<strong>Stub是方法层面</strong>，个人觉得挺在理的。</p>
-<p>用实例来说说mock的使用。</p>
-<p>接<a href="https://lupeipei.github.io/2017/10/24/test-concepts-about-stub/">上一篇</a>，测试了两个行为，验证search_tmbd是否调用了find_in_tmdb， 验证最后的结果是否render到了<code>search_tmbd.html.erb</code>这个template。但是还有一个我们没有测试的，就是find_in_tmdb返回的结果是否可用于这个template。</p>
-<p>在<code>movies_controller.rb</code>中，修改search_tmbd这个method，将搜索结果赋值给到@movies：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fkup1kdwg1j30e902pglq.jpg" alt=""></p>
-<p>然后我们的测试代码是这样子的：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkup4vrh3zj30f309bwg9.jpg" alt=""></p>
-<p>这里用mock(‘Moive’)，创建了一个假的movie对象，并赋值给@fake_results。用stub来调用find_in_tmdb后，返回值是@fake_results。最后<code>except assigns(:movies).to eq(@fake_results)</code> 显示我们预期实例变量movies的赋值结果是等于@fake_results的。</p>
-<p>运行测试，pass。</p>
-<p>说了这么多，我的理解是mock创建了对象的替身，来模拟对象的行为。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>附上一份RSpec的烹饪教程，来自Edx：</p>
-<p><strong>RSpec Cookery</strong></p>
-<ul>
-<li>Each spec should test just one behavior</li>
-<li>Use seams(stub,mock, double) as needed to isolate that behavior</li>
-<li>Determine what type of expectation will check the behavior</li>
-<li>Write the test and make sure it fails for the right reason</li>
-<li>Add code until test is green</li>
-<li>Look for opportunities to refactor/beautify</li>
-</ul>
-
-          
+          <p>接上一篇，这篇说说mock是啥。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/25/test-concept-about-mock/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1065,7 +861,7 @@ Scenario: Try to add nonexistent movie(happy path)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>768 words</span>
+              <span>764 words</span>
             </span>
           
 
@@ -1083,45 +879,14 @@ Scenario: Try to add nonexistent movie(happy path)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>学习测试的时候，一直不大懂stub，后来刷多了课程，感觉好像不那么懵逼了。</p>
-<p>决定结合自己的学习与思考，说说stub到底是个啥。</p>
-<p>BTW，if  you want to be a rocking unit tester, you must know stub and mock.：P</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先来看一个问题：</p>
-<p>你准备测试method A，method A 依赖于method B，比如method A要调用远端的API，而你只想测试method A有没有被正确调用，method B 存在与否，是不是返回了预期的结果，你并不care， 那么要怎么做才能保证测试的独立性？</p>
-<p>这样的测试，就要用到stub。</p>
-<p>下面以一个movie model来说明一下如何使用stub。</p>
-<p>设想一个简单的movie影片查询情景：</p>
-<p>用户在TMDb页面中输入影片名称，点击查询按钮，这时MoviesController 中对应的 search_tmdb method会去调用movie model里面真正执行search行为的method，这个method在数据库中进行搜索匹配，最后返回搜索结果，随后controller的 search_tmdb会render到搜索结果的页面，用户看到搜索结果，这样整个的搜索动作才算完成。</p>
-<p>现在的情况是，movie model里面没有定义任何执行search 行为的method，而我们只想要验证controller的search_tmdb 调用了model里面执行search的method，不管这个method的存不存在，有没有返回预期结果，我们不care, 我们只想确定controller的search_tmdb做了正确的事，怎么破？</p>
-<p>用stub来打破依赖。用一个伪造的method去替代，确保这个伪造的method被调用即可。</p>
-<p>你的<code>movies_controller.rb</code>中定义了一个search_tmdb,但是里面啥也没有：</p>
-<pre><code class="Ruby">def search_tmdb
-end
-</code></pre>
-<p>你的test文件长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNbRwgy1fktni1u9gaj30df05o3z5.jpg" alt=""></p>
-<p>这时运行测试文件，会报错，因为你的search_tmdb并没有说让Movie去调用这个find_in_tmdb，如何让测试通过？</p>
-<p>在<code>movies_controller.rb</code>中修改search_tmdb method，使它长这样：</p>
-<pre><code class="Ruby">def search_tmdb
-+ Movie.find_in_tmdb(params[:search_terms])
-end
-</code></pre>
-<p>再次运行测试文件，通过！！</p>
-<p>这里值得注意的是，你的movie model中，<strong>根本就没有find_in_tmdb这个method</strong>，很神奇是不是？</p>
-<p>事实上，为了打破method之间的依赖，保证测试的独立性，这里伪造了一个针对find_in_tmdb的调用，<strong>即使这个find_in_tmdb本身存在model中，也会被忽视，overriding it</strong>。</p>
-<p>这就是Stub了，很特别是不是？我第一次接触的时候，觉得很special。</p>
-<p>看第二个测试： <strong>selects the Search Results template for rendering</strong></p>
-<p>这里我们要确认controller的search_tmdb在调用find_in_tmdb后，是否render到了特定的template，即<code>search_tmdb.html.erb</code>。由于find_in_tmdb并没有定义，故这里也要用stub。怎么写呢？</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNbRwgy1fkuj2c03kjj30h606qgmv.jpg" alt=""></p>
-<p>[这里用了matchers: render_template, response.]</p>
-<p><code>Movie.stub(:find_in_tmbd)</code>： 假定执行了find_in_tmdb</p>
-<p><code>expect(response).to render_template</code>:  验证最后的结果，是否render到了search_tmbd.html.erb这个template</p>
-<p>运行测试文件，pass。</p>
-<p>这里要注意，如果测试失败了，请检查一下你的app/views/movies/下是否存在search_tmbd.html.erb，如果不存在，新建，不然这个测试是无法通过的。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>记住一句话，有助于理解stub： The code you wish you had。</p>
-
-          
+          <p>学习测试的时候，一直不大懂stub，后来刷多了课程，感觉好像不那么懵逼了。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/24/test-concepts-about-stub/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1260,7 +1025,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>479 words</span>
+              <span>485 words</span>
             </span>
           
 
@@ -1278,33 +1043,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在部署网站后遇到的一个大坑，长这样：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fks5pqyvghj30no09u0ti.jpg" alt=""></p>
-<p>看到这一行熟悉的we’re sorry, but something went wrong，默默跟这位老朋友打个招呼【捂脸】。</p>
-<p>Google后，发现其他用passenger来部署Rails的，也遇到过这种页面无法显示的问题，但是没看到有人提供解决方法或者思路的，决定记录下我的整个解决步骤，给同样入坑的伙伴们作个参考。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>Google，看了stack overflow上的一些相关内容后，猜测是passenger的问题，于是终端输入<code>sudo passenger-status</code>, 发现passenger根本就没有开这个Rails的进程。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fks5pqt1ywj30l108xt9z.jpg" alt=""></p>
-<p>没开那就手动来开，在app的current目录下，运行<code>bundle exec passenger start</code>, 报错：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks5pqia5ej30tc0ka46y.jpg" alt=""></p>
-<p>怎么办？按照指示去tmp下找文件，看error log。</p>
-<p>以root身份登录，去tmp目录下，查看出错的log,这里是passenger-error-pxhJuZ.html。</p>
-<pre><code>cd /tmp
-nano passenger-error-pxhJuZ.html
-</code></pre><p>打开显示如下：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fksdg0z54rj30wv0dftdo.jpg" alt=""></p>
-<p>OK，那就动动listen 这个gem, google 后，参考stackoverflow上的解答<a href="https://stackoverflow.com/questions/38663706/loaderror-could-not-load-the-listen-gem-rails-5" target="_blank" rel="noopener">LoadError: Could not load the ‘listen’ gem (Rails 5)</a>， 把listen从development中移除，放在了global中</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksdhtg52aj30et0azdhc.jpg" alt=""></p>
-<p>本地运行<code>bundle</code>，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面，发现还是老样子。怎么回事？突然想到stack overflow上提到可以登录rails console看看，好，试试。</p>
-<p>用deploy身份登录远端后，执行：</p>
-<pre><code>cd ~/Together/current #Together 是你的APP名称
-RAILS_ENV=production bundle exec rake db:seed
-</code></pre><p>果然，报错，显示网站有bug，立马回去修bug……</p>
-<p>在本地修复好，git commit 和 git push 后，进行部署 <code>cap production deploy</code>,  刷新页面， OK！！</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>这段爬坑的日子，遇到了不少Google了也不一定能解决的坑，甚至会让你在懵逼的情况下，被别人的解答带得越来越远。只想说解决问题的思路真的太重要了，同时多点耐心，相信坑坑皆有解。</p>
-<p>Be more patient.</p>
-
-          
+          <p>在部署网站后遇到的一个大坑。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/23/passenger-deploy-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1443,7 +1189,7 @@ RAILS_ENV=production bundle exec rake db:seed
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>424 words</span>
+              <span>429 words</span>
             </span>
           
 
@@ -1461,37 +1207,14 @@ RAILS_ENV=production bundle exec rake db:seed
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>本场测试的star是 Capybara。</p>
-<p>考虑到自己写的method还是挺多的，就没有一一integration test了。</p>
-<p>实作了简单的首页测试，用户注册，用户登录，用户退出。</p>
-<p>记录下遇到的问题，顺带加入了debug的部分。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><strong>Capybara::ElementNotFound: Unable to find visible link or button “ 登出”</strong></li>
-</ul>
-<p>做登录，登出的测试时，终端报出如下错误：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrwabt60oj30mn0783z9.jpg" alt=""></p>
-<p>报错显示页面找不到“ 登出”这个link 或者button，对应的测试文件长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fkrwac5bn8j30en0f440o.jpg" alt=""></p>
-<p><strong>怎么破？</strong></p>
-<p>第一想法就是查看一下用户登录后，点击”Hi!, #{user.username}”，页面这时候是长啥样，是不是真的没有“ 登出”这个link 或者button。</p>
-<p>怎么做呢？好办，加入<code>save_and_open_page</code>, 注释掉报错的代码，像这样👇：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkrwhk5kaqj30ds0g176e.jpg" alt=""></p>
-<p>终端再次运行案例，得到这样的一串网址：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrwkc51ljj30ny05z758.jpg" alt=""></p>
-<p>终端输入：<code>open tmp/capybara/capybara-201710230848216776109515.html</code>, 浏览器便会打开这个网址了。</p>
-<p>我的是这样子：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fkrwltsrhcj30oe0hi40b.jpg" alt=""></p>
-<p><strong>有登出呢！</strong>为什么显示Unable to find visible link or button ？那只能说明这不是一个link or button？Google后，发现在stackoverflow上有个非常相似的案例：<a href="https://stackoverflow.com/questions/11269724/how-to-use-capybara-in-rspec-to-click-on-a-dropdown-option" target="_blank" rel="noopener">How to use capybara in rspec to click on a dropdown option</a></p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkrx3y3ul4j30kl06lgms.jpg" alt=""></p>
-<p>试试把<code>click_on&quot; 登出&quot;</code>换成<code>page.find(:xpath, &quot;//a[@href=&#39;/users/sign_out&#39;]&quot;).click</code>, 终端再次运行案例，Pass！！</p>
-<p>but ,xpath是啥？XPath 是一门在 XML 文档中查找信息的语言，用于在 XML 文档中通过元素和属性进行导航。</p>
-<p>了解更多可以看看W3school的教程<a href="http://www.w3school.com.cn/xpath/index.asp" target="_blank" rel="noopener">xpath</a>。</p>
-<p>在capybara中为什么要这么用？戳这里<a href="https://github.com/teamcapybara/capybara#xpath-css-and-selectors" target="_blank" rel="noopener">capybara XPath, CSS and selectors</a> .</p>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p><strong>capybara</strong> 中，操作页面的方法除了visit，click外，还有很多比如fill_in， check，choose等等，很强大。</p>
-<p>详见：<a href="https://github.com/teamcapybara/capybara" target="_blank" rel="noopener">capybara</a></p>
-
-          
+          <p>TDD 学习笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/23/TDD-with-RSpec-integration-test/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1630,7 +1353,7 @@ RAILS_ENV=production bundle exec rake db:seed
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>775 words</span>
+              <span>780 words</span>
             </span>
           
 
@@ -1648,83 +1371,14 @@ RAILS_ENV=production bundle exec rake db:seed
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>刷完了Edx上关于TDD，BDD的课程，也看了《Everyday rails testing with RSpec》, 于是迫不及待想给自己的网站<a href="https://www.togetherisbetter.cn" target="_blank" rel="noopener">Together</a>也加上RSpec部分，好比刚从师傅那学了几招的小徒弟，立马想找个人试试身手，这中间自然也是免不了各种坑的，一一记录， 避免二次入坑。</p>
-<p>PS ： FactoryGirl官方GitHub库已经改名为FactoryBot，实作的时候，请小心敲键盘……</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p><strong>ArgumentError: Factory not registered</strong></p>
-<p>运行测试文件时，终端报出这样的错误：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkq88je5s0j30sd04xmyd.jpg" alt=""></p>
-<p><strong>怎么破？</strong></p>
-<p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<pre><code class="Ruby">RSpec.configure do |config|
-  config.include FactoryBot::Syntax::Methods
-  .....
-+  config.before do
-+    FactoryBot.find_definitions
-+  end
-end
-</code></pre>
-</li>
-<li><p><strong>FactoryBot::DuplicateDefinitionError: Factory already registered: event</strong></p>
-<p>运行测试文件时，终端报出这样的错误：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkq8u4t8xfj30qg07wdh6.jpg" alt=""></p>
-<p><strong>怎么破？</strong></p>
-<p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<pre><code class="Ruby">RSpec.configure do |config|
-  config.include FactoryBot::Syntax::Methods
-  .....
-  config.before do
-+   FactoryBot.factories.clear
-    FactoryBot.find_definitions
-  end
-end
-</code></pre>
-</li>
-<li><p><strong>Please set Qiniu’s access_key and secret_key before authorize any tokens</strong></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkqrce6o1ij30pc052wfp.jpg" alt=""></p>
-<p>终端运行<code>rspec spec/controllers/events_controller_spec.rb</code>, 为了测试events controller部分，用FactoryBot创建了event，这里有必要说一下，我的event model中有logo部分，而用户上传的logo图片我是用七牛来存储的。抛出异常，查看七牛官方<a href="https://github.com/qiniu/ruby-sdk/blob/master/spec/qiniu/auth_spec.rb" target="_blank" rel="noopener">GitHub spec部分</a>，找到了这个：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkqrjx0s05j30px0jcq67.jpg" alt=""></p>
-<p>我擦，看完了<code>spec/qiniu/tokens/auth_spec.rb</code>，除了懵逼外，我不知道怎么走下一步，转念想想我这里并不要测试七牛这块啊，我只想测试controller中的method是不是调用了，so what should I do? bypass it。</p>
-<p>修改<code>app/uploads/</code>下所有的uploader文档，比如avatar_uploader.rb,  修改storage设置：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkqsdym52jj30c302hq2y.jpg" alt=""><br><strong>除了生产环境，开发和测试请一律使用file存储！</strong></p>
-<p>再次测试， 一线飘绿，OK！</p>
-</li>
-<li><p><strong>NoMethodError: Undefined method ‘sign_in’</strong></p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkqtb87yhqj30p903saah.jpg" alt=""></p>
-<p><strong>怎么破？</strong></p>
-<p>google后，在stack overflow上找到了解答。</p>
-<p>修改<code>spec/support/rails_helper.rb</code>文件，在<code>RSpec.configure do |config|</code>部分添加<code>config.include Devise::TestHelpers, type: :controller</code> :</p>
-<pre><code class="Ruby">RSpec.configure do |config|
-  ......
-+ config.include Devise::TestHelpers, type: :controller
-  ......
-end
-</code></pre>
-<p>再次测试, pass!  </p>
-</li>
-<li><p>如果你的model中有图片部分，比如event model中有个event logo，而你用factoryBot生成数据时，是这样的：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fkr1glxjegj30ki065q3s.jpg" alt=""></p>
-<p>同时，你在测试案例中要用到build(:event)，那么，先要恭喜你，新坑正在等在你。</p>
-<p>我在做controller的create method测试时，一直报错：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fkr1lop75jj30o704bgm8.jpg" alt=""></p>
-<p>设置断点后，找到了是eventlogo没有赋值成功：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkr1p9w8bgj30u207egna.jpg" alt=""></p>
-<p>Google后，你会发现stack overflow上已经有人问过类似的了，但是各执一词，让人有些摸不着头脑，有说用fixture_file_upload的，呃，fixture VS FactoryBot， 我们更爱后者。那<strong>怎么破</strong>？</p>
-<p>看<strong>carrierwave</strong>的GitHub文档找到<a href="https://github.com/carrierwaveuploader/carrierwave/wiki/How-to:-Use-test-factories" target="_blank" rel="noopener">Use test factories</a>部分:</p>
-<p>重点来了：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkr233qjewj30k90g6di4.jpg" alt=""></p>
-<p>原来我用的那种格式，是用于create的，如果用build，只存在内存中，则需要换成<code>Rack::Test::UploadedFile.new</code>的样式。</p>
-<p>修改<code>spec/factories/events.rb</code>文件，将原eventlogo注释掉：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkr2j2fr38j30ky06kgmq.jpg" alt=""></p>
-</li>
-</ul>
-<p>   终端再次运行：<code>rspec spec/controllers/events_controller_spec.rb</code>, OK !</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><pre><code> 按照TDD「Test driven development」的理论，应该测试先行, 像下图酱样子：
-</code></pre><p>  <img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkr2b72qhfj30s60djt92.jpg" alt=""></p>
-<p>  无奈我已经做好了整个网站，决定不按套路出牌，后期加入TDD，来测测前期代码的稳定性 , 在测了一部分功能后，深有感触，测试果然是很有必要的：P。</p>
-
-          
+          <p>TDD 学习笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/22/TDD-with-RSpec-errors-recording/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1863,7 +1517,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>402 words</span>
+              <span>398 words</span>
             </span>
           
 
@@ -1881,41 +1535,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做测试的时候，案例未通过，满屏飘红是常有的事，所以在测试中debug就显得很有必要，为便于阐述，以我自己做的一个events_controller 的测试为例，看看如何debug。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>一个测试报错了，而提示又不足以让你立马get到点，比如在做controller的单位测试时，验证create这个method，出错：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkqyujzh4nj30o704bgm8.jpg" alt=""></p>
-<p>很显然，event没有成功写入数据库，如何debug？</p>
-<p>首先，你可能想单独跑这一个案例，其他的注释掉。</p>
-<p>比较粗暴的方法是注解掉其他的测试案例，只留下你要纠正的那个，另一个方法是用<code>:focus =&gt; true</code>。</p>
-<p>两步走：</p>
-<ul>
-<li><p>编辑<code>spec/rails_helper.rb</code>， 加入两行设定：</p>
-<pre><code class="Ruby">  RSpec.configure do |config|
-  ......
-
-+  config.filter_run :focus =&gt; true
-+  config.run_all_when_everything_filtered = true
-</code></pre>
-</li>
-<li><p>修改你的test文件，比如针对上面的报错，我的文件是<code>spec/controllers/events_controller_spec.rb</code>, 在未通过的案例中，加入了<code>:focus =&gt; true</code></p>
-<p>​</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fkqz77tr3uj30eh076jsg.jpg" alt=""></p>
-</li>
-</ul>
-<p>终端运行<code>rspec spec/controllers/events_controller_spec.rb</code>, 将会只运行这一个实例。</p>
-<p>「需要注意的是，测试通过后，记得把<code>:focus =&gt; true</code> 移除。」</p>
-<p>确认只有这个案例运行后，接下来，我们用byebug下断点，检查下为什么event没有存入数据库。</p>
-<p>在<code>app/controllers/events_controller.rb</code>中，create部分，加入byebug：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkqzl4lewgj30i505p0tc.jpg" alt=""></p>
-<p>终端再次运行<code>rspec spec/controllers/events_controller_spec.rb</code>， 会发现程序停在那里了:</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fkqzmdxoxdj30u6093q4v.jpg" alt=""></p>
-<p>这时就可以检查变量了。比如我输入@event查看各个字段的赋值情况，发现eventlogo没有赋值成功，fix it。</p>
-<p>最后输入<code>continue</code>, 程序就会继续执行下去。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fkr0525em2j30u60ab0uv.jpg" alt=""></p>
-<h4 id="the-End"><a href="#the-End" class="headerlink" title="the End"></a>the End</h4><p>Happy debugging! ：P</p>
-
-          
+          <p>做测试的时候，案例未通过，满屏飘红是常有的事，所以在测试中debug就显得很有必要，为便于阐述，以我自己做的一个events_controller 的测试为例，看看如何debug。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/20/how-to-debug-with-RSpec/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2054,7 +1681,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>361 words</span>
+              <span>364 words</span>
             </span>
           
 
@@ -2072,30 +1699,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在给自己的网站加密后，网址从http变成https了，可是我却发现网站成了这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fks9mass87j30ey03x0u2.jpg" alt=""></p>
-<p>预期中的它应该是长这样子👇：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fks9njubhqj303g00vjr7.jpg" alt=""></p>
-<p>仔细检查了Nginx中的配置文档，没有发现问题，推测不是配置的问题，那么为什么会这样？</p>
-<p>【BTW, 阿里云有免费的SSL证书，可以让网站从HTTP换成HTTPS，戳这里直达<a href="https://common-buy.aliyun.com/?spm=5176.2020520163.cas.1.2arDtO&amp;commodityCode=cas#/buy" target="_blank" rel="noopener">阿里云</a>。】</p>
-<p>请确保你的Nginx配置是正确的，下面的解决思路是以配置无误为前提的。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>google后找到了这篇文章：【Google，大神】</p>
-<p><a href="https://support.comodo.com/index.php?/Knowledgebase/Article/View/1057/0/why-isnt-my-sites-padlock-green-or-doesnt-have-green-address-bar" target="_blank" rel="noopener">Why isn’t my Site’s padlock green or doesn’t have green address bar ?</a></p>
-<p>按照文章的提示，解决了问题，以chrome为例，具体步骤如下：</p>
-<p>打开网站，右击，选择检查（inspect），</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fks9wu7e2lj30q90ixhcb.jpg" alt=""></p>
-<p>然后选择security安全，可以看到这样的页面：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fks9sjsqjbj30uc0kz1bn.jpg" alt=""></p>
-<p>在mixed content中，提示让你重新加载页面，OK，我们reload一下。</p>
-<p>这时，可以发现mixed content中出现这样的链接：<br><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fksa0let1rj30so0i7aoa.jpg" alt=""></p>
-<p>点击，查看：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fksa0kw4csj30pr0h0dj6.jpg" alt=""></p>
-<p>OK，问题找到了，是图片链接用了http导致的。</p>
-<p>原来因为网站用了七牛云存储，图片的链接为http，解决的办法是去七牛买个加速域名，换成https……</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>每个人遇到的情况不一样，这里我只是贴出我是如何找到解决方法的，希望对遇到了同样问题的小伙伴有所帮助。<br>Happy coding!</p>
-
-          
+          <p>踩坑HTTPS。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/18/website-padlock-green-issue/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2161,7 +1772,7 @@ end
               
                 
                 <a class="post-title-link" href="/2017/10/15/deploy-with-qiniu/" itemprop="url">
-                  七牛云端部署，想说爱你不容易
+                  七牛云端存储，想说爱你不容易
                 </a>
               
             
@@ -2234,7 +1845,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>798 words</span>
+              <span>808 words</span>
             </span>
           
 
@@ -2252,67 +1863,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>  前段时间，租了阿里云，买了域名，最近折腾了下，终于把之前做的网站部署上去了。</p>
-<p>  整个部署过程中，感觉最虐的就是七牛云那块了，对于半路出家的新手来说，真是个不小的坑。记录下这段虐心的旅程。</p>
-<hr>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>  我用的是Capistrano来部署Rails项目，这里只记录一下我在远端服务器运行seed时，会出现的问题。<br>  好，我们开始吧！<br>  当你在终端<code>~/yourproject_name/current</code>执行<code>RAILS_ENV=production bundle exec rake db:seed</code>, 可能会出现如下报错：</p>
-<ul>
-<li><p><strong>NoMethodError： undefined method qiniu_up_host</strong></p>
-<p>这个报错出现的有些奇怪，我在本地运行<code>rake db:seed</code>时，也报错，而我之前部署到heroku时并没有出现过这种情况，不解。</p>
-<p>虽然不理解它为什么会出现，但是有问题咱就得想着解决，看看怎么破了它。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkj51hciw8j30qn069di8.jpg" alt=""></p>
-<p><strong>解决办法：</strong></p>
-<p>方法很粗暴。<br>在本地的<code>config/initializers/carrierwave.rb</code>文件中，将host那一行直接注释，然后运行<code>rake db:seed</code>， 发现OK啦。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fkj56rr9y4j30cl06ndgc.jpg" alt=""></p>
-<p>为什么我会想到直接注释？Google了下，发现如果你的服务器在国内，qiniu_up_host是可以不用设置的。</p>
-<p>另外，还有一种情况是config.qiniu_up_host的值写错了，不同的存储区域是不一样的，具体可以参见<a href="https://developer.qiniu.com/kodo/manual/1671/region-endpoint" target="_blank" rel="noopener">七牛开发者中心-存储区域</a>。</p>
-</li>
-<li><p><strong>TypeError: no implicit conversion of nil to String</strong></p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fkj032q8itj30l70bctbx.jpg" alt=""></p>
-<p>出现这个情况，是因为我使用了<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 管理密码，之前部署到heroku时，终端运行<code>figaro heroku:set -e production</code>就可以了，但是这里，我们怎么把七牛对应的AccessKey，SecretKey等信息放入remote server呢？</p>
-<p>其实，<a href="https://github.com/laserlemon/figaro" target="_blank" rel="noopener">Figaro</a> 的README文档中已经提到了，咱们这么来：</p>
-<p>Step1、在远端的<code>~/yourproject_name/shared/config</code>中，添加<code>application.yml</code>, 内容如下：</p>
-<p><code>`</code>Ruby<br>production:<br>   qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
-<p>   qiniu_secret_key: xxxx  # 你的 qiniu SecretKey</p>
-<p>   qiniu_bucket: xxxx  # 你的 qiniu bucket</p>
-<p>   qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain</p>
-</li>
-</ul>
-<p>   development:<br>     qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
-<pre><code> qiniu_secret_key: xxxx  # 你的 qiniu SecretKey
-
- qiniu_bucket: xxxx  # 你的 qiniu bucket
-
- qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain
-</code></pre><pre><code>
-  这里，虽然我们添加了这个文件，但是由于你的`config/deploy.rb`中没有设置，所以部署的时候并不会去连接这个文件。
-
-  Step2、在本机上编辑`config/deploy.rb`，将`application.yml`添加进去：
-
-  ```Ruby
-  -  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;
-  +  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;, &quot;config/application.yml&quot;
-</code></pre><p>  OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
-<ul>
-<li><p><strong>TypeError: class or module required for rescue clause</strong></p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1fkj0j8b12pj30oa0bujuv.jpg" alt=""></p>
-<p>看到报错，第一反应就是google，在<a href="https://github.com/huobazi/carrierwave-qiniu/issues/17" target="_blank" rel="noopener">carrierwave-qiniu configuration error #17</a> 中, 提到<code>qiniu-rs</code>这个gem已经没有人在维护了，要安装最新版的<code>carrierwave-qiniu</code>。好，那就重新安装，又不是第一次被版本坑了: P。</p>
-<p>在gemfile中做如下修改：</p>
-<pre><code>+ gem &#39;carrierwave-qiniu&#39;, &#39;~&gt; 1.1.5&#39;
-
-- gem &#39;qiniu-rs&#39;
-</code></pre><p>终端运行<code>bundle install</code>, 报错显示：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79ly1fkj1s2ugzfj30me0bq76f.jpg" alt=""></p>
-<p>显示没有mime-types，按照提示，运行<code>bundle update</code>， OK！</p>
-<hr>
-</li>
-</ul>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p><strong>Attention：</strong></p>
-<p>  请在每次修改后，进行git commit 和 git push ，然后在本地运行 <code>cap production deploy</code>部署，Capistranno会从GitHub上拉下最新的进度，最后在远端服务器的<code>~/yourproject_name/current</code>目录下，运行<code>RAILS_ENV=production bundle exec rake db:seed</code>。</p>
-<p>  哦，附上我的成品<a href="https://www.togetherisbetter.cn/" target="_blank" rel="noopener">Together is better</a> : P.</p>
-
-          
+          <p>部署时踩坑七牛云存储。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/10/15/deploy-with-qiniu/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2528,7 +2086,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

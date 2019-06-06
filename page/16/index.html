@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,331 words</span>
+              <span>1,334 words</span>
             </span>
           
 
@@ -387,260 +387,14 @@
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="http://howitzer-framework.io/" target="_blank" rel="noopener">howitzer</a>是一个基于ruby脚本的web验收测试框架， 初学时，对这个新伙伴是不甚了解，按照老规矩，看doc，看API。看完后，结合自己的理解，简单过一下里面几个重要的概念。</p>
-<p>基本思路：</p>
-<blockquote>
-<ul>
-<li>是什么？</li>
-<li>怎么用？</li>
-<li>用的时候要注意什么？</li>
-</ul>
-</blockquote>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>Driver</p>
-<blockquote>
-<p>是一个针对多个浏览器进行测试的通用界面，所有的Driver可以分成两类：</p>
-<ul>
-<li>Headless testing: 没有用户操作界面的模拟浏览器</li>
-<li>real browser testing: 通过扩展程序或者插件来与真实的浏览器进行集成</li>
-</ul>
-</blockquote>
-<p>Howitzer使用Capybara来对driver进行管理和设置，可以在<code>config/default.yml</code>中进行设置</p>
-</li>
-<li><p>Pages</p>
-<p>介绍pages之前，介绍一下Page Object Model。</p>
-<p>Page Object Model是一个自动化测试模版，创建用于测试的用户界面的抽象实体。可以将网站的每个page看作是一个类，然后通过调用这些类的实例来进行测试，而每个页面的元素可以看作是一个page的method，通过调用这些method来对该页面的元素进行调用。</p>
-<p>这样，page就很好理解了。</p>
-<p>Page是用于描述真实页面的类，比如在<code>web/pages</code>目录下，建立主页的文件，可以这样写：</p>
-<pre><code class="Ruby">class Homepage &lt; Howitzer::Web::Page
-path &#39;/&#39;
-end
-HomePage.open #打开主页
-</code></pre>
-<p>当然，这里的前提是你在<code>config/default.yml</code>中已经设置好了app_host</p>
-<p>再比如：</p>
-<pre><code class="Ruby">class ProductPage &lt; Howitzer::Web::Page
-  path &#39;/products{/id}&#39;
-end
-ProductPage.open(id: 1) #=&gt; 访问 /products/1
-</code></pre>
-<p>如果要指定特定的host，可以这样：</p>
-<pre><code class="Ruby">class AuthPage &lt; Howitzer::Web::Page
-    site &#39;https://example.com&#39;
-    path &#39;/auth&#39;
-end
-</code></pre>
-<p><strong>Pages的验证：</strong></p>
-<p>其实就是用于区分每个page的anchor，有三种不同的类型：</p>
-<p><strong>URL，title，element</strong></p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  path &#39;/&#39;
-  validate :url, /\A(?:.*?:\/\/)?[^\/]*\/?\z/
-end
-</code></pre>
-<p>使用<code>.displayed?</code>可以去判断一个页面的所有验证是否都通过。</p>
-<p>用这个可以检查特定的页面成功打开，比如：</p>
-<pre><code class="Ruby">class AccountPage &lt; Howitzer::Web::Page
-  path &#39;/accounts/{id}&#39;
- end
- AccountPage.open(id: 22)
- expect(AccountPage).to be_displayed
-</code></pre>
-</li>
-<li><p>Elements</p>
-<p>页面的元素，可以是单个元素，比如搜索栏，也可以是元素集合，比如菜单中的选项集。</p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  element :test_name1, &#39;.foo&#39;                         #css locator, default
-  element :test_name2, :css, &#39;.foo&#39;                   #css locator
-  element :test_name3, :xpath, &#39;//div[@value=&quot;bar&quot;]&#39;  #xpath locator
-
-  element :test_link1, :link, &#39;Foo&#39;                   #link locator by &#39;Foo&#39; text
-  element :test_link2, :link, &#39;bar&#39;                   #link locator by &#39;bar&#39; id
-
-  element :test_field1, :fillable_field, &#39;Foo&#39;        #field locator by &#39;Foo&#39; text
-  element :test_field2, :fillable_field, &#39;bar&#39;        #field locator by &#39;bar&#39; id
-  element :test_field3, :fillable_field, &#39;baz&#39;        #field locator by &#39;baz&#39; name
-end
-</code></pre>
-<p>这里要注意，不能通过page类直接调用element，需要在page类中定义一个method来调用element。</p>
-<p>比如：</p>
-<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
-  element :new_button, :xpath, &quot;.//*[@name=&#39;New&#39;]&quot;
-
-  def start_new_project
-    new_button_element.click
-  end
-end
-
-HomePage.on { new_button_element.click } # 不正确的用法
-HomePage.on { start_new_project } # 正确的打开方式
-</code></pre>
-</li>
-<li><p>Sections</p>
-<p>在howitzer中，有一个Howitzer::Web::Section类。</p>
-<p>section的使用场景：当多个页面中出现相同的部分时，或者某部分在一个页面中频繁出现，类似rails中的公用表单。</p>
-<p>使用<code>&lt;section_name&gt;_section</code>来生成一个section的实例,  这里使用一个特别的me方法，通过参数指定section，比如：</p>
-<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
-  me &quot;#gbx3&quot; #section的父元素
-end
-</code></pre>
-<p>使用的时候，这么用：</p>
-<pre><code class="Ruby"># 定义section:
-
-class MenuSection &lt; Howitzer::Web::Section
-  me &quot;#gbx3&quot;
-end
-
-# 包含menusection的页面:
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu
-end
-
-# 页面调用section:
-
-HomePage.on { menu_section }
-</code></pre>
-<p>当两个页面有相同的section，但是跟节点不同时，可以这么用：</p>
-<pre><code class="Ruby"># 定义section
-
-class MenuSection &lt; Howitzer::Web::Section
-  me &#39;#gbx3&#39;
-end
-
-# 定义两个page类，都包含有menu这个section
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu # 使用默认的selector
-end
-
-class SearchResultsPage &lt; Howitzer::Web::Page
-  section :menu, &quot;#gbx48&quot; # 覆盖了默认的selector
-end
-</code></pre>
-<p>测试section是否存在某个页面：</p>
-<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
-  me &#39;#gbx3&#39;
-  element :search, &quot;a.search&quot;
-end
-
-class HomePage &lt; Howitzer::Web::Page
-  section :menu
-end
-
-HomePage.on { has_menu_section? } #=&gt; returns true or false
-</code></pre>
-<p>多层级section的使用，看一个登陆的例子，结合了cucumber 的step定义：</p>
-<pre><code class="Ruby"># define a page that contains an area that contains a section for both logging in and registration, then modeling each of the sub sections separately
-
-class LoginSection &lt; Howitzer::Web::Section
-  me &quot;div.login-area&quot;
-  element :username, &quot;#username&quot;
-  element :password, &quot;#password&quot;
-  element :sign_in, &quot;button&quot;
-
-  def login(username, password)
-    username_element.set username
-    password_element.set password
-    sign_in_element.click
-  end  
-end
-
-class RegistrationSection &lt; Howitzer::Web::Section
-  me &quot;div.reg-area&quot;
-  element :first_name, &quot;#first_name&quot;
-  element :last_name, &quot;#last_name&quot;
-  element :next_step, &quot;button.next-reg-step&quot;
-
-  def sign_up(first_name, last_name)
-    first_name_element.set first_name
-    first_name_element.set last_name
-    next_step_element.click
-  end
-end
-
-class LoginRegistrationFormSection &lt; Howitzer::Web::Section
-  me &quot;div.login-registration&quot;
-  section :login
-  section :registration  
-end
-
-class HomePage &lt; Howitzer::Web::Page
-  section :login_and_registration
-end
-
-# how to login (fatuous, but demonstrates the point):
-Then /^I sign in$/ do
-  HomePage.open
-  HomePage.on do
-    is_expected.to have_login_and_registration_section
-    login_and_registration_section.login_section.login(&#39;bob&#39;, &#39;p4ssw0rd&#39;)
-  end  
-end
-
-# how to sign up:
-
-When /^I enter my name into the home page&#39;s registration form$/ do
-  HomePage.open
-  HomePage.on do
-    expect(login_and_registration_section.registration_section).to have_first_name
-    expect(login_and_registration_section.registration_section).to have_last_name
-    login_and_registration_section.registration_section.signup(&#39;Bob&#39;, &#39;Arum&#39;)
-  end  
-end
-</code></pre>
-</li>
-<li><p>IFrames</p>
-<p>IFrames 在howitzer中被声明为一个 <code>Howitzer::Web::Page</code>类，通过包含该frame 的section或者page来引用，比如：</p>
-<p>创建一个frame实例，在DashboardPage中引用它，测试该frame是否在DashboardPage中存在。</p>
-<pre><code class="Ruby">class FbPage &lt; Howitzer::Web::Page
-  element :some_text_field, &quot;input.username&quot;
-end
-
-class DashboardPage &lt; Howitzer::Web::Page
-  iframe :fb, &quot;#fb&quot;
-end
-
-DashboardPage.open
-DashboardPage.on { is_expected.to have_fb_iframe }
-</code></pre>
-<p>与iframe中的元素进行交互, 这里用了cucumber login的step definition来说明：</p>
-<pre><code class="Ruby"># Howitzer::Web::Page representing the iframe
-class LoginPage &lt; Howitzer::Web::Page
-  element :username, &quot;input.username&quot;
-  element :password, &quot;input.password&quot;
-
-  def login(username, password)
-    username_element.set username
-    password_element.set password
-  end  
-end
-
-# Howitzer::Web::Page representing the page that contains the iframe
-class HomePage &lt; Howitzer::Web::Page
-  iframe :login, &quot;#login_and_registration&quot;
-end
-
-# cucumber step that performs login
-When /^I log in$/ do
-  HomePage.open
-  HomePage.on do
-    login_iframe do |frame|
-      #`frame` is an instance of the `LoginPage` class
-      frame.login(&#39;admin&#39;, &#39;p4ssword&#39;)
-    end
-  end  
-end
-</code></pre>
-</li>
-</ul>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
-<p><a href="http://docs.howitzer-framework.io/" target="_blank" rel="noopener">howitzer doc</a></p>
-
-          
+          <p>学学 Howitzer。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/12/25/concepts-in-howitzer/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -779,7 +533,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>487 words</span>
+              <span>483 words</span>
             </span>
           
 
@@ -797,56 +551,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple navigation</a>是一个ruby库，用来生成navigation的，它的优势是可以定制自己的导航菜单，特别是当你有多个菜单或者你的菜单相对比较复杂的时候。</p>
-<p>可是官方只是给出了一个<a href="http://simple-navigation-demo.codeplant.ch/" target="_blank" rel="noopener">online demo</a>，并没有给到具体的install  和 usage，这让初次接触simple navigation的小白有些被动，Google了一些文章，实做了一下，知道怎么玩啦，记录下以备用。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>安装gem</p>
-<p>在gemfile文件中，添加如下：【建议把bootstrap也安装了】</p>
-<pre><code class="Ruby">gem &#39;bootstrap-sass&#39;
-gem &#39;simple-navigation&#39;
-gem &#39;simple-navigation-bootstrap&#39;
-</code></pre>
-<p>终端运行：</p>
-<pre><code>bundle install
-</code></pre><p>重启服务器：<code>rails s</code></p>
-<p>将<code>application.css</code>文件更名为<code>application.scss</code>，终端输入：</p>
-<pre><code>mv app/assets/stylesheets/application.css app/assets/stylesheets/application.scss
-</code></pre><p>在<code>application.scss</code>文件中，添加如下：</p>
-<pre><code>@import &quot;bootstrap-sprockets&quot;;
-@import &quot;bootstrap&quot;;
-</code></pre><p>生成menu 的configuration文件<code>navigation.rb</code>， 终端输入：</p>
-<pre><code>bundle exec rails g navigation_config
-</code></pre><p>此时，config文件下会生成一个<code>navigation.rb</code>文件，长这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fmjtnki6lbj30o007tmyr.jpg" alt=""></p>
-<p>在文件的下方，已经列出了一些用法，包括如何添加有sub navigation的item，添加指定条件的item，比如登陆，是否为管理员等等。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjtwnw2dzj30nv0gb42w.jpg" alt=""></p>
-</li>
-</ul>
-<ul>
-<li><p>设置menu</p>
-<p>我们来改改，定制一下，比如下面这样：【当然，请确保你写的path是有效的……】</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvdavg84j30le04n74t.jpg" alt=""></p>
-</li>
-<li><p>展示menu</p>
-<p>在需要展示的页面中，添加:</p>
-<pre><code>&lt;%= render_navigation(:expand_all =&gt; true)%&gt;
-</code></pre><p>这里，expand_all 为true是指全部铺开，即子菜单未被激活也是展开的，效果类似这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fmjve7qr4oj305z04it8l.jpg" alt=""></p>
-<p>这里可以用参数level来控制层级的显示，上面菜单 + 子菜单，只有两级，所以用</p>
-<p><code>render_navigation(:level =&gt; 2)</code>也是可以的。如果改成：</p>
-<pre><code>&lt;%= render_navigation(:level =&gt; 1)%&gt;
-</code></pre><p>则显示一级菜单，像这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fmjvz5s8kej3063027q2r.jpg" alt=""></p>
-<p>另：</p>
-<p>看到GitHub 中提到使用<code>&lt;%= render_navigation(:expand_all =&gt; false)%&gt;</code> 来让未被激活的子菜单隐藏，没有设置的情况下，:expand_all是默认为false的, 我试了一下，没有成功，所有菜单还是全部铺开，有些奇怪。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple-navigation</a></p>
-<p><a href="https://github.com/pdf/simple-navigation-bootstrap" target="_blank" rel="noopener">simple-navigation-bootstrap</a></p>
-<p><a href="http://www.xoen.org/2012/05/bootstrap-menus-in-rails/" target="_blank" rel="noopener">bootstrap menu in rails</a></p>
-
-          
+          <p><a href="https://github.com/codeplant/simple-navigation" target="_blank" rel="noopener">simple navigation</a>是一个ruby库，用来生成navigation的，它的优势是可以定制自己的导航菜单，特别是当你有多个菜单或者你的菜单相对比较复杂的时候。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/12/17/use-simple-navigation-in-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -985,7 +697,7 @@ gem &#39;simple-navigation-bootstrap&#39;
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,212 words</span>
+              <span>1,208 words</span>
             </span>
           
 
@@ -1003,279 +715,14 @@ gem &#39;simple-navigation-bootstrap&#39;
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>工作中常常要处理Array，索性把ruby 中Array的一些常用方法小结一下，加深印象。</p>
-<p>先来看看Array中除去继承自Object之外的，有多少public methods</p>
-<pre><code class="Ruby">(Array.instance_methods - Object.instance_methods).count
-# 输出:
-120
-# ruby版本为 2.3.1
-</code></pre>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
-<li><p>建立空数组：</p>
-<pre><code class="Ruby">[]
-Array.new
-</code></pre>
-</li>
-<li><p>使用%w, %i 创建非空数组</p>
-<p><strong>创建不包含空白的字符串数组，可用%w</strong></p>
-<pre><code class="Ruby">%w(Ruby Python Scheme)
-# 输出:
-[&quot;Ruby&quot;, &quot;Python&quot;, &quot;Scheme&quot;]
-</code></pre>
-<p><strong>创建元素为符号的数组，可用%i</strong></p>
-<pre><code class="Ruby">%i(Ruby Python Scheme)
-# 输出:
-[:Ruby, :Python, :Scheme]
-</code></pre>
-</li>
-<li><p>数组的大小</p>
-<pre><code class="Ruby">[4, 8, 15, 16, 23, 42].count
-[4, 8, 15, 16, 23, 42].size
-[4, 8, 15, 16, 23, 42].length
-# 输出:
-6
-6
-6
-</code></pre>
-</li>
-<li><p>将string转化为array</p>
-<p> split</p>
-<pre><code class="Ruby">&quot;a, b, c, d&quot;.split(&quot;, &quot;)
-# 输出:
-[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;]
-</code></pre>
-</li>
-<li><p>将array转化为string</p>
-<p>join</p>
-<pre><code class="Ruby">[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;].join(&quot;, &quot;)
-# 输出:
-&quot;a, b, c, d&quot;
-</code></pre>
-</li>
-<li><p>将hash 转化为array</p>
-<p>to_a</p>
-<pre><code class="Ruby">table = {:&quot;color1&quot; =&gt; &quot;blue&quot;, :&quot;color2&quot; =&gt; &quot;red&quot;}
-table.to_a
-# 输出:
-[[:color1, &quot;blue&quot;], [:color2, &quot;red&quot;]]
-
-table.to_a.flatten
-# 输出:
-[:color1, &quot;blue&quot;, :color2, &quot;red&quot;]
-</code></pre>
-</li>
-<li><p>在数组中提取元素</p>
-<p>index从0开始，index为正时，从array的第一个元素开始，index为负时，从最后一个元素开始</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5][2]
-# 输出:
-3
-
-[1, 2, 3, 4, 5][-1]
-# 输出:
-5
-</code></pre>
-</li>
-<li><p>给数组添加元素</p>
-<p>在尾部添加&lt;&lt;  or push</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5] &lt;&lt; &quot;woot&quot;
-# 输出: [1, 2, 3, 4, 5, &quot;woot&quot;]
-
-[1, 2, 3, 4, 5].push(&quot;woot&quot;)
-# 输出: [1, 2, 3, 4, 5, &quot;woot&quot;]
-</code></pre>
-<p>在开头添加 unshift</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].unshift(0)
-# 输出:
-[0, 1, 2, 3, 4, 5]
-</code></pre>
-</li>
-<li><p>连接数组concat ／ +</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].concat([6, 7])
-# 输出:
-[1, 2, 3, 4, 5, 6, 7]
-
-[1, 2, 3, 4, 5] + [6, 7]
-# 输出:
-[1, 2, 3, 4, 5, 6, 7]
-</code></pre>
-</li>
-<li><p>数组转换map, collect</p>
-<pre><code class="Ruby">[1, 2, 3, 4, 5].map {|x| x * 3}
-# 输出:
-[3, 6, 9, 12, 15]
-
-[1, 2, 3, 4, 5].collect {|x| x + 2 }
-# 输出:
-[3, 4, 5, 6, 7]
-</code></pre>
-</li>
-<li><p>获取分散的数组values_at</p>
-<pre><code class="Ruby">[1,2,3,4,5,6].values_at(1,2,4)
-# 输出:
-[2, 3, 5]
-</code></pre>
-</li>
-<li><p>筛选特定的元素 select</p>
-<pre><code class="Ruby">[1,2,3,4,5,6].select {|number| number % 2 == 0}
-# 输出:
-[2, 4, 6]
-</code></pre>
-</li>
-<li><p>删除元素 delete</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.delete(5) # 注意这里delete的参数是元素，不是index
-# 输出:
-5
-
-a
-# 输出:
-[1, 3, 4, 6, 7]
-</code></pre>
-<p>删除指定index的元素delete_at 【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.delete_at(5)
-# 输出:
-7
-
-a
-# 输出:
-[1,3,5,4,6]
-</code></pre>
-<p>删除符合要求的delete_if【破坏性修改】, reject</p>
-<pre><code class="Ruby">[1,2,3,4,5,6,7,8,9].delete_if{|x| x % 2 == 0}
-# 输出:
-[1, 3, 5, 7, 9]
-
-[1,2,3,4,5,6,7,8,9].reject{|x| x % 2 == 0}
-# 输出:
-[1, 3, 5, 7, 9]
-</code></pre>
-<p>删除所有nil元素compact</p>
-<pre><code class="Ruby">a = [nil, 4, nil, 8, 15, 16, nil, 23, 42, nil]
-a.compact
-# 输出:
-[4, 8, 15, 16, 23, 42]
-</code></pre>
-<p>删除指定部分slice</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7]
-a.slice(1,2)
-# 输出:
-[3, 5]
-
-a.slice!(1,2)
-# 输出:
-[3, 5]
-
-a
-# 输出:
-[1, 4, 6, 7]
-</code></pre>
-<p>删除第X个元素shift, 默认是第一个【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.shift
-# 输出:
-1
-
-a
-# 输出:
-[2, 3, 4, 5, 6, 7, 8, 9]
-
-a.shift(2)
-# 输出:
-[2, 3]
-
-a
-# 输出:
-[ 4, 5, 6, 7, 8, 9]
-</code></pre>
-<p>删除最后X个元素pop ，默认是最后一个【破坏性修改】</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.pop
-# 输出:
-9
-
-a
-# 输出:
-[1,2,3,4,5,6,7,8]
-
-a.pop(3)
-# 输出:
-[6,7,8]
-
-a
-# 输出:
-[1,2,3,4,5]
-</code></pre>
-<p>ruby中method后面带有！符号的都是具有破坏性的修改, 但是那些没有带！尾巴的也不是那么友好，比如上面的shift， pop。 那么可有办法保护我们的array？有滴，上freeze</p>
-<p>freeze可以禁止具有破坏性的方法来修改对象。</p>
-<pre><code class="Ruby">a = [1,2,3,4,5,6,7,8,9]
-a.freeze
-a.pop
-# 输出:
-# can&#39;t modify frozen Array
-
-a
-# 输出:
-[1,2,3,4,5,6,7,8,9]
-</code></pre>
-</li>
-<li><p>去除重复元素uniq</p>
-<pre><code class="Ruby">a = [1,3,5,4,6,7,1,3,7]
-a.uniq
-# 输出:
-[1, 3, 5, 4, 6, 7]
-</code></pre>
-</li>
-<li><p>平坦化数组flatten</p>
-<p>前面出现过，再多看些例子：</p>
-<pre><code class="Ruby">[4, [8], [15], [16, [23, 42]]].flatten
-# 输出:
-[4, 8, 15, 16, 23, 42]
-</code></pre>
-<p>不传递参数时，默认是完全平坦化，传递参数，则平坦化层级X，例如：</p>
-<pre><code class="Ruby">[4, [8], [15], [16, [23, [42, 43]]]].flatten(1)
-# 输出:
-[4, 8, 15, 16, [23, [42, 43]]]
-
-[4, [8], [15], [16, [23, [42, 43]]]].flatten(2)
-# 输出:
-[4, 8, 15, 16, 23, [42, 43]]
-
-[4, [8], [15], [16, [23, [42, 43]]]].flatten(3)
-# 输出:
- [4, 8, 15, 16, 23, 42, 43]
-</code></pre>
-</li>
-<li><p>获取某个元素的出现次数count</p>
-<p>count前面已经出现过，用于计算数组的长度，不带参数，如果传递参数给到count，则返回该元素在数组中出现的次数。</p>
-<pre><code class="Ruby">[42, 8, 15, 16, 23, 42].count(42)
-# 输出:
-2
-</code></pre>
-</li>
-<li><p>排序sort</p>
-<pre><code class="Ruby">a = [1, 3, 5, 4, 6, 7]
-a.sort
-# 输出:
- [1, 3, 4, 5, 6, 7]
-</code></pre>
-<p>使用块来指定排序规则：</p>
-<pre><code class="Ruby">a = [&quot;ruby&quot;, &quot;python&quot;, &quot;C&quot;, &quot;C++&quot;, &quot;java&quot;]
-a.sort
-# 输出:
-[&quot;C&quot;, &quot;C++&quot;, &quot;java&quot;, &quot;python&quot;, &quot;ruby&quot;]    # 默认按照首字母排序
-
-a.sort {|a, b| a.length &lt;=&gt; b.length}
-# 输出:
-[&quot;C&quot;, &quot;C++&quot;, &quot;ruby&quot;, &quot;java&quot;, &quot;python&quot;]   # 按照字符长度来排序
-</code></pre>
-<p>同样的，sort！方法具有破坏性。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>先整这么多，用到新的再补上，嘿哈</p>
-</li>
-</ul>
-
-          
+          <p>工作中常常要处理Array，索性把ruby 中Array的一些常用方法小结一下，加深印象。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/12/13/methods-of-Array-in-Ruby/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1419,30 +866,15 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
 
       
         
-          
-            <p>送君一掬温柔</p>
+          <p>送君一掬温柔</p>
 <iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="//music.163.com/outchain/player?type=2&id=28921691&auto=1&height=66"></iframe>
-
-<p>一直觉得音乐是个特别神奇的东西。</p>
-<p>无形无色，却能有着撩拨人心的力量。</p>
-<p>开心了，听歌助兴，不开心了，听歌释怀。</p>
-<p>疲惫时，一首歌，仿佛能治愈，能满血复活。</p>
-<p>晴朗的日子里，踩着单车，塞上耳机，哼歌吹哨，真真是享受。</p>
-<p>记得《偷影子的人》中，男主有个嗜好，每天早上都要来一段大提琴曲，而他最终找到了那个有着大提琴音色般笑声的克蕾尔，彼时她已经是一名大提琴家。</p>
-<p>也许耳朵才是抵达心灵的窗口。</p>
-<p>嗯，深情不过陪伴，温柔最是得人心。</p>
-<p>愿你在音符中寻觅到那份温暖与温柔。</p>
-<p>好了，不矫情了，听歌吧。</p>
-<p>PS：</p>
-<p>为什么要写这么一篇小短文？</p>
-<p>其实，我只是想试试如何在hexo里面添加音乐文件……</p>
-<p>事实证明，可以边看文章边听歌了……</p>
-<p>嗯，其实，还是一心一意听歌的好，好音乐值得去专注。</p>
-<hr>
-<p>参考：</p>
-<p><a href="http://www.jianshu.com/p/a52b68794a6b" target="_blank" rel="noopener">hexo创建个人博客（附加插入音乐、分享、评论、标签页、搜索）</a></p>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/12/06/about-music/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1581,7 +1013,7 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>550 words</span>
+              <span>549 words</span>
             </span>
           
 
@@ -1599,112 +1031,14 @@ a.sort {|a, b| a.length &lt;=&gt; b.length}
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>URL中通常会遇到特殊字符的处理，比如某一个参数中含有中文 或者”#$ ^ &amp; * + =”等特殊符号。</p>
-<p>如何处理才能正确传递参数？</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><strong>处理之前，先来点小知识。</strong></p>
-<p>URL中一些特殊字符及对应的Url编码如下：</p>
-<table>
-<thead>
-<tr>
-<th>Character</th>
-<th>From UTF-8</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>space</td>
-<td>%20</td>
-</tr>
-<tr>
-<td>!</td>
-<td>%21</td>
-</tr>
-<tr>
-<td>“</td>
-<td>%22</td>
-</tr>
-<tr>
-<td>#</td>
-<td>%23</td>
-</tr>
-<tr>
-<td>$</td>
-<td>%24</td>
-</tr>
-<tr>
-<td>%</td>
-<td>%25</td>
-</tr>
-<tr>
-<td>&amp;</td>
-<td>%26</td>
-</tr>
-<tr>
-<td>‘</td>
-<td>%27</td>
-</tr>
-<tr>
-<td>(</td>
-<td>%28</td>
-</tr>
-<tr>
-<td>)</td>
-<td>%29</td>
-</tr>
-<tr>
-<td>*</td>
-<td>%2A</td>
-</tr>
-<tr>
-<td>+</td>
-<td>%2B</td>
-</tr>
-<tr>
-<td>,</td>
-<td>%2C</td>
-</tr>
-<tr>
-<td>-</td>
-<td>%2D</td>
-</tr>
-<tr>
-<td>.</td>
-<td>%2E</td>
-</tr>
-<tr>
-<td>/</td>
-<td>%2F</td>
-</tr>
-</tbody>
-</table>
-<p><strong>小案例：从一个中文字符的处理开始</strong></p>
-<p>restclient中，如果URL含有中文等非英文的特殊字符， 只需要使用<strong>URI::encode</strong>即可。比如下面这个例子：</p>
-<p>网址是 <a href="http://example.com，" target="_blank" rel="noopener">http://example.com，</a> 用户输入关键字“伊丽莎白好乖滴 ”查询：</p>
-<pre><code>url = &#39;http://example.com/search?keyword=伊丽莎白好乖滴&#39;
-RestClient.get(url)
-</code></pre><p>这里，使用restclient发出get请求，会出现URI::InvalidURIError 的错误.</p>
-<p>正确的打开方式可以像这样：</p>
-<pre><code>require &#39;addressable/uri&#39;
-url = &#39;http://example.com/search?keyword=伊丽莎白好乖滴&#39;
-RestClient.get(URI::encode(url))
-</code></pre><p>这样，url中的中文字符会转化为下面这样的ascii码。</p>
-<pre><code>http://example.com/search?keyword=%E4%BC%8A%E4%B8%BD%E8%8E%8E%E7%99%BD%E5%A5%BD%E4%B9%96%E6%BB%B4
-</code></pre><p><strong>特别加餐：传递给参数的值中，含有&amp;等特殊字符</strong></p>
-<p>需要特别提一句的是，如果你的URL是这样的：</p>
-<pre><code>url = &#39;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&#39;
-</code></pre><p>而你希望将<code>&amp;s</code>传递给keyword， 使用URI::encode时，会是这样：</p>
-<pre><code>http://example.com/search?keyword=&amp;s&amp;city=shanghai&amp;type=food
-</code></pre><p>这里，因为URL中传递参数时，是用”&amp;”符号隔开的，所以rest client识别的时候，会认为keyword这个参数并没有赋值， 而<code>&amp;s</code>中，s表示另一个参数, 且没有赋值，这样，发出请求后会报错，这种情况如何解决？做这样的处理:</p>
-<pre><code>URI::encode(url).sub(&quot;&amp;&quot;, &quot;%26&quot;)
-</code></pre><p>encode后，将第一个&amp;, 也就是<code>&amp;s</code>转变为”%26s”, 再传递给RestClient。</p>
-<p>这里你可能想要问，为什么不直接传递”%26s”？</p>
-<p>问得好！如果直接将”%26s”传递给keyword，经过URI::encode之后，keyword接收到的就会是：“%2526s”， why？Cause it will encode “%” to “%25”。</p>
-<p>当然，不只是rest client，其他需要针对URL进行encoding的，也可以进行类似的处理。</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://github.com/rest-client/rest-client/issues/476" target="_blank" rel="noopener">URL with square brackets: URI::InvalidURIError</a></p>
-<p><a href="https://www.w3schools.com/tags/ref_urlencode.asp" target="_blank" rel="noopener">HTML URL Encoding Reference</a></p>
-
-          
+          <p>URL中通常会遇到特殊字符的处理。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/12/01/deal-with-special-character-when-using-restclient-url/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1843,7 +1177,7 @@ RestClient.get(URI::encode(url))
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>382 words</span>
+              <span>387 words</span>
             </span>
           
 
@@ -1861,30 +1195,14 @@ RestClient.get(URI::encode(url))
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>在ruby中抛出异常时，除了输出程序本身的exception之外，你可能还希望它输出一些其他信息，例如指出是哪个文件，对应的id是什么等，以便后期查找。</p>
-<p>这时，可以通过定制ruby的exception来解决。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><strong>看个场景：</strong></p>
-<p>以接口测试的一个情况为例，说明一下怎么玩。</p>
-<p>用户A在做接口测试时，使用restclient的get, put, post, delete发出请求，出错，这时，用户A除了希望获取到rest client本身的Exception外，还希望可以输出reponse.headers中的traceid， 类似这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1flr4wg5vwhj30pp015gll.jpg" alt=""></p>
-<p>那么如何将traceid加入到exception的message内容中去呢？</p>
-<p><strong>重新定义一个class，继承自ruby的StandardError， 将需要输出的信息作为变量传递给该class即可。</strong></p>
-<p>具体这么来：</p>
-<p>新建一个class ： MyError</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1flr4v3whjkj30kp0423yq.jpg" alt=""></p>
-<p>在使用restclient时，raise 异常即可。具体代码类似这样👇：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1flr4ju0i95j30k305f0tb.jpg" alt=""></p>
-<p>简单说明一下：</p>
-<p>我们去获取网站example.com首页的内容，用rescue来捕捉异常，并将restclient的异常信息<code>e. message</code> 和<code>e.response.headers[:traceid]</code>合并起来作为参数传递，生成MyError的一个实例 <code>my_error</code> ，并针对response的code做判断，如果code不在200～206， 则抛出<code>my_error</code>.</p>
-<p>这里，其实是将标准的出错信息加了个定制的尾巴，父对象StandardError接受到新的message，在出错时抛出。</p>
-<p>OK啦。</p>
-<p>很简单是不是？得空可以试试定制化你的exceptions：P</p>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>参考：</p>
-<p><a href="http://blog.honeybadger.io/ruby-custom-exceptions/" target="_blank" rel="noopener">Custom exceptions in Ruby</a></p>
-<p><a href="http://blog.honeybadger.io/ruby-exception-vs-standarderror-whats-the-difference/" target="_blank" rel="noopener">Ruby’s Exception vs StandardError: What’s the difference?</a>Â</p>
-
-          
+          <p>定制你的exception。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/22/custom-exceptions-in-ruby/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2023,7 +1341,7 @@ RestClient.get(URI::encode(url))
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>349 words</span>
+              <span>345 words</span>
             </span>
           
 
@@ -2041,48 +1359,14 @@ RestClient.get(URI::encode(url))
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>我们在使用rest-client去发出请求时，result code是200 固然很好，但有时候我们也希望能读取到Exceptions， 例如读取result code是400bad request的response内容，怎么做？</p>
-<p>看个例子。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>场景：用户A想要通过接口获取到个人信息，代码如下：</p>
-<pre><code class="JSON"> respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#{access_token}&#39;
- profile_response = JSON.parse(respoonse.body)
-</code></pre>
-<p>其中，如果<code>access_token</code>过期或者无效，用户希望得到这样的结果：</p>
-<ul>
-<li>返回 400 Bad Request</li>
-<li>返回一个JSON格式的reponse body ，内容像这样：</li>
-</ul>
-<pre><code class="JSON">{          
-   &quot;code&quot;: 400,
-   &quot;error&quot;: {
-      &quot;message&quot;: &quot;The access token could not be decrypted&quot;,
-      &quot;type&quot;: &quot;OAuthException&quot;
-   }
-}
-</code></pre>
-<p>这时，如果你的<code>access_token</code>是过期或者无效的，终端运行的时候，会报错400 Bad Request ，但是却没有返回对应的response。</p>
-<p>如何解决？</p>
-<p>其实，如果你熟悉ruby的异常处理，就会发现很简单，把上述的代码改成如下：</p>
-<pre><code class="JSON">body = begin
-  respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#{access_token}&#39;
-  response.body
-rescue RestClient::ExceptionWithResponse  =&gt; e
-  e.response.body
-end
-
-profile_response = JSON.parse(body)
-</code></pre>
-<p>这里，使用了<code>rescue RestClient::ExceptionWithResponse  =&gt; e</code> 获取异常对象，并赋给了变量e，通过<code>e.response.body</code>来回传需要的error信息。</p>
-<p>大功告成。</p>
-<p>其实，看到这里，你就明白，不仅仅是 400bad request的response内容可以读取，其他如403 Forbidden，404 not found 等的response内容也是可以依葫芦画瓢来做的。：P</p>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>参考：</p>
-<ul>
-<li><a href="https://stackoverflow.com/questions/23623330/reading-the-body-of-a-400-response" target="_blank" rel="noopener">Reading the body of a 400 response?</a></li>
-<li><a href="https://stackoverflow.com/questions/23623330/reading-the-body-of-a-400-response" target="_blank" rel="noopener">Response callbacks, error handing</a></li>
-</ul>
-
-          
+          <p>我们在使用rest-client去发出请求时，result code是200 固然很好，但有时候我们也希望能读取到Exceptions， 例如读取result code是400bad request的response内容，怎么做？</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/21/read-the-body-of-400-response-with-ruby-exception-handling/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2221,7 +1505,7 @@ profile_response = JSON.parse(body)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>350 words</span>
+              <span>344 words</span>
             </span>
           
 
@@ -2239,58 +1523,14 @@ profile_response = JSON.parse(body)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>实际上，还是传递字符……</p>
-<p>看下面的例子👇</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>当你想要在examples中传递一个Array时，要怎么做？直接传递？我们试试。</p>
-<p>背景如下：</p>
-<p>在文件<code>search.feature</code>中，search_terms的数据是一个数组[ ‘chocolate’ , ‘Nigella Lawson’]：</p>
-<pre><code class="Ruby"> Scenario Outline:
- When I search for &quot;&lt;search_terms&gt;&quot;
- Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
- Examples:
-         | search_terms | recipe_title |
-         | [ &#39;chocolate&#39; , &#39;Nigella Lawson&#39;] | White chocolate and mintmousse |
-</code></pre>
-<p>对应的step文件，如<code>search_step.rb</code>，内容：</p>
-<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
-  search_terms = terms
-  ......
-end
-
-Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
-  ......
-end
-</code></pre>
-<p>这时如果直接在终端运行cucumber会报错，因为你的search_terms传递的是一个array。</p>
-<p>在 <a href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315" target="_blank" rel="noopener">Cucumber:10316 -  Passing arrays in tables</a>中有位mswinson提到了这个问题，然后有位叫Andy的回复了他。【蛮好玩的，有兴趣的可以看看。】</p>
-<p>解决方法就是<strong>避开Array，传递String，用“，”来区分各个element，然后在step definitions中用<code>split(/, /)</code>将其转换为Array</strong>。</p>
-<p>比如上面的这个例子，可以这么来：</p>
-<p>修改文件<code>search.feature</code>内容：</p>
-<pre><code class="Ruby"> Scenario Outline:
- When I search for &quot;&lt;search_terms&gt;&quot;
- Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
-
- Examples:
-         | search_terms | recipe_title |
-         | chocolate , Nigella Lawson| White chocolate and mintmousse |
-</code></pre>
-<p>在对应的step文件中， 使用<code>search_terms = terms.split(/, /)</code>。</p>
-<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
-  search_terms = terms.split(/, /) ## 这时search_terms就是一个array了
-  ......
-end
-
-Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
-  ......
-end
-</code></pre>
-<p>OK，完成。</p>
-<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>嗯，就这么简单，可我还是想把它写出来，硬生生整出了一篇文章来……</p>
-<p>参考： <a href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315" target="_blank" rel="noopener">Cucumber:10316 -  Passing arrays in tables</a></p>
-<p>enjoy ：D</p>
-
-          
+          <p>实际上，还是传递字符……</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/15/how-to-pass-array-in-examples/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2429,7 +1669,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>871 words</span>
+              <span>876 words</span>
             </span>
           
 
@@ -2447,140 +1687,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p><a href="https://github.com/rest-client/rest-client" target="_blank" rel="noopener">Rest-client</a>， 顾名思义，遵守RESTful规则的客户端，可以对服务器发出请求。</p>
-<p>每次使用时以<code>RestClient.get／post/put/delete</code>起头，更高级的用法是以<code>RestClient::Request.execute()</code>为固定结构。</p>
-<p>如果你的专案中多处需要用到rest-client，你一定希望可以封装起来，易于调用，让代码更优雅。</p>
-<p>我们开始吧。</p>
-<h4 id="用法简介"><a href="#用法简介" class="headerlink" title="用法简介"></a>用法简介</h4><p><a href="https://github.com/rest-client/rest-client" target="_blank" rel="noopener">Rest-client</a>的<a href="http://www.rubydoc.info/github/rest-client/rest-client/RestClient#post-class_method" target="_blank" rel="noopener">官方文档</a>中， 详细地列出了各个method的参数情况，我们挑出最重要的那四个：</p>
-<pre><code>.get(url, headers = {}, &amp;block)
-.post(url, payload, headers = {}, &amp;block)
-.put(url, payload, headers = {}, &amp;block)
-.delete(url, headers = {}, &amp;block)
-</code></pre><p>会发现四个verb请求都带有headers，block，但是这两个参数都不是必填的。比如<code>get</code>， 只给一个URL就满足了。</p>
-<p>在<a href="https://github.com/rest-client/rest-client" target="_blank" rel="noopener">GitHub</a>库上有相关的实例，长这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1flbgi7h7mgj30oh07r407.jpg" alt=""></p>
-<p>用起来很简单，那么在ruby中如何封装呢？比如有个图书model，我想要对某个书进行修改，使用put时，就要传递至少三个参数，冗长的URL表明是哪本书，你的登录信息，比如sessionId, 要更新的内容。类似这样：</p>
-<pre><code>RestClient.post &#39;http://book.com/books/bookid&#39;, {:sessionId =&gt; &#39;XXXXXXXX&#39;, :token =&gt; &quot;xxxx&quot;},{&quot;name&quot;: &quot;XXX&quot;, &quot;description:&quot; &quot;XXXXX&quot; .......}
-</code></pre><p>代码看着很不整洁，如何改进？</p>
-<p>别急，先来看看在ruby中如何实现全局调用一个method。</p>
-<h4 id="call-method-from-the-global-scope"><a href="#call-method-from-the-global-scope" class="headerlink" title="call method from the global scope"></a>call method from the global scope</h4><p>比如你定义了method C</p>
-<pre><code class="Ruby">def C(name)
-    puts &quot;hello, #{name}&quot;
-end
-</code></pre>
-<p>你想要在专案的多个文件中均可以调用这个method C，怎么实现？</p>
-<p>使用module，这么来，在文件A.rb中，放入如下内容：</p>
-<pre><code class="Ruby">module A
-    module B
-        def C(name)
-            puts &quot;hello, #{name}&quot;
-        end
-    end
-end
-</code></pre>
-<p>这时候，你引用C，需要写成A::B.C， 呃，这不是我们想要的结果，继续优化。</p>
-<p>在Ruby中，任何一个method都绑定了一个对象。当我们调用比较常见的method，比如<code>puts</code>， <code>require</code>时，其实我们是在调用<code>main.puts</code>, <code>main.require</code>, 也就是它们有一个默认的object，叫做main。</p>
-<p>那我们也想给C挂上这样的object，让它也可以像puts一样被直接调用，怎么做？</p>
-<p>让Object这个class中，包含我们的A::B即可，修改文件A.rb：</p>
-<pre><code class="Ruby">module A
-    module B
-        def C(name)
-            puts &quot;hello, #{name}&quot;
-        end
-    end
-end
-
-class Object
-    include A::B
-end
-</code></pre>
-<p>这样当你在其他文件中，比如app.rb中调用C时，只要加上如下代码即可：</p>
-<pre><code class="Ruby">require &#39;A&#39; #C定义的文件名
-extend A::B
-</code></pre>
-<p>好，回到我们的restclient, 现在就很好做了。</p>
-<h4 id="简化restclient的调用"><a href="#简化restclient的调用" class="headerlink" title="简化restclient的调用"></a>简化restclient的调用</h4><p>知道如何对method进行global 调用，我们可以这么玩。</p>
-<p>新建<code>myclient.rb</code>文件，内容如下：</p>
-<pre><code class="Ruby">require &#39;rest-client&#39;
-
-module MyClient
-  module Client
-  end
-end
-</code></pre>
-<p>里面没有任何method，我们加上get。</p>
-<pre><code class="Ruby">require &#39;rest-client&#39;
-$apiurl = http://example.com/api. #这是你API的URL，请自行修改
-module MyClient
-  module Client
-    def get(url, headers = nil)
-      response = RestClient.get(
-          $apiurl + url,
-          headers
-      )
-    end
-   end
- end
-
-class Object
-  include MyClient::Client
-end
-</code></pre>
-<p>这时，如果要在其他文件调用，比如app.rb文件中，使用get,就可以这么用了。</p>
-<pre><code class="Ruby">require_relative &#39;my_client&#39;
-extend MyClient::Client
-
-......
-headers =  {:&#39;session&#39; =&gt; &#39;XXXX&#39;}
-get(&quot;/books&quot;, headers)
-.....
-</code></pre>
-<p>同样的，将post，put， delete 加入，补全代码，如下：</p>
-<pre><code class="Ruby">require &#39;rest-client&#39;
-$apiurl = http://example.com/api. #这是你API的URL，请自行修改
-module MyClient
-  module Client
-    def get(url, headers = nil)
-      response = RestClient.get(
-          $apiurl + url,
-          headers
-      )
-    end
-
-    def post(url, payload, headers = nil )
-      response = RestClient.post(
-          $apiurl + url,
-          payload,
-          headers
-      )
-    end
-
-    def put(url, payload, headers = nil )
-      response = RestClient.put(
-          $apiurl + url,
-          payload,
-          headers
-      )
-    end
-
-    def delete(url, headers = nil )
-      response = RestClient.delete(
-          $apiurl + url,
-          headers
-      )
-    end
-  end
-end
-
-class Object
-  include MyClient::Client
-end
-</code></pre>
-<p>搞定，可以欢快地调用啦！！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/18964016/how-can-i-add-a-method-to-the-global-scope-in-ruby" target="_blank" rel="noopener">How can I add a method to the global scope in Ruby?</a></p>
-
-          
+          <p>RestClient 使用笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/09/usage-of-restclient/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2719,7 +1833,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>160 words</span>
+              <span>166 words</span>
             </span>
           
 
@@ -2737,33 +1851,14 @@ end
 
       
         
-          
-            <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>只运行指定的feature时，有两种方法。</p>
-<ul>
-<li>可以类似RSpec那样，指定文件位置 ，比如 <code>cucumber features/your_feature.feature</code></li>
-<li>可以添加tag</li>
-</ul>
-<p>比如：</p>
-<pre><code class="Ruby">@approved @car_buy
-
-　　Feature: Car Buy
-
-        　　@wip
-
-        　　Scenario: Buy a car in store
-
-</code></pre>
-<p>　　一个Scenario会继承指定给Feature的tags，所以在上面的例子中，Scenario有三个tags：@approved @car_buy @wip.  </p>
-<p>调用时，使用<code>cucumber  --tags tag_name</code>。</p>
-<p>比如运行feature，终端输入：</p>
-<pre><code>cucumber  --tags @car_buy
-</code></pre><p>使用tag的好处是可以细化到scenario。比如上例， 就可以使用命令：</p>
-<pre><code>cucumber –tags @wip
-</code></pre><p>来运行你想要的那部分Scenario.</p>
-<p>插一句：cucumber默认加载<code>features/support/.</code>. 即support下的所有文件。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.cnblogs.com/puresoul/archive/2011/12/28/2305160.html" target="_blank" rel="noopener">cucumber 入门之Gherkin</a></p>
-
-          
+          <p>运行指定的feature。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2017/11/07/how-to-run-the-feature-you-want/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2979,7 +2074,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

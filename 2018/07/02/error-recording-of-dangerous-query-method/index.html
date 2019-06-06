@@ -89,18 +89,18 @@
 
 
 
-<meta name="description" content="问题描述：现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。 使用scope进行处理： class Issue &amp;lt; ApplicationRecord   .........   IDLIST = [4, 6, 9]   scope :order_by_custom_id, -&amp;gt">
+<meta name="description" content="踩坑 query method。">
 <meta name="keywords" content="Rails,ErrorTracking">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Dangerous query method called with non-attribute argument(s)">
 <meta property="og:url" content="http://lupeipei.github.io/2018/07/02/error-recording-of-dangerous-query-method/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="问题描述：现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。 使用scope进行处理： class Issue &amp;lt; ApplicationRecord   .........   IDLIST = [4, 6, 9]   scope :order_by_custom_id, -&amp;gt">
+<meta property="og:description" content="踩坑 query method。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-03-15T10:49:15.000Z">
+<meta property="og:updated_time" content="2019-06-06T02:18:54.401Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Dangerous query method called with non-attribute argument(s)">
-<meta name="twitter:description" content="问题描述：现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。 使用scope进行处理： class Issue &amp;lt; ApplicationRecord   .........   IDLIST = [4, 6, 9]   scope :order_by_custom_id, -&amp;gt">
+<meta name="twitter:description" content="踩坑 query method。">
 
 
 
@@ -374,7 +374,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>541 words</span>
+              <span>545 words</span>
             </span>
           
 
@@ -391,7 +391,9 @@
       
 
       
-        <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
+        <p>踩坑 query method。</p>
+<a id="more"></a>
+<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
 <p>使用scope进行处理：</p>
 <pre><code class="Ruby">class Issue &lt; ApplicationRecord
   .........
@@ -407,7 +409,7 @@ end
 <p>在controller中调用了该scope。刷新页面后，发现服务器报出warning message：</p>
 <pre><code class="Ruby">DEPRECATION WARNING: Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): &quot;CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END&quot;. Non-attribute arguments will be disallowed in Rails 6.0. This method should not be called with user-provided values, such as request parameters or model attributes. Known-safe values can be passed by wrapping them in Arel.sql().
 </code></pre>
-<h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
 <p>很简单，就是使用warning message里面提到的Arel.sql()方法，将<code>CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END</code> 用Arel.sql() 包起来即可。</p>
 <p>修改scope：</p>
 <pre><code class="Ruby">class Issue &lt; ApplicationRecord
@@ -441,7 +443,7 @@ end
 <p>也就是新建了一个Arel::Nodes::SqlLiteral实例，而Arel::Nodes::SqlLiteral为什么是安全的呢？用Arel::Nodes::SqlLiteral 把raw_sql包起来的用意是什么？估计也能猜到，防攻击啥的。果然，Google了下，发现说是可以防止<strong>SQL注入</strong>的情况。</p>
 <p>有些复杂了，脑子暂时消化不了。</p>
 <p>此外，文档中有关<a href="https://www.rubydoc.info/github/rails/rails/ActiveRecord%2FConnectionAdapters%2FDatabaseStatements:sanitize_limit" target="_blank" rel="noopener"><strong>sanitize_limit</strong></a> 部分也有提到SQL injection的问题。</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://www.rubydoc.info/github/rails/arel" target="_blank" rel="noopener">Arel</a></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.rubydoc.info/github/rails/arel" target="_blank" rel="noopener">Arel</a></p>
 <p><a href="https://groups.google.com/forum/#!topic/rubyonrails-core/UGZmPT1nDX4" target="_blank" rel="noopener">A “strict Arel” mode for ActiveRecord to prevent SQL injection vulnerabilities</a></p>
 
       
@@ -663,7 +665,7 @@ end
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#问题描述："><span class="nav-number">1.</span> <span class="nav-text">问题描述：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法："><span class="nav-number">2.</span> <span class="nav-text">解决方法：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考："><span class="nav-number">3.</span> <span class="nav-text">参考：</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#问题描述"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法"><span class="nav-number">2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -728,7 +730,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

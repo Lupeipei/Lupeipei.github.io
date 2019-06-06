@@ -387,136 +387,14 @@
 
       
         
-          
-            <p>对Vue窥视已久，最近弄了下，感觉挺赞，记录下简单的搭建过程。</p>
-<p>以下操作均以Mac OS X为准。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>开发环境需要 npm, node, vue，我们 一步步来。</p>
-<p>用nvm来安装node：</p>
-<p>类似RVM，nvm是用于管理node多版本，参考<a href="https://github.com/creationix/nvm" target="_blank" rel="noopener">nvm</a>.</p>
-<p>先装nvm，终端执行：</p>
-<pre><code>curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
-</code></pre><p>然后执行：</p>
-<pre><code>export NVM_DIR=&quot;$HOME/.nvm&quot;
-[ -s &quot;$NVM_DIR/nvm.sh&quot; ] &amp;&amp; \. &quot;$NVM_DIR/nvm.sh&quot; # This loads nvm
-</code></pre><p>这会将nvm库clone到<code>./nvm</code>，同时会在你的profile文件中添加source line. <code>source ~/.nvm/nvm.sh</code></p>
-<p>执行命令检查下nvm是否已经安装成功：</p>
-<pre><code>command -v nvm
-</code></pre><p>如果终端输出nvm，则表示安装成功，如果没有输出nvm，参考<a href="https://github.com/creationix/nvm" target="_blank" rel="noopener">nvm</a> ，里面有详尽的解说帮你脱坑。</p>
-<p>装node最新版：</p>
-<pre><code>nvm install node
-</code></pre><p>安装完成后，执行：</p>
-<pre><code>nvm use node
-</code></pre><p>这个命令会使系统使用刚刚安装的node最新版本，此时的最新版是v10.1.0, npm 5.7.1</p>
-<p>或者使用xcode, homebrew， 安装node。</p>
-<p>在安装了xcode, homebrew的情况下，终端执行：</p>
-<pre><code>brew install node
-</code></pre><p>稍等一会，就会安装好最新的node，连带着会安装npm.</p>
-<p>用npm安装vue ,vue-cli 这两个node包：</p>
-<p>终端执行：</p>
-<pre><code>npm install vue vue-cli -g
-</code></pre><h4 id="创建第一个vue项目"><a href="#创建第一个vue项目" class="headerlink" title="创建第一个vue项目"></a>创建第一个vue项目</h4><p>准备工作完成，来建一个vue项目。</p>
-<p>终端执行：</p>
-<pre><code>vue init webpack my_project
-</code></pre><p>webpack是用于把各种js/css/html代码最后打包编译到一起的工具。vuejs集成了webpack， 这里创建的vue项目是基于webpack的。</p>
-<p>如果是第一次创建，它会问你一堆的问题，回答即可。</p>
-<p>运行结束时，会看到：</p>
-<pre><code># Project initialization finished!
-# ========================
-
-To get started:
-
-  cd my_project
-  npm run dev
-</code></pre><p>我们照着来：</p>
-<pre><code>cd my_project
-npm run dev
-</code></pre><p>成功的话，会显示这样的信息：</p>
-<pre><code>Your application is running here: http://localhost:8080
-</code></pre><p>打开<a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a>, 可以看到：<br><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fr5ibfqdpcj30mo0h1q3r.jpg" alt=""></p>
-<p>项目的基本结构大致如下：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79ly1fr6nnnpugaj30820cwdg6.jpg" alt=""></p>
-<p>其中dist是打包后生成的，即执行<code>npm run build</code>后生成的。</p>
-<p>简单看看各个目录放的是什么。</p>
-<ul>
-<li>build/：打包相关</li>
-<li>config/：配置文件存放目录</li>
-<li>node_modules/: 项目中用到的第三方包，特别大，安装所有的第三方包，执行 <code>npm install</code></li>
-<li>src/：源代码所在目录，也是我们主要活动的地方，你可以将它看成是rails的app，一般在<code>src/components/</code>下面添加组件文件，然后在<code>src/router/index.js</code>中定义新的路径。后面我们会建一个新的组件试试。</li>
-<li>static/：静态文件</li>
-<li>test/：测试</li>
-</ul>
-<p>至此，一个简单的Vue项目的搭建完成，下面我们自己来添加一些页面。</p>
-<h4 id="创建你的第一个页面"><a href="#创建你的第一个页面" class="headerlink" title="创建你的第一个页面"></a>创建你的第一个页面</h4><p>上面打开的<a href="http://localhost:8080，" target="_blank" rel="noopener">http://localhost:8080，</a> 其默认的页面内容定义在<code>src/components/HelloWorld.vue</code>中。</p>
-<p>vue文件的基本结构如下：</p>
-<pre><code class="Vue">&lt;template&gt;
-  ......
-&lt;/template&gt;  
-&lt;script&gt;
-......
-&lt;/script&gt;
-
-&lt;style&gt;
-......
-&lt;/style&gt;
-</code></pre>
-<p>在<code>router/index.js</code>中可以看到路径的定义方式，仿照HelloWorld.vue，我们可以自己新增一个页面。</p>
-<p>两步走：</p>
-<ul>
-<li>新增路由</li>
-<li>新增vue文件</li>
-</ul>
-<p>比如我们要新增一个hi页面，修改<code>router/index.js</code>，修改如下：</p>
-<pre><code class="Js">import Vue from &#39;vue&#39;
-import Router from &#39;vue-router&#39;
-import HelloWorld from &#39;@/components/HelloWorld&#39;
-import Hi from &#39;@/components/Hi&#39;
-Vue.use(Router)
-
-export default new Router({
-  routes: [
-    {
-      path: &#39;/&#39;,
-      name: &#39;HelloWorld&#39;,
-      component: HelloWorld
-    },
-    {
-      path: &#39;/hi&#39;,
-      name: &#39;Hi&#39;,
-      component: Hi
-    }
-   ]
-})  
-</code></pre>
-<p>新增Hi.vue组件：</p>
-<pre><code>touch src/components/Hi.vue
-</code></pre><p>在Hi.vue中填入以下内容：</p>
-<pre><code>&lt;template&gt;
-  &lt;div&gt;
-    {{message}}
-  &lt;/div&gt;
-&lt;/template&gt;
-
-&lt;script&gt;
-export default {
-  data () {
-    return {
-      message: &#39;Hi, I am a Rubyist&#39;
-    }
-  }
-}
-&lt;/script&gt;
-
-&lt;style&gt;
-&lt;/style&gt;
-</code></pre><p>此时，访问<a href="http://localhost:8080/#/hi，" target="_blank" rel="noopener">http://localhost:8080/#/hi，</a> 可以看到如下页面：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79ly1fr6od9autqj30k90c43ys.jpg" alt=""></p>
-<p>OK！自定义页面完成！</p>
-<p>更多玩法，参考Vuejs官方。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://vuejs.org/" target="_blank" rel="noopener">Vue.js</a></p>
-<p><a href="https://github.com/creationix/nvm" target="_blank" rel="noopener">nvm</a></p>
-<p><a href="http://vue_book.siwei.me/" target="_blank" rel="noopener">vuejs教程</a></p>
-
-          
+          <p>对Vue窥视已久，最近弄了下，感觉挺赞，记录下简单的搭建过程。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/10/create-your-first-vue-project/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -673,30 +551,14 @@ export default {
 
       
         
-          
-            <h4 id="问题描述："><a href="#问题描述：" class="headerlink" title="问题描述："></a>问题描述：</h4><p>本地代码push到远端repos，终端执行<code>git push branch xxx</code>时，遇到了一个报错：</p>
-<pre><code>Server aborted the SSL handshake
-</code></pre><p>SSL 握手失败？</p>
-<p>老大扫了一眼，说终端访问GitHub要走代理，并告知了如何实现，666！</p>
-<p>记录下整个实现步骤以备忘。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在使用shadowsocks的情况下，通过shadowsocks 获取HTTP Proxy Shell Export Line, 查看端口是1087.</p>
-<pre><code>export http_proxy=http://127.0.0.1:1087;export https_proxy=http://127.0.0.1:1087;
-</code></pre><p>下载<a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a>, 终端执行：</p>
-<pre><code>brew install corkscrew
-</code></pre><p>在根目录下，执行：</p>
-<pre><code>vi .ssh/config
-</code></pre><p>将文件内容修改为：</p>
-<pre><code>Host github.com
-    ProxyCommand corkscrew 127.0.0.1 xxxx %h %p
-</code></pre><p>此处xxxx改成你走代理的端口号：比如上面的1087.</p>
-<p>保存，切换到项目对应的目录下，重新执行：</p>
-<pre><code>git push branch xxx
-</code></pre><p>OK !！</p>
-<p>看到有人提到了<a href="https://www.proxifier.com/" target="_blank" rel="noopener">proxifier</a>， 也是个神器，鉴于自己没有用过，这里就不详述了。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/elia/corkscrew" target="_blank" rel="noopener">corkscrew</a></p>
-<p><a href="https://www.zybuluo.com/yiranphp/note/611721" target="_blank" rel="noopener">解决 mac （windows）终端上代理的难题</a></p>
-
-          
+          <p>本地代码push到远端repos，终端执行<code>git push branch xxx</code>时，遇到了一个报错。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/09/visit-github-through-terminal-using-https-proxy/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -853,174 +715,15 @@ export default {
 
       
         
-          
-            <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
+          <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
 <p>说三个：benchmark，new &amp; allocate， delegator。</p>
-<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h4><p>Benchmark是一个module，提供了诸多方法，用于获取ruby代码的执行时间。</p>
-<p>比较常用的三个方法：</p>
-<ul>
-<li>benchmark(caption = “”, label_width = nil, format = nil, *labels) { |report| … }</li>
-<li>bm(label_width = 0, *labels) { |report| … }</li>
-<li>bmbm(width = 0) { |job| … }</li>
-</ul>
-<p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
-<p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
-<p>看例子感受下三者：</p>
-<pre><code class="Ruby">require &#39;benchmark&#39;
-include Benchmark
-
-n = 500000
-
-Benchmark.benchmark(CAPTION, 6, FORMAT) do |x|
-  tf = x.report(&quot;for: &quot;) {for i in 1..n; a = &quot;1&quot; ; end }
-  tt = x.report(&quot;times: &quot;) { n.times do; a = &quot;1&quot;; end }
-  tu = x.report(&quot;upto: &quot;) {1.upto(n) do ; a = &quot;1&quot; ; end }
-end
-
-Benchmark.bm(6) do |x|
-  tf = x.report(&quot;for: &quot;) {for i in 1..n; a = &quot;1&quot; ; end }
-  tt = x.report(&quot;times: &quot;) { n.times do; a = &quot;1&quot;; end }
-  tu = x.report(&quot;upto: &quot;) {1.upto(n) do ; a = &quot;1&quot; ; end }
-end
-
-
-Benchmark.bmbm(6) do |x|
-  tf = x.report(&quot;for: &quot;) {for i in 1..n; a = &quot;1&quot; ; end }
-  tt = x.report(&quot;times: &quot;) { n.times do; a = &quot;1&quot;; end }
-  tu = x.report(&quot;upto: &quot;) {1.upto(n) do ; a = &quot;1&quot; ; end }
-end
-</code></pre>
-<p>输出的结果：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcly1fr438e3d72j30fv09ewg0.jpg" alt=""></p>
-<p>这么看，感觉times也没有特别比for快多少……</p>
-<h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
-<p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
-<p>new对应的sourcecode如下：</p>
-<pre><code class="C">static VALUE
-rb_class_s_new(int argc, const VALUE *argv, VALUE klass)
-{
-    VALUE obj;
-
-    obj = rb_class_alloc(klass);
-    rb_obj_call_init(obj, argc, argv);
-
-    return obj;
-}
-</code></pre>
-<p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
-<p>看个例子感受下两者的差异：</p>
-<pre><code class="ruby">### 根据官方文档稍稍改编了下
-klass = Class.new do
-  def initialize(*args)
-    @initialized = true
-  end
-
-  def initialized?
-    @initialized || false
-  end
-end
-
-klass.allocate #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;
-klass.allocate.initialized? #=&gt; false
-klass.new #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 @initialized=true&gt;
-klass.new.initialized? #=&gt; true
-</code></pre>
-<h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
-<p>先来看看SimpleDelegator。</p>
-<p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">class Stats
-  def initialize
-    @source = SimpleDelegator.new([])
-  end
-
-  def stats(records)
-    p &quot;before setobj: #{@source.size}&quot;
-    @source.__setobj__(records)
-    p &quot;after setobj: #{@source.size}&quot;
-  end
-end
-
-s = Stats.new
-
-s.stats(%w{Hello ruby world})
-#=&gt; &quot;before setobj: 0&quot;
-#=&gt; &quot;after setobj: 3&quot;
-</code></pre>
-<p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
-<p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
-<p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
-<p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
-<p>先看个Forwardable的例子：</p>
-<pre><code class="Ruby">require &#39;forwardable&#39;
-
-class RecordCollection
-  attr_accessor :records
-  extend Forwardable
-  def_delegator :@records, :[], :record_number
-  def_delegators :@records, :size, :&lt;&lt;, :map
-end
-
-obj = RecordCollection.new
-obj.records = [1,2,4]
-obj.record_number(0) #=&gt; 1， 相当于执行[1,2,4](0)
-obj.size #=&gt; 3 ， 相当于执行[1,2,4].size
-obj &lt;&lt; 5 #=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5
-obj.map { |x| x + 1} #=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map{|x| x + 1}
-</code></pre>
-<p>这里 <code>def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
-<pre><code class="Ruby">def_delegator :@records, :size
-def_delegator :@records, :&lt;&lt;
-def_delegator :@records, :map
-</code></pre>
-<p>再来看一个SingleForwardable的例子：</p>
-<pre><code class="Ruby">class A
-  def self.hi
-    puts &quot;hello&quot;
-  end
-end
-
-module B
-  extend SingleForwardable
-  def_delegator :A, :hi
-end
-
-B.hi #=&gt; hello
-</code></pre>
-<p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
-<p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
-<p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
-<p>以上面的例子为例：</p>
-<pre><code class="Ruby">class A
-  def self.hi
-    puts &quot;hello&quot;
-  end
-end
-
-module B
-  extend SingleForwardable
-  def_delegator :A, :hi
-
-  def self.hi
-    puts &quot;world&quot;
-  end
-
-end
-
-B.hi #=&gt; world
-</code></pre>
-<h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fr43phbujxj308e034t8q.jpg" alt=""></p>
-<p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a>年，是这么说的：</p>
-<blockquote>
-<p>However, this year saw the <strong>beginning of the Gregorian Calendar switch</strong>, when the Papal bull known as Inter gravissimas introduced the Gregorian calendar, adopted by Spain, Portugal, the Polish–Lithuanian Commonwealth and most of present-day Italy from the start. In these countries, <strong>the year continued as normal until Thursday, October 4. However, the next day became Friday, October 15</strong> (like a common year starting on Friday), in those countries (France followed two months later, letting Sunday, December 9 be followed by Monday, December 20).</p>
-</blockquote>
-<p>这种操作真6，老祖宗们会玩。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://devdocs.io/ruby~2.5/" target="_blank" rel="noopener">ruby 2.5</a></p>
-<p><a href="https://en.wikipedia.org/wiki/1582" target="_blank" rel="noopener">1582</a></p>
-<p>谢谢D推荐的<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>， 用来阅读文档真的是超赞！推荐使用<a href="http://devdocs.io/" target="_blank" rel="noopener">devdocs</a>：P</p>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/08/benchmark-new-allocate-and-delegator-in-ruby/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1159,7 +862,7 @@ B.hi #=&gt; world
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>389 words</span>
+              <span>404 words</span>
             </span>
           
 
@@ -1177,58 +880,14 @@ B.hi #=&gt; world
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>登录阿里云，看到醒目的红色警报，点开是主机上存在漏洞： <strong>GNU Wget缓冲区错误漏洞</strong>，给到的参考链接: <a href="https://securitytracker.com/id/1039661?spm=5176.2020520154.sas.66.528f79d6yN4eC4" target="_blank" rel="noopener">securitytracker.com</a>显示要升级到版本1.19.2。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqzfuo5h2mj30cw01cdfu.jpg" alt=""></p>
-<p>升级过程中，遇到了点问题，Google后解决，记录下整个升级步骤。</p>
-<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>查看版本</p>
-<pre><code>wget -V
-</code></pre><p>显示是<code>GNU Wget 1.17.1 built on linux-gnu.</code></p>
-<p>删掉旧版本：</p>
-<pre><code>apt-get remove wget
-</code></pre><p>安装1.19.2或者更高版本，见<a href="http://ftp.gnu.org/gnu/wget/，" target="_blank" rel="noopener">http://ftp.gnu.org/gnu/wget/，</a> 目前最新版本是1.19.4</p>
-<pre><code>wget http://ftp.gnu.org/gnu/wget/wget-1.19.4.tar.gz
-tar -zxvf wget-1.19.4.tar.gz
-cd wget-1.19.4
-./configure --with-ssl=openssl
-</code></pre><p>执行完<code>./configure</code> 后报错：</p>
-<pre><code>configure: error: The pkg-config script could not be found or is too old.  Make sure it
-is in your PATH or set the PKG_CONFIG environment variable to the full
-path to pkg-config.
-
-Alternatively, you may set the environment variables XMEDCON_GLIB_CFLAGS
-and XMEDCON_GLIB_LIBS to avoid the need to call pkg-config.
-See the pkg-config man page for more details.
-</code></pre><p>装pkg-config:</p>
-<pre><code>apt-get install -y pkg-config
-</code></pre><p>再次执行：</p>
-<pre><code>./configure --with-ssl=openssl
-</code></pre><p>成功的话，会发现最后生成了Makefile：</p>
-<pre><code>config.status: creating Makefile
-config.status: creating src/Makefile
-config.status: creating doc/Makefile
-config.status: creating util/Makefile
-config.status: creating po/Makefile.in
-config.status: creating tests/Makefile
-config.status: creating lib/Makefile
-config.status: creating testenv/Makefile
-config.status: creating tests/certs/interca.conf
-config.status: creating tests/certs/rootca.conf
-config.status: creating src/config.h
-config.status: executing depfiles commands
-config.status: executing po-directories commands
-config.status: creating po/POTFILES
-config.status: creating po/Makefile
-</code></pre><p>此时，执行：</p>
-<pre><code>make &amp;&amp; make install
-</code></pre><p>查看版本：</p>
-<pre><code>wget -V
-</code></pre><p>显示：<br>GNU Wget 1.19.4 built on linux-gnu.</p>
-<p>OK!</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://blog.csdn.net/baidu_38083619/article/details/79948272" target="_blank" rel="noopener">GNU Wget缓冲区溢出漏洞</a></p>
-<p><a href="https://stackoverflow.com/questions/23202146/cannot-find-pkg-config-error" target="_blank" rel="noopener">cannot find pkg-config-error</a></p>
-
-          
+          <p>踩坑 GNU Wget缓冲区错误漏洞，完全懵逼。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/04/upgrade-wget-on-ubuntu/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1372,41 +1031,14 @@ config.status: creating po/Makefile
 
       
         
-          
-            <p>五一小长假徒步徽杭古道，来回近16个小时的大巴车程，对于高度晕车的人，算是拖着半条命回来了，出于对blog的偏爱，决定把出行也搬到blog上，前方多图预警。</p>
-<p>烟雾缭绕下的群山：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqvv9zvbocj31400u0n1m.jpg" alt=""></p>
-<p>古道：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqvvhbn8afj31400u0wqc.jpg" alt=""></p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqvvlzuq33j30u0140wsa.jpg" alt=""></p>
-<p>走过陡峭的崖壁，前方便是人家：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqvwdy5potj30u014015p.jpg" alt=""></p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fqvvm0k12hj30u0140qb9.jpg" alt=""></p>
-<p>山间花，不知名：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqvva1oqxyj30u0140ajg.jpg" alt=""></p>
-<p>布满铁锈的扶手上爬出朵朵小黄花：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqvva0ukc5j30u0140dl9.jpg" alt=""></p>
-<p>一场夜雨后的农家樱桃树，红色可食用，酸酸甜甜，就是果核比较大：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqvv9xivk6j30u0140grd.jpg" alt=""></p>
-<p>随处可见的笋，然后三餐都吃了笋：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqvv9ysfmnj30u0140wqn.jpg" alt=""></p>
-<p>小胖子终于翻到一张可以见人的，还好比小朋友爬的快：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqvvwh3gjjj30m80gowh2.jpg" alt=""></p>
-<p>我的纯天然登山杖，可惜回来的时候，落在车上了：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqvv9zf1oij30u0140dke.jpg" alt=""></p>
-<p>山顶：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqvwdxn9vxj31400u00z5.jpg" alt=""></p>
-<p>瀑布：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqvv9y2u0rj30u0140qf5.jpg" alt=""></p>
-<p>领队的小驴玩偶：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fqvvm1566uj30u01407f7.jpg" alt=""></p>
-<p>水坝：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1fqvvhciisuj31400u0n41.jpg" alt=""></p>
-<p>我见青山多妩媚，料青山见我应如是：P</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fqvvlzfjc8j31400u0n10.jpg" alt=""></p>
-<p>Over。</p>
-
-          
+          <p>五一小长假徒步徽杭古道，来回近16个小时的大巴车程，对于高度晕车的人，算是拖着半条命回来了，出于对blog的偏爱，决定把出行也搬到blog上，前方多图预警。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/01/travels-of-huihang-ancient-road/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1550,44 +1182,14 @@ config.status: creating po/Makefile
 
       
         
-          
-            <p>深山，夜雨，一顿饱餐后，在潺潺溪流声的陪伴下，刷完了这本小书。</p>
-<p>回来后，决定写写这本小书。</p>
-<p>有关这本书的介绍，Google下就会出来很多结果，是一封丈夫写给妻子的情书，主要是讲述了自己与爱人D从相识相恋，步入婚姻以及婚后五十多年里相濡以沫的故事， 信最后交代了妻子患病的原因，作者是法国安德烈高兹，在本书出版后的第二年，彼时八十有四的他与罹患绝症的妻子双双自杀，一起离开了人世。</p>
-<p>我想看这本书的，应该妹子居多，开篇那段告白，大概没有多少妹子能抵挡住。</p>
-<blockquote>
-<p>很快你就八十二岁了。身高缩短了六厘米，体重只有四十五公斤。但是你一如既往的美丽、幽雅、令我心动。我们已经在一起度过了五十八个年头，而我对你的爱愈发浓烈。我的胸口又有了这恼人的空茫，只有你灼热的身体依偎在我怀里时，它才能被填满。</p>
-</blockquote>
-<p>他们一起度过了五十八个年头，准确来说，算上他们离世那一年，五十九年，跨越半个多世纪的陪伴。将近六十年啊，总觉得，很多事情，一旦和时间挂上钩，即便再平淡苍白也变得沉稳有力。</p>
-<p>刷完后，想起译者在序中提到的那个问题：</p>
-<blockquote>
-<p> 如果高兹最终没有在这个世界寻得一席之地，或者更直白地说出版了自己的著作，还会有这个美丽的爱情故事吗？</p>
-</blockquote>
-<p>想针对这个说说自己的看法。</p>
-<p>译者说这个问题已经没有意义，假设不存在，因为高兹在D的帮助下，最终还是获得了一席之地。在这段过程中，D给了他很大的帮助，他很感激她。他们不仅是夫妻，更是伙伴。那如果我们假定高兹最终真的没有寻到一席之地，他们会怎么样？</p>
-<p>他会成为无数郁郁不得志的文人之一，那他的爱情是不是也会连带着被他亲手摧毁？</p>
-<p>鉴于D的成熟以及高兹的自我反思能力，我觉得这份感情只会是两人向前的动力，而不会成为伤害。</p>
-<p>D有一种在逆境中依然蓬勃生长的力量，真的极为欣赏这种向上而生的性格。但是单纯来自爱人的安慰并不能抚平一个人在个体自我实现上的屡屡受挫，更何况高兹还带着些避世属性，我们来看看高兹是个什么样的人呢？在步入婚姻前，他有担心，他的懦弱让他想要逃避，害怕现实的残酷与琐碎的生活会毁掉这份美好的爱情，对此，D说了一段话，很是醒目：</p>
-<blockquote>
-<p>如果你和一个人结合在一起，打算度过一生，你们就将两个人的生命放在一起，不要做有损你们结合的事情。建构你们的夫妻关系就是你们共同的计划，你们永远都需要根据环境的变化而不断地加强、改变，重新调整方向。你们怎么做，就会成为怎样的人。</p>
-</blockquote>
-<p>如今看来，婚后他们各自所做的，让他们成为了更好的人。</p>
-<p>婚后，他欣赏D对于未来的信心，羡慕她随时随地都能抓住幸福的能力，而自己的不得志让他觉得自己配不上D，爱情里面，自卑是正常的，因为我们会借由这自卑让自己变得越来越好，书中有这么一段：“如果一个写者的写作需求有一个合适的主题贯穿始终，并且让这需求有条理地组织起来，成为一项计划，那么写者就变成了作家。我们成千上万的人一生都在写，并且最终没有坚持到底，没有出版任何东西。你也有过这样的过程。你知道，从开始，你就知道一定要永远保护我的计划。“ 我想，对写作有过这样思考的他，又懂得她的用心良苦，即使这一路走得并不顺，但终点可期啊。在信中多处，都可以看出高兹是一个懂得反思自我的人，特别是高兹对于《叛徒》中有关妻子描述部分的反思。</p>
-<blockquote>
-<p>那么，在这一章里，我的动机究竟是什么呢？包括在整本书中，我的动机究竟是什么？为什么我在谈到你的时候，总带着这么一种漫不经心、高高在上的神气？为什么我给了你那么一点可怜的位置，然而就在这么一点可怜的位置里，你的形象也总是变形的，没有得到足够的尊重？</p>
-<p>第一次深深地爱上一个人，同时也得到这个人的爱，以前我觉得这样的故事太平庸，太个人，太普通：这不是能够让我进入普遍意义的物质。相反，失败的、不可能的爱情才是高贵文学的范畴。我一向只在失败和虚无之美中感觉自在，而不是成功和肯定之中。我必须位于你我之上，不惜以损害我们，损害你为代价，借助超越我们个体存在的思考。</p>
-</blockquote>
-<p>当然他自己也提到那种 “通过残酷的自我批判来取悦自己”的情况，但从这里读来，我更愿意相信这不再是取悦自己，是反思后的坦诚，是坦然地承认自己所犯的错。一个人懂得时时反思，并敢于承认自己的不足，是一种难能可贵的品质，它会让人更快地成长。</p>
-<p>一点小小的吐槽。</p>
-<p>其实看的时候，高兹提到自己日日埋头于写作，D养家糊口，提到他们多年的清贫生活，提到D为他整理写作用的种种资料文档，以及后续自己写书过程中D的帮助，处处都体现了D为了他所做的付出，仿佛D的存在是为了他的存在，文中也有提到这一点，当然高兹是为了感谢妻子，但这隐隐让我觉得有种伪大男子主义的气味，而整封信里，并没有提及到同样作为独立个体的D，她想要成为怎样的人？高兹想要成为一名作家，在这个世界寻得一席之地，D就是为了帮助他实现理想而存在？D自己想要做什么呢？D曾经想要学习德语，最后因为高兹的立场问题，而放弃了德语的学习，我看到的是一个女子为了爱人理想的实现所做的种种努力，但是却没有看到同样作为伴侣一方的高兹，对于D的个体实现需求有过什么关注与鼓励，或者是高兹并没有想到要写D的自我实现这部分，又或者D确实没有太多的个体需求，她的自我实现便是帮助高兹找寻到自我。D无疑是成熟的女性，高兹是幸福的，他接受的是一份成熟的爱情，没有太多的矫揉造作，有的只是一个可爱的女子，一个内心坚韧的女子，带着一份决定与之携手走过此后半生的笃定。庆幸的是，在她患上蛛网膜病变后的三十多年里，这位“澳洲犹太小子”长伴左右，在一次出游中，他还为她偷偷拍下一张海滩上的背影照片，那一年她已经五十二岁了，容颜老去，而他说她“美丽绝伦”，走过这大半生，不是渐行渐远而是愈加难分难舍，也许这是他向她表达谢意最好的方式。</p>
-<p>岁月从来不残忍，看你怎么看待，对于D而言，晚年带来的，不是美人迟暮后对年少盛颜的追思，而是骨子里那份无关年轮的纯粹恬淡。</p>
-<p>借这封情书的结尾做结尾：</p>
-<blockquote>
-<p> 我们都不愿意在对方去了以后，一个人继续孤独地活下去。我们经常对彼此说，万一有来生，我们仍然愿意共同度过。</p>
-</blockquote>
-<p>RIP</p>
-
-          
+          <p>深山，夜雨，一顿饱餐后，在潺潺溪流声的陪伴下，刷完了这本小书。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/05/01/notes-of-to-D/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1744,167 +1346,15 @@ config.status: creating po/Makefile
 
       
         
-          
-            <h4 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h4><p><a href="https://github.com/karlseguin" target="_blank" rel="noopener">Karl Seguin</a>的一本小册子，很短，边读边实作，发现这把瑞士小军刀挺特别，哈哈。</p>
+          <p><a href="https://github.com/karlseguin" target="_blank" rel="noopener">Karl Seguin</a>的一本小册子，很短，边读边实作，发现这把瑞士小军刀挺特别，哈哈。</p>
 <p>戳<a href="https://github.com/karlseguin/the-little-redis-book" target="_blank" rel="noopener">这里</a> 获取小册子的最新版。</p>
-<p>整本小册子主要介绍了五种数据结构String,  Hash, List, Set, SortedSet 以其基本用法，一些更为高级的主题如Big O Notation, Transaction和一些重要的命令如expirt, sort，最后提到了有关配置configuration，验证authentication，备份backups，Redis集群cluster等等内容。</p>
-<p>我们先安装，然后来看看五个主要的数据结构具体都是怎么玩的。</p>
-<p>【以下均以Mac OSX上的操作为例】</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>官方下载地址：<a href="https://redis.io/download" target="_blank" rel="noopener">https://redis.io/download</a></p>
-<p>官方给到的安装命令：</p>
-<pre><code>wget http://download.redis.io/releases/redis-4.0.9.tar.gz
-tar xzf redis-4.0.9.tar.gz
-cd redis-4.0.9
-make
-</code></pre><p>如果你的Mac OSX裝了homebrew的话，直接:</p>
-<pre><code>brew install redis
-</code></pre><p>装好后，根目录下执行 <code>redis-server</code>, 就跑起来了。</p>
-<p>开另一个窗口，执行<code>redis-cli</code> ， 进入redis的console， 可以通过<code>info</code>命令来查看更多服务器相关信息。</p>
-<p>好了，准备工作完成，来看看这五种数据结构。</p>
-<h4 id="Strings"><a href="#Strings" class="headerlink" title="Strings"></a>Strings</h4><p>基本用法：</p>
-<pre><code class="Redis">set users:leto &quot;{name: leto, planet: dune, likes: [spice]}&quot;
-get users:leto
-strlen users:leto
-getrange users:leto 1 9
-append users:leto hello
-get users:leto
-incr stats:page:about
-incrby rating:video:12333 5
-</code></pre>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqpvulp6obj30k00afdh2.jpg" alt=""></p>
-<p>简单说一下：</p>
-<p><code>set &lt;key&gt; &lt;value&gt;</code> : 存储key-value</p>
-<p><code>get &lt;key&gt;</code> : 获取key</p>
-<p><code>strlen &lt;key&gt;</code>: 获取value的长度</p>
-<p><code>getrange &lt;key&gt; &lt;start&gt; &lt;end&gt;</code> : 获取指定起始与终止位置的value子串</p>
-<p><code>append &lt;key&gt; &lt;new_value&gt;</code> : 给key对应的value追加new_value</p>
-<p><code>incr &lt;key&gt;</code>:  value自动加1，没有设置value时，value默认是0</p>
-<p><code>incrbr &lt;key&gt; &lt;num&gt;</code>: 给value加上num</p>
-<p>Redis的所有命令可以查阅这里：<a href="https://redis.io/commands" target="_blank" rel="noopener">https://redis.io/commands</a></p>
-<p>此外，可以使用<code>flushdb</code> 清空所有数据。</p>
-<h4 id="Hashes"><a href="#Hashes" class="headerlink" title="Hashes"></a>Hashes</h4><p>类似Strings的set，get, Hash中使用<code>hset</code>, <code>hget</code>, <code>hmset</code>, <code>hmget</code>.</p>
-<p>基本用法：</p>
-<pre><code>hset users:goku powerlevel 900
-hget users:goku powerlevel
-hmset users:goku race cool age 20
-hmget users:goku race powerlevel
-hgetall users:goku
-hkeys users:goku
-hdel users:goku age
-del users:goku
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq3ku5aohj30h10en3zl.jpg" alt=""></p>
-<p>看输出其实就知道这些命令都是干嘛的，这里还是简单说一下：</p>
-<p>【这里的field，指的就是hash中的key，为了便于区分，用field来代替。】</p>
-<p><code>mset &lt;key&gt; &lt;field1&gt; &lt;value1&gt; &lt;field2&gt; &lt;value2&gt;...</code>： set多个field-value，value默认是string类型</p>
-<p><code>mget &lt;key&gt; &lt;field1&gt; &lt;field2&gt;...</code>: get多个field对应的value</p>
-<p><code>hgetall &lt;key&gt;</code> : 获取所有的field-value</p>
-<p><code>hkeys &lt;key&gt;</code> : 获取所有的fields</p>
-<p><code>hdel &lt;key&gt; &lt;field&gt;</code>： 删除某个field</p>
-<p><code>del &lt;key&gt;</code> : 删除所有的fileds</p>
-<p>第四章提到了keys Anti-Pattern, 给到的例子就是用Hashes来CRUD每个账户的bug信息。</p>
-<h4 id="Lists"><a href="#Lists" class="headerlink" title="Lists"></a>Lists</h4><p>基本用法：</p>
-<pre><code>rpush newusers goku
-rpush newusers tom
-ltrim newusers 0 10
-lrange newusers 0 3
-lrange newusers 2 10
-</code></pre><p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq515sib9j30cu05874m.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>rpush &lt;list&gt; &lt;item&gt;</code> : push一个item到list， 例子中是在newusers的list中push了一个user goku</p>
-<p><code>ltrim &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : trim成指定的长度，例子中是到0~10</p>
-<p><code>lrange &lt;list&gt; &lt;begin&gt; &lt;end&gt;</code> : 获取指定长度的list,上面的例子中，newusers这个list中有goku, tom，对应的index是0，1，所以<code>lrange newuser 0 3</code>输出了goku, tom, 而<code>lrange newuser 2 10</code>则为空。</p>
-<p>书中提到了sets的一些场景，可用于存储logs或者跟踪用户浏览网站的足迹。</p>
-<h4 id="Sets"><a href="#Sets" class="headerlink" title="Sets"></a>Sets</h4><p>sets用来存储唯一值，同时提供一系列以集合为基础的运算，比如并集，交集。</p>
-<p>一些基本用法：</p>
-<pre><code>sadd friends:leto paul tom jessica
-sadd friends:duncan paul jessica alia
-sismember friends:leto jessica
-sismember friends:leto alia
-sinter friends:leto friends:duncan
-sinterstore friends:leto_duncan friends:leto friends:duncan
-smembers friends:leto_duncan
-</code></pre><p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqq5q2vcmrj30in07lt9i.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>sadd &lt;set&gt; &lt;member1&gt; &lt;member2&gt; ....</code> : 给集合添加members</p>
-<p><code>sismember &lt;set&gt; &lt;member&gt;</code> : 判断member是不是set中的元素， 1代表是，0代表不是。</p>
-<p><code>sinter &lt;set1&gt; &lt;set2&gt;</code>:  求两个集合的交集</p>
-<p><code>sinterstore &lt;set1&gt; &lt;set2&gt; &lt;new_set&gt;</code>:将两个集合的交集存储在一个新的集合new_set中</p>
-<p><code>smembers &lt;set&gt;</code> ： 查看set的members</p>
-<h4 id="Sorted-Sets"><a href="#Sorted-Sets" class="headerlink" title="Sorted Sets"></a>Sorted Sets</h4><p>Sorted Sets可以看成是带有score的sets。</p>
-<p>基本用法：</p>
-<pre><code>zadd friends:leto 100 paul 90 tom 98 jessica 80 chani
-zcount friends:leto 90 100
-zrevrank friends:leto chani
-zrank friends:leto chani
-zrangebyscore friends:leto -inf +inf
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq6a6h7xgj30ht06774s.jpg" alt=""></p>
-<p>简单说一下这些命令：</p>
-<p><code>zadd &lt;set&gt; &lt;score1&gt; &lt;member1&gt; &lt;score2&gt; &lt;member2&gt;....</code> : 给set的members添加上score</p>
-<p><code>zcount &lt;set&gt; &lt;score_start&gt; &lt;score_end&gt;</code> : set中score在score_start ～ score_end之间的member个数</p>
-<p><code>zrevrank &lt;set&gt; &lt;member&gt;</code> : 降序排序后member的位置</p>
-<p><code>zrank &lt;set&gt; &lt;member&gt;</code> ：升序排序后member的位置【Redis的默认排序是升序】</p>
-<p> <code>zrangebyscore &lt;set&gt; -inf +inf</code> : 输出sorted set</p>
-<p>sorted set的一个比较常用的场景是用来追踪以时间为纬度的事件。好吧，我没用过，这里就不举例子了。</p>
-<h4 id="其他一些好玩的命令"><a href="#其他一些好玩的命令" class="headerlink" title="其他一些好玩的命令"></a>其他一些好玩的命令</h4><ul>
-<li><p>Expire</p>
-<p>用来设置key的过期时间。</p>
-<p>看个例子：</p>
-<pre><code>set pages:about 30
-get pages:about
-expire pages:about 20 # 设置过期为20秒后
-ttl pages:about # 查看还剩多少秒过期
-persist pages:about # 取消过期设置
-get pages:about
-expire pages:about 5
-get pages:about # 此时pages:about过期，值变成了nil
-setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More details, 30秒后过期
-</code></pre><p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7braobij30h808ngm9.jpg" alt=""></p>
-<p>​</p>
-</li>
-<li><p>Publication and subscriptions</p>
-<p>可以订阅channel，取消channel，publish message，很cool！</p>
-<p>玩一下。</p>
-<p>在一个window上跑<code>redis-cli</code>, 执行<code>subscribe warnings</code>, 另开一个window跑<code>redis-cli</code>, 执行：<code>publish warnings &quot;hi,Redis~&quot;</code></p>
-<p>你会看到第一个window中的warnings channel接受到了信息“hi,Redis~”。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fqq7pb02wxj30fg04ajrj.jpg" alt=""></p>
-</li>
-<li><p>Monitor</p>
-<p>好用的debugging 工具，可以清晰看到你的所有历史操作。</p>
-<p>直接上图感受下：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqq7npsw9cj30ol08k40y.jpg" alt=""></p>
-</li>
-<li><p>Sort</p>
-<p>sort可以用来给list，set， sorted set进行排序。</p>
-<p>可以用limit来限定哪些records需要排序，用by指定排序依据。</p>
-<p>看个例子感受下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fqq7vfvj2wj30l50c9t9r.jpg" alt=""></p>
-<p>​</p>
-</li>
-</ul>
-<h4 id="Something-else"><a href="#Something-else" class="headerlink" title="Something else"></a>Something else</h4><ul>
-<li><p>pipelining</p>
-<blockquote>
-<p>Normally when a client sends a request to Redis it waits for the reply before sending the next request. With pipelining you can send a number of requests without waiting for their responses. This reduces the networking overhead and can result in significant performance gains.</p>
-<p>正常情况下，当客户端发送请求给到redis时，它需要得到回复后才可能发送下一条请求。但是通过pipelining， 你可以在不需要等待回复的情况下，向Redis发送大量的请求。这减少了网络开支，显著提升了性能。</p>
-<p>没用过，先记着。</p>
-</blockquote>
-</li>
-<li><p>Transaction</p>
-<blockquote>
-<p>每个Redis的命令都是原子性的，当使用多个命令时，Redis同样支持transaction。</p>
-<p>Redis is actually single-threaded, which is how every command is guaranteed to be atomic. While one command is executing, no other command will run.</p>
-<p>Redis如何保证translation? 即原子性，一致性，隔离性，持久性？</p>
-<ul>
-<li>The commands will be executed in order</li>
-<li>The commands will be executed as a single atomic operation (without another client’s command being executed halfway through)</li>
-<li>That either all or none of the commands in the transaction will be executed</li>
-</ul>
-</blockquote>
-</li>
-</ul>
-<h4 id="The-end"><a href="#The-end" class="headerlink" title="The end"></a>The end</h4><p>读技术类书籍果然不比一般书籍，得跟着实作才有感觉，真想向天再借500年……</p>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/26/notes-of-the-little-redis/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2043,7 +1493,7 @@ setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More 
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>405 words</span>
+              <span>410 words</span>
             </span>
           
 
@@ -2061,56 +1511,14 @@ setex pages:detail 30 &#39;More details&#39; # set key= pages:about ,值为More 
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在Cucumber中，当你需要在Examples中传递Array的时候，只需要用逗号分隔即可，比如下面这种：</p>
-<pre><code class="Ruby">Scenario Outline: check cart
-    When I am &quot;&lt;username&gt;&quot;， I check my cart
-    Then I will see the product lists is &quot;&lt;products&gt;&quot;
-    Examples:
-    | username | products |
-    |  Tom | Apple, Banana, Blackberry, Orange |
-    |  Lucy | Apple, Blackberry, Orange, Lemon |
-    |  Jim | Blueberry, Orange, Lemon |
-</code></pre>
-<p>然后在对应的step_defination中，只需要用<code>split(&#39;, &#39;)</code>就可以把字符串转化为Array了。</p>
-<p>但是，如果你需要传递类似如下的数据呢？Array的元素是一个个hash。</p>
-<pre><code class="Ruby">Scenario Outline: invite friends
-    When I am &quot;&lt;username&gt;&quot;， I invite friends &quot;&lt;friends&gt;&quot; to join in the game
-    Then My friends list has been updated
-    Examples:
-    | username | friends |
-    |  Tom | [{:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20}, {:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30}] |
-    |  Lucy | [{:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston&quot;, :age =&gt; 19}]|
-</code></pre>
-<p>这时，example中需要传递类似<code>[{:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20}, {:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30}]</code>的Array对象。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>鉴于Examples中只能传String，所以这里我们还是传String，同时借用下ruby中的Struct，最后将传递过来的string，转化成目标格式。</p>
-<p>还是以上面的case为例，feature改成这样：</p>
-<pre><code class="Ruby">Scenario Outline: invite friends
-    When I am &quot;&lt;username&gt;&quot;， I invite friends &quot;&lt;friends&gt;&quot; to join in the game
-    Then My friends list has been updated
-    Examples:
-    | username | friends |
-    |  Tom | Tom, Preston-Werner, 20, Kenneth, Reitz, 30 |
-    |  Lucy | Tom, Preston, 19|
-</code></pre>
-<p>这样问题就转化成，在对应的step_defination中，如何将字符串“Tom, Preston-Werner, 20, Kenneth, Reitz, 30” 转化成<code>[{:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20}, {:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30}]</code>。</p>
-<p>用一个method来处理：</p>
-<pre><code class="Ruby">def transform_to_array(origin_arg)
-  raise ArgumentError unless origin_arg.include?(&#39;,&#39;) ## 检查下参数
-  friend = Struct.new(:firstname, :lastname, :age)
-  [].tap do |result|
-    origin_arg.split(&#39;, &#39;).each_slice(3).to_a.each do |a|
-      new_friend = friend.new(a.first,a[1], a.last )
-      result &lt;&lt; Hash[new_friend.each_pair.to_a]
-    end
-  end
-end
-</code></pre>
-<p>OK！</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://ruby-doc.org/core-2.2.1/Struct.html" target="_blank" rel="noopener">Struct</a></p>
-<p><a href="https://stackoverflow.com/questions/8082423/returning-struct-data-as-a-hash-in-ruby" target="_blank" rel="noopener">returning struct data as a hash in ruby</a></p>
-
-          
+          <p>Array中带有 Hash。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/24/passing-array-with-hash-inside-in-cucumber/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2249,7 +1657,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>821 words</span>
+              <span>817 words</span>
             </span>
           
 
@@ -2267,186 +1675,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>多态关联（polymorphic associations）算是个挖了很久的坑，一直没填，这次填了这个坑。</p>
-<h4 id="是什么？"><a href="#是什么？" class="headerlink" title="是什么？"></a>是什么？</h4><p>Polymorphic Associations help when <strong>one table must belongs_to multiple other tables</strong>。</p>
-<p>大白话可以这样理解：当存在多个model 同时 has_many 一个model时，可以使用多态关联，来实现model层面的DRY。【我是这样理解的……】</p>
-<p>官方给到的图解案例是这样滴：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqiz6399vrj30ht0k9ta8.jpg" alt=""></p>
-<p>Employee和Product同时拥有多个pictures，Picture里面必须包含两个字段：imageable_id，imageable_type。这样就不需要新增EmployeePicture和ProductPicture两个model了，只需要一个Picture就可以了。</p>
-<p>这么说好像没啥感觉，通过一个小例子来实战一下。</p>
-<h4 id="怎么玩？"><a href="#怎么玩？" class="headerlink" title="怎么玩？"></a>怎么玩？</h4><ul>
-<li><p>新建一个rails项目 poly, 有article，event和comment，用户可以对article或者event进行评论，单个article，event可以拥有多个comments。</p>
-<pre><code>rails new poly
-cd poly
-rails g model article title:string content:text
-rails g model event title:string start_at:datetime end_at:datetime description:text
-rake db:migrate
-</code></pre><p>记得重启服务器：<code>rails s</code>。</p>
-<p>建controller：</p>
-<pre><code>rails g controller articles
-rails g controller events
-</code></pre><p>完成ArticlesController，EventsController中的7个action，这里就不一一列出了。</p>
-<p>修改<code>routes.rb</code>：</p>
-<pre><code class="ruby">Rails.application.routes.draw do
-  resources :events
-  resources :articles
-  root &quot;articles#index&quot;
-end
-</code></pre>
-<p>使用seeds或者task，生成一些测试数据，这里我用了seeds。</p>
-<p>添加articles和events的index，show页面。</p>
-<p>浏览器打开<code>localhost:3000</code>，类似这样：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fqjaoxvg4dj30l00cgq43.jpg" alt=""></p>
-<p>现在请上comment。</p>
-</li>
-</ul>
-<ul>
-<li><p>建model comment</p>
-<p>运行：</p>
-<pre><code>rails g model comment
-</code></pre><p>修改生成的migrate文件如下：</p>
-<pre><code class="ruby">class CreateComments &lt; ActiveRecord::Migration[5.1]
-  def change
-    create_table :comments do |t|
-      t.text :content
-      t.belongs_to :commentable, polymorphic: true
-      t.timestamps
-    end
-    add_index :comments, [:commentable_id, :commentable_type]
-  end
-end
-</code></pre>
-<p>这里<code>t.belongs_to :commentable, polymorphic: true</code>等同与</p>
-<pre><code class="Ruby">      t.integer :commentable_id
-      t.string :commentable_type
-</code></pre>
-<p>运行<code>rake db:migrate</code>， 重启服务器。</p>
-</li>
-</ul>
-<ul>
-<li><p>给article，event，comment建立联系：</p>
-<p>修改<code>app/models/article.rb</code>, <code>app/models/event.rb</code>，添加上：</p>
-<pre><code class="Ruby">has_many :comments, as: :commentable
-</code></pre>
-<p>好，我们去rails console 看看是不是可以给article和event添加comments。</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqjdhgv3ukj30qo0b0wgt.jpg" alt=""></p>
-<p>可以看到成功为article创建了comment。</p>
-<p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
-<pre><code class="Ruby">  def show
-    @article = Article.find(params[:id])
-    @comments = @article.comments
-  end
-</code></pre>
-<p>修改<code>app/views/articles/show.html.erb</code></p>
-<pre><code class="Html">&lt;div class=&quot;container-fluid&quot;&gt;
-  &lt;h1&gt;&lt;%= @article.title %&gt;&lt;/h1&gt;
-  &lt;p&gt;&lt;%= @article.content %&gt;&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;% if @comments %&gt;
-        &lt;% @comments.each do |comment| %&gt;
-            &lt;li&gt;&lt;%= comment.content %&gt;&lt;/li&gt;
-        &lt;% end %&gt;
-    &lt;% end %&gt;
-  &lt;/ul&gt;
-&lt;/div&gt;
-</code></pre>
-<p>打开<code>http://localhost:3000/articles/0</code>,可以看到刚刚添加的那个comment：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqje66qmksj30mf05tmxj.jpg" alt=""></p>
-</li>
-<li><p>DRY comment view</p>
-<p>新建comments controller：</p>
-<pre><code>rails g controller comments
-</code></pre><p>修改<code>app/controllers/comments_controller.rb</code>, 内容如下：</p>
-<pre><code class="Ruby">class CommentsController &lt; ApplicationController
-  before_action :load_commentable
-
-  def index
-    @comments = @commentable.comments
-  end
-
-  def new
-    @comment = @commentable.comments.new
-  end
-
-  def create
-    @comment = @commentable.comments.new(comment_params)
-    if @comment.save
-      redirect_to @commentable
-    else
-      render :new
-    end
-  end
-
-  private
-
-  def load_commentable
-    resource, id = request.path.split(&#39;/&#39;)[1,2]
-    @commetable = resource.singularize.classify.constantize.find(id)
-  end
-
-  def comment_params
-    params.require(:comment).permit(:content)
-  end
-end
-</code></pre>
-<p>修改<code>routes.rb</code>：</p>
-<pre><code class="Ruby">Rails.application.routes.draw do
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
-
-  resources :events do
-    resources :comments
-  end
-  resources :articles do
-    resources :comments
-  end
-  root &quot;articles#index&quot;
-end
-</code></pre>
-<p>新建 <code>app/views/comments/_form.html.erb</code>:</p>
-<p>内容如下：</p>
-<pre><code class="html">&lt;%= form_for [@commentable, @comment] do |f| %&gt;
-    &lt;div class=&quot;field&quot;&gt;
-      &lt;%= f.text_area :content %&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;action&quot;&gt;
-      &lt;%= f.submit &quot;sumbit&quot; %&gt;
-    &lt;/div&gt;
-&lt;% end %&gt;
-</code></pre>
-<p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
-<pre><code class="ruby">  def show
-    @commentable = Article.find(params[:id])
-    @comments = @commentable.comments
-    @comment =  @commentable.comments.new
-  end
-</code></pre>
-<p>修改<code>app/views/articles/show.html.erb</code>:</p>
-<pre><code class="Html">&lt;div class=&quot;container-fluid&quot;&gt;
-  &lt;h1&gt;&lt;%= @article.title %&gt;&lt;/h1&gt;
-  &lt;p&gt;&lt;%= @article.content %&gt;&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;% if @comments %&gt;
-        &lt;% @comments.each do |comment| %&gt;
-            &lt;li&gt;&lt;%= comment.content %&gt;&lt;/li&gt;
-        &lt;% end %&gt;
-    &lt;% end %&gt;
-  &lt;/ul&gt;
-
-  &lt;%= render &quot;comments/form&quot; %&gt;
-&lt;/div&gt;
-</code></pre>
-<p>针对event做同样的处理，这样create comment就可以重复使用了。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fqjfdf6zfsj30kl072gm6.jpg" alt=""></p>
-<p>看看events：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fqjfretw42j30lu0903z3.jpg" alt=""></p>
-</li>
-</ul>
-<p>OK!! 基本功能实现，想要美观地码楼的话，就要用到Ajax部分了，继续写就没完没了了 ，下次在码字: P</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://jarlowrey.com/blog/polymorphic-rails-5.html" target="_blank" rel="noopener">Polymorphic Associations in Rails 5</a></p>
-<p><a href="https://rubyplus.com/articles/3901-Polymorphic-Association-in-Rails-5" target="_blank" rel="noopener">Polymorphic Association in Rails 5</a></p>
-
-          
+          <p>多态关联（polymorphic associations）算是个挖了很久的坑，一直没填，这次填了这个坑。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/20/polymorphic-associations-in-rails5/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2585,7 +1821,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>460 words</span>
+              <span>471 words</span>
             </span>
           
 
@@ -2603,68 +1839,14 @@ end
 
       
         
-          
-            <h4 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h4><p>Rails中，有model user和 article，article与user的关系是一对多，现在需要针对每一个User，列出所有ta发布的文章，而 article的数据来源于另一个外部的数据库，比如 works 。</p>
-<p>怎么处理？</p>
-<p>用establish_connection。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>拆解成两步：</p>
-<ul>
-<li>为外部数据库建配置文件</li>
-<li>为model和外部数据库建立连接</li>
-</ul>
-<p>具体如下：</p>
-<p>Step1、 新增文件<code>config/works_database.yml</code>，内容如下：</p>
-<pre><code class="Iml"># using another database
-default: &amp;default
-  adapter: mysql2
-  encoding: utf8
-  username: root
-  password:
-  host: localhost
-  pool: 5
-
-development:
-  &lt;&lt;: *default
-  database: works_development
-
-test:
-  &lt;&lt;: *default
-  database: works_test
-
-production:
-  &lt;&lt;: *default
-  database: works_production
-</code></pre>
-<p>这里，假定数据库works_development是已经存在的，其实就是场景描述中的works数据库。</p>
-<p>Step2、创建initializer去读取配置文件并存入环境变量中</p>
-<p>在config/initializers/下，新增文件<code>works_database.rb</code>，内容如下：</p>
-<pre><code>WORKS_DB = YAML.load_file(File.join(Rails.root.join(&#39;config&#39;,&#39;works_database.yml&#39;)))[Rails.env.to_s]
-</code></pre><p>这样，我们外部数据库的配置信息就会存储在WORKS_DB中了。</p>
-<p>Step3、 创建一个基类来处理数据库的连接</p>
-<p>新建文件<code>app/models/works_database.rb</code>，放入以下内容：</p>
-<pre><code class="Ruby">class WorksDatabase &lt; ApplicationRecord
-  self.abstract_class = true
-  establish_connection WORKS_DB
-end
-</code></pre>
-<p>establish_connection是ActiveRecord::Base的一个类方法，由于WorksDatabase继承自ApplicationRecord，所以可以直接调用，它的作用就是用于连接数据库的。</p>
-<p>Step4、 将需要连接到WORKS_DB的model都继承自WorksDatabase</p>
-<p>修改<code>app/models/article.rb</code>：</p>
-<pre><code class="Ruby">class Article &lt; WorksDatabase
-  belongs_to :user
-end
-</code></pre>
-<p>OK !</p>
-<p>Step 3 和Step 4其实可以合并成一步，直接在<code>app/models/article.rb</code>中修改成如下：</p>
-<pre><code class="Ruby">class Article &lt; ActiveRecord::Base
-  belongs_to :user
-  establish_connection WORKS_DB
-end  
-</code></pre>
-<p>但是这种一般在只有一个或少数几个model需要用到外部数据库时使用的较多，当存在多个models的时候，则推荐用baseclass的方式，把establish_connection封装起来，其他类直接继承该基类即可。即遵守DRY原则。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.thegreatcodeadventure.com/managing-multiple-databases-in-a-single-rails-application/" target="_blank" rel="noopener">Managing Multiple Databases in a Single Rails Application</a></p>
-
-          
+          <p>学习 为Rails 配置外部数据库。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/19/manage-multiple-database-in-a-single-rails-app/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2880,7 +2062,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

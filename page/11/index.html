@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>754 words</span>
+              <span>760 words</span>
             </span>
           
 
@@ -387,67 +387,14 @@
 
       
         
-          
-            <h4 id="异步处理是什么"><a href="#异步处理是什么" class="headerlink" title="异步处理是什么"></a>异步处理是什么</h4><p>google到的结果：</p>
-<blockquote>
-<p>Asynchronous refers to processes that do not depend on each other’s outcome, and can therefore occur on different threads simultaneously. It enables various workflow processes to run at the same time. you are simply running the workflow in the background of the calling application.</p>
-</blockquote>
-<p>简单来说，就是多个进程不依赖于各自的输出结果，可以同时出现在不同的线程中，这种方式使得不同的工作流进程可以同步进行。</p>
-<p>在Rails中，可以理解成，当用户送出操作后，Rails 不会立即执行该任务，而是交由另一个进程(process)在背景下进行处理。</p>
-<h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>当任务要执行很久的时候，例如汇出大笔数据、汇入大笔数据等，这时如果不进行异步处理，可能会：</p>
-<ul>
-<li>导致用户体验不佳，浏览器卡住，需要等服务器完成任务才有回应</li>
-</ul>
-<ul>
-<li>影响服务器效能，用户可能等不及又重新刷，导致任务重头执行，而一个HTTP Request 如果长时间执行，会让 Rails 服务器无法服务其他用户</li>
-</ul>
-<h4 id="如何使用"><a href="#如何使用" class="headerlink" title="如何使用"></a>如何使用</h4><p>有两个gem可用：<a href="https://github.com/tobi/delayed_job" target="_blank" rel="noopener">delayed_job</a>， <a href="https://github.com/mperham/sidekiq" target="_blank" rel="noopener">Sidekiq</a>。</p>
-<p>这里说说sidekiq的用法。</p>
-<p>以一个简单的数据导入为例来说明下如何使用。</p>
-<ul>
-<li><p>安装Redis</p>
-<p>sidekiq需要使用Redis来存储所有的job和操作数据，运行：<code>brew install redis</code></p>
-<p>新开一个terminal窗口，执行<code>redis-server /usr/local/etc/redis.conf</code>,默认情况下，Sidekiq 会在本地通过端口6379尝试连接Redis。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcly1fq1vk2qsn9j30u908a0t8.jpg" alt=""></p>
-</li>
-<li><p>安装sidekiq</p>
-<p>在gemfile中添加:</p>
-<pre><code>gem &#39;sidekiq&#39;
-</code></pre><p>执行<code>bundle</code></p>
-</li>
-<li><p>添加配置</p>
-<p>编辑<code>config/environments/development.rb</code>，<code>config/environments/production.rb</code>, 添加：</p>
-<pre><code>config.active_job.queue_adapter = :sidekiq
-</code></pre><p>告知Rails 要用 sidekiq 来做异步处理。</p>
-<p>新建文件<code>config/sidekiq.yml</code>, 添加如下内容：</p>
-<pre><code class="Iml">:queues:
-  - default
-</code></pre>
-<p>重启服务器。</p>
-</li>
-<li><p>新建一个异步处理任务ImportWorkerJob</p>
-<pre><code>rails g job import_worker
-</code></pre><p>编辑<code>app/jobs/import_worker_job.rb</code>，修改perform部分:</p>
-<pre><code class="ruby">def perform(import_id)
-  import = Import.find(import_id)
-  ## do something, eg. import.file!
-end
-</code></pre>
-</li>
-<li><p>如何调用？</p>
-<p>对于需要异步处理的job，使用<code>ImportWorkerJob.perform_later(@import.id)</code>即可。</p>
-</li>
-</ul>
-<h4 id="Redis与memcache"><a href="#Redis与memcache" class="headerlink" title="Redis与memcache"></a>Redis与memcache</h4><p>说到Redis，很容易想到memcache，看看他俩的区别。</p>
-<p>一直以为他俩特别像，都是用来做缓存的。但是Google了下发现，相对而言，Redis能做的更多，表现也更好。</p>
-<p>memcache小巧，允许你存储key/value这样的一堆堆键值，且对value的字符有限制【up to 1M】。重启memcache， 数据全部清空。Redis可以当作cache来用，memcache能做的，它都能做，但对value字符的限制扩展到了512M。重启redis后，默认情况下，数据并不清空，当然，如果你需要它像memcache一样清空，也没问题。它还具有像其他数据库一样的特性，比如集群等。可以在终端运行：<code>redis-cli info</code> 来一览Redis。</p>
-<p>好像我目前都是把redis当缓存服务器来使用的……</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://docs.oracle.com/cd/E24705_01/doc.91/e24264/sync_async_processing.htm#EOTWK00192" target="_blank" rel="noopener">Understanding Synchronous and Asynchronous Processing</a></p>
-<p><a href="https://stackoverflow.com/questions/10558465/memcached-vs-redis" target="_blank" rel="noopener">Memcached vs. Redis?</a></p>
-<p><a href="http://www.mikeperham.com/2017/04/20/monitoring-redis/" target="_blank" rel="noopener">Monitoring Redis</a></p>
-<p>强烈推荐<a href="https://github.com/mperham" target="_blank" rel="noopener">Mike Perham</a>「maintainer of Sidekiq」 的<a href="https://www.mikeperham.com/" target="_blank" rel="noopener">个人blog</a>， 干货很多，里面对于sidekiq和Redis也有详细的讲解。</p>
-
-          
+          <p>对sidekiq多点了解。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/06/Asynchronous-processes-about-sidekiq-in-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -591,56 +538,15 @@ end
 
       
         
-          
-            <p><strong>人生的刺，就在这里，留恋着不肯快走的，偏是你所不留恋的东西</strong>。</p>
+          <p><strong>人生的刺，就在这里，留恋着不肯快走的，偏是你所不留恋的东西</strong>。</p>
 <p>&emsp;语出《写在人生边上》</p>
-<p>这本钱钟书的散文集，共9篇，很短，适合在一个下着细雨的午后，泡杯茶，翻一翻。</p>
-<p>文中偶有些让人捧腹的句子，但更多的是一个人的娓娓道来，好似在听一个人絮絮叨叨跟你闲扯。</p>
-<p>魔鬼夜访那篇，听听鬼的牢骚：</p>
-<blockquote>
-<p>你知道，我是做灵魂生意的。人类的灵魂一部分由上帝挑去，此外全归我。谁料这几十年来，生意清淡得只好喝阴风。一向人类灵魂有好坏之分。好的归上帝收存，坏的由我买卖。到了十九世纪中叶，忽然来了个大变动，除了极少数外，人类几乎全无灵魂。有点灵魂的又都是好人，该归上帝掌管。譬如战士们是有灵魂的，但是他们的灵魂，直接升入天堂，全没有我的份。近代心理学者提倡”没有灵魂的心理学“，这种学说在人人有灵魂的古代，决不会发生。到了现在，即使有一两个给上帝挑剩的灵魂，往往又臭又脏，不是带着实验室里的药味，就是罩了一层旧书的灰尘，再不然还有刺鼻的铜臭，我<strong>有爱洁的脾气，不愿意捡破烂</strong>。近代当然也有坏人，但是他们坏得没有性灵，没有人格，不动声色像无机体，富有效率像机械。就是诗人之类，也很使我失望；他们常说表现灵魂，把灵魂全部表现完了，更不留一点儿给我。你说我忙，你怎知道我闲得发慌，我也是近代物质和机械文明的牺牲品，一个失业者，而且我的家庭负担很重，有七百万子孙待我养活。当然应酬还是有的，像我这样有声望的人，不会没有应酬，今天就是吃了饭来。在这个年头儿，不愁没有人请你吃饭，<strong>只是人不让你用本事来换饭吃</strong>。这是一种苦闷。</p>
-</blockquote>
-<p>这本书写于动乱的抗战时期，这篇与其说是鬼话连篇，不如说是借鬼之口来表达对世事的看法。</p>
-<p>关于门窗：</p>
-<p>这篇写的挺好玩，分析了下门窗的区别，进而由窗想到人的眼睛。</p>
-<blockquote>
-<p>门许我们追求，表示欲望，窗子许我们占领，表示享受。</p>
-<p>关窗的作用等于闭眼。<strong>天地间有许多景象是要闭了眼才看得见的</strong>，譬如梦。假使窗外的人声物态太嘈杂了，关了窗好让灵魂自由地去探胜，安静地默想。有时，关窗和闭眼也有连带关系，你觉得窗外的世界不过尔尔，并不能给予你什么满足，你想回到故乡，你要看见跟你分离的亲友，你只有睡觉，闭了眼向梦里寻去，于是你起来先关了窗。<strong>因为只是春天，还留着残冷，窗子也不能整天整夜不关的</strong>。</p>
-</blockquote>
-<p>开窗观室外风光，关窗观人心内在。</p>
-<p>关于快乐：</p>
-<blockquote>
-<p><strong>一切快乐的享受都属于精神的，尽管快乐的原因是肉体上的物质刺激</strong>。</p>
-<p>洗一个澡，看一朵花，吃一顿饭，假使你觉得快活，并非全因为澡洗得干净，花开得好，或者菜合你口味，主要因为你心上没有挂碍，轻松的灵魂可以专注肉体的感觉，来欣赏，来审定。</p>
-</blockquote>
-<p>心上没有挂碍是幸福的，但有时心上有所挂碍，念着对你重要的人，也是一种幸福吧？</p>
-<p>不过人生苦短，多笑笑，它是会传染的。</p>
-<p>关于小孩子能不能读《伊索寓言》，他也发表了一段颇为精彩的个人观点：</p>
-<blockquote>
-<p>小孩子该不该读寓言，<strong>全看我们成年人在造成什麽一个世界、什麽一个社会，给小孩子长大了来过活</strong>。卢梭认为寓言会把纯朴的小孩子教得复杂了，失去了天真，所以要不得。我认为寓言要不得，因为它把纯朴的小孩子教得愈简单了，愈幼稚了，以为人事里是非的分别、善恶的果报，也象在禽兽中间一样的公平清楚，长大了就处处碰壁上当。缘故是，卢梭是原始主义者（Primitivist），主张复古，<strong>而我呢，是相信进步的人</strong>——虽然并不象寓言里所说的苍蝇，坐在车轮的轴心上，嗡嗡地叫到：“车子的前进，都是我的力量。”</p>
-</blockquote>
-<p>我呢，也是相信进步的人。</p>
-<p>关于吃饭：</p>
-<blockquote>
-<p>有这样优裕的物质环境，舌头像身体一般，本来是极随便的，此时也会有贞操和气节了；许多从前惯吃的东西，现在吃了彷佛玷污清白，决不肯再进口。精细到这种田地，似乎应当少吃，实则反而多吃。</p>
-</blockquote>
-<p>突然想到老庄有句话：虽富贵，不以养伤身，虽贫贱，不以利累形。呃，这个貌似跟吃饭没什么关系。</p>
-<p>一直觉得毛姆很会一本正经，拽着文气，优雅地骂人，在这点上，我觉得钱钟书老人家一点也不逊色。</p>
-<blockquote>
-<p>说笑自从幽默文学提倡以来，卖笑变成了文人的职业。【顺带黑自己吗？】</p>
-<p>常将一群妇女的说笑声比于“莺啼燕语”，那简直是对于禽类的悔辱了。</p>
-<p>色盲决不学绘画，文盲却有时谈文学，而且谈得还特别起劲。于是产生了印象主义的又唤作自我表现或创造的文学批评。</p>
-<p>这种文艺鉴赏，称为“创造”的或“印象主义”的批评，还欠贴切。我们不妨小试点铁成金的手段，各改一字。“创造的”改为“捏造的”，取“捏”鼻头做梦和向壁虚“造”之意，至于“印象派”呢，我们当然还记得四个瞎子摸白象的故事，改为“摸象派”，你说怎样？这跟文盲更拍合了。</p>
-</blockquote>
-<p>有格调的作家和有格调的导演一样讨人喜欢，他们创作不在于取悦读者或观众，更多的是宣扬下个人理论。</p>
-<p>在谈教训那一篇的文章结尾，他来了这么一句结语：</p>
-<blockquote>
-<p>写到这里，我忽然心血来潮。这篇文章不恰恰也在教训麽？难道我自己也人到中年，走到生命的半路了！白纸上黑字是收不回来的，扯个淡收场罢。</p>
-</blockquote>
-<p>这么短的一本小书，我也硬要自己写出个读书笔记什么的，也是够了, 引用《传习录》中的一句话收场吧！</p>
-<p><strong>人生大病只一傲字，有我即傲，众恶之魁</strong>。</p>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/05/notes-of-written-on-the-edge-of-life/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -779,7 +685,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>252 words</span>
+              <span>257 words</span>
             </span>
           
 
@@ -797,35 +703,14 @@ end
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>开发时，在Rails根目录下，运行<code>rake db:create</code>,  报错：</p>
-<pre><code>could not connect to server: No such file or directory
-    Is the server running locally and accepting
-    connections on Unix domain socket &quot;/tmp/.s.PGSQL.5432&quot;?
-</code></pre><p>终端输入：<code>psql</code>, 报同样的错。</p>
-<p>开发环境： PostgreSQL 10.0 ， Rails 5.1.4， Ruby 2.3.6， MacOS Sierra 10.12.3</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在stack overflow上， <a href="https://stackoverflow.com/questions/13410686/postgres-could-not-connect-to-server" target="_blank" rel="noopener">Postgres could not connect to server</a>中给出了这样的解答：</p>
-<p>终端运行：</p>
-<pre><code>rm /usr/local/var/postgres/postmaster.pid
-</code></pre><p>原因是：👇</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fq0vpknxz0j30k204xt98.jpg" alt=""></p>
-<p>可惜，我运行后出现报错：</p>
-<pre><code>rm: /usr/local/var/postgres/postmaster.pid: No such file or directory
-</code></pre><p>后面的<a href="https://stackoverflow.com/users/1701175/freepender" target="_blank" rel="noopener">FreePender</a> 给出了另一个解释，提到这类问题可能是版本升级导致, 并给出了解答。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fq0vvxd6itj30kw0al76b.jpg" alt=""></p>
-<p>运行：</p>
-<pre><code>postgres -D /usr/local/var/postgres
-</code></pre><p>找到原因了，是版本不兼容问题：</p>
-<pre><code>The data directory was initialized by PostgreSQL version 9.6, which is not compatible with this version 10.0.
-</code></pre><p>运行：</p>
-<pre><code>rm -rf /usr/local/var/postgres &amp;&amp; initdb /usr/local/var/postgres -E utf8
-</code></pre><p>重新<code>bundle</code>, 终端运行：</p>
-<pre><code>rake db:create
-</code></pre><p>Perfect!! 完美解决！</p>
-<p>Thanks to <a href="https://stackoverflow.com/users/1701175/freepender" target="_blank" rel="noopener">FreePender</a>  for this solution.</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/13410686/postgres-could-not-connect-to-server" target="_blank" rel="noopener">Postgres could not connect to server</a></p>
-
-          
+          <p>踩坑 Postgres 记录。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/05/Postgres-could-not-connect-to-server/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -982,94 +867,14 @@ end
 
       
         
-          
-            <p>说三个自己也用过的技巧，没用过的也写不出来。</p>
-<h4 id="空指针保护"><a href="#空指针保护" class="headerlink" title="空指针保护"></a>空指针保护</h4><p>这个非常常见。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">a ||= []
-## 上面的|| 是逻辑操作符或，相当于 a || (a = [])
-</code></pre>
-<p>上面这个方法的好处在于，它可以保证a不为nil，这种惯用方法称为<strong>空指针保护</strong>。</p>
-<p>空指针保护常常用于初始化实例变量。比如下面的例子：</p>
-<pre><code class="Ruby">class C
-  def data
-    @data ||= {}
-  end
-
-  def data?
-    @data.present?
-  end
-end
-</code></pre>
-<h4 id="Tap"><a href="#Tap" class="headerlink" title="Tap"></a>Tap</h4><p>《ruby元编程》里面提到了tap，使用tap，可以在方法链中插入中间操作，比如：</p>
-<pre><code class="Ruby">temp = [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift
-puts temp #=&gt; a
-x = temp.upcase.next
-</code></pre>
-<p> 上诉的代码显得很不ruby，使用tap改进下，可以这么写：</p>
-<pre><code class="Ruby">[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift.tap {|x| puts x}.upcase.next #=&gt; a
-</code></pre>
-<p>其实tap在方法定义中也很常见。比如<a href="https://github.com/glebm/i18n-tasks" target="_blank" rel="noopener">i18n-tasks</a>的源代码中，就多次出现了tap的身影：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcly1fpzts3u39sj30mb064wey.jpg" alt=""></p>
-<p>举一个简单的例子感受下：</p>
-<pre><code class="Ruby"># source是一个Array，存放文件路径
-# get_all_files 可以获取指定的单个或多个路径下所有的文件
-def get_all_files(source)
-  files = []
-  source.map do |path|
-    path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
-    group = Dir.glob(&quot;#{path}**/**&quot;)
-    files &lt;&lt; group.reject { |x| File.directory?(x) }
-  end
-end
-</code></pre>
-<p>如果换成tap，则可以这样定义：</p>
-<pre><code class="Ruby">def get_all_files(source)
-  [].tap do |files|
-    source.map do |path|
-      path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
-      group = Dir.glob(&quot;#{path}**/**&quot;)
-      files &lt;&lt; group.reject { |x| File.directory?(x) }
-    end
-  end
-end
-</code></pre>
-<h4 id="Symbol-to-proc"><a href="#Symbol-to-proc" class="headerlink" title="Symbol#to_proc"></a>Symbol#to_proc</h4><p>这个在rubyist高手中算是比较流行的一种技巧了。</p>
-<p>看个常用的数组求和：</p>
-<pre><code class="Ruby">a = [1,2,3,4]
-a.reduce(&amp;:+) #= &gt; 10
-a.inject(0,&amp;:+) #= &gt; 10
-</code></pre>
-<p>「reduce 和inject 是alias的关系, 两者可以互用。我依然记得第一次看到数组求和<code>[1,2,3,4].reduce(&amp;:+)</code> 这个例子时，一脸懵逼……」</p>
-<p>这种带有<code>&amp;:+</code>的标记的，就是Symbol#to_proc。</p>
-<p>上面的求和，如果不用Symbol#to_proc， 则可以这样写：</p>
-<pre><code class="Ruby">a = [1,2,3,4]
-a.reduce{|sum, x| sum + x } #= &gt; 10
-a.inject(0){|sum, x| sum + x } #= &gt; 10
-</code></pre>
-<p>对于Symbol#to_proc 的方法的使用，要注意一点，那就是<code>&amp;:method</code>中的method，必须是对象可以调用的无参method，比如上面的<code>&amp;:+</code>，+ 是1，2，3，4都可以调用的<strong>无参实例方法</strong>。</p>
-<p>看个例子感觉下：</p>
-<pre><code class="Ruby">b = [&#39;hi&#39;,&#39;ruby&#39;,&#39;hello&#39;]
-b.map(&amp;:capitalize) #= &gt; [&quot;Hi&quot;, &quot;Ruby&quot;, &quot;Hello&quot;]
-b.map(&amp;:nil?) #= &gt; [false, false, false]
-b.map(&amp;:concat(&#39;world&#39;)) #= &gt; raise: syntax error
-</code></pre>
-<p>b中的每一个元素都是String对象，可以成功调用无参的实例方法capitalize，nil?等，但是当调用带有参数的concat方法时就会报错，为什么？</p>
-<p>原来在Symbol类中有一个to_proc方法，用于把符号转化为一个Proc对象：</p>
-<pre><code class="Ruby">class Symbol
-  def to_proc
-    Proc.new {|x| x.send(self)} # 动态派发，调用self这个method的
-  end
-end
-</code></pre>
-<p>上面的<code>b.map(&amp;:capitalize)</code> 等价于<code>b.map(&amp;:capitalize.to_proc)</code>, 由于&amp;可以调用对象的to_proc方法把对象转为一个proc，所以可以简写成<code>b.map(&amp;:capitalize)</code> ， 也就是说，<code>b.map(&amp;:capitalize)</code> 等同于<code>b.map{|x|x.send(:capitalize)}</code>。</p>
-<p>注意到Symbol类中定义的to_proc方法是不带参数的。</p>
-<p>当然，如果你想要调用带参数的method，可以自定义一个method或者考虑给to_proc打个猴子补丁。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">《ruby元编程第二版》</a></p>
-<p><a href="https://medium.com/aviabird/ruby-tap-that-method-90c8a801fd6a" target="_blank" rel="noopener">Ruby: Tap that method</a></p>
-<p><a href="https://www.brianstorti.com/understanding-ruby-idiom-map-with-symbol/" target="_blank" rel="noopener">Understanding Ruby’s idiom: array.map(&amp;:method)</a></p>
-
-          
+          <p>说三个自己也用过的技巧，没用过的也写不出来。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/04/common-idioms-in-ruby/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1226,44 +1031,14 @@ end
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用<code>rails new</code>新开一个项目的时候，遇到的一个报错：</p>
-<pre><code>   Rails 5 requires Ruby 2.2.2 or newer.
-
-    You&#39;re running
-      ruby 2.0.0p648 (2015-12-16 revision 53162) [universal.x86_64-darwin16]
-
-    Please upgrade to Ruby 2.2.2 or newer to continue.
-</code></pre><p>输入：<code>ruby -v</code>，得到的版本：ruby 2.3.6p384，明明2.3.6啊！为什么说我的是ruby2.0.0？</p>
-<p>我以为是有旧的ruby版本存在，终端输入：<code>rvm list</code>， 得到如下结果：</p>
-<pre><code class="Shell">rvm rubies
-
-   ruby-2.3.1 [ x86_64 ]
-=* ruby-2.3.6 [ x86_64 ]
-   ruby-2.4.0 [ x86_64 ]
-
-# =&gt; - current
-# =* - current &amp;&amp; default
-#  * - default
-</code></pre>
-<p>这就很奇怪了，随后终端输入:<code>rails -v</code>， 报错，内容与rails new一样。</p>
-<p>怎么回事？！</p>
-<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>Google到了解答， 在这里<a href="https://github.com/rails/rails/issues/27569" target="_blank" rel="noopener"><code>rails new</code> fails to read my Ruby version and won’t create a new project </a></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1fpoa9x9455j30ja037js1.jpg" alt=""></p>
-<p>原来rails检查的是system的ruby，先check下：</p>
-<ul>
-<li><p>终端输入<code>rvm system</code> ，得到</p>
-<pre><code>ruby 2.0.0p648 (2015-12-16 revision 53162) [universal.x86_64-darwin16]
-</code></pre><p>果然，是ruby2.0.0。</p>
-</li>
-<li><p>切换到之前的版本</p>
-<pre><code>rvm use ruby-2.3.6 --default
-</code></pre><p>OK!!!  <code>rails new yourproject</code>， 继续开始新的征程～～</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4></li>
-</ul>
-<p><a href="https://github.com/rails/rails/issues/27569" target="_blank" rel="noopener"><code>rails new</code> fails to read my Ruby version and won’t create a new project </a></p>
-
-          
+          <p>使用<code>rails new</code>新开一个项目的时候，遇到的一个报错。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/03/rails5-requires-ruby-2-or-newer/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1402,7 +1177,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>485 words</span>
+              <span>488 words</span>
             </span>
           
 
@@ -1420,41 +1195,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>成功发布了一个轮子，<a href="https://rubygems.org/gems/i18n-processes" target="_blank" rel="noopener">i18n-processes</a> ,  一个在<a href="https://rubygems.org/gems/i18n-tasks" target="_blank" rel="noopener">i18n-tasks</a>上进行了改造的轮子，看到它发布成功的那一刻，真的是开心到飞起，虽然这个gem并不是那么useful， 但是造轮子的感觉还是很赞的。</p>
-<p>好，回正题，继上一篇<a href="http://luciaca.cn/2018/03/21/create-your-first-rubygem/" target="_blank" rel="noopener">创建你的第一个gem</a>， 这篇详细写一下如何publish your gem，同时记录下遇到的问题。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>发布其实很简单，三步走：</p>
-<ul>
-<li><p>注册或者登陆rubygems官网<a href="https://rubygems.org" target="_blank" rel="noopener">https://rubygems.org</a>, 搜索下，确保你的gem名唯一 。</p>
-</li>
-<li><p>在你gem文件所在的目录下，创建gem, 终端运行：</p>
-<pre><code>gem build yourgem-name
-</code></pre><p>这一步很重要，如果没有做，发布的时候，会出现<code>While executing gem ... (Gem::Package::FormatError)</code>的报错。</p>
-</li>
-<li><p>发布</p>
-<p>终端运行：</p>
-<pre><code class="Shell">gem push yourgem-name-version.gem
-## version 为版本号，比如: gem push i18n-processes-0.1.0.gem
-</code></pre>
-</li>
-<li><p>更新版本</p>
-<p>比如你的初始版本是0.1.0， 你更新了这个gem，添加了一些新的功能，修复了一些bug or whatever, 总之你的版本升级了，比如改为0.1.1，如何让published的0.1.0也更新到0.1.1？</p>
-<p><code>git add</code> ,<code>git commit</code> ,<code>git push</code>后，确保everything up-to-date，终端运行：</p>
-<pre><code>rake release
-</code></pre><p>请确保你已经修改了版本号，否则会出现：<code>Repushing of gem versions is not allowed.</code>的报错。</p>
-<p>一切无误后，会出现<code>Pushed yourgem-name version to rubygems.org</code>, 表示已经成功了。  </p>
-</li>
-</ul>
-<p>遇到的问题：</p>
-<ul>
-<li><p>HTTP Basic: Access denied.</p>
-<p>呃，这是个有点白痴的问题，检查你的email和password，确认没有输入错误，基本就OK了。之所以提到这个问题，是rubygem的issues<a href="https://github.com/rubygems/rubygems.org/issues/583" target="_blank" rel="noopener">Cannot gem push (HTTP Basic: Access Denied) #583</a>中有这块的讨论，有人提到了gem版本的问题，但是只要你的gem不是特别老，比如2.0.6啥的，是不会因为gem版本的原因而出现上诉报错的。</p>
-<p>just check your email and password, that’s enough.</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://guides.rubygems.org/publishing/#introduction" target="_blank" rel="noopener">publishing your gem</a></p>
-
-          
+          <p>小激动。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/04/02/publishing-your-gem/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1593,7 +1341,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>710 words</span>
+              <span>723 words</span>
             </span>
           
 
@@ -1611,49 +1359,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>《Ruby元编程》part 2 说的是rails中的元编程，相比part 1 ，这部分的篇幅少了很多。</p>
-<p>主要说了这四块：</p>
-<ul>
-<li>ActiveRecord的组成</li>
-<li>ActiveSupport的concern模块</li>
-<li>alias_method_chain</li>
-<li>属性方法</li>
-</ul>
-<p>来逐一看看。</p>
-<h4 id="ActiveRecord的组成"><a href="#ActiveRecord的组成" class="headerlink" title="ActiveRecord的组成"></a>ActiveRecord的组成</h4><ul>
-<li>是什么？</li>
-</ul>
-<p>ActiveRecord是一个库，用来将Ruby对象映射到数据库中，然后你就可以直接对model进行操作，使用类的对象与数据库交互，不需要通过传统的SQL语句，rails会帮你转化成SQL语句。</p>
-<ul>
-<li>依赖和组成</li>
-</ul>
-<p>ActiveRecord依赖ActiveSupport，ActiveModel，并且使用ActiveSupport::Autoload来扩展了类。</p>
-<p>ActiveRecord::Base是它最重要的类，由一堆模块组装起来，通过extend，include 多个module，获得了大量的实例方法和类方法。</p>
-<h4 id="ActiveSupport的concern模块"><a href="#ActiveSupport的concern模块" class="headerlink" title="ActiveSupport的concern模块"></a>ActiveSupport的concern模块</h4><p>concern模块是一个最小依赖管理系统，它的诞生，是为了解决包含并扩展类中链式包含的问题。</p>
-<p>书中较详细地说明了concern的实现机制，通过覆写内核方法append_features来决定module是否进入祖先链 ,不过这段的代码真不好理解。</p>
-<h4 id="alias-method-chain"><a href="#alias-method-chain" class="headerlink" title="alias_method_chain"></a>alias_method_chain</h4><p>它的兴起是为了处理别名机制，你可以把它看成是环绕别名的构建器，而这也是它消亡的原因。颇有“成也萧何，败也萧何”的味道。</p>
-<p>既然它已经逐渐退出舞台，那么用什么来解决给原方法增加新功能的问题呢？</p>
-<p>在第五章中提到的prepend，成了它的替代品。</p>
-<h4 id="属性方法"><a href="#属性方法" class="headerlink" title="属性方法"></a>属性方法</h4><ul>
-<li><p>是什么？</p>
-<p>自动创建的访问器。比如你创建了一个类Student，它有name， age字段，可以通过Student.new创建对象，直接对其name， age读写。</p>
-<pre><code class="Ruby">s = Student.new
-s.name = &quot;Tom&quot;
-s.age = 18
-s.save
-s.name #=&gt; Tom
-</code></pre>
-<p>这里<code>name =</code>， <code>name</code>， <code>age=</code>, <code>age</code>等方法，就是属性方法，都是ActiveRecord通过查看students表的字段进行创建的。</p>
-</li>
-<li><p>发展历史</p>
-<p>Rails1.0时，通过幽灵方法来实现属性方法，由于幽灵方法并不是真正的方法，调用时要先完整搜过一遍祖先链，所以Rails2.0时，对属性方法的实现进行了改进。大致的思路是：第一次访问属性时，这个属性是个幽灵方法，ActiveRecord::Base#method_missing会在这时把这个幽灵方法转化为真实的方法，同时method_missing还动态地为数据库中的其他字段创建读，写，查询访问器，下一次再访问时，就会有一个真实的方法器可供访问，不再进入method_missing方法。</p>
-</li>
-</ul>
-<h4 id="一点感触"><a href="#一点感触" class="headerlink" title="一点感触"></a>一点感触</h4><p>刚开始看元编程的时候，很激动，像是发现了宝似的，现在看完了，平静了很多。借用书中的一句话：元编程的目的不是为了让代码变得更聪明，而是让代码变得更灵活。</p>
-<p>Happy metaprogramming!</p>
-
-          
+          <p>《Ruby元编程》之Rails源代码赏析笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/31/ruby-metaprogramming-part6-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1810,198 +1523,14 @@ s.name #=&gt; Tom
 
       
         
-          
-            <p>《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。</p>
-<h4 id="从需求说起"><a href="#从需求说起" class="headerlink" title="从需求说起"></a>从需求说起</h4><p>本章开始用一个boss提出的问题作为引子，我觉得这个例子很好。简述下问题：</p>
-<p>创建一个名为attr_checked的类宏，这个类宏要满足两个条件：</p>
-<ul>
-<li>接受属性名和代码块，代码块用于验证属性值的有效性</li>
-<li>只有当类包含某个模块，比如checkedAttributes时，才可以使用attr_checked</li>
-</ul>
-<p>解决思路可以转化成：</p>
-<ul>
-<li>如何定义一个类宏方法？【先用eval定义一个内核方法，然后再改造成类宏】</li>
-<li>如何给一个类宏方法添加代码块？【method添加&amp;block参数即可】</li>
-<li>定义模块checkedAttributes，通过钩子方法为指定的类添加attr_checked</li>
-</ul>
-<h4 id="认识下eval"><a href="#认识下eval" class="headerlink" title="认识下eval"></a>认识下eval</h4><p>定义自己的类宏方法前，先来认识下Kernel#eval。</p>
-<p>eval是内核方法，参数是一段ruby代码文本。相比instance_eval， class_eval，<strong>它只能执行代码字符串</strong>。那instance_eval， class_eval是否能执行代码字符串？可以。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">my_array = [1,2,3]
-my_array.instance_eval &quot;self.reduce(&amp;:+)&quot; #= &gt; 6
-eval(&quot;my_array.inject {|sum, x| sum + x}&quot;) #= &gt; 6
-</code></pre>
-<p>这类代码字符串可以携带一个binding对象，然后在该对象的作用域中执行代码。</p>
-<ul>
-<li><p>eval与binding</p>
-<p>Binding是一个用对象表示的作用域，可以通过Kernel#binding 来创建。ruby 还提供了TOPLEVEL_BINDING的预定义常量，表示顶级作用域的Binding对象。</p>
-<p>看代码理解下：</p>
-<pre><code class="Ruby">class MyClass
-  def my_method
-    @x = 1
-    binding
-  end
-end
-obj = MyClass.new.my_method
-eval(&quot;@x&quot;,obj) #= &gt; 1
-eval(&quot;self&quot;, TOPLEVEL_BINDING) #= &gt; main
-</code></pre>
-</li>
-<li><p>eval的麻烦</p>
-<p>最大的问题是安全性，因为执行的是一段字符串，ruby是不会对字符串进行语法检查的，容易引发代码注入攻击。</p>
-<p>看个例子：</p>
-<pre><code class="ruby">def explore_array(method)
-  code = &quot;[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].#{method}&quot;
-  eval code
-end
-
-explore_array(&quot;include?(&#39;a&#39;)&quot;) #= &gt; true
-explore_array(&quot;size&quot;) #= &gt; 3
-explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;) #= &gt; 列出了该文件所在目录下的所有文件
-</code></pre>
-<p>这里，运行类似<code>explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;)</code>这样的恶意代码可能会带来意想不到的后果。所以，能用代码块就用代码块。</p>
-<p>如何防止代码注入攻击？</p>
-<ul>
-<li><p>解析所有的代码字符串，不现实</p>
-</li>
-<li><p>改用动态方法和动态派发来替换eval</p>
-<p>比如上面的例子，explore_array可以这样写：</p>
-<pre><code class="Ruby">def explore_array(method, *arguments)
-  [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].send(method, *arguments)
-end
-
-explore_array(:include?, &#39;a&#39;) #= &gt; true
-explore_array(:size) #= &gt; 3
-</code></pre>
-</li>
-</ul>
-</li>
-<li><p>污染对象和安全级别</p>
-<p>针对eval存在的安全问题，可以采用一些使它变得安全的方法。</p>
-<p>Ruby会自动把不安全的对象标记为污染对象，你可以通过给$SAFE赋值（[0,1, 2,3]）来设置安全级别，禁止某些潜在的危险操作，其中0最低，3最高。</p>
-<p>通过使用安全级别，可以为eval方法创造了一个可控的环境，像这样的环境称之为<a href="https://en.wikipedia.org/wiki/Sandbox_(software_development" target="_blank" rel="noopener">沙盒</a>。</p>
-</li>
-</ul>
-<h4 id="用eval来定义add-checked-attr"><a href="#用eval来定义add-checked-attr" class="headerlink" title="用eval来定义add_checked_attr"></a>用eval来定义add_checked_attr</h4><p>「其实，这里我并不是很理解，为什么要调用eval来定义这个method，然后又去掉它？为什么不直接用class_eval的方式来定义？难道这样绕一圈，仅仅是为了向读者介绍eval？」</p>
-<p>不吐糟，直接看解答：</p>
-<pre><code class="Ruby">def add_checked_attr(klass, attr)
-  eval &quot;
-  class #{klass}
-    def #{attr}=(value)
-      raise &#39;Invalid attribute&#39; unless value
-      @#{attr} = value
-    end
-    def #{attr}
-      @#{attr}
-    end
-  end
-  &quot;
-end
-</code></pre>
-<h4 id="去掉eval，加上block"><a href="#去掉eval，加上block" class="headerlink" title="去掉eval，加上block"></a>去掉eval，加上block</h4><p>鉴于eval的问题，改用class_eval来打开类，同时给方法添加一个block</p>
-<pre><code class="Ruby">def add_checked_attr(klass, attr, &amp;validation)
-  klass.class_eval do
-
-    define_method &quot;#{attr}=&quot; do |value|
-      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-      instance_variable_set(&quot;@#{attr}&quot;, value)
-    end
-
-    define_method attr do
-      instance_variable_get(&quot;@#{attr}&quot;)
-    end
-
-  end
-end
-</code></pre>
-<h4 id="改造成类宏"><a href="#改造成类宏" class="headerlink" title="改造成类宏"></a>改造成类宏</h4><p>为了让add_checked_attr对所有类都可用，可以将它定义在class中，另修改方法名为attr_checked，去掉类参数。</p>
-<p>解答如下：</p>
-<pre><code class="Ruby">class Class
-  def attr_checked(attr, &amp;validation)
-    define_method &quot;#{attr}=&quot; do |value|
-      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-      instance_variable_set(&quot;@#{attr}&quot;, value)
-    end
-
-    define_method attr do
-      instance_variable_get(&quot;@#{attr}&quot;)
-    end
-  end
-end
-</code></pre>
-<p>最后请上我们的hooks。</p>
-<h4 id="钩子方法"><a href="#钩子方法" class="headerlink" title="钩子方法"></a>钩子方法</h4><p>看个例子：</p>
-<pre><code class="Ruby">module M
-  def self.included(othermod)
-    puts &quot;M was included into #{othermod}&quot;
-  end
-end
-
-class C
-  include M
-end
-#= &gt; M was included into C
-</code></pre>
-<p>Module#included在一个module被include时，被自动调用，这种方法称之为钩子方法，因为<strong>它们像钩子一样，钩住一个特定的事件</strong>。类似的方法还有Module#method_added, Module#extend_object等。</p>
-<p>想要捕获单件方法的钩子事件，需要使用BasicObject的singleton_xxx方法，比如singleton_method_added。</p>
-<p>针对上面的例子，可以覆写include方法得到一样的效果：</p>
-<pre><code class="Ruby">module M;end
-
-class C
-  def self.include(*modules)
-    puts &quot;#{modules} was included into C&quot;
-    super
-  end
-  include M
-end
-#= &gt; [M] was included into C
-</code></pre>
-<p>注意这里覆写include中，最后<strong>调用了super</strong>，不然这个module是不会被include的。这种通过覆写添加额外功能的效果，也可以通过环绕别名的方式实现。</p>
-<p>包含并扩展类的方式就用到了钩子，看个例子：</p>
-<pre><code class="Ruby">module M
-  def self.included(klass)
-    klass.extend ClassMethods
-  end
-end
-
-module ClassMethods
-  def my_method
-    puts &quot;it could be a class method&quot;
-  end
-end
-
-class D
-  include M
-end
-
-D.my_method #= &gt; it could be a class method
-</code></pre>
-<p>类D包含了模块M，调用了M的钩子方法:included， 这个钩子方法接着用module ClassMethods扩展了类D，使得module ClassMethods的my_method 成为了类D的类方法。</p>
-<p>Rails中ActiveSupport有一个module Concern，就封装了包含并扩展的技巧。</p>
-<p>使用这种技巧，完成最后一步。</p>
-<pre><code class="Ruby">module CheckedAttributes
-  def self.included(base)
-    base.extend ClassMethods
-  end
-
-  module ClassMethods
-    def attr_checked(attr, &amp;validation)
-      define_method &quot;#{attr}=&quot; do |value|
-        raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-        instance_variable_set(&quot;@#{attr}&quot;, value)
-      end
-
-      define_method attr do
-        instance_variable_get(&quot;@#{attr}&quot;)
-      end
-    end
-  end
-end
-</code></pre>
-<p>OK ！</p>
-<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>整本书到这里，基本算是走完了大半了，后面第二部分是有关rails中的元编程，篇幅就相对而言少了些，作者挑了几个板块说一下。我的感觉是，如果前面的六章理解的七七八八了，可以看一些gem的源代码，有利于加深理解。你会在其中发现很多元编程的身影。</p>
-
-          
+          <p>《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2140,7 +1669,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2,669 words</span>
+              <span>2,679 words</span>
             </span>
           
 
@@ -2158,301 +1687,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是《Ruby元编程》第五章类定义的学习笔记，这一章有很多的概念，类宏，单件方法，单件类，类扩展，环绕别名……还见到了我曾一度迷惑不解的 <a href="https://en.wikipedia.org/wiki/Duck_typing" target="_blank" rel="noopener">duck typing</a>. 这应该算是全书最精彩的一个章节了。</p>
-<p> 好，来看看都有些啥。</p>
-<h4 id="当前类"><a href="#当前类" class="headerlink" title="当前类"></a>当前类</h4><p>像无所不在的当前对象一样，也有一个对应的当前类（模块）存在。</p>
-<p>如何跟踪当前类？三种方式：</p>
-<ul>
-<li>在程序顶层，self是main，当前类是Object， main对象所属的类</li>
-<li>在一个方法中，当前类是当前对象的类</li>
-<li>用class关键字打开一个类（module打开一个模块）时，该类称为当前类</li>
-</ul>
-<p>这里第三种方法，存在一种情况：当类名不可知时，如何打开类？比如类名是一个变量。</p>
-<p>用class_eval method。</p>
-<h4 id="class-eval"><a href="#class-eval" class="headerlink" title="class_eval"></a>class_eval</h4><p>类似牛逼的instance_eval可以打破类的封装一样，class_eval可以打开类，给类定义实例方法。</p>
-<p>看这段代码：</p>
-<pre><code class="Ruby">def add_method_to(a_class)
-  a_class.class_eval do
-    def m; puts &#39;hi&#39;; end
-  end
-end
-
-add_method_to String
-&#39;abc&#39;.m  #=&gt; hi
-</code></pre>
-<p> 这里你一定也会想到这种打开类的方法，容易引起猴子补丁的问题，当然你可以用细化的方式来处理，不过还是要慎重使用class_eval。</p>
-<p>类似instance_eval还有一个instance_exec的双胞胎兄弟一样，class_eval也有一个class_exec，它可以接受额外的代码块作为参数。</p>
-<h4 id="class-eval与instance-eval"><a href="#class-eval与instance-eval" class="headerlink" title="class_eval与instance_eval"></a>class_eval与instance_eval</h4><p>其实instance_eval也可以修改类，修改的是当前对象的单件类。后面说到单件类时，可以看到。书中也有相应的例子。不要忘了，类也是对象。</p>
-<p>那么class_eval与instance_eval如何选择？看目的。</p>
-<ul>
-<li>如果想要打开一个对象，用instance_eval更好</li>
-<li>如果想要修改类，用class_eval打开</li>
-</ul>
-<p>第六章也提到了一个eval，执行包含ruby代码的字符串，不过它有些安全性上的问题。</p>
-<h4 id="类实例变量和类变量"><a href="#类实例变量和类变量" class="headerlink" title="类实例变量和类变量"></a>类实例变量和类变量</h4><p>两者都是存储在类中的。不同之处在于：</p>
-<ul>
-<li>类实例变量只能被类本身访问，定义时用@</li>
-<li>类变量可以被子类或者类的实例访问，定义时用@@，类变量属于类体系结构，并不真正属于类，存在类似全局变量的风险，慎重使用。</li>
-</ul>
-<p>对象也有实例变量，而且跟类实例变量看着还挺像，那么两者有什么区别？</p>
-<p>当当前类充当self时，访问的变量是类实例变量，当类的实例充当self时，通常是调用了某个实例方法，然后拥有了该实例变量。</p>
-<p>看例子加深理解：</p>
-<pre><code class="Ruby">class C
-  @var = 1
-  def self.read; @var; end
-  def read; @var; end
-  def write; @var = 2; end
-end
-
-obj = C.new
-obj.read
-obj.write
-obj.read #=&gt; 2
-C.read #=&gt; 1
-</code></pre>
-<p>这里C和C的对象obj都拥有一个实例变量@var，但是两者是不同的。C访问的是类实例变量，obj访问的是类的对象的实例变量，也就是它调用了read后获得到实例变量。</p>
-<h4 id="单件方法"><a href="#单件方法" class="headerlink" title="单件方法"></a>单件方法</h4><p>Ruby允许给单个对象增加一个方法。看个例子：</p>
-<pre><code class="Ruby">my_array = [1,2,3,4]
-
-def my_array.add_one
-  self.map{|x| x + 1}
-end
-
-my_array.add_one #=&gt; [2,3,4,5]
-my_array.methods.grep(/add_one/) #=&gt; [:add_one]
-my_array.singleton_methods #=&gt; [:add_one]
-
-[1,2].singleton_methods #=&gt; []
-</code></pre>
-<p>这里my_array拥有了add_one这个method，而其他对象没有。</p>
-<p><strong>这种只对单个对象生效的方法，称为单件方法。</strong></p>
-<p>通过调用singleton_methods可以查看某个对象的单件方法。</p>
-<p>这里就要提一下 <a href="https://en.wikipedia.org/wiki/Duck_typing" target="_blank" rel="noopener">duck typing</a>了。</p>
-<p>有了单件方法，那么所有的对象都可以拥有自己的方法了，这里也就可以看出，Ruby中，对象的“类型”并不严格与它的类相关，<strong>“类型”只是对象能响应的一组方法</strong>。也就是说，一个对象是不是duck类的实例并不重要，重要的是它能不能响应walk，quack的方法，也就是谚语中所说的：“If it walks like a duck and it quacks like a duck, then it must be a duck.”</p>
-<h4 id="类方法"><a href="#类方法" class="headerlink" title="类方法"></a>类方法</h4><p>类也是对象，而类名只是常量，所以在类上调用方法，就和对象调用方法一样。</p>
-<p><strong>类方法的实质就是：它是一个类的单件方法</strong>。单件方法存放在哪里？存放在该类的单件类里。</p>
-<p>类方法的定义有三种：</p>
-<pre><code class="ruby">def MyClass.a_class_method; end
-
-def MyClass
-  def self.a_class_method; end
-end
-
-# 打开了该类的单件类，在单件类定义了类方法
-def MyClass
-  class &lt;&lt; self
-    def yet_another_class_method; end
-end
-</code></pre>
-<p>这里，class &lt;&lt; 打开了该类的单件类。</p>
-<h4 id="类宏"><a href="#类宏" class="headerlink" title="类宏"></a>类宏</h4><p>像<strong>attr_accessor</strong>, <strong>attr_read</strong>, <strong>attr_writer</strong>这样的方法称之为类宏。</p>
-<p>他们看起来像是关键字，其实只是普通的方法。估计你看到这里也就知道了，这些其实是类方法。</p>
-<h4 id="单件类"><a href="#单件类" class="headerlink" title="单件类"></a>单件类</h4><p>单件类是一个对象的单件方法的存活之所，每个单件类都只有一个实例。</p>
-<p>通过Object#singleton_class或者class &lt;&lt; 可以获得单件类。</p>
-<p>看个例子来更好地了解下单件类：</p>
-<pre><code class="Ruby">class C
-  def a_method
-    puts &#39;C#a_method()&#39;
-  end
-
-  def self.a_class_method
-    puts &#39;C.a_class_method()&#39;
-  end
-end
-
-class D &lt; C;end
-
-obj = D.new
-
-class &lt;&lt; obj
-  def a_singleton_method
-    puts &quot;obj#a_singleton_method()&quot;
-  end
-end
-
-obj.singleton_class #= &gt; #&lt;Class:#&lt;D:0x007f9e23909f70&gt;&gt;
-obj.singleton_class.superclass #= &gt; D
-
-D.singleton_class #= &gt; #&lt;Class:D&gt;
-D.singleton_class.superclass #= &gt; #&lt;Class:C&gt;
-
-C.singleton_class #= &gt; #&lt;Class:C&gt;
-C.singleton_class.superclass #= &gt; #&lt;Class:Object&gt;
-</code></pre>
-<p>查看obj单件类，D单件类的祖先链，会得到：</p>
-<pre><code class="Ruby">obj.singleton_class.ancestors #=&gt; [#&lt;Class:#&lt;D:0x007fc2ee041790&gt;&gt;,D,C,Object, Kernel, BasicObject]
-D.singleton_class.ancestors #=&gt; [#&lt;Class:D&gt;, #&lt;Class:C&gt;, #&lt;Class:Object&gt;, #&lt;Class:BasicObject&gt;, Class, Module, Object, Kernel,BasicObject]
-</code></pre>
-<p>我们来做出obj的祖先链图：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1fpjld2vuu5j30u0140go6.jpg" alt=""></p>
-<p>【跟书中稍稍不同，我把kernel加进来了，请无视这小学级别的英文书写】</p>
-<p>可以发现：<strong>一个对象的单件类的超类是这个对象的类</strong>。</p>
-<p>书中还列出了七条规则，但是我觉得理解了这个例子，能做出祖先链图，对单件类基本算是掌握了。</p>
-<p>还记得instance_eval可以修改类？它修改的其实是对象的单件类，也就是给对象添加了单件方法，比如先前那个例子，还能这么做：</p>
-<pre><code class="Ruby">my_array = [1,2,3,4]
-
-my_array.instance_eval do
-  def add_one
-    self.map{|x| x + 1}
-  end
-end
-
-my_array.add_one #=&gt; [2,3,4,5]
-my_array.methods.grep(/add_one/) #=&gt; [:add_one]
-my_array.singleton_methods #=&gt; [:add_one]
-</code></pre>
-<p>这里你可能会想，如果单件方法与类或者对象继承的方法同名，如何调用？<strong>先调用单件方法</strong>，也就是单件方法覆写了祖先链上游的同名方法，这种猴子补丁也有风险。</p>
-<p>看个例子：</p>
-<pre><code class="ruby">module MyModule
-  def size; &quot;size&quot;; end
-  def ancestors; &quot;ancestors&quot;; end
-end
-
-class C
-  extend MyModule
-end
-
-obj = []
-obj.extend MyModule
-
-obj.size #= &gt; 调用的是单件类中的方法, 输出&quot;size&quot;
-C.ancestors #= &gt; 调用的是单件类中的方法, 输出&quot;ancestors&quot;
-</code></pre>
-<p>如果类或者对象本身有这个方法，与扩展后的单件方法同名，调用的是自身的方法，而不是单件方法。</p>
-<pre><code class="Ruby">module MyModule
-  def size; &quot;size&quot;; end
-end
-
-class C
-  def self.size
-     &quot;it is C#size&quot;
-  end
-  extend MyModule
-end
-
-C.size #= &gt; 从祖先链开始找，调用的是自己的类方法, 输出&quot;it is C#size&quot;
-</code></pre>
-<h4 id="类属性"><a href="#类属性" class="headerlink" title="类属性"></a>类属性</h4><p>像attr_accessor, attr_read,attr_writer这样的方法可以给对象添加属性，那么如何给类添加属性?</p>
-<p>属性实际上是一对方法，而且还是单件方法，所以针对指定类，添加类属性，则需要在它的单件类定义这个属性即可。</p>
-<p>比如这段代码：</p>
-<pre><code class="Ruby">class C
-  class &lt;&lt; self
-    attr_accessor :h
-  end
-end
-C.h = &#39;hi&#39;
-C.h #= &gt; hi
-</code></pre>
-<h4 id="类扩展与对象扩展"><a href="#类扩展与对象扩展" class="headerlink" title="类扩展与对象扩展"></a>类扩展与对象扩展</h4><p>通过向类的单件类中添加模块来定义类方法，这种技巧称之为类扩展，类是对象，相应地，这种技巧也能用在对象上，故也有对象扩展。</p>
-<p>看段代码理解下：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
-
-class C
-  class &lt;&lt; self
-    include MyModule
-  end
-end
-
-obj = []
-class &lt;&lt; obj
-  include MyModule
-end
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
-<p>类C和对象obj【这里是个空数组】，都在其对应的单件类中包含了MyModule，把MyModule的普通方法a_method变成了其单件方法。</p>
-<p>由于类扩展和对象扩展的普遍性，Ruby中专门提供了一个方法：Object#extend,所以上面的代码还可以这么写：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
-
-class C
-  extend MyModule
-end
-
-obj = []
-obj.extend MyModule
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
-<h4 id="方法包装器"><a href="#方法包装器" class="headerlink" title="方法包装器"></a>方法包装器</h4><p>方法包装器，即用一个方法包装另一个方法。怎么会有这样的需求？假定目前你有一个不能直接修改的方法，比如它在一个封装的库里，你希望为这个方法包装额外的特性。比如添加异常处理什么的。</p>
-<p>有三种方式：环绕别名，细化封装器，下包含包装器。</p>
-<ul>
-<li><p>环绕别名</p>
-<p>先来看看alias关键字，可以给方法起一个别名。</p>
-<pre><code class="Ruby">class C
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-  alias_method :m, :my_method
-end
-C.new.my_method #= &gt; C#my_method()
-C.new.m #= &gt; C#my_method()
-</code></pre>
-<p>如果给方法起了别名，然后又重新定义了它，会如何？继续这个例子：</p>
-<pre><code class="Ruby">class C
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-  alias_method :m, :my_method
-
-  def my_method
-    puts &quot;redefine my_method&quot;
-    m # 调用了m, 也就是原来的my_method
-  end
-end
-C.new.my_method #= &gt; redefine my_method\n C#my_method()
-C.new.m #= &gt; C#my_method()
-</code></pre>
-<p>这里重新定义了my_method，但是别名引用的仍然是原始的那个方法。</p>
-<p>这里其实做了这样的事：</p>
-<ul>
-<li>给方法定义了别名（my_method多了别名m）</li>
-<li>重定义了这个方法（my_method）</li>
-<li>在新的方法中调用了老方法（m）</li>
-</ul>
-<p>新的my_method像是环绕在老的my_method方法之外，包装了新的功能，这种技巧就叫做环绕别名。</p>
-<p>环绕别名的一个潜在危险与加载有关，特别是多次环绕别名时，所以才会有alias_method_chain的兴起与衰亡。【书中rails部分有提到】</p>
-<p>而它最主要的问题在于它是一种猴子补丁。</p>
-</li>
-<li><p>细化封装器</p>
-<p>跟细化方法一样，用refine来定义，在新的方法中使用super来调用旧方法。</p>
-<p>细化封装器的作用范围从<code>using</code>开始，到文件末尾，这使得细化封装器比全局性的环绕别名更安全。</p>
-</li>
-<li><p>下包含包装器</p>
-<p>是环绕别名的一种替代方式。使用Module#prepend方法，可以覆写类的同名方法，同时可以通过super来调用旧方法。比如上面的例子，用pretend可以这么写：</p>
-<pre><code class="Ruby">module D
-  def my_method
-    puts &quot;redefine my_method&quot;
-    super
-  end
-end
-
-class C
-  prepend D
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-end
-C.new.my_method #= &gt; redefine my_method\n C#my_method()
-</code></pre>
-<p>module D 中的my_method覆盖了class C中的实例方法my_method。</p>
-</li>
-</ul>
-<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>这章的很多知识点，在后面rails源代码赏析中都可以寻到踪迹，特别是类扩展和方法包装器，看完这章，突然有种拿到武功秘籍的错觉：P</p>
-
-          
+          <p>《Ruby元编程》之类定义笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/29/ruby-metaprogramming-part4-class-defination/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2591,7 +1833,7 @@ C.new.my_method #= &gt; redefine my_method\n C#my_method()
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,650 words</span>
+              <span>1,660 words</span>
             </span>
           
 
@@ -2609,248 +1851,14 @@ C.new.my_method #= &gt; redefine my_method\n C#my_method()
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>关于这个问题，已经有很多大牛给到过解答，但是Google全网，并没有看到涉及这6个method的完整对比，</p>
-<p>稍完整的比如：<a href="http://web-k.github.io/blog/2012/12/19/ruby-require-load/" target="_blank" rel="noopener">About Ruby require / load / autoload / include / extend</a>，RubyChina上也有很精彩的解答：<a href="https://ruby-china.org/topics/25706" target="_blank" rel="noopener">基础 Ruby 中 Include, Extend, Load, Require 的使用区别</a>， 决定整理下各位大牛的解答，顺带加点个人的理解，对这6位进行下对比。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先给它们简单分类下：require，load, autoload均涉及到文件的加载，归为一类，剩下的include，prepend，extend归为第二类。先来看第一类。</p>
-<h4 id="require"><a href="#require" class="headerlink" title="require"></a>require</h4><ul>
-<li>kernel method，可以加载ruby文件，也可以加载外部的库。</li>
-<li>相比load ,针对同一个文件，它只加载一次</li>
-</ul>
-<h4 id="load"><a href="#load" class="headerlink" title="load"></a>load</h4><ul>
-<li>与require很类似，但是<code>load</code>会每次都重新加载文件。</li>
-<li>大部分情况下，除非你加载的库变动频繁，需要重新加载以获取最新版本，一般建议用require来代替load.</li>
-</ul>
-<h4 id="autoload"><a href="#autoload" class="headerlink" title="autoload"></a>autoload</h4><ul>
-<li>用法稍稍不同：<code>autoload(const_name, &#39;file_path&#39;)</code>, 其中const_name 通常是模块名，或者类名。</li>
-<li>对于load和require，在ruby运行到require／load时，会立马加载文件，而autoload则只有当你调用module或者class时才会加载文件。</li>
-</ul>
-<p>看个例子来感受下三者的不同：【#= &gt; 表示输出结果】</p>
-<pre><code class="Ruby">## module_m.rb
-module M
-  puts &#39;load a module&#39;
-  class A
-    def self.hello
-      puts &#39;hello&#39;
-    end
-  end
-end
-
-## test.rb
-
-## require ：只加载一次
-puts &quot;first load: #{(require &#39;./module_m.rb&#39;)}&quot;
-puts &quot;load again: #{(require &#39;./module_m.rb&#39;)}&quot;
-#= &gt; load a module
-#= &gt; first load: true
-#= &gt; load again: false
-
-# load ：多次加载
-puts &quot;first load: #{(load &#39;./module_m.rb&#39;)}&quot;
-puts &quot;load again: #{(load &#39;./module_m.rb&#39;)}&quot;
-#= &gt; load a module
-#= &gt; first load: true
-#= &gt; load a module
-#= &gt; load again: true
-
-# autoload ：调用时才加载
-puts &quot;first load: #{autoload(:M,&#39;./module_m.rb&#39;)}&quot;
-puts &quot;load again: #{autoload(:M,&#39;./module_m.rb&#39;)}&quot;
-M::A::hello
-#= &gt; first load:
-#= &gt; load again:
-#= &gt; hello
-
-</code></pre>
-<p>不过现在应该很少有rubyist用autoload了。</p>
-<p>2011年，Matz针对 Autoload will be dead，有如下的声明：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpq5qxl950j30dx06iwfp.jpg" alt=""></p>
-<p>至于原因，则是autoload本身在多线程环境下存在基本的缺陷，这个我并没有尝试过，不是很理解。stack overflow上<a href="https://stackoverflow.com/questions/804297/when-to-use-require-load-or-autoload-in-ruby?rq=1&amp;utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa" target="_blank" rel="noopener">When to use <code>require</code>, <code>load</code> or <code>autoload</code> in Ruby?</a>有位是这么说的：</p>
-<blockquote>
-<p>The lazyness of autoload sounds nice in theory, <strong>but many Ruby modules do things like monkey-patching other classes, which means that the behavior of unrelated parts of your program may depend on whether a given class has been used yet or not</strong>。</p>
-</blockquote>
-<p>他提到了猴子补丁的情况。如果有例子，应该会更好理解。</p>
-<p>顺带提一句，Rails的ActiveRecord中大量使用的autoload，跟这里的autoload不是一回事，它是module ActiveSupport::Autoload中的方法。</p>
-<h4 id="include"><a href="#include" class="headerlink" title="include"></a>include</h4><p>当一个类或者模块 include了一个module M时， 则该类或者模块就拥有了该module M的方法。</p>
-<p>当涉及多个类调用同一方法时，这个方法就可以抽离出来，放入module中，然后类只需include该module即可。这样的做法也正体现了DRY原则。</p>
-<p>例如：</p>
-<pre><code class="Ruby">module M
-  def my_method; puts &quot;hello&quot;; end
-end
-
-class C
-  include M
-end
-
-class D
-  include M
-end
-
-C.new.my_method #= &gt; hello
-D.new.my_method #= &gt; hello
-</code></pre>
-<p>include的另一种较常见的用法是<strong>搭配extend</strong>，实现<strong>包含并扩展</strong>类的功能，同时可能还会搭配着钩子方法included。在一些常用gem的源代码中，可以看到这类用法的身影。</p>
-<h4 id="extend"><a href="#extend" class="headerlink" title="extend"></a>extend</h4><p>当一个类或者对象使用extend 时，相当于<strong>打开了该类或者该对象的单件类</strong>，为其添加了单件方法。</p>
-<p>比如：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
-
-class C
-  extend MyModule
-end
-
-obj = []
-obj.extend MyModule
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
-<p>使用include实现同样的效果：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
-
-class C
-  class &lt;&lt; self
-    include MyModule
-  end
-end
-
-obj = []
-class &lt;&lt; obj
-  include MyModule
-end
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
-<h4 id="prepend"><a href="#prepend" class="headerlink" title="prepend"></a>prepend</h4><p>相比include，extend， prepend「Available since Ruby 2」的知名度和使用率要少很多。</p>
-<p>prepend和include很像，当一个类prepend或include 一个模块时，该模块中的方法会成为该类的实例方法。</p>
-<p>二者的区别在于，模块在祖先链中的位置。 使用include时，模块在包含它的类之上。如果是prepend， 则是在prepend它的类之下。而祖先链中位置的不同，决定了方法调用的顺序。</p>
-<p>比如下面这个例子：</p>
-<pre><code class="Ruby">module M1
-  def hello
-    puts &quot;hello! this is module M1&quot;
-  end
-end
-module M2
-  def hello
-    puts &quot;hello! this is module M2&quot;
-  end
-end
-
-class C
-  prepend M1
-  include M2
-  def hello
-    puts &quot;hello! this is class C&quot;
-  end
-end
-
-C.ancestors #=&gt; [M1, C, M2, Object, Kernel, BasicObject]
-
-C.new.hello #=&gt; hello! this is module M1
-</code></pre>
-<p>这里，祖先链的顺序是M1在最前面，所以即使C中定义了一个method hello， 也不会被调用，因为module M1覆写了这个method。</p>
-<p>从上面的例子也可以看出，prepend是很方便的方法包装器，假定我们想要给class C的hello method添加一些其他的功能实现，则可以这样写：</p>
-<pre><code class="Ruby">module M1
-  def hello
-    puts &quot;add something outside C#hello&quot;
-    super
-  end
-end
-...... # 省略module M2
-class C
-  prepend M1
-  include M2
-  def hello
-    puts &quot;hello! this is class C&quot;
-  end
-end
-
-C.new.hello
-#=&gt; add something outside C#hello
-#=&gt; hello! this is class C
-</code></pre>
-<p>在module M1中覆写了hello，同时使用了super，调用了C中原来的hello method。</p>
-<h4 id="extend-require-include中，module在祖先链中的差异"><a href="#extend-require-include中，module在祖先链中的差异" class="headerlink" title="extend, require, include中，module在祖先链中的差异"></a>extend, require, include中，module在祖先链中的差异</h4><p>前面已经提到在使用include时，模块在包含它的类之上。如果是prepend， 则是在prepend它的类之下。那么使用extend，模块会出现在哪里？</p>
-<p>根据之前的例子，改编了下：</p>
-<pre><code class="ruby">module M1
-  def hello
-    puts &quot;hello! this is module M1::hello&quot;
-  end
-end
-module M2
-  def hello
-    puts &quot;hello! this is module M2&quot;
-  end
-end
-
-## 添加 M3
-module M3
-  def hello
-    puts &quot;hello! this is module M3&quot;
-  end
-end
-
-class C
-  prepend M1
-  include M2
-  extend M3
-  def hello
-    puts &quot;hello! this is C#hello&quot;
-  end
-end
-
-C.ancestors #=&gt; [M1, C, M2, Object, Kernel, BasicObject]
-</code></pre>
-<p>此时，C的祖先链中并没有出现M3，那么M3在哪里？</p>
-<p>当类extend某个module时，其实是扩展了该类的类方法，所以，可以在该类的单件类的祖先链里面找找。</p>
-<p>承接上面的例子， 查看C单件类的祖先链：</p>
-<pre><code class="ruby">C.singleton_class.ancestors
-#=&gt; [#&lt;Class:C&gt;, M3, #&lt;Class:Object&gt;,#&lt;Class:BasicObject&gt;,Class, Module, Object, Kernel,BasicObject]
-</code></pre>
-<p>可以看到，M3在该类的单件类的上方。此时调用C.hello, 会得到</p>
-<pre><code class="ruby">C.hello #=&gt; hello! this is module M3
-</code></pre>
-<p>当然，如果你在C中定义了类方法hello，则会调用C自定义的这个类方法，比如：</p>
-<pre><code class="Ruby">...... # 省略module M1 M2 M3
-class C
-  ...... # 同上，省略
-
-  def self.hello
-    puts &quot;hello! This is C.hello&quot;
-  end
-end
-C.hello #=&gt; hello! This is C.hello
-</code></pre>
-<p>如果想要调用M3中的hello，在C的hello中加上super即可。</p>
-<pre><code class="ruby">...... # 省略module M1 M2 M3
-class C
-  ...... # 同上，省略
-
-  def self.hello
-    puts &quot;hello! This is C.hello&quot;
-    super
-  end
-end
-C.hello
-#=&gt; hello! This is C.hello
-#=&gt; hello! this is module M3
-</code></pre>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://bugs.ruby-lang.org/issues/5653" target="_blank" rel="noopener">I strongly discourage the use of autoload in any standard libraries” (Re: autoload will be dead)</a></p>
-<p><a href="http://web-k.github.io/blog/2012/12/19/ruby-require-load/" target="_blank" rel="noopener">About Ruby require / load / autoload / include / extend</a></p>
-<p><a href="https://ruby-china.org/topics/25706" target="_blank" rel="noopener">基础 Ruby 中 Include, Extend, Load, Require 的使用区别</a></p>
-<p><a href="https://stackoverflow.com/questions/804297/when-to-use-require-load-or-autoload-in-ruby?rq=1&amp;utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa" target="_blank" rel="noopener">When to use <code>require</code>, <code>load</code> or <code>autoload</code> in Ruby?</a></p>
-
-          
+          <p>读完 Ruby 元编程后的收获。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/28/differences-among-require-load-autoload-extend-include-prepend-in-ruby/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -3066,7 +2074,7 @@ C.hello
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

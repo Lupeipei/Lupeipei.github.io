@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>692 words</span>
+              <span>688 words</span>
             </span>
           
 
@@ -387,115 +387,14 @@
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用undef_method， 遇到的一个问题，想不明白rails是如何处理的。最后在rubyChina上<a href="https://ruby-china.org/topics/37438" target="_blank" rel="noopener">发帖</a>求助，没成想得到了很耐心的解答，贴上，以期可飨同惑者。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先看一段调用undef_method的代码：</p>
-<pre><code class="ruby">module MyModule
-  def my_value
-    &quot;my_value in MyModule&quot;
-  end
-end
-
-class MyClass
-  attr_accessor :my_value
-
-  def initialize(value)
-    @my_value = value
-  end
-end
-
-class MySubClass &lt; MyClass
-  include MyModule
-  undef_method :my_value
-end
-
-object = MySubClass.new(20)
-puts object.my_value
-</code></pre>
-<p>执行，很明显，会报错，抛出<strong>NoMethodError</strong></p>
-<pre><code>undefined method `my_value&#39; for #&lt;MySubClass:0x007fbdc4065818 @my_value=20&gt;
-</code></pre><p> 没毛病，正常，ruby 2.5中对<a href="https://ruby-doc.org/core-2.5.0/Module.html#method-i-undef_method" target="_blank" rel="noopener">undef_method</a> 的定义就是这样的，prevents the current class from responding to calls to the named methods。</p>
-<p>But，你会发现rails中有一个神奇的地方，以一个简单的user model为例：</p>
-<p>user model含有字段name， 同时include了一个module UserAddon，使用undef_method来禁止调用引入的name方法，按照undef_method的定义， 此时User的对象调用name时，应该会报错，但是进入终端后，发现没有，反而返回了正确的结果。</p>
-<p>代码如下：</p>
-<pre><code class="ruby">## app/models/user.rb
-
-# == Schema Information
-#
-# Table name: users
-#
-#  id                          :integer          not null, primary key
-#  email                       :string(254)
-#  name                        :string(254)
-#  password_digest             :string(254)
-#  created_at                  :datetime         not null
-#  updated_at                  :datetime         not null
-
-class User &lt; ActiveRecord
-  include UserAddon
-  undef_method :name
-end
-
-## app/models/users_addon.rb
-module UserAddon
-  def name
-    &quot;hello&quot;
-  end
-end
-</code></pre>
-<p>这时，rails c 进入console：</p>
-<pre><code class="ruby">user = User.first
-
-# =&gt; #&lt;User id: 1, name: &quot;admin&quot;, email: &quot;test@gmail.com&quot;, created_at:……&gt;
-
-user.methods.include?(:name)
-# =&gt; false
-
-user.name
-
-# =&gt; &quot;admin&quot;
-
-$ user.name
-
-# =&gt; Couldn&#39;t locate a definition for user.name
-
-user.respond_to?(:name)
-# =&gt; true
-</code></pre>
-<p>使用pry的$ ，找不到user.name的定义，但是执行user.name却返回了正确的结果，此时一定调用了method_missing。但是，如何查看rails是如何实现的呢？</p>
-<p>ruby元编程中在有关 rails的属性方法中曾经提到，当第一次访问一个属性时，这个属性是一个幽灵方法，ActiveRecord::Base # method_missing() 会把它转换成一个真实的方法，同时创建出读，写，查询方法，比如上面的name，会创建name, name=, name?，这样下次就可以直接调用。</p>
-<p>但是，这里很显然，user.methods.include?(:name)返回了false，这里并没有创建name这个方法，那么rails是如何让user.name 返回了”admin”的呢？</p>
-<p>这里附上来自<a href="https://ruby-china.org/IChou" target="_blank" rel="noopener">IChou</a> 大神的解答：</p>
-<p>使用undef_method :name后，调用user.name, 它会落入下面的 method_missing 方法中:</p>
-<pre><code class="ruby"># lib/active_model/attribute_methods.rb:425
-
-def method_missing(method, *args, &amp;block)
-  if respond_to_without_attributes?(method, true) # =&gt;  这里是 false
-    super
-  else
-    match = matched_attribute_method(method.to_s)
-    #&lt;struct ActiveModel::AttributeMethods::ClassMethods::AttributeMethodMatcher::AttributeMethodMatch target=&quot;attribute&quot;, attr_name=&quot;name&quot;, method_name=&quot;name&quot;&gt;
-    match ? attribute_missing(match, *args, &amp;block) : super
-  end
-end
-
-def attribute_missing(match, *args, &amp;block)
-  __send__(match.target, match.attr_name, *args, &amp;block)
-  # match.target =&gt; &quot;attribute&quot;， 这里调用了自身的 attribute 方法
-end
-
-# lib/active_record/attribute_methods/read.rb:76
-def _read_attribute(attr_name) # :nodoc:
-  @attributes.fetch_value(attr_name.to_s) { |n| yield n if block_given? }
-end
-alias :attribute :_read_attribute
-private :attribute
-</code></pre>
-<p>「也就是最后调用@attributes.fetch_value(attr_name.to_s) ，user.name的返回了正确的结果，而不是如预期所想的那样抛出NoMethodError。」</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/rails/rails/blob/master/activemodel/lib/active_model/attribute_methods.rb" target="_blank" rel="noopener">rails attribute methods</a></p>
-<p><a href="https://apidock.com/ruby/Module/undef_method" target="_blank" rel="noopener">undef method</a></p>
-
-          
+          <p>使用undef_method， 遇到的一个问题，想不明白rails是如何处理的。最后在rubyChina上<a href="https://ruby-china.org/topics/37438" target="_blank" rel="noopener">发帖</a>求助，没成想得到了很耐心的解答，贴上，以期可飨同惑者。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/09/05/when-using-undef-method-with-rails-attribute-methods/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -652,50 +551,14 @@ private :attribute
 
       
         
-          
-            <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>数据迁移中遇到的一个问题，看个例子：</p>
-<pre><code class="ruby">### app/models/company.rb
-class Company &lt; ActiveRecord::Base
-  ……
-end
-
-### app/models/firm.rb
-class Firm &lt; Company
-  ……
-end
-</code></pre>
-<p>在company中，有一个字段type，按照惯例，会开启单表继承STI功能，Firm不再只是Company的一个普通的子类subclass，它与Company共享着同一个表单。</p>
-<p>这时，需要给company添加了一个attribute，比如 creator，同时迁移数据，firm中的creator内容，需要单独调用form中的方法get_creator：</p>
-<pre><code class="ruby">class AddCreatorToCompanies &lt; ActiveRecord::Migration[5.2]
-  class Company &lt; ActiveRecord::Base; end
-
-  def change
-    add_column :companies, :creator, :string
-
-    Comany.where(type: &quot;Firm&quot;).find_each do |firm|
-      firm.update(creator: firm.get_creator)
-    end
-  end
-end
-</code></pre>
-<p>执行时，终端报错，显示：</p>
-<pre><code>Invalid single-table inheritance type: Firm is not a subclass of AddCreatorToCompanies::Company.
-</code></pre><h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在Company中添加  <strong>self.inheritance_column</strong>，触发单表继承STI。</p>
-<pre><code class="ruby">class AddCreatorToComanies &lt; ActiveRecord::Migration[5.2]
-  class Company &lt; ActiveRecord::Base
-    self.inheritance_column = &quot;_type&quot;
-  end
-
-  def change
-    add_column :companies, :creator, :string
-    ……
-  end
-end
-</code></pre>
-<p>再次执行即可。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://api.rubyonrails.org/classes/ActiveRecord/Inheritance.html" target="_blank" rel="noopener">Single table inheritance</a></p>
-
-          
+          <p>数据迁移中遇到的一个问题。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/09/04/migrate-on-sti/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -852,60 +715,15 @@ end
 
       
         
-          
-            <p>昨晚9点不到就睡了，简直了，I want to marry my bed.</p>
+          <p>昨晚9点不到就睡了，简直了，I want to marry my bed.</p>
 <p>这周基本已经停了这项练习，真的是很有难度，决定不给自己平添焦虑，填上这最后一篇，暂时say bye。</p>
-<hr>
-<ul>
-<li>变色的杯子，根据水温，杯子中饮品的成分，自动变换颜色，这样会让饮品变得更好喝?</li>
-</ul>
-<ul>
-<li>卷寿司神器，包寿司的时候，新手容易卷不好，把海苔放进去，然后放入米饭和食材，它会自动帮你卷好寿司。</li>
-</ul>
-<ul>
-<li>过敏源提醒设备，类似手环，用户输入自己的过敏源，一旦检测到用户可能在接近过敏源时，发出警告，以防用户产生过敏。【从此，远离芥末】</li>
-</ul>
-<ul>
-<li>美食推荐，不同于一般的app推荐，场景如下，你在看一部电影，里面有美食场景，你可能对某款美食特别钟意，按下暂停键，截图，上传到app，它会告诉你，你所在的附近哪里有这款美食或者类似的美食，并推荐商家及用户评价，如果没有，它也会智能推荐与之味道相似的可替代食品。</li>
-</ul>
-<ul>
-<li>哼歌记录。当你哼歌时，可以开启记录，它会记录下你哼过的歌，时长，音色，音调，同时记录下你爱哼的歌，每月／季度／年智能播放你的哼歌记录，相当于一个哼歌的时间记录仪。</li>
-</ul>
-<ul>
-<li>夜路鼓励灯，走夜路的时候，如果害怕，可以打开这个，它除了照明，还会语音播报，告诉你前方路况，还有多久就到家了，还会播放各种笑话逗你，转移注意力。</li>
-</ul>
-<ul>
-<li>漂游心情笺，每个人都可以在里面随手写一段话或者提个问题，发出去，然后他人随机阅读，每一个回复该笺的人，如果得到该笺主人的点赞，就会获得一定的奖励。</li>
-</ul>
-<ul>
-<li>点子客栈，一间收集好点子的客栈，对于提出好点子的顾客，可享用美食</li>
-</ul>
-<ul>
-<li>会唱歌的饮料，扫码瓶身，会播放音乐，只要你跟着音乐哼，唱完后，瓶子自动开启，享用。</li>
-</ul>
-<ul>
-<li>模拟插花app，模拟插花，给到素材，自己去组合。</li>
-</ul>
-<ul>
-<li>呼吸监测手链，检查你的呼吸情况，告诉你如何调整呼吸。</li>
-</ul>
-<ul>
-<li>一款通过踩单车就能充电的手机，把手机放在单车的某个位置，踩单车产生的动力可以给手机充电。</li>
-</ul>
-<ul>
-<li>防水的键盘，永远不用担心饮料或者茶水溅到键盘上就得去修了。</li>
-</ul>
-<ul>
-<li>显示屏可以收缩的笔记本，用双手拉显示屏两边，拉大显示屏，同时保证成像精度不受损，这样就可以不用买显示器了。</li>
-</ul>
-<ul>
-<li>表情包生成器应用，上传一张人脸图片，即可生成一系列基于该人脸图片的表情包。</li>
-</ul>
-<ul>
-<li>屏幕清洁仪，类似女孩们用的洁面仪，不过这个是用来清洁电脑屏幕和键盘的，按一下开关，开始清扫屏幕和键盘，像是一个迷你的智能扫地机。</li>
-</ul>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/09/01/ideas-sharing-003/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1062,84 +880,14 @@ end
 
       
         
-          
-            <p>记录下踩过的一个坑：</p>
-<p>类A与类B存在一对多关系，需要校验在创建b时，a存在，分别使用validates_presence_of :a 与 validates_presence_of :a_id，会发现当a尚未保存时，前者会成功创建b，后者则不行。</p>
-<p>看个简单的例子：</p>
-<p>group 与post 之间是一对多关系， post含字段group_id。</p>
-<pre><code class="Ruby">### app/models/post.rb
-class Post &lt; ApplicationRecord
-  belongs_to :group, optional: true
-  ## 为了方便找出两者的差异，这里使用optional: true，post创建时，group_id可为nil
-
-  validates :content, presence: true
-end
-
-#### app/models/group.rb
-class Group &lt; ApplicationRecord
-  belongs_to :user
-  has_many :posts
-
-  validates :title, presence: true
-end
-</code></pre>
-<p>此时，在终端执行：</p>
-<pre><code class="Ruby">post = Post.new(content: &quot;this is a post&quot;)
-post.save
-
-# =&gt; true
-</code></pre>
-<p>接下来分别<code>validates_presence_of :group_id</code>和<code>validates_presence_of :group</code>来给post添加有效性校验，要求group必须存在。</p>
-<ul>
-<li><p>在post.rb中添加<code>validates_presence_of :group_id</code></p>
-<p>进入console，执行如下代码：</p>
-<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
-
-post.save
-
-#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
-
-group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
-
-post = Post.new(content: &quot;my post&quot;)
-
-post.group = group
-
-post.save
-
-#=&gt; rollback, 返回false
-
-post.save!
-
-#=&gt; rollback, 显示 Validation failed: Group can&#39;t be blank
-</code></pre>
-<p>第一次创建post，没有给到group，无法新建，正常。</p>
-<p>第二次创建post，使用post.group = group  给post的group赋值， 但是，你会发现虽然post.group有记录，不为nil， 但是post.group_id 依然为nil，保存时，校验group_id，为nil, 报错。</p>
-</li>
-<li><p>在post.rb中添加<code>validates_presence_of :group</code></p>
-<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
-
-post.save
-
-#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
-
-group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
-
-post = Post.new(content: &quot;my post&quot;)
-
-post.group = group
-
-post.save
-
-#=&gt; 返回true, 依次在Group，Post中插入了一条新的记录
-</code></pre>
-<p>第一次创建post，没有给到group，无法新建，正常，同<code>validates_presence_of :group_id</code> 的效果一样。</p>
-<p>第二次创建post，使用post.group = group  给post的group赋值，此时，虽然post.group_id 依然为nil，但是由于post.group不为nil，检验通过，group存在，成功创建。</p>
-<p>很显然，当我们创建post时，需要检验group必须存在，并不要求此时group已经创建，后者才是我们需要的校验方式。</p>
-</li>
-</ul>
-
-          
+          <p>记录下踩过的一个坑：</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/28/trouble-with-validates-presence-of/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1296,174 +1044,14 @@ post.save
 
       
         
-          
-            <p>之前看shared_context那块，对使用metadata来调用shared_context不是很理解，Google下相关文档，终于整明白了，记录下metadata的定义和使用。</p>
-<h4 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h4><p>官网上V3.8 的rspec-core中<a href="https://relishapp.com/rspec/rspec-core/v/3-8/docs/metadata" target="_blank" rel="noopener">metadata</a>部分，含三部分current_example, described class, User-defined metadata，但是没有明确的定义metadata[也可能是我没找到……]。</p>
-<p><a href="https://www.tutorialspoint.com/rspec/rspec_metadata.htm" target="_blank" rel="noopener">tutorials point</a>针对metadata给到的定义：</p>
-<pre><code>data about your describe, context and it blocks.
-</code></pre><p><a href="https://pragprog.com/book/rspec3/effective-testing-with-rspec-3" target="_blank" rel="noopener">Effective Testing with RSpec 3</a> 在chapter8中提到Metadata解决了RSpec中的一个特殊问题：</p>
-<blockquote>
-<p> Keep information about the context your specs are running in</p>
-</blockquote>
-<p>类似一个信息存储盒，里面存储了如下信息：</p>
-<ul>
-<li>Example configuration(for example, marked as skipped or pending)</li>
-<li>Source code locations</li>
-<li>Status of the previous run</li>
-<li>How one example runs differently than others</li>
-</ul>
-<p>可以把metadata看成一个带着example group相关信息的hash对象。</p>
-<p>Metadata中默认的keys包括：</p>
-<blockquote>
-<p> :description, :full_description, :described_class, :file_path, :example_group, :last_run_status ……..</p>
-</blockquote>
-<p>想要查看metadata的内容，需要通过当前的example来调用metadata这个method，而example对象的引用，可以通过 it, subject, let , before, after, around 后接block来获取。</p>
-<p>看个简单的例子感受下。</p>
-<p>安装Rspec后，在rails项目中随意跑一个example，比如：</p>
-<pre><code class="ruby">## spec/metadata_spec.rb
-
-require &#39;rails_helper&#39;
-
-RSpec.describe :hash do
-  it &quot;hello&quot; do |example|
-    pp example.metadata
-  end
-end
-</code></pre>
-<p>执行后，输出如下结果：</p>
-<pre><code class="ruby">{:block=&gt;
-  #&lt;Proc:0x007fcd83b1dc28@/Users/xxxx/xxx/spec/metadata_spec.rb:4&gt;,
- :description_args=&gt;[&quot;hello&quot;],
- :description=&gt;&quot;hello&quot;,
- :full_description=&gt;&quot;hash hello&quot;,
- :described_class=&gt;:hash,
- :file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
- :line_number=&gt;4,
- :location=&gt;&quot;./spec/metadata_spec.rb:4&quot;,
- :absolute_file_path=&gt;&quot;/Users/xxxx/xxx/spec/metadata_spec.rb&quot;,
- :rerun_file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
- :scoped_id=&gt;&quot;1:1&quot;,
- ...........
- :last_run_status=&gt;&quot;unknown&quot;}
-</code></pre>
-<p>这里输出的都是metadata默认的内容，你也可以自定义metadata。</p>
-<p>Rspec官网上举了一些例子，这里看一个简单的，给你的example加上tag fast：</p>
-<pre><code class="ruby">## spec/metadata_spec.rb
-
-require &#39;rails_helper&#39;
-
-RSpec.describe :hash do
-  it &quot;hello&quot;, fast: true do |example|
-    pp example.metadata
-  end
-end
-
-## 也可以写成it &quot;hello&quot;, :fast do  |example|, Rspec默认缺省的value为true
-</code></pre>
-<p>执行后，会发现输出结果中有<code>:fast=&gt;true</code>。</p>
-<p>如果是在RSpec.describe中添加fast，则内嵌的所有example的metadata中都会带有<code>:fast=&gt;true</code>。</p>
-<h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>通过metadata可以给example或者example group添加同样的metadata，这样执行时，可以选择执行匹配要求的example了，此外也可以将module批量include到指定的example group中【后面会提到】。</p>
-<p>那么，如何实现批量添加呢？</p>
-<p>使用Rspec的<a href="https://www.rubydoc.info/github/rspec/rspec-core/RSpec%2FCore%2FConfiguration:define_derived_metadata" target="_blank" rel="noopener">config.define_derived_metadata</a>。</p>
-<p>看两个场景：</p>
-<ul>
-<li>给某个目录下的所有example group都添加上同一个metadata</li>
-<li>有条件地添加特定的metadata</li>
-</ul>
-<p><strong>指定目录下的所有example group都添加上同一个metadata</strong></p>
-<p>用过Rspec都知道，所有spec/controllers下的文件，都不需要添加type: :controller 这个metadata，RSpec会给所有该目录下的example group默认添加上type: :controller,这个是怎么实现的呢？</p>
-<p>像这样：</p>
-<pre><code class="ruby">### spec/spec_helper.rb
-
-RSpec.configure do |config|
-  config.define_derived_metadata(file_path: /spec\/controllers/) do |meta|
-    meta[:type] = :controller
-  end
-end
-</code></pre>
-<p>再比如：给spec/unit下的所有example group都添加上focus这个tag。</p>
-<pre><code class="ruby">### spec/spec_helper.rb
-
-RSpec.configure do |config|
-  config.define_derived_metadata(file_path: /spec\/unit/) do |meta|
-    meta[:focus] = true
-  end
-end
-</code></pre>
-<p><strong>有条件地添加特定的metadata</strong></p>
-<p>这里看一个实用性的例子，有关<a href="https://relishapp.com/rspec/rspec-core/docs/expectation-framework-integration/aggregating-failures" target="_blank" rel="noopener">aggregate_failures</a>【没用过aggregate_failures？参考部分附上了aggregate_failure的简单说明，可有助理解】。</p>
-<p>要求除了已经添加aggregate_failures为false的example group，所有其他的example group都将aggregate_failure设置为true。</p>
-<p>比如在clazz_a和clazz_b中，添加了aggregate_failures为false， 现在希望除了clazz_a和clazz_b外，其他都默认指定aggregate_failures为true。</p>
-<pre><code class="ruby">### spec/models/clazz_a_spec.rb
-RSpec.descirbe :clazz_a, aggregate_failures: false do
-  context &quot;xxx&quot; do
-    ......
-  end
-end
-
-### spec/models/clazz_b_spec.rb
-RSpec.descirbe :clazz_b, aggregate_failures: false do
-  context &quot;xxx&quot; do
-    ......
-  end
-end
-</code></pre>
-<p>实现的方式也很简单：</p>
-<pre><code class="ruby">### spec/spec_helper.rb
-
-RSpec.configure do |config|
-  config.define_derived_metadata do |meta|
-    meta[:aggregate_failures] = true unless meta.key?(:aggregate_failures)
-  end
-end
-</code></pre>
-<p>如果example group中已经添加了aggregate_failures，则pass，否则添加aggregate_failures为true。</p>
-<p>Cool!</p>
-<h4 id="back-to-shared-context"><a href="#back-to-shared-context" class="headerlink" title="back to shared_context"></a>back to shared_context</h4><p>回到之前困惑的shared_context 中。</p>
-<p>我们知道，通过使用include_context “xxx” 可以调用定义的shared_context，同样，也可以通过给example添加metadata来调用。</p>
-<p>比如：</p>
-<pre><code class="ruby">#### spec/support/shared_stuff.rb
-
-RSpec.shared_context &quot;shared stuff&quot; do
-  let(:h) { { :hello =&gt; &quot;world&quot; } } ## 没啥意义的context，仅仅用来举例
-end
-RSpec.configure do |config|
-  config.include_context &quot;shared stuff&quot;, include_shared: true
-end
-</code></pre>
-<p>使用时，只要给example group添加上<code>include_shared: true</code>这个metadata即可, 效果等同于调用了<code>include_context &quot;shared stuff&quot;</code>。</p>
-<pre><code class="ruby">#### spec/shared_stuff_example.rb
-
-require &#39;rails_helper&#39;
-require &quot;support/shared_stuff.rb&quot;
-
-RSpec.describe &quot;this is an example&quot;, :include_shared do
-  it { expect(h[:hello]).to eq &quot;world&quot; }
-end
-</code></pre>
-<p>执行，pass。</p>
-<p>上面的例子，可以理解为所有添加了<code>include_shared： true</code>的example group 都执行了<code>include_context &quot;shared stuff&quot;</code> ,事实上，确实如此。</p>
-<p>再看一个更常见的例子：</p>
-<p>我们在一个module Signin中定义了一些实现不同用户登录的methods【比如sgin_in_admin, sign_in_guest……】，现在希望在spec/controller下的所有example group中都可以调用这些method的。</p>
-<p>使用metadata可以这样实现：</p>
-<pre><code class="ruby">### spec/support/sign_in.rb
-
-module SignIn
-  ..... ### methods
-end
-
-RSpec.configure do |config|
-  config.include SignIn, type: :controller
-end
-</code></pre>
-<p>这样，所有metadata中type为controller的example group便都会执行<code>include SignIn</code>了。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://relishapp.com/rspec/rspec-core/docs/metadata" target="_blank" rel="noopener">Rspec core metadata</a></p>
-<p><a href="https://relishapp.com/rspec/rspec-core/docs/example-groups/shared-context" target="_blank" rel="noopener">Rspec core shared context</a></p>
-<p><a href="https://pragprog.com/book/rspec3/effective-testing-with-rspec-3" target="_blank" rel="noopener">Effective Testing with RSpec 3</a></p>
-<p>附：</p>
-<p>这里简单说明下aggregate_failure是干嘛用的。常规情况下，当执行一组exceptions时，在执行到第一个失败的exception后程序就跳出这个example了，不会继续执行后面的exception，直接开始执行下一个example，而通过aggregate_failure，程序会执行完该组所有的exceptions，然后列出所有failures的exceptions，再去执行下一个example。</p>
-
-          
+          <p>之前看shared_context那块，对使用metadata来调用shared_context不是很理解，Google下相关文档，终于整明白了，记录下metadata的定义和使用。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/25/metadata-in-RSpec/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1620,67 +1208,15 @@ end
 
       
         
-          
-            <p>感觉选了一个特别苦逼的练习，有时大半天都想不出一个idea，光在那里发呆，看着一片空白的typora，胡思乱想，如果有一个idea生成器该多好，然后思绪开始各种飘，也许吃点东西会更容易想出来，嗯，然后专注啃零食，也许吃点水果更健康……</p>
+          <p>感觉选了一个特别苦逼的练习，有时大半天都想不出一个idea，光在那里发呆，看着一片空白的typora，胡思乱想，如果有一个idea生成器该多好，然后思绪开始各种飘，也许吃点东西会更容易想出来，嗯，然后专注啃零食，也许吃点水果更健康……</p>
 <p>祈祷下周还能整出003来。</p>
-<hr>
-<p>Let ideas flying.</p>
-<ul>
-<li>防雨鞋，下雨的时候，按一下鞋子上的按钮，会形成一层透明保护层，保证鞋不会被雨打湿</li>
-</ul>
-<ul>
-<li>电量传输，手机快要没电的时候，又没有充电的地方，类似蓝牙传文件，可以使用蓝牙与另一个手机完成连接，然后传送电量</li>
-</ul>
-<ul>
-<li>音乐辨识头像，根据用户的听歌记录和喜好，生成专属头像</li>
-</ul>
-<ul>
-<li>肢体语言翻译app，无法言语的人，可以通过跟别人比划手势来交流，但是正常人可能并不知道如何解读，用这个肢体语言app对着别人做的手势，会翻译出对应的含义，同时录入自己想说的话，它会转换成肢体语言，给别人看【呃，既然这样，他们为什么不通过打字来交流呢？】</li>
-</ul>
-<ul>
-<li>租房订阅，根据用户的设置，房间的大小，区域，价位，然后定时推送符合或者基本符合的租房信息</li>
-</ul>
-<ul>
-<li>印有二维码的T恤，如果想让更多人认识你，可以让别人扫一下你的二维码，就可以获取到你的故事，了解你的喜恶。</li>
-</ul>
-<ul>
-<li>代码记录，记录下你敲代码的速度和容易出错的地方，提醒你下次应该如何改进</li>
-</ul>
-<ul>
-<li>坐姿提醒贴，贴在你的颈椎处，如果发现坐姿不正确，发出警告，纠正坐姿。</li>
-</ul>
-<ul>
-<li>线下超市扫码买单，用户自己拿完商品，打开超市对应的app，对着商品的二维码扫一扫，商品直接添加到购物车，结算，完成买单，走人，再也不用排队了。【亚马逊有过这种结算方式，比这更高级】</li>
-</ul>
-<ul>
-<li>一颗可以无限次发芽的种子，给到阳光，水，土壤就可以发芽，生长，开花，最后叶落归根，还是一颗种子，明年可以继续发芽，开花，结果，循环往复。【希望它结的是人参果】</li>
-</ul>
-<ul>
-<li>红糖馒头生成器，给机器里，添加红糖和面粉，水，稍等一些时间，就可以吃到热腾腾的红糖馒头。【我一定是吃多了】</li>
-</ul>
-<ul>
-<li>瘦胳膊神器，类似手套，戴上，启动，它会带动双臂开始各种摇摆，瘦胳膊同时兼减缓久坐。【减肥是人类永久的话题】</li>
-</ul>
-<ul>
-<li>atom快捷键智能提醒，太多的快捷键你记不住，没关系，atom记录下你的使用习惯，当你下次作出同样的操作时，弹窗，告诉你可以用哪个快捷键。</li>
-</ul>
-<ul>
-<li>美景即时体验，选择你想要看的美景，比如欧洲的某个小岛，中国的某个古镇，戴上眼镜，AR即时呈现此时的那个地方，是什么样子。</li>
-</ul>
-<ul>
-<li>奶茶自制机，给到茶，牛奶，糖，即可，它会自己煮好茶，然后做出一杯美味的奶茶</li>
-</ul>
-<ul>
-<li>鞋子自清洁器，这个机器最好别那么大容量，是比较迷你的，使用时，放入清洁液，然后将脏脏的鞋子放进去，点击开始即可，几分钟后，鞋子干干净净。</li>
-</ul>
-<ul>
-<li>不会脱落的船袜，套上去之后，不会时不时脱落。</li>
-</ul>
-<ul>
-<li>先秦上古时期古文语音版，类似音乐app，但是很纯粹，没广告没评论没小视频，只有先秦各大家的作品，塞上耳机，上下班路上可以听。</li>
-</ul>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/24/ideas-sharing-002/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1837,102 +1373,14 @@ end
 
       
         
-          
-            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>测试时遇到的一个问题:</p>
-<blockquote>
-<p>新建一个对象，该对象新建后会自动保存，现在需要测试其无法保存的情景，使得obj.save返回为false。</p>
-</blockquote>
-<p>踩坑：</p>
-<p>obj这个对象的创建中有一个属性attr设置了必填，同时该attr的值来自另一个对象a， 参考先前的代码，解决的思路是：</p>
-<p>通过<code>a.save(validate: false)</code>, 让a在attr为空时保存，然后obj创建时，会取a的attr作为自己的attr，这样obj保存时必然是false，因为atrr为空，它无法过检验，但是运行后发现，不管是<code>a.save(validate: false)</code>还是<code>a.save!(validate: false)</code>, 再次执行<code>a.save</code>，都会回滚，返回false。虽然它们跳过了validation，但是save时，并没有成功，Google了半天，没有找出好的解决方法。后来，看到同事用stub的方式完美解决了，由衷觉得真是太赞了。</p>
-<p>同一个问题，换个人解决，高下立判，只能说，知道和想到，隔了好几个山头啊。</p>
-<p>记录下allow_any_instance_of的用法。</p>
-<h4 id="allow-any-instance-of"><a href="#allow-any-instance-of" class="headerlink" title="allow_any_instance_of"></a>allow_any_instance_of</h4><p>允许一个class的任何实例stub任何一个method的，可设置返回值，也可以不设置，文档中说可以replace allow，但是allow接受的参数是对象，而allow_any_instance_of则是类。</p>
-<p>看一些老的版本，比如2.99，会发现allow_any_instance_of的”前身”，any_instance.stub，我以为是前身，但是在该版本的Rspec-mock的message exception部分，已经出现了allow_any_instance_of，有些奇怪，不过用起来倒是都好用的，这里一并下记录下两者的用法。</p>
-<ul>
-<li><p>stub 单个method无参</p>
-<p>单个method的stub，看官网的例子：</p>
-<pre><code class="ruby">### allow_any_instance_of
-RSpec.describe &quot;allow_any_instance_of&quot; do
-  it &quot;returns a specified value on any instance of a class&quot; do
-    allow_any_instance_of(Object).to receive(:foo).and_return(:return_value)
-    obj = Ojbect.new
-    expect(obj.foo).to eq(:return_value)
-  end
-end
-</code></pre>
-<p>用any_instance.stub 可以这样写：</p>
-<pre><code class="ruby">### any_instance.stub
-RSpec.describe &quot;any_instance.stub&quot; do
-  it &quot;returns a specified value on any instance of a class&quot; do
-    Object.any_instance.stub(:foo).and_return(:return_value)
-    obj = Ojbect.new
-    expect(obj.foo).to eq(:return_value)
-  end
-end
-</code></pre>
-</li>
-<li><p>stub单个method有参</p>
-<p>带参数的单个method，这样写：</p>
-<pre><code class="ruby">### allow_any_instance_of
-RSpec.describe &quot;allow_any_instance_of&quot; do
-  context &quot;with arguments&quot; do
-    it &quot;returns the stub value when arugments match&quot; do
-      allow_any_instance_of(Object).to receive(:foo).with(:param_one, :param_two).and_return(:return_value_one)
-      allow_any_instance_of(Object).to receive(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
-      obj = Ojbect.new
-      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
-      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
-    end
-  end
-end
-</code></pre>
-<p>换成any_instance.stub，可以这么来：</p>
-<pre><code class="ruby">### any_instance.stub
-RSpec.describe &quot;any_instance.stub&quot; do
-  context &quot;with arguments&quot; do
-    it &quot;returns the stub value when arugments match&quot; do
-      Object.any_instance.stub(:foo).with(:param_one, :param_two).and_return(:return_value_one)
-      Object.any_instance.stub(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
-      obj = Ojbect.new
-      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
-      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
-    end
-  end
-end
-</code></pre>
-</li>
-<li><p>stub 多个method无参</p>
-<p>多个method：</p>
-<pre><code class="ruby">### allow_any_instance_of
-RSpec.describe &quot;allow_any_instance_of&quot; do
-  it &quot;stub multiple methods&quot; do
-    allow_any_instance_of(Object).to receive_messages(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
-    obj = Ojbect.new
-    expect(obj.foo).to eq(&quot;foo&quot;)
-    expect(obj.bar).to eq(&quot;bar&quot;)
-  end
-end
-</code></pre>
-<p>用any_instance.stub：</p>
-<pre><code class="ruby">### any_instance.stub
-RSpec.describe &quot;any_instance.stub&quot; do
-  it &quot;stub multiple methods&quot; do
-    Object.any_instance.stub(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
-    obj = Ojbect.new
-    expect(obj.foo).to eq(&quot;foo&quot;)
-    expect(obj.bar).to eq(&quot;bar&quot;)
-  end
-end
-</code></pre>
-<p>any_instance.stub还有一些兄弟姐妹，比如any_instance.unstub，any_instance.stub_chain， 可以戳<a href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class" target="_blank" rel="noopener">这里</a>了解更多。</p>
-</li>
-</ul>
-<h4 id="warning"><a href="#warning" class="headerlink" title="warning"></a>warning</h4><p>官网上提到了慎用allow_any_instance_of,原因除了认为使用该方法<code>is often a design smell</code>，同时也是频频出bug的地方，be careful.</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class" target="_blank" rel="noopener">Stub on any instance of a class</a></p>
-<p><a href="https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/any-instance" target="_blank" rel="noopener">any instance</a></p>
-
-          
+          <p>测试时遇到的一个问题。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/22/stub-any-instance-of-a-class/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2089,275 +1537,14 @@ end
 
       
         
-          
-            <h4 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h4><p>Rspec是Ruby社区流行的测试框架之一，另一个是Minetest。</p>
-<p>RSpec包含：</p>
-<blockquote>
-<p> respec-core</p>
-<p>respec-expectations</p>
-<p>rspec-mocks</p>
-<p>rspec-rails</p>
-<p>rspec-support</p>
-</blockquote>
-<p>安装了rspec后，在终端执行：<code>rspec --version</code>，可以看到每个部分的版本。</p>
-<p>对于RSpec框架，Rails项目里面用的比较多的是Rspec-rails。</p>
-<p>最佳效果：写最少的测试，测最多的东西。</p>
-<h4 id="基本结构："><a href="#基本结构：" class="headerlink" title="基本结构："></a>基本结构：</h4><p>最简单的一个场景一个例子:</p>
-<p>describe/it:</p>
-<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
-  it &quot;does something&quot; do
-  end
-end
-</code></pre>
-<p>嵌套:</p>
-<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
-  context &quot;in one context&quot; do
-    it &quot;does one thing&quot; do
-    end
-  end
-
-  context &quot;in another context&quot; do
-    it &quot;does another thing&quot; do
-    end
-  end
-end
-</code></pre>
-<p>在测试前，通常需要创建测试数据，一般会在每个测试案例中单独创建，也可以借助before【hook methods】来简化，减少重复创建。before调用有两种形式：</p>
-<ul>
-<li>before(:each, &amp;block) - default mode</li>
-<li>before(:all, &amp;block)</li>
-</ul>
-<p>使用before(:each )  创建的测试数据，在每个测试结束后都会回滚，即每个测试里面的数据都是独立的。每次执行context前，都会重新执行一次before(:each)，而before(:all) 只执行一次，被这个describe／context下的所有it公用。使用before(:all)时，建议配after(:all) 来清空数据，保证多个describe之间的独立性，同时使用before(:each) 来重新加载数据，以获取最新的数据。</p>
-<p>比如：</p>
-<pre><code class="Ruby">before(:all) do
-  @widget = Widget.create!
-end
-
-before(:each) do
-  @widget.reload
-end
-
-after(:all) do
-  @widget.destroy
-end
-</code></pre>
-<h4 id="Shared-examples"><a href="#Shared-examples" class="headerlink" title="Shared examples"></a>Shared examples</h4><p>shared_examples 是Rspec的类方法，用于定义class 或者 module的行为，shared的含义就是共享，个人的理解是把多个测试中，重合度高的地方抽出来，封装起来，类似于include module，在module中定义常用方法，每个类include 该module后，就拥有了该module的实例方法。</p>
-<p>可以使用以下四种方式来将定义的shared_examples include到context中：</p>
-<pre><code class="Ruby">include_examples &quot;name&quot;      # include the examples in the current context
-it_behaves_like &quot;name&quot;       # include the examples in a nested context
-it_should_behave_like &quot;name&quot; # include the examples in a nested context
-matching metadata            # include the examples in the current context
-</code></pre>
-<p>备注：metadata是什么？describe的部分常会看到 type: :model，这个就是RSpec metadata.【官网中举了相关的例子，还不是很懂】</p>
-<p>看个官方的例子：</p>
-<pre><code class="ruby">require &quot;set&quot;
-
-RSpec.shared_examples &quot;a collection&quot; do
-  let(:collection) { described_class.new([7, 2, 4]) }
-
-  context &quot;initialized with 3 items&quot; do
-    it &quot;says it has three items&quot; do
-      expect(collection.size).to eq(3)
-    end
-  end
-
-  describe &quot;#include?&quot; do
-    context &quot;with an item that is in the collection&quot; do
-      it &quot;returns true&quot; do
-        expect(collection.include?(7)).to be_truthy
-      end
-    end
-
-    context &quot;with an item that is not in the collection&quot; do
-      it &quot;returns false&quot; do
-        expect(collection.include?(9)).to be_falsey
-      end
-    end
-  end
-end
-
-RSpec.describe Array do
-  it_behaves_like &quot;a collection&quot;
-end
-
-RSpec.describe Set do
-  it_behaves_like &quot;a collection&quot;
-end
-</code></pre>
-<p>带参数的shard_example:</p>
-<pre><code class="Ruby">RSpec.shared_examples &quot;a measurable object&quot; do |measurement, measurement_methods|
-  measurement_methods.each do |measurement_method|
-    it &quot;should return #{measurement} from ##{measurement_method}&quot; do
-      expect(subject.send(measurement_method)).to eq(measurement)
-    end
-  end
-end
-
-RSpec.describe Array, &quot;with 3 items&quot; do
-  subject { [1, 2, 3] }
-  it_should_behave_like &quot;a measurable object&quot;, 3, [:size, :length]
-end
-
-RSpec.describe String, &quot;of 6 characters&quot; do
-  subject { &quot;FooBar&quot; }
-  it_should_behave_like &quot;a measurable object&quot;, 6, [:size, :length]
-end
-</code></pre>
-<p>也可以在context中定义shared_examples，然后在该context中调用，注意，可将context看作是一个作用域，出了这个context，则不能调用定义在该context 中的shared_examples：</p>
-<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
-  context &quot;per context&quot; do
-
-    shared_examples &quot;shared examples are nestable&quot; do
-      it { expect(true).to eq true }
-    end
-
-    it_behaves_like &quot;shared examples are nestable&quot;
-  end
-end
-</code></pre>
-<p>如果在另一个context中调用，则会报错：</p>
-<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
-  context &quot;per context&quot; do
-
-    shared_examples &quot;shared examples are nestable&quot; do
-      it { expect(true).to eq true }
-    end
-  end
-
-  context &quot;another context&quot; do
-    it_behaves_like &quot;shared examples are nestable&quot;
-  end
-end
-</code></pre>
-<h4 id="Shared-context"><a href="#Shared-context" class="headerlink" title="Shared context"></a>Shared context</h4><p>shared_context顾名思义，将多个context中共用的部分抽出来，定义成method来反复调用。</p>
-<p>调用已定义好的shared_context的方式有两种，一是include_context，而是metadata。</p>
-<p>看一段简单的例子，先定义一个shared_context:</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot; do
-  context &quot;context 1&quot; do
-    let(:a) { create :a }
-    let(:b) { create :b }
-    let(:c) { create :c }
-    let(:d) { create :d }
-    ........ # do something
-  end
-end
-
-### another describe
-
-RSpec.describe &quot;somethings 2&quot; do
-  context &quot;context 2&quot; do
-    let(:a) { create :a }
-    let(:b) { create :b }
-    let(:c) { create :c }
-    let(:d) { create :d }
-    ........ # do something
-  end
-end
-</code></pre>
-<p>使用shared_context简化，定义shared_context :</p>
-<p>在spec/support下定义一个文件，比如shared_context.rb：</p>
-<pre><code class="Ruby">RSpec.shared_context &quot;shared data&quot; do
-  let(:a) { create :a }
-  let(:b) { create :b }
-  let(:c) { create :c }
-  let(:d) { create :d }
-end
-</code></pre>
-<p>简化之前的测试：</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot; do
-  context &quot;context 1&quot; do
-    include_context &quot;shared data&quot;
-    ........ # do something
-  end
-end
-
-### another describe
-
-RSpec.describe &quot;somethings 2&quot; do
-  context &quot;context 2&quot; do
-    include_context &quot;shared data&quot;
-    ........ # do something
-  end
-end
-</code></pre>
-<p>如果使用metadata，如何调用？参考官网的例子，需要修改下刚刚创建的这个shared_data.rb文件：</p>
-<pre><code class="Ruby">RSpec.configure do |rspec|
-  rspec.shared_context_metadata_behavior = :apply_to_host_groups ## 用于设置metadata调用后的作用域
-end
-
-RSpec.shared_context &quot;shared data&quot;, :shared_context =&gt; :metadata do
-  let(:a) { create :a }
-  let(:b) { create :b }
-  let(:c) { create :c }
-  let(:d) { create :d }
-end
-
-RSpec.configure do |rspec|
-  rspec.include_context &quot;shared data&quot;, :include_shared =&gt; true
-end
-</code></pre>
-<p>那么上面的例子，就可以这样调用了：</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot;, :include_shared =&gt; true do
-  context &quot;context 1&quot; do
-    ........ # do something
-  end
-end
-
-### another describe
-
-RSpec.describe &quot;somethings 2&quot;, :include_shared =&gt; true do
-  context &quot;context 2&quot; do
-    ........ # do something
-  end
-end
-</code></pre>
-<p>看到这里，说一下shared_context与shared_example的区别，一个是context层面，一个是class／module层的，如果多个describe中，含有重合度高的context／describe，那么用shared_example来抽出共同的行为进行简化，如果是在多个context中，含有重合度高的代码，比如新建各种测试数据等，更偏向setup，则使用shared_context。</p>
-<h4 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h4><ul>
-<li><p><strong>测试数据重置：</strong></p>
-<p>使用gem：database_rewinder</p>
-<p>配置rewinder：</p>
-<pre><code class="ruby"># spec/support/rspec_helper.rb
-RSpec.configure do |config|
-  config.before :suite do
-    DatabaseRewinder.clean_all
-  end
-
-  config.after :each do
-    DatabaseRewinder.clean
-  end
-end
-</code></pre>
-</li>
-<li><p><strong>Shoulda-matchers</strong></p>
-<p>使用Shoulda-matchers 来测试关联和验证：</p>
-<pre><code class="ruby">require &#39;rails-helper&#39;
-
-descirbe User do
-  it { should has_many(:posts).dependent(:destroy) }
-  it { should has_many(:groups).through(:groupships) }
-  it { should validate_presence_of :name }
-end
-</code></pre>
-</li>
-<li><p><strong>is_expected vs expect</strong></p>
-<p>is_expected 等价于expect(subject)</p>
-<p>比如下面这个例子：</p>
-<pre><code class="Ruby">it { is_expected.to validate_presence_of(:title) }
-
-# equals to
-
-it { expect(subject).to validate_presence_of(:title) }
-</code></pre>
-<p> RSpec测试缺省都有一个subject，值为described_class.new，而descirbed_class 是对应需要测试的class的实例，可以当成ruby中的self，如果是model，则是model.new, controller,则是controller.new。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://relishapp.com/rspec/rspec-core/v/3-8/docs/example-groups/shared-examples" target="_blank" rel="noopener">rspec-core v 3.8</a></p>
-<p>注：代码部分基本取自官网。</p>
-
-          
+          <p>Rspec是Ruby社区流行的测试框架之一，另一个是Minetest。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/19/rspec-basic/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2514,79 +1701,18 @@ it { expect(subject).to validate_presence_of(:title) }
 
       
         
-          
-            <blockquote>
+          <blockquote>
 <p>If ideas come slowly, be patient.</p>
 <p>If they come suddenly, in a rush, don’t try to slow down the process and develop any one of them, simple jot them all down.</p>
 <p>​                                                                    - 《Beyond feelings》</p>
 </blockquote>
-<p>受《Beyond feelings》的影响，决定练习下ideas。争取后面能坚持记录下当周的“胡思乱想” ：）</p>
-<p>总量差不多20个吧。</p>
-<ul>
-<li>带有闹钟效应的床，定好了起床的闹钟，如果到点了没有起床，床就会坍塌或者漏水，让你不得不起床。【这换床得多频繁？】</li>
-</ul>
-<ul>
-<li>嗅觉感应器，比如你闻到了一种花香，很是欣喜，就可以用它记录下来，这样以后想要再闻到，它可以随时复现。</li>
-</ul>
-<ul>
-<li>提醒联系app，获取你的认同，得到你的好友列表，记录下你和朋友之间的来往，然后定期提醒你哪些朋友很久没有联系了，需要联系一下。</li>
-</ul>
-<ul>
-<li>账单记录表，上传你的账单，它会自动记录下所有的账单消费，每月给到你完整记录。【在地铁上瞅到一位大叔对着账单一笔笔敲进一个APP软件时想到的】</li>
-</ul>
-<ul>
-<li>可收缩的小枕头。一款可携带式的枕头，不使用的时候非常小，当你觉得困的时候，拿出来，按下操作按钮，它就会膨胀，然后就可以美美睡一觉，睡醒后，再次按按钮，就变得很小。</li>
-</ul>
-<ul>
-<li>一个声音转换器，入耳式，可以将别人的声音转换成任何你喜欢的声音，比如说，领导喷你的时候，你就可以把他的声音切换成你爱豆的声音，那么就好比在听歌，多好！</li>
-</ul>
-<ul>
-<li>不进水的眼镜，平时可以戴，游泳的时候也可以戴，这样每次游泳就不用戴泳镜了。</li>
-</ul>
-<ul>
-<li>一个叫用户如何赖床不迟到的小萌宠，记录用户的睡眠数据，根据上班时间和用户的睡眠质量，告诉用户还可以再赖床多久</li>
-</ul>
-<ul>
-<li>一个按摩颈椎的小物件，准确定位你颈椎的酸疼区</li>
-</ul>
-<ul>
-<li>一个可以让物体失重的神奇贴，贴在上面就失重了，这样就不用担心电脑背着太重了，拯救颈椎啊。</li>
-</ul>
-<ul>
-<li>一款可以迅速修复晒黑的皮肤的乳液，再也不怕晒伤了</li>
-</ul>
-<ul>
-<li>饿了么可以根据客户的外卖历史，智能推荐早饭，午饭，下午茶，晚饭，并且根据客户的反馈改进推荐算法，这样的话，用户粘性会不会更强？虽然我不用饿了么</li>
-</ul>
-<ul>
-<li>定时关机的app，可以设置当使用了多久的手机后，手机会关机，主要是为了防止用户花太多的时间在手机上，而忽略了更重要的事。比如刷小视频一个小时后，手机自动关机，且规定时间内无法开机。【这样一款霸气的app一定不敢上架】</li>
-</ul>
-<ul>
-<li>体重／体脂率提醒app，每天提醒你当前体重／体脂率多少，需要配合怎样的运动才能达到标准体重，昨天吃了什么导致体重上涨，下次如何避免，每次当你想要吃高热量的食物时，发出提醒。【作为一个胖子，我可能会很讨厌这款app】</li>
-</ul>
-<ul>
-<li>小熊玩偶，不是那种会说话的玩偶，安安静静，白白的，像ice bear的北极熊，可以根据你的设定变换size。冬天的时候，可以设置成较大的size，抱着睡觉，暖暖，夏天的时候，可以设置成很小的size，塞进衣柜不占用空间。</li>
-</ul>
-<ul>
-<li>一款穿衣推荐的镜子，当你试穿一件衣服的时候，你站在镜子面前，通过全方位的摄像，它会记录下你前后左右的试穿效果，然后针对你的试穿作出评价，给到建议，甚至告诉你店里哪一件会更适合你。【这样店里的营业员就可能要失业了】</li>
-</ul>
-<ul>
-<li>代码解读器，让它浏览某个GitHub上的开源repos，然后给到你解读，告诉你这个库用来做什么，如何实现，实现的思路是什么，这种解决思路还可以用在哪里，用了哪些工具，哪一段代码写得非常好等等诸如此类。</li>
-</ul>
-<ul>
-<li>定时消失的书，这种书只能是电子书了，购买的电子书，可以设置多久就会自动消失，强制要求及时阅读。</li>
-</ul>
-<ul>
-<li>单一的kindle交易平台，将自己不再使用的kindle上架进行交易。【拯救吃灰的kindle】</li>
-</ul>
-<ul>
-<li>外卖集中箱。类似快递的最后100米，可以放在各种蜜蜂箱里，发信息通知取件人，外卖也可以统一送到某个固定点，让点餐人自己去取，这样应该可以节省很多外卖人员的时间。</li>
-</ul>
-<ul>
-<li>止困提神糖。当人想要睡觉的时候，吃一颗就好了，满血复活。</li>
-</ul>
-
-          
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/17/ideas-sharing-001/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2743,98 +1869,14 @@ it { expect(subject).to validate_presence_of(:title) }
 
       
         
-          
-            <p>感觉好久没用postman，手生了好多，记录下今天踩的坑。</p>
-<p>用postman发送请求时，在body中传递参数，如果传递的是Array/Hash型的参数，分简单的三种情况，分别用三个小例子说明一下：</p>
-<ul>
-<li><p>传递的参数是非嵌套的hash</p>
-<p>在body中，输入以下内容：</p>
-</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>key</th>
-<th>value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>student[name]</td>
-<td>Daniel</td>
-</tr>
-<tr>
-<td>student[age]</td>
-<td>20</td>
-</tr>
-<tr>
-<td>student[gender]</td>
-<td>male</td>
-</tr>
-</tbody>
-</table>
-<p>  发出请求的时候，对应传递的参数内容为：</p>
-<pre><code>   { &quot;student&quot;: { &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;gender&quot;: &quot;male&quot; } }
-</code></pre><ul>
-<li>传递的参数是嵌套的hash</li>
-</ul>
-<p>  在body中，输入以下内容：</p>
-<table>
-<thead>
-<tr>
-<th>key</th>
-<th>value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>student[name]</td>
-<td>Daniel</td>
-</tr>
-<tr>
-<td>student[age]</td>
-<td>20</td>
-</tr>
-<tr>
-<td>student[teachers][1][name]</td>
-<td>David</td>
-</tr>
-</tbody>
-</table>
-<p>  发出请求的时候，对应传递的参数内容为：</p>
-<pre><code>   { &quot;student&quot;: { &quot;name&quot;: &quot;Daniel&quot;, &quot;age&quot;: &quot;20&quot;, &quot;teachers&quot;: { &quot;1&quot;: { &quot;name&quot;: &quot;David&quot; }}}}
-</code></pre><ul>
-<li><p>传递的是array</p>
-<p>在body中，输入以下内容：</p>
-</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>key</th>
-<th>value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>student_ids[]</td>
-<td>10</td>
-</tr>
-<tr>
-<td>student_ids[]</td>
-<td>11</td>
-</tr>
-<tr>
-<td>student_ids[]</td>
-<td>12</td>
-</tr>
-</tbody>
-</table>
-<p>  发出请求的时候，对应传递的参数内容为：</p>
-<pre><code>   { &quot;student_ids&quot;: [&quot;10&quot;, &quot;11&quot;, &quot;12&quot;] }
-</code></pre><p>  OK！下次不要再踩同样的坑了。</p>
-
-          
+          <p>感觉好久没用postman，手生了好多，记录下今天踩的坑。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/08/16/deliver-array-hash-in-postman-body/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -3050,7 +2092,7 @@ it { expect(subject).to validate_presence_of(:title) }
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

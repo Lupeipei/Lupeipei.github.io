@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2,339 words</span>
+              <span>2,351 words</span>
             </span>
           
 
@@ -387,270 +387,14 @@
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是《Ruby元编程》第4章代码块的学习笔记，我看完整章，觉得用可调用对象来概括整章可能更合适，所以， 我把标题改了。</p>
-<p>好，进入正题。</p>
-<h4 id="可调用对象"><a href="#可调用对象" class="headerlink" title="可调用对象"></a>可调用对象</h4><p>四种：</p>
-<ul>
-<li>代码块</li>
-<li>proc：Proc类的对象，同时也是创建Proc类的一个method</li>
-<li>lambda：Proc类的对象，同时也是创建Proc类的一个method</li>
-<li>方法</li>
-</ul>
-<p>看个例子先。</p>
-<p>同一个method，四种调用方式，注意最后一个调用方式有些不同：</p>
-<pre><code class="Ruby"># 代码块
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
-
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;) {|x| puts &quot;hello, #{x}&quot;} # =&gt; hello, Ruby
-
-# proc
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
-
-my_proc = Proc.new {|x| puts &quot;hello, #{x}&quot;}
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;, &amp;my_proc) # =&gt; hello, Ruby
-
-# lambda
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
-
-my_lambda = lambda {|x| puts &quot;hello, #{x}&quot;}
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;, &amp;my_lambda) # =&gt; hello, Ruby
-
-
-# 方法
-class C2
-  def my_method(x)
-    puts &quot;hello, #{x}&quot;
-  end
-end
-
-obj = C2.new
-m = obj.method :my_method
-m.call(&quot;Ruby&quot;) # =&gt; hello, Ruby
-</code></pre>
-<p>来认识下这四位小伙伴。</p>
-<h4 id="代码块Blocks"><a href="#代码块Blocks" class="headerlink" title="代码块Blocks"></a>代码块Blocks</h4><p>Ruby中绝大多数都是对象，block则是个特例。【判断某个事物是不是对象，可以用<code>x.is_a? Object</code>来判断】</p>
-<p>戳这里<a href="https://stackoverflow.com/questions/3429553/is-everything-an-object-in-ruby" target="_blank" rel="noopener">Is everything an object in ruby?</a>看stack overflow上人们怎么说，不过对于Amadan的answer，我觉得不是特别准确，他提到“<strong>Methods</strong>, operators and blocks <strong>aren’t</strong>, but can be wrapped by objects (Proc).” 而实际上，如果你进irb, 运行<code>puts.is_a? Object</code>，你会发现它返回true，即puts是method，也是对象。</p>
-<p>貌似跑题了，回正题。</p>
-<ul>
-<li><p>代码块的定义</p>
-<p>代码块可以用大括号{}定义， 也可以用do … end关键字定义。</p>
-<p>代码块可以有参数。</p>
-<p>代码块最后一行代码执行的结果会被作为返回值。</p>
-<p>只有在调用一个方法时，才可以定义一个块，块会被直接传递给这个方法，该方法会用yield关键字调用这个块。</p>
-<p>可以通过内核方法block_given?来判断当前调用的方法中是否包含块。比如：</p>
-<pre><code class="Ruby">def my_method
-  return yield if block_given?
-  &#39;no block&#39;
-end
-
-my_method # =&gt; no block
-my_method {&quot;Here&#39;s a block&quot;} # =&gt; Here&#39;s a block
-</code></pre>
-</li>
-<li><p>代码块是闭包closures</p>
-<p>运行代码需要一个执行环境：局部变量，实例变量，self等，这些简称为绑定（binding）。</p>
-<p>那么，块在哪里获得它的绑定呢？</p>
-<p>定义一个块时，它会获取当前环境中的绑定，带着它们四处游荡。<strong>当块被传给一个方法时，它会带着这些绑定一块进入该方法。</strong>【注意它的这个特性，这也是为什么它被称之为闭包的原因】</p>
-</li>
-<li><p>作用域scope</p>
-<p>ruby中没有嵌套式的作用域，它的作用域是截然分开的。一旦进入一个新的作用域，原先的绑定就会被替换。</p>
-<ul>
-<li><p>作用域门</p>
-<p>程序会在三个地方关闭前一个作用域，同时开启一个新的作用域：</p>
-<ul>
-<li>类定义class</li>
-<li>模块定义module</li>
-<li>方法def</li>
-</ul>
-<p>这三种情况分别以class，module， def关键字作为标志，每个关键字都对应一个作用域门。</p>
-<p>在class/module 与def之间有个小区别：类定义／模块定义中，代码会立即执行，但是在方法中则不会。</p>
-</li>
-<li><p>扁平化作用域与共享作用域</p>
-<p><strong>用Class.new方法代替class关键字, Module.new方法代替module关键字, define_method方法代替def关键字</strong>， 就是扁平化作用域。即<strong>用方法调用来替代了作用域门</strong>，使得一个作用域看到另一个作用域里的变量，好似两个作用域挤压在一起，它们可以共享各自的变量。</p>
-<p>看个例子理解下：</p>
-<pre><code class="ruby">my_var = &quot;hello, ruby&quot;
-class C
-  # 需要在这里打印出my_var
-  def my_method(x)
-    # 在这里也要打印出my_var
-  end
-end
-</code></pre>
-<p>这里，my_var存在于顶级作用域中，但是一旦进入class／def这个作用域，my_var就不存在了。</p>
-<p>你也许会说，把my_var 变成全局变量$my_var, 呃，coding的一个原则就是<strong>能不用全局变量就不要用全局变量，存在安全隐患，即使是顶级实例变量，也应当避免少用</strong>。</p>
-<p>我们来扁平化作用域：</p>
-<pre><code class="Ruby">my_var = &quot;hello, ruby&quot;
-C = Class.new do
-  puts &quot;#{my_var}&quot; # =&gt; hello, ruby
-  define_method :my_method do
-    puts &quot;#{my_var}&quot;
-  end
-end
-C.new.my_method # =&gt; hello, ruby
-</code></pre>
-<p>说完扁平化作用域，来看看共享作用域。</p>
-<p>当一个扁平作用域中，定义了多个方法，把这些方法用一个作用域门保护起来，它们就可以共享绑定，这种处理作用域的方法称之为共享作用域。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">def shared_banding
-  shared = 1
-  define_method :my_method do
-    shared
-  end
-  define_method :my_other_method do |x|
-    shared += x
-  end
-end
-shared_banding # =&gt; 调用方法，切换到def shared_banding的作用域
-my_method # =&gt; 1
-my_other_method(4) # =&gt; 5
-</code></pre>
-<p>理解了扁平作用域，来看看<a href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval" target="_blank" rel="noopener">instance_eval</a>与<a href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_exec" target="_blank" rel="noopener">instance_exec</a>方法。</p>
-</li>
-</ul>
-</li>
-<li><p>instance_eval 与instance_exec</p>
-<p>两者都是BasicObject的instance methods，打破封装的杠把子。instance_exec比instance_eval稍微灵活些，可以传递参数，Ruby <a href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval" target="_blank" rel="noopener">BasicObject 的doc</a> 里面也有举例。</p>
-<p>看段书中的代码理解下：</p>
-<pre><code class="Ruby">class C
-  def initialize
-    @v =1
-  end
-end
-
-obj = C.new
-obj.instance_eval do
-  self
-  @v
-end
-
-v = 2
-obj.instance_eval { @v }  #=&gt; 1
-obj.instance_eval { @v =v }  #=&gt; 2
-obj.instance_eval { @v }  #=&gt; 2
-obj.instance_exec(5) {|x| @v + x} #=&gt; 7
-</code></pre>
-<p>直接改变了obj中的实例变量@v，而针对传递给instance_eval与instance_exec的代码块，它有一个名字，叫做<strong>上下文探针</strong>（context probe），好似它们可以深入到对象的代码块中，对对象进行操作。</p>
-</li>
-<li><p>洁净室</p>
-<p>洁净室是一个用来执行块的环境，类似一个白板类，比如BasicObject。当你希望多个方法在执行时，不共享实例变量，可以考虑洁净室。</p>
-<p>OK，block部分暂时告一段落，我们看Proc。</p>
-</li>
-</ul>
-<h4 id="Proc-与lambda"><a href="#Proc-与lambda" class="headerlink" title="Proc 与lambda"></a>Proc 与lambda</h4><p>lambda与Proc很相近，一起说。</p>
-<p>由于代码块不是对象，当你想将代码块存起来以后调用时，就需要对象，有需求便有供应，Proc类应运而生。</p>
-<p>它是由块转换来的对象，可以与块进行互相切换。建一个Proc的对象，有四种方法：</p>
-<pre><code class="Ruby"># Proc.new
-p1 = Proc.new {|x| puts &quot;#{x}&quot;}
-p1.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-
-# proc method
-p2 = proc {|x| puts &quot;#{x}&quot;}
-p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-
-# lambda method
-p3 = lambda {|x| puts &quot;#{x}&quot;}
-p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-
-# stabby lambda
-p4 = -&gt; (x) {puts &quot;#{x}&quot;}
-p4.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-</code></pre>
-<p>关于Proc，说两点：块与Proc的转换，proc与lambda的区别【这是个频繁被问的问题……】</p>
-<ul>
-<li><p>块与Proc的转换</p>
-<p>先从块的传递开始。</p>
-<p>在方法中，可以通过yield来直接运行一个代码块，但是当你想把代码块传递给一个方法时，就需要给代码块起一个名字，附加到一个绑定上。怎么破？</p>
-<p>解决的方法是<strong>给方法添加一个特殊的参数，这个参数位于参数列表最后，且用&amp;表示</strong>。【还记得<code>block_given?</code>吗？】</p>
-<p>&amp; 操作符的含义是：<strong>这是一个Proc对象，我想把它当作代码块使用，去掉&amp;操作符，就能得到一个Proc对象</strong> 【这里暗含着块与Proc的转换】</p>
-<p>看例子：</p>
-<pre><code class="ruby"># 去掉&amp; 得到一个Proc对象
-def my_method(&amp;my_proc)
-  my_proc
-end
-
-my_proc = my_method {|x| puts &quot;#{x}&quot; }
-my_proc.class # =&gt; Proc
-my_proc.call(&quot;hi&quot;) # =&gt; hi
-
-# &amp; 把Proc转化为块传递给方法
-def my_method(a)
-  puts &quot;#{a}, #{yield}&quot;
-end
-
-my_proc = proc {&quot;world&quot;}
-my_method(&quot;hi&quot;, &amp;my_proc) # =&gt; hi, world
-</code></pre>
-</li>
-<li><p>Proc与lambda的对比</p>
-<p>先说个区别：用lambda方法（包括 -&gt;）创建的Proc称为lambda，而用其他方法创建的则是Proc。可以用Proc#lambda来检测。</p>
-<pre><code class="Ruby"># proc method
-p2 = proc {|x| puts &quot;#{x}&quot;}
-p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-p2.lambda? # =&gt; false
-
-# lambda method
-p3 = lambda {|x| puts &quot;#{x}&quot;}
-p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-p3.lambda? # =&gt; true
-</code></pre>
-<p>最重要的区别有两个：</p>
-<ul>
-<li><p>return有不同的含义</p>
-<p>在proc中，return不是从proc中返回，而是从定义proc的作用域返回。</p>
-<p>觉得书中的例子不够典型，改良了下，可以很明显看出二者的区别：</p>
-<pre><code class="ruby">def my_double
-  a = lambda {return 10}
-  result = a.call
-  return result * 2
-end
-my_double # =&gt; 20
-
-def my_other_double
-  my_proc = Proc.new {return 10}
-  result = my_proc.call
-  return result * 2 # =&gt; 这段代码不会运行！
-end
-my_other_double # =&gt; 10
-</code></pre>
-</li>
-<li><p>参数问题</p>
-<p>在参数问题上，lambda比proc要严格，而proc则宽容很多。</p>
-<p>比如：</p>
-<pre><code class="Ruby">p = Proc.new {|a, b| puts &quot;#{a}:#{b}&quot;}
-p.call(1,2,3) # =&gt; 1:2
-p.call(1) # =&gt; 1:
-
-p2 = lambda {|a, b| puts &quot;#{a}:#{b}&quot;}
-p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (ArgumentError)
-</code></pre>
-<p>Google下，会发现很多前辈都写过这方面的文章，这里就不多说了，stack overflow上也有一些精彩的answer：<a href="https://stackoverflow.com/questions/1740046/whats-the-difference-between-a-proc-and-a-lambda-in-ruby" target="_blank" rel="noopener">What’s the difference between a proc and a lambda in Ruby?</a>， 可加深理解。</p>
-</li>
-</ul>
-</li>
-</ul>
-<h4 id="方法method"><a href="#方法method" class="headerlink" title="方法method"></a>方法method</h4><p>  第3章刚刚提到过dynamic methods和ghost methods。不过这里要讲的是方法的另一种定义方式：<strong>使用method方法来定义，调用时call</strong>。最开始那个class C2例子中的my_method就是这样调用的。</p>
-<p>  方法这部分没有什么特别的，书中提到了自由方法unbound method，即一个方法从最初定义它的类或者module中脱离出来。</p>
-<p>  使用Method#unbound可以把一个方法变成自由方法， 使用UnboundMethod#bind可以把它再绑定到一个对象上，不过绑定的对象需要是该类及其子类的对象，而module则不需要。</p>
-<p>  原谅我不是很理解自由方法存在的意义。书中也提到了它只在极个别场合发挥作用，这里不展开细说了。</p>
-<h4 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h4><p>书中最后那个DSL例子，个人感觉很不错，特别是使用共享作用域，消除全局变量的代码重构，很精彩，推荐阅读。</p>
-
-          
+          <p>《Ruby元编程》之可调用对象笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/27/ruby-metaprogramming-part3-callable-objects/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -789,7 +533,7 @@ p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (Argument
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,676 words</span>
+              <span>1,685 words</span>
             </span>
           
 
@@ -807,191 +551,14 @@ p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (Argument
 
       
         
-          
-            <h4 id="化繁为简"><a href="#化繁为简" class="headerlink" title="化繁为简"></a>化繁为简</h4><p>《Ruby元编程》的第3章说到了方法，从一段代码的重构说起，主线是动态方法dynamic methods和幽灵方法ghost methods，随后说了下ghost methods 的两个常见陷阱。</p>
-<p>整章看下来，最大的感触就是重构后的代码真的是清爽啊。dynamic methods和ghost methods简直就是化繁为简的利器。</p>
-<p>先来看段代码。</p>
-<h4 id="一段需要重构的代码"><a href="#一段需要重构的代码" class="headerlink" title="一段需要重构的代码"></a>一段需要重构的代码</h4><p>引用书中的例子：</p>
-<pre><code class="Ruby">class Computer
-
-  def initialize(computer_id, data_source)
-    @id = computer_id
-    @data_source = data_source # data_source是一个对象
-  end
-
-  def mouse
-    info = @data_source.get_mouse_info(@id)
-    price = @data_source.get_mouse_price(@id)
-    result = &quot;Mouse: #{info}($#{price})&quot;
-    return &quot;#{result}&quot; if price &gt;= 100
-    result
-  end
-
-  def cpu
-    info = @data_source.get_cpu_info(@id)
-    price = @data_source.get_cpu_price(@id)
-    result = &quot;Cpu: #{info}($#{price})&quot;
-    return &quot;#{result}&quot; if price &gt;= 100
-    result
-  end
-
-  def keyboard
-    info = @data_source.get_keyboard_info(@id)
-    price = @data_source.get_keyboard_price(@id)
-    result = &quot;Keyboard: #{info}($#{price})&quot;
-    return &quot;#{result}&quot; if price &gt;= 100
-    result
-  end
-
-end
-</code></pre>
-<p>这段代码中，class Computer有三个method，且每个method的代码有很多共通的部分。如何解决这种代码繁复的问题？</p>
-<p>解决方法就在dynamic methods和ghost methods。</p>
-<h4 id="动态方法dynamic-methods"><a href="#动态方法dynamic-methods" class="headerlink" title="动态方法dynamic methods"></a>动态方法dynamic methods</h4><p>先来看看用动态方法如何重构上诉代码：</p>
-<pre><code class="Ruby">class Computer
-
-  def initialize(computer_id, data_source)
-    @id = computer_id
-    @data_source = data_source # data_source是一个对象
-    @data_source.methods.grep(/^get_(.*)_info$/)
-    {Computer.define_component $1}
-  end
-
-  def self.define_component(name)
-    define_method(name) do
-      info = @data_source.send &quot;get_#{name}_info&quot;, @id
-      price = @data_source.send &quot;get_#{name}_price&quot;, @id
-      result = &quot;#{name.capitalize}: #{info}($#{price})&quot;
-      return &quot;#{result}&quot; if price &gt;= 100
-      result
-    end
-  end
-
-end
-</code></pre>
-<p>这里使用了内省，即调用methods得到@data_source中所有匹配<code>/^get_(.*)_info$/</code>的methods，使用$1来保存，然后调用类方法define_component。而在类方法define_component中，则使用了动态方法，其中，define_method是定义动态方法，而send则是动态派发。</p>
-<p>方法无非就是定义加调用，动态方法跟普通方法并没有什么大的区别。</p>
-<ul>
-<li><p>定义动态方法</p>
-<p>用define_method来定义动态方法。看个例子：</p>
-<pre><code class="Ruby">class MyClass
-  define_method :my_method do |x, y|
-    x + x * y
-  end
-end
-
-obj = MyClass.new
-obj.send(:my_method,1,2) # =&gt; 3
-obj.my_method(1,2) # =&gt; 3
-</code></pre>
-<p>方法的定义由常规的def关键字变成了define_method关键字, 其他并没有什么变化。方法名作为参数，外加一个代码块block。我的理解是，它的灵活性与send其实很一致，就在于方法名是参数，可以动态定义方法。</p>
-</li>
-<li><p>调用动态方法</p>
-<p>调用一个方法实际上是给对象发送一条信息。</p>
-<p>send是Object的一个实例方法，第一个参数是方法的名字，由于方法名最好是不可修改的，所以通常是以符号的形式传递，剩下的，则是需要传递给方法的参数，可含代码块。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">class MyClass
-  def my_method(x,y)
-    x + yield(x,y)
-  end
-end
-
-obj = MyClass.new
-obj.send(:my_method,1,2){|x, y| x * y} # =&gt; 3
-obj.my_method(1,2) {|x, y| x * y} # =&gt; 3
-</code></pre>
-<p>使用send调用my_method， 和使用.my_method的调用是一样的。</p>
-<p>那么使用send的意义在哪里？因为方法名成了参数，所以在代码运行中，可以决定调用哪个方法，上面重构后的代码便是如此，根据name的值，来决定需要调用哪个method。</p>
-</li>
-</ul>
-<h4 id="幽灵方法-ghost-methods"><a href="#幽灵方法-ghost-methods" class="headerlink" title="幽灵方法 ghost methods"></a>幽灵方法 ghost methods</h4><p>见到了大名鼎鼎的method_missing了。</p>
-<p>先看用幽灵方法重构Computer类的结果：</p>
-<pre><code class="Ruby">class Computer &lt; BasicObject
-
-  def initialize(computer_id, data_source)
-    @id = computer_id
-    @data_source = data_source # data_source是一个对象
-  end
-
-  def method_missing(name, *args)
-    super if !@data_source.respond_to?(&quot;get_#{name}_info&quot;)
-    info = @data_source.send &quot;get_#{name}_info&quot;, @id
-    price = @data_source.send &quot;get_#{name}_price&quot;, @id
-    result = &quot;#{name.capitalize}: #{info}($#{price})&quot;
-    return &quot;#{result}&quot; if price &gt;= 100
-    result
-  end
-
-end
-</code></pre>
-<p>这里，注意到<strong>Computer继承自BasicObject</strong>，而不是默认的Object，这是为了避开method_missing的一个陷阱，而选择了BasicObject这个白板类（blank slates）【白板类：拥有极少方法的类】，这块留在陷阱部分说。</p>
-<p>可以看到method_missing中send的身影，故它也使用了动态派发。</p>
-<p>method_missing是BasicObject的一个私有实例方法。通过重定义method_missing来完成对方法调用的拦截，但是值得一提的是，它们不会出现在object#methods的列表中，故有幽灵方法之称。</p>
-<p>书中举了<a href="https://github.com/huboard/ghee" target="_blank" rel="noopener">Ghee</a>的例子，我去看了它的method_missing定义, 在lib/ghee的resource_proxy.rb中：</p>
-<pre><code class="Ruby">## lib/ghee/resource_proxy.rb
-def method_missing(message, *args, &amp;block)
-  subject.send(message, *args, &amp;block)
-end
-</code></pre>
-<p>这里连续调用了两次method_missing，先是将message转发给Ghee::ResourceProxy#method_missing方法，然后再从这里转给subject，而这个subject是一个Hassher::Mash对象，它又转给了Hassher::Mash#method_missing方法进行处理。这种捕获幽灵方法，并将它们转发给另一个对象，又称之为幽灵代理，即像Ghee::ResourceProxy这样的对象，就是幽灵代理。</p>
-<h4 id="幽灵方法的两个陷阱"><a href="#幽灵方法的两个陷阱" class="headerlink" title="幽灵方法的两个陷阱"></a>幽灵方法的两个陷阱</h4><ul>
-<li><p>在method_missing中调用了未定义的method，导致method_missing被不断回调，直到调用堆栈溢出</p>
-<p>看段代码：</p>
-<pre><code class="Ruby">class C
-  def method_missing(name, *args)
-    10.times do
-      number = rand(10)
-    end
-    puts &quot;#{number}&quot;
-  end
-end
-</code></pre>
-<p>【这是一段没啥用的代码，仅仅用来作为例子】</p>
-<p>这里其实涉及到作用域scope的问题，number定义在代码块中，等到代码块结束，执行puts “#{number}”时，ruby会把<strong>number当成是一个在self上省略了括号的方法调用</strong>，<strong>即self.number,</strong> 正常情况下，会出现nomethoderror，因为没有定义number这个method的，但是由于重写了method_missing，所以它会继续调用这个重写后的method_missing，导致出现死循环。</p>
-<p>如何解？改number的作用域即可。</p>
-<pre><code class="Ruby">class C
-  def method_missing(name, *args)
-    number = 0
-    10.times do
-      number = rand(10)
-    end
-    puts &quot;#{number}&quot;
-  end
-end
-</code></pre>
-</li>
-<li><p>幽灵方法与真实方法重名，导致幽灵方法被忽略。</p>
-<p>书中举了一个display的例子，我觉得挺好理解的，附上：</p>
-<pre><code class="Ruby">my_computer = Computer.new(12, DS.new)
-my_computer.display # =&gt; nil
-</code></pre>
-<p>这里，my_computer调用了display方法，其本意是要看显示器method，但是Object自带了一个display方法，Computer继承Object，所以也有一个display方法，导致调用的时候，忽略了幽灵方法，这里也可以看得出来，在调用方法时，必然是先搜遍了祖先链，然后再调用幽灵方法。</p>
-<p>怎么破？两种方式。</p>
-<ul>
-<li><p>使用白板类</p>
-<p>用幽灵方法重构代码那部分就提到了，Computer继承自BasicObject，用的就是白板类，从而没有了display这样的情况。</p>
-</li>
-<li><p>删除方法display</p>
-<p>用两种删除方法的途径：undef_method【删除所有包括继承来的方法】， remove_method【删除接受者自己的方法】</p>
-<p>看段代码：</p>
-<pre><code class="Ruby">class Computer
-  .....
-  def self.hide(name)
-    if instance_methods.include?(name)
-      undef_method name
-    end
-  end
-  hide(&#39;display&#39;)
-end
-</code></pre>
-<p>这样就会删除掉继承自Object#display方法。个人觉得删除方法容易出问题，用白板会好一些</p>
-<h4 id="使用原则"><a href="#使用原则" class="headerlink" title="使用原则"></a>使用原则</h4></li>
-</ul>
-</li>
-</ul>
-<p>由于幽灵方法并不是真正的方法，用的时候还容易踩坑，所以在可以使用动态方法的时候，尽量使用动态方法，除非必须使用幽灵方法，否则尽量不要使用它。</p>
-
-          
+          <p>《Ruby元编程》之方法笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/26/ruby-metaprogramming-part2-the-methods/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1130,7 +697,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2,586 words</span>
+              <span>2,597 words</span>
             </span>
           
 
@@ -1148,312 +715,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>看完了<a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">Ruby元编程(第2版)</a>，全书三大part，共13章，第一部分Ruby元编程是重点，也是基础，理解了part 1， part 2的Rails元编程也就七七八八了，part 3是附录，供延伸阅读。</p>
-<p>part 1读起来让人有种醍醐灌顶之感，很是惊喜，part 2告诉了你rails源代码中一些故事，针对这两块简单做了些笔记，打算整理出来，加深理解，也顺带梳理一下Ruby的知识点。</p>
-<p>这篇来写写Ruby中的对象，类及方法调用。</p>
-<h4 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h4><p>对象是由一组实例变量和对自身类的引用构成。</p>
-<ul>
-<li><p>实例变量</p>
-<p>看个书中的例子：</p>
-<pre><code class="Ruby">class MyClass
-    def my_method
-        @v = 1
-    end
-end
-
-object = MyClass.new # 这时object.instance_variables是[]
-object.my_method # 这时object.instance_variables是@v
-</code></pre>
-<p>这里，@v是实例变量，object 创建时，并没有任何实例变量，当object调用my_method时，它有了实例变量@v。你可以通过<code>object.instance_variables</code>来验证。</p>
-</li>
-</ul>
-<ul>
-<li><p>方法</p>
-<p>通过<code>object.methods</code>可以得到对象object的所有方法，这些都是MyClass类的实例方法。</p>
-<p>方法存放在类中，而不是对象中，实例变量则存放在对象中。也就是<strong>同一个类的对象共享同样的方法，但不共享实例变量</strong>。</p>
-</li>
-</ul>
-<h4 id="类"><a href="#类" class="headerlink" title="类"></a>类</h4><p>类是一个对象（Class类的一个实例）加一组实例方法和一个对其超类（superclass）的引用。</p>
-<p>类本身也是对象，它是Class的一个实例。Class.class是Class。</p>
-<p>Class.superclass是Module，因此一个类也是一个模块。</p>
-<p> 在一些静态语言中，比如Java，实例是类的一个不可修改的对象，但是Ruby允许你打开修改， 这种操作又称之为打开类。</p>
-<p>可使用class_eval method来打开任意类。</p>
-<ul>
-<li><p>打开类(open class)与猴子补丁（monkey patch）</p>
-<p>看个简单的例子：</p>
-<pre><code class="Ruby">class A
-  def a; &#39;a&#39;; end
-end
-
-class A
-  def b; &#39;b&#39;; end
-end
-
-obj = A.new
-obj.a
-obj.b
-</code></pre>
-<p>这里，Ruby先是定义了这个类A，并定义了method a，随后，Ruby重新打开了类A，定义了method b。</p>
-<p>打开类是Ruby很强大的利器，可以动态修改已经存在的类，即使是String，Array这类标准库中的类也不例外。</p>
-<p>不过利剑用的不好，容易伤着自己。打开类容易带来<a href="https://en.wikipedia.org/wiki/Monkey_patch" target="_blank" rel="noopener"><strong>猴子补丁</strong></a>的问题。</p>
-<p>书中举的例子很好，这里直接引用：</p>
-<pre><code class="Ruby">class Array
-  def replace(original, replacement)
-    self.map {|e| e == original ? replacement : e}
-  end
-end
-</code></pre>
-<p>这里，打开了Array这个标准库中的类，然后定义了一个replace的method，我们知道Array自身已经有一个replace的method了，那么重新定义，会覆盖掉原来的replace，而你的程序中的其他部分极有可能依赖于原来的replace，这可能会导致危险的后果。这种method就属于猴子补丁。</p>
-<p>如何解决？</p>
-<p>两种方法。</p>
-<ul>
-<li><p>换个名字</p>
-<p>比如replace换成substitute，同时仔细检查该类中是否有同名的方法，确保新的名字不存在monkey patch的情况。</p>
-</li>
-<li><p>用<strong>细化（Refinement）</strong></p>
-<p>先定义一个module，然后在这个module里面定义这个method，然后使用using方法来启用这个method，<strong>细化的作用范围只在声明了using的模块内部有效</strong>。看例子：</p>
-<pre><code class="Ruby">module ArrayExtensions
-  refine Array do
-    def replace(original, replacement)
-      self.map {|e| e == original ? replacement : e}
-    end
-  end
-end
-
-module  ArrayStuff
-  using ArrayExtensions
-  [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace(&quot;a&quot;, &quot;d&quot;) # =&gt; [&quot;d&quot;, &quot;b&quot;, &quot;c&quot;]
-end
-
-[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace([&quot;a&quot;, &quot;d&quot;]) # =&gt; [&quot;a&quot;, &quot;d&quot;]
-</code></pre>
-<p> 前者调用的是在ArrayExtensions中refine的method replace，而且只在声明了using ArrayExtensions的module ArrayStuff有效， 后者调用的则是Array标准库中的replace method。</p>
-<p>它只在你希望它生效的地方生效，这真的蛮好。不过<strong>细化也有其陷阱</strong>，看段代码：</p>
-<pre><code class="Ruby">class MyClass
-  def my_method
-    puts &quot;original my_method&quot;
-  end
-
-  def my_other_method
-    my_method
-  end
-end
-
-module MyClassRefinement
-  refine MyClass do
-    def my_method
-      puts &quot;refined my_method&quot;
-    end
-  end
-end
-
-using MyClassRefinement
-MyClass.new.my_method  # =&gt; &quot;refined my_method&quot;
-MyClass.new.my_other_method # =&gt; &quot;original my_method&quot;
-</code></pre>
-<p>这里，my_other_method对my_method的调用，是在using之后，所以后面还是调用了之前未细化的my_method，所以用细化的时候还是要小心些。</p>
-</li>
-</ul>
-</li>
-<li><p>Superclass</p>
-<p>superclass是一个类方法，可以获取当前类的父类。像上面细化例子里面的MyClass，它的superclass是Object。</p>
-<pre><code class="Ruby">Array.superclass # =&gt; Object
-Object.superclass # =&gt; BasicObject
-BasicObject.superclass # =&gt; nil
-</code></pre>
-<p>以MyClass为例，obj是它的实例对象，对应的class, superclass如下：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79ly1fp7v0xt72bj31hc0u0493.jpg" alt=""></p>
-</li>
-<li><p>模块Module</p>
-<pre><code>Class.superclass =&gt; Module
-</code></pre><p>Module可以看成是一堆method的集合，类和模块很接近，使用的时候，如果你希望自己的代码包含在别的代码中，使用module，如果希望某段代码被实例化或者被继承，用类。</p>
-</li>
-</ul>
-<ul>
-<li><p>常量</p>
-<p>任何以大写字母开头的引用都是常量，包括<strong>类名</strong>和<strong>模块名</strong>。</p>
-<p>Ruby中的常量类似变量，它的值是可以修改的，那么它与变量有什么区别？最大的区别在于作用域。</p>
-<p>Ruby代码中的常量类似于文件系统中的文件，类和模块就像是目录。类似不同目录下，不同文件可以有相同的名字，不同的模块和类中，也可以有相同名字的常量。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">module M
-  MyContant = &#39;outer contant&#39;
-  class C
-    MyContant = &#39;inner contant&#39;
-  end
-  C::MyContant # =&gt; &quot;inner contant&quot;
-  M::MyContant # =&gt; &quot;outer contant&quot;
-end
-
-M::C::MyContant # =&gt; &quot;inner contant&quot;
-</code></pre>
-<p>这里，常量使用了路径引用的方式。用::进行分割。而M这种用来充当常量容器的模块，被称之为<strong>命名空间</strong>。</p>
-</li>
-<li><p>命名空间</p>
-<p>我觉得命名空间的一个作用是隔离。比如下面这种：</p>
-<pre><code class="Ruby">module N
-  class C
-    puts &quot;in module N&quot;
-  end
-end
-
-module M
-  class C
-    puts &quot;in module M&quot;
-  end
-end
-
-N::C # =&gt; in module N
-M::C # =&gt; in module M
-</code></pre>
-<p>使用命名空间可以轻松解决<strong>类同名</strong>的问题。这里书中提到了一个细节，有关load的使用。</p>
-<p>load用于加载代码，比如<code>load(&#39;demo.rb&#39;)</code>，demo.rb文件中如果定义了常量，就有可能污染当前程序的命名空间，怎么解决？通过参数来强制限定其只在自身范围内有效：<code>load(&#39;demo.rb&#39;, true)</code>.</p>
-</li>
-</ul>
-<h4 id="方法的调用"><a href="#方法的调用" class="headerlink" title="方法的调用"></a>方法的调用</h4><p>方法的调用分为方法的查找和执行。</p>
-<p>在细说之前，先说两个概念：<strong>接受者</strong>，<strong>祖先链</strong></p>
-<p><strong>接收者</strong>：调用方法所在的对象，比如my_array.replace()， 这里my_array就是接收者。</p>
-<p><strong>祖先链</strong>：以任意一个Ruby类为例，它从superclass一路往上找，superclass的superclass，直到BasicObject，其经历的路径，就是该类的祖先链。</p>
-<p>查看某个class的祖先链，使用ancestors【这是一个类方法】。比如：</p>
-<pre><code class="Ruby">Array.ancestors # =&gt; [Array, Enumerable, Object, Kernel, BasicObject]
-</code></pre>
-<p>这里Kernel模块是包含在Object这个class中的。于是，无论哪个对象都可以随意使用Kernel模块中的方法，这些方法又称之为<strong>内核方法</strong>（Kernel Method）.同样，你也可以<strong>打开Kernal，新增方法，这个方法就会对所有的对象可用了</strong>，cool吧？</p>
-<p>祖先链中包含模块，当某个模块包含在某个类中时，Ruby就会把该模块加入到祖先链中。</p>
-<p><strong>模块的位置在include它的类之上。如果是prepend， 则是在prepend它的类之下</strong>。</p>
-<p>【prepend也是很好的方法包装术，后面的章节中它还会出场】</p>
-<p>看几个例子加深理解：</p>
-<pre><code class="Ruby">module M1; end
-
-class C
-  include M1
-end
-
-class D &lt; C; end
-D.ancestors # =&gt; [D, C, M1, Object, Kernel, BasicObject]
-
-
-class C2
-  prepend M1
-end
-
-class D2 &lt; C2; end
-D2.ancestors # =&gt; [D2, M1, C2, Object, Kernel, BasicObject]
-</code></pre>
-<p><strong>一个模块只会在祖先链中出现一次：</strong></p>
-<pre><code class="Ruby">module M1; end
-module M2
-  include M1
-end
-
-module M3
-  prepend M1
-  include M2
-end
-
-M3.ancestors # =&gt; [M1, M3, M2]
-</code></pre>
-<p><strong>人生的出场顺序很重要，祖先链中也是：</strong></p>
-<pre><code class="Ruby">module M1; end
-module M2; end
-
-class C
-  include M1
-  include M2
-end
-
-class C2
-  include M2
-  include M1
-end
-
-C.ancestors # =&gt; [C, M2, M1]
-C2.ancestors # =&gt; [C2, M1, M2]
-</code></pre>
-<p>理解祖先链很有必要，它对于理解后面章节中，特别是单件类，类方法，实例方法等的覆写，扩展等很有帮助。</p>
-<ul>
-<li><p>方法查找</p>
-<p>一句话：<strong>向右一步，再向上</strong></p>
-<p><strong>搞懂了祖先链，其实也就知道了方法的查找</strong>，从接收者对应的class开始（向右一步），一直沿着祖先链往上找，直到找到这个method即可。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">module M1
-  def hello
-    puts &quot;hello, Ruby! this is M1&quot;
-  end
-end
-module M2
-  def hello
-    puts &quot;hello, Ruby! this is M2&quot;
-  end
-end
-
-class C
-  include M1
-  include M2
-end
-
-C.new.hello
-</code></pre>
-<p>这里hello是调用哪个？</p>
-<p>我们知道C.ancestors是 [C, M2, M1]，M2中有hello这个method，所以它会找到最近的那个，也就是M2的hello ，输出：<code>hello, Ruby! this is M2</code>。</p>
-</li>
-<li><p>方法执行</p>
-<p>Ruby中每一行代码都会在一个对象中被执行，这个对象就是所谓的当前对象，可以用self表示。</p>
-<p>任何时刻，只有一个对象可以充当当前对象，当调用一个方法时，接收者就成为了self。</p>
-<p>看个例子【书中的这个例子很好，直接拿来】：</p>
-<pre><code class="Ruby">class C
-  def test_self
-    @var = 1
-    my_method()
-    self
-  end
-
-  def my_method
-    @var = @var + 1
-  end
-end
-
-obj = C.new
-
-obj.test_self # =&gt; #&lt;C:0x007faf9d0588f0 @var=2&gt;
-</code></pre>
-<p>调用test_self时，obj就成为了self，@var成了obj的实例变量，执行my_method时，@var仍然是obj的实例变量， 最后返回self的引用，可以看到@var变为2。</p>
-<p>有关self部分，可以顺带说说两种情况。</p>
-<ul>
-<li><p>顶层上下文（top level context）</p>
-<p>如果没有调用任何方法，此时谁是self？运行irb，问Ruby：</p>
-<pre><code class="Ruby">self # =&gt; main
-self.class  # =&gt; Object
-</code></pre>
-<p>Ruby程序开始运行时，解释器会创建一个名为main的对象作为当前对象，也就是self。这个对象又叫做<strong>顶层上下文</strong>（top level context）。</p>
-</li>
-<li><p>类或模块中，self的角色由这个类或模块本身担任</p>
-</li>
-</ul>
-<p>书中还提到了借助self，重新理解private。即：<strong>不能明确指定接收者来调用私有方法</strong>。</p>
-<p>看个例子：</p>
-<pre><code class="Ruby">class C
-  def public_method
-    self.private_method
-  end
-
-  private
-
-  def private_method; end
-  end
-end  
-
-C.new.public_method
-</code></pre>
-<p>运行时会报错：</p>
-<pre><code>private method `private_method&#39; called for #&lt;C:0x007fce270f4478&gt; (NoMethodError)
-</code></pre><p>因为此处用了self，所以调用public_method时，C的对象便成为了self， 而private_method是不能直接被实例对象调用的。去掉public_method中的self即可。</p>
-<p>这部分的主要内容基本如上，是不是感觉学到了好多？: P</p>
-</li>
-</ul>
-<h4 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h4><p>去年打开《Ruby元编程》的时候，看得云里雾里，无法继续，现在再次打开，却有种拨开云雾之感，好似你懂了你曾不懂的，不知如何准确描述这种欣喜的感觉。Whatever，I love it!</p>
-<p>推荐这本<a href="https://book.douban.com/subject/26575429/" target="_blank" rel="noopener">Ruby元编程(第2版)</a></p>
-
-          
+          <p>《Ruby元编程》之对象模型笔记。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/24/ruby-metaprogramming-part1-the-object-model/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1592,7 +861,7 @@ C.new.public_method
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>555 words</span>
+              <span>569 words</span>
             </span>
           
 
@@ -1610,57 +879,14 @@ C.new.public_method
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在某些场景下，UI界面需要隐藏某些元素，这些元素对用户来说不可见，但是依然存在HTML中，当然，对用户不可见的元素，对于selenium也是不可见的，因为selenium基本就是在模拟着用户的页面行为。</p>
-<p>被隐藏的元素，会带有类似如下的CSS值：</p>
-<pre><code>style=”Display:none;&quot;
-style=&quot;visibility:hidden;&quot;
-type=”hidden”
-……
-</code></pre><p>针对这种情况，解决的思路有两个：</p>
-<ul>
-<li><strong>使用Selenium WebDriver 中driver的execute_script method直接对元素进行操作，比如click</strong></li>
-<li><strong>使用selenium WebDriver 中driver的execute_script method修改元素的属性，让它可见，然后再进行操作</strong></li>
-</ul>
-<p>第二种显得有点绕弯了，而且第二种在某些情况下并不适用，比如：</p>
-<p>看这段HTML代码：</p>
-<pre><code class="Html">&lt;div class=&quot;ant-time-picker-panel-select&quot;&gt;
-  &lt;ul&gt;
-    &lt;li&gt;09&lt;/li&gt;
-    &lt;li&gt;10&lt;/li&gt;
-    &lt;li&gt;11&lt;/li&gt;
-    &lt;li&gt;12&lt;/li&gt;
-    &lt;li&gt;13&lt;/li&gt;
-    &lt;li&gt;14&lt;/li&gt;
-    &lt;li&gt;15&lt;/li&gt;
-    &lt;li&gt;16&lt;/li&gt;
-    &lt;li class=&quot;ant-time-picker-panel-select-option-selected&quot;&gt;17&lt;/li&gt;
-  &lt;/ul&gt;
-&lt;/div&gt;
-</code></pre>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpgmneyklij30so08gdh8.jpg" alt=""></p>
-<p>这里其实并没有给元素添加一些不可见的CSS设置，即使你给13对应的li tag添加<code>style=&quot;visibility:visible;&quot;</code> 也没有效果，依然是不可见。</p>
-<p>通常的用户行为是将光标放在17的位置，然后鼠标滑动到最上方，让所有选项可见，然后再选择，为了不让问题过于复杂，针对隐藏元素，建议直接采用第一种解决方法。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>直接以上面的问题为例，假定我们需要选择13，先定位到13，采用cssSelector方式【戳这里了解<a href="using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/">如何快速获取xpath和cssSelector</a>】：</p>
-<pre><code class="Ruby">element = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li:nth-child(5)&quot;)
-</code></pre>
-<p>然后调用execute_script：</p>
-<pre><code class="Ruby">driver.execute_script(&quot;arguments[0].click();&quot;, element )
-</code></pre>
-<p>完成。</p>
-<p>这里如果选定的值是一个变量呢？可以直接封装起来：</p>
-<pre><code class="Ruby">def select_hour(driver, hour)
-  hour_list = driver.find_element(:css, &quot;.ant-time-picker-panel-select &gt; ul &gt; li&quot;)
-  target = hour_list.select {|x| x.text == hour }
-  driver.execute_script(&quot;arguments[0].click();&quot;, target.first ) if target != []
-end
-</code></pre>
-<p>OK，大功告成。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://seleniumwithjavapython.wordpress.com/selenium-with-python/intermediate-topics/playing-with-javascript-and-javascript-executor/hidden-elements-in-javascript/" target="_blank" rel="noopener">Hidden Elements In HTML Page</a></p>
-<p><a href="http://www.rubydoc.info/gems/selenium-webdriver/0.0.28/Selenium/WebDriver/Driver" target="_blank" rel="noopener">docs for Selenium::WebDriver::Driver</a></p>
-<p>PS. 还有一些麻烦的定位，比如从日期选择器中选定特定日期，可以参考<a href="https://www.guru99.com/handling-date-time-picker-using-selenium.html" target="_blank" rel="noopener">How to Select Date from DatePicker in Selenium Webdriver</a>，不过日期选择这种还是要具体问题具体分析。</p>
-
-          
+          <p>太阳底下，所有隐藏的都能找出来。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/24/deal-with-hidden-element-selenium/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1799,7 +1025,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>732 words</span>
+              <span>738 words</span>
             </span>
           
 
@@ -1817,107 +1043,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>用了很多前辈们造的轮子，没准你也想自己造个轮子，用实际行动来为open source添砖加瓦。</p>
-<p>即便刚开始做出来的不甚理想，甚至是破砖破瓦，不过能自己做一个gem，这本身就是一件很cool的事了：P</p>
-<p>那么一个简单的gem包括哪些文件呢？基本的框架是怎样的？如何快速创建一个gem？</p>
-<h4 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h4><ul>
-<li><p>准备工作：命名</p>
-<p>借用Phil Karlton的话：There are only two hard things in Computer Science: cache invalidation and <strong>naming things</strong>.</p>
-<p>So first of all, naming your gem. 记得去<a href="https://rubygems.org/" target="_blank" rel="noopener">rubygems</a>搜索下，确保你的gem名唯一。</p>
-<p>好，开始正式创建你的gem。</p>
-<p>如果你认真去看<a href="http://guides.rubygems.org/" target="_blank" rel="noopener">guides rubygems</a>， 会发现步骤其实还挺多，这里我们直接抄近道。</p>
-<p>一个gem的基本pattern长这样：【该gem名为ice_bear，呃，谁会不喜欢<a href="http://webarebears.wikia.com/wiki/Ice_Bear" target="_blank" rel="noopener">ice bear</a>？】</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpjbe4verpj30af09e0t2.jpg" alt=""></p>
-</li>
-</ul>
-<p>以下以ice_bear gem的创建为例，四步走：</p>
-<ul>
-<li><p>创建gem</p>
-<p>终端运行：</p>
-<pre><code>bundle gem ice_bear
-</code></pre><p>如果是第一次创建gem，会问你要不要生成test文件(rspec/minitest)，是否想要添加license等，根据需要回复即可。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1fpjawbg751j30rd059769.jpg" alt=""></p>
-<p>这里选择rspec,会生成如下文件：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1fpjaxcc7zcj30eo06ogm9.jpg" alt=""></p>
-<p>如果是第一次生成gem，是没有README.md的，需要自己手动添加。</p>
-</li>
-<li><p>放到GitHub上，open source</p>
-<p>默认添加了version control，所以cd 到ice_bear 目录后，不需要git init.</p>
-<p>终端运行：</p>
-<pre><code>cd ice_bear
-git add .
-git commit -m &quot;my first gem ice_bear&quot;
-git remote add origin https://github.com/XXX/ice_bear
-git push -u origin master
-</code></pre></li>
-<li><p>修改文件：<code>ice_bear_gemspec</code>：</p>
-<p>三处需要修改：spec.summary，spec.description，spec.homepage</p>
-<p>其中在spec.homepage 列添加你的public repo URL, 也就是你push到GitHub的repos 地址：</p>
-<pre><code class="spec">Gem::Specification.new do |spec|
-  ......
-  spec.summary       = &#39;ice bear would have been less charming&#39;
-  spec.description   = &lt;&lt;-TEXT
-  Ice Bear is the youngest of the trio but is undoubtedly the strongest and, in some respects, the most mature.
-  TEXT
-  spec.homepage      = &quot;https://github.com/xxxx/ice_bear&quot;
-  ......
-end
-
-</code></pre>
-<p>这里description部分太长，故用<code>&lt;&lt;-TEXT TEXT</code>【类似<a href="https://en.wikipedia.org/wiki/Here_document" target="_blank" rel="noopener">heredoc</a>】包起来了。</p>
-<p>最近进度push到GitHub：</p>
-<pre><code>git commit -am &quot;update ice_bear_gemspec&quot;
-git push
-</code></pre></li>
-<li><p>运行测试文件，确保正常</p>
-<p>本地运行<code>bundle exec rspec</code>，得到如下结果：</p>
-<pre><code class="Shell">IceBear
-  has a version number
-  does something useful (FAILED - 1)
-
-Failures:
-
-  1) IceBear does something useful
-     Failure/Error: expect(false).to eq(true)
-
-       expected: true
-            got: false
-
-       (compared using ==)
-     # ./spec/ice_bear_spec.rb:7:in `block (2 levels) in &lt;top (required)&gt;&#39;
-
-Finished in 0.08058 seconds (files took 0.55356 seconds to load)
-2 examples, 1 failure
-
-Failed examples:
-
-rspec ./spec/ice_bear_spec.rb:6 # IceBear does something useful
-</code></pre>
-<p>查看测试文件：<code>ice_bear_spec.rb</code> ：</p>
-<pre><code class="Ruby">RSpec.describe IceBear do
-  it &quot;has a version number&quot; do
-    expect(IceBear::VERSION).not_to be nil
-  end
-
-  it &quot;does something useful&quot; do
-    expect(false).to eq(true)
-  end
-end
-</code></pre>
-<p>与预期相同，OK！gem 搭建成功，下一步，make your gem useful ：P</p>
-</li>
-</ul>
-<h4 id="关于发布"><a href="#关于发布" class="headerlink" title="关于发布"></a>关于发布</h4><p>gem 完成后，确保你有<a href="https://rubygems.org/" target="_blank" rel="noopener">RubyGems.org</a>的账号，终端运行：</p>
-<pre><code>gem push ice_bear_0.1.0.gem
-</code></pre><p>其中0.1.0是你gem的版本号，输入账号和密码即可。当然你也可以修改一些其他设置，比如set up a private gem server，具体参见<a href="http://guides.rubygems.org/publishing/" target="_blank" rel="noopener">publishing your gem</a>。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9549450/how-to-setup-a-basic-ruby-project" target="_blank" rel="noopener">How to setup a basic ruby project?</a></p>
-<p><a href="https://github.com/codinguy/skeleton-ruby-project" target="_blank" rel="noopener">skeleton ruby project</a></p>
-<p><a href="http://guides.rubygems.org/" target="_blank" rel="noopener">guides rubygems</a></p>
-<p><a href="http://wsmoak.net/2015/02/22/ruby-project-structure.html" target="_blank" rel="noopener">Ruby Project Structure</a></p>
-<p><a href="http://guides.rubygems.org/publishing/" target="_blank" rel="noopener">publishing your gem</a></p>
-
-          
+          <p>第一次造轮子。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/21/create-your-first-rubygem/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2056,7 +1189,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>804 words</span>
+              <span>813 words</span>
             </span>
           
 
@@ -2074,92 +1207,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p> 之前用<a href="https://github.com/wvanbergen/chunky_png" target="_blank" rel="noopener">chunky png</a>来做图片处理，后面发现在添加线条及文字这方面，<a href="https://github.com/wvanbergen/chunky_png" target="_blank" rel="noopener">chunky png</a>很受限，决定换成<a href="https://github.com/rmagick/rmagick" target="_blank" rel="noopener">RMagick</a>，随后又因为它吃内存的原因，换成了 <a href="https://github.com/minimagick/minimagick" target="_blank" rel="noopener">mini_magick</a> , <a href="https://github.com/minimagick/minimagick" target="_blank" rel="noopener">mini_magick</a>的用法与<a href="https://github.com/rmagick/rmagick" target="_blank" rel="noopener">RMagick</a>较相似，这里记录下<a href="https://github.com/rmagick/rmagick" target="_blank" rel="noopener">RMagick</a>的draw用法【单纯觉得很好玩 : P】，另，安装的时候，踩了点坑，顺带把安装也写写。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>Mac OS下：</p>
-<pre><code>brew install imagemagick
-gem install rmagick
-</code></pre><p>如果已经安装了imagemagick，则：</p>
-<pre><code>brew upgrade imagemagick
-gem install rmagick
-</code></pre><p>对于<strong>Mac OSX Sierra</strong> (and High Sierra)，安装的时候，可能还是失败，看日志，可能会出现这样的报错信息：</p>
-<pre><code>Can&#39;t install RMagick 2.16.0. Can&#39;t find MagickWand.h.
-</code></pre><p>如何解决？参考这个<a href="https://stackoverflow.com/questions/39494672/rmagick-installation-cant-find-magickwand-h" target="_blank" rel="noopener">RMagick installation: Can’t find MagickWand.h</a></p>
-<p>终端输入：</p>
-<pre><code>brew unlink imagemagick
-brew install imagemagick@6 &amp;&amp; brew link imagemagick@6 --force
-</code></pre><p>然后：</p>
-<pre><code>gem install rmagick
-</code></pre><p>OK，你已经get到了这个轮子，看看怎么使用吧。</p>
-<h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><p>RMagick不仅仅可以用来给图片添加线条和文字，它还可以新建，读写图片等，戳<a href="https://rmagick.github.io/usage.html" target="_blank" rel="noopener">官网</a>详见。</p>
-<p>重点看它的draw类。【因为我觉得Drawing on and adding text to images是它最cool的功能点：P】</p>
-<p>这里用两个简单的例子说一下如何添加文字和线条。</p>
-<ul>
-<li><p>添加线条</p>
-<p>以添加一个方框为例，新建<code>demo.rb</code>:</p>
-<pre><code class="Ruby">require &#39;RMagick&#39;
-include Magick
-
-demo = ImageList.new(&quot;demo.png&quot;) # 建image对象，这里demo.png是存在的，若要新建一张图片，可以用Image.new
-border = Magick::Draw.new # 建draw实例
-border.stroke(&#39;rgb(255,0,0)&#39;) # 线条颜色，这里红色
-border.fill(&#39;transparent&#39;) # 填充色，这里不填充，选透明
-border.stroke_width(4) # 线条宽度
-border.rectangle(100, 100, 500, 500) # 方框线条的位置，左上角起始点,右下角终止点
-border.draw(demo) # 给demo画上
-demo.write(&#39;demo.png&#39;) # 保存
-</code></pre>
-<p>这里，demo.png本来是一张空白图片：【不要怀疑，我真的放了一张空白的图片】</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fp6upeoxkfj31hc0hndfm.jpg" alt=""></p>
-<p>终端运行<code>ruby demo.rb</code>后，demo.png成了这样：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fp6urjqvynj31hc0hn0nb.jpg" alt=""></p>
-<p>好玩吧？还可以画其他的，比如圆形，星星等等，比如我们画个星星:</p>
-<pre><code class="Ruby">require &#39;RMagick&#39;
-include Magick
-
-demo = ImageList.new(&quot;demo.png&quot;)
-star = Magick::Draw.new
-star.stroke(&#39;red&#39;).stroke_width(3)
-star.fill(&#39;yellow&#39;)
-star.polygon( 75,37.5,     89.5,80.5, 134.5,80.5,   98.5,107.5,
-           111.5,150.5,  75,125,    38.5,150.5,   51.5,107.5,
-           15.5,80.5,    60.5,80.5)
-star.draw(demo)
-demo.write(&#39;demo.png&#39;)
-</code></pre>
-<p> 运行后，效果图：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fp6uxrz3c5j31hc0hngll.jpg" alt=""></p>
-<p>画图基本的套路就是这样，想画画其他的？看它的<a href="https://rmagick.github.io/draw.html" target="_blank" rel="noopener">draw class</a>的文档。</p>
-</li>
-<li><p>添加文字</p>
-<p>还是用demo.png，我们看看如何在空白页上添加文字：</p>
-<pre><code class="Ruby">require &#39;RMagick&#39;
-include Magick
-
-demo = ImageList.new(&quot;demo.png&quot;)
-Text = &#39;I Love Ruby!&#39; # 需要添加的文字
-text = Magick::Draw.new
-text.font_family = &#39;helvetica&#39; # 字体
-text.pointsize = 60 # 大小
-text.gravity = Magick::CenterGravity # 字的朝向，这里是区域的中心
-# 调用annotate(img, width, height, x, y, text)这个method给demo添加文字， width, height, x, y决定字体的摆放位置
-# 把文字当成一个长方形，width, height是起始位置【gravity设定的起始点】，x, y是偏移量. fill是填充色
-text.annotate(demo, 0,0,2,2, Text) {
-    self.fill = &#39;red&#39;
-}
-
-demo.write(&#39;demo.png&#39;)
-</code></pre>
-<p>效果图：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fp6veoa0fmj31hc0hna9x.jpg" alt=""></p>
-<p>哈哈，是不是很cool？我就抛砖引玉，剩下的，看文档，自己玩吧！</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/39494672/rmagick-installation-cant-find-magickwand-h" target="_blank" rel="noopener">RMagick installation: Can’t find MagickWand.h</a></p>
-<p><a href="https://rmagick.github.io/usage.html" target="_blank" rel="noopener">how to use RMagick</a></p>
-<p><a href="https://rmagick.github.io/draw.html" target="_blank" rel="noopener">class Draw</a></p>
-
-          
+          <p>画画的过程蛮好玩的。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/18/drawing-on-and-adding-text-to-images-using-rmagick/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2298,7 +1353,7 @@ demo.write(&#39;demo.png&#39;)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>833 words</span>
+              <span>843 words</span>
             </span>
           
 
@@ -2316,42 +1371,14 @@ demo.write(&#39;demo.png&#39;)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写过一篇有关<a href="http://luciaca.cn/2018/01/24/learning-selenium-webdriver-ruby-version/" target="_blank" rel="noopener">Selenium webdriver</a> 的学习笔记，这里再补充个小技巧。</p>
-<p>Selenium webdriver testing中，定位元素是非常基本的步骤，定位到了元素你才能对其进行操作。如果可以快速获取元素的xpath, cssSelector，同时也能检查自己写的xpath, cssselector是否正确，那就太赞了。</p>
-<p>这里以能造轮子会拍照的Kenneth Reitz的<a href="https://github.com/kennethreitz" target="_blank" rel="noopener">github</a>主页为例，来看看如何快速获取及检验你的xpath，cssSelector。</p>
-<p>BTW，定位元素的方法有很多，我在学习笔记也有记录，能用id尽量用id，这里仅仅说一下如何借助console来完成xpath, cssSelector的定位，并不代表元素定位就这两种方式。</p>
-<h4 id="如何获取？"><a href="#如何获取？" class="headerlink" title="如何获取？"></a>如何获取？</h4><p>假定我们希望对页面中unfollow这个按钮进行click的操作， 那么首先得要找到它。</p>
-<p>chrome浏览器下，选中该元素，查看<strong>inspect</strong>，打开developer tool，然后右键，选择<strong>copy</strong>，就可以看到copy  selector, copy xpath两个选项了。</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdadi8mxsg31180izgyr.gif" alt=""></p>
-<p>针对你需要的copy即可。不过提醒下，这里一般copy下来的cssSelector都特别长，你可以自行做一下删减。</p>
-<p>比如上面这个，得到的selector：</p>
-<pre><code>#js-pjax-container &gt; div &gt; div.h-card.col-3.float-left.pr-3 &gt; div.user-profile-following-container.js-user-profile-following-toggle.mb-3 &gt; span &gt; span.unfollow &gt; form &gt; button
-</code></pre><p>得到的xpath是这样：</p>
-<pre><code>//*[@id=&quot;js-pjax-container&quot;]/div/div[1]/div[5]/span/span[2]/form/button
-</code></pre><p>Xpath不算太长，还能接受，不过xpath会将页面的所有元素进行扫描以完成定位，比较耗时，所以能用cssSelector的话，还是选择cssSelector。</p>
-<p>那么上面那个太长了，怎么简化？把它的class复制下来：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdaob6bnfj311m0axaeb.jpg" alt=""></p>
-<p>改成这样：</p>
-<pre><code>button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target
-</code></pre><p>那要如何确定自己写的这个selector是否正确呢？看下面👇：</p>
-<h4 id="如何检测？"><a href="#如何检测？" class="headerlink" title="如何检测？"></a>如何检测？</h4><p>在developer tool的console中，<strong>使用$$(“xxx”)来检查cssSelector， 使用$x(“xxxx”)来检查xpath</strong>。</p>
-<p>这里有两处console可供使用，一般直接用element下面的，方便直接查看定位到的元素。</p>
-<p>来检查一下刚刚的selector是否正确。</p>
-<p>输入后<code>$$(&quot;button.btn.btn-block.top-0.js-sticky.js-user-profile-follow-button.js-toggler-target&quot;)</code>，发现找到了两个元素，第一个是follow的按钮，第二个才是我们要的unfollow。</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fpdbb108vig30yw0k24qp.gif" alt=""></p>
-<p>发现定位到了两个元素，这样怎么破？</p>
-<p>仔细看，会发现这是一个Ajax的交互，点击unfollow后，向服务器发出unfollow的请求，执行user controller中对应的unfollow action，页面渲染，随后出现follow按钮。</p>
-<p>鉴于这两个按钮的cssSelector一模一样，这种情况下，建议换成xpath。</p>
-<p>用刚刚获取的xpath来检测一下：</p>
-<p>如果你输入有语法错误，它会报错，这里注意双引号的使用。在双引号中嵌套了其他双引号，换成单引号。</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fpfi6bihaxg30yw0k2gz5.gif" alt=""></p>
-<p>发现用xpath来定位时，只有一个。OK，完成定位。</p>
-<p>PS.这里cssSelector的这个例子举的不是很好，但用法基本就是这么玩的。</p>
-<h4 id="推荐"><a href="#推荐" class="headerlink" title="推荐"></a>推荐</h4><p>在Google selenium相关测试中，找到了这篇文章<a href="http://yizeng.me/2014/03/23/evaluate-and-validate-xpath-css-selectors-in-chrome-developer-tools/" target="_blank" rel="noopener">Evaluate and validate XPath/CSS selectors in Chrome Developer Tools</a>，作者写的很详细，看完让我有种感觉：“人家都写的这么好了，我还写个啥？”……</p>
-<p>当然，最终我还是决定要写写，加深印象:  P</p>
-
-          
+          <p>快速找到心心念念的element。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/17/using-chrome-console-to-evaluate-and-validate-xpath-and-cssselector/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2508,25 +1535,14 @@ demo.write(&#39;demo.png&#39;)
 
       
         
-          
-            <h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>在selenium web driver test 中，遇到的一个问题：进行fill form操作时，会抛出error：</p>
-<p><strong>unknown error: call function result missing ‘value’</strong></p>
-<p>其中：chrome  version 65，chromedriver version 2.34，  Mac OS Sierra 10.12</p>
-<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>Google后，很快看到解答：来自stack overflow的<a href="https://stackoverflow.com/questions/49175711/q-codeceptjs-unknown-error-call-function-result-missing-value" target="_blank" rel="noopener">Q: CodeceptJS “unknown error”: call function result missing ‘value’</a></p>
-<p> <img src="https://ws2.sinaimg.cn/large/006tNc79gy1fpdjohdpuxj30k306uzlp.jpg" alt=""></p>
-<p>chrome悄无声息地升级到了65，这个坑真的是让人无言以对……</p>
-<p>解决方法也就是升级chrome driver ，那就开始吧。</p>
-<h4 id="升级"><a href="#升级" class="headerlink" title="升级"></a>升级</h4><p>Mac下，使用brew:</p>
-<pre><code>brew upgrade chromedriver
-</code></pre><p>OK, 搞定！一步更新到最新版2.36。</p>
-<p>再次运行测试，passed。</p>
-<p>后记下：</p>
-<p>现在看升级方法，很简单，但是最开始的时候，我用<code>brew upgrade chromedriver</code>出错了，以为不能这么升级【现在想想，当时应该是翻墙的原因】，然后我竟然脑抽地改用了<code>npm install chromedriver --chromedriver_version=LATEST</code>！！ 报错 http request error, Google后看<a href="https://github.com/vuejs/vue-cli/issues/562" target="_blank" rel="noopener">ChromeDriver installation failed Error with http request: Error</a>，是翻墙的原因，还一本正经地采用了cdn的迂回方法，结果各种惨不忍睹 ……</p>
-<p>写下这个，主要是希望同我一般的小白，别再踩坑了，白白浪费了大好时光，Mac下，直接<code>brew upgrade chromedriver</code>即可。当然，Linux下，还是用npm ： P</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/49175711/q-codeceptjs-unknown-error-call-function-result-missing-value" target="_blank" rel="noopener">Q: CodeceptJS “unknown error”: call function result missing ‘value’</a></p>
-<p><a href="https://stackoverflow.com/questions/48609069/org-openqa-selenium-webdriverexception-unknown-error-call-function-result-miss" target="_blank" rel="noopener">org.openqa.selenium.WebDriverException: unknown error: call function result missing ‘value’</a></p>
-
-          
+          <p>在selenium web driver test 中，遇到的一个问题。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/15/selenium-unknown-error-call-function-result-missing-value/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2652,7 +1668,7 @@ demo.write(&#39;demo.png&#39;)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,443 words</span>
+              <span>1,439 words</span>
             </span>
           
 
@@ -2670,25 +1686,14 @@ demo.write(&#39;demo.png&#39;)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这三本是17年夏脱产在家那会，约朋友一起看完的，整理文档的时候，把三本的读后感简单整理了下。</p>
-<h4 id="老舍文集"><a href="#老舍文集" class="headerlink" title="老舍文集"></a>老舍文集</h4><p>300多页，整本书含话剧《茶馆》，《正红旗下》、《我这一辈子》等7部小说，15篇散文。</p>
-<p>读完后什么感觉呢？</p>
-<p>没什么特别的，更多的是阅读中获得的快乐吧，同时对那个时代多了些了解。</p>
-<p>对于这类文学书籍，我曾经的阅读原则是快读就是王道，但这次我没有，反而选择放慢，所以读《茶馆》的时候，我会惊讶于王利发的精于世故，常四爷的硬气如初，看《正红旗下》时，我会想到原来100多年前北京的风沙已经很严重，对大姐夫家那一群人的行为感到可笑又可气，看《微神》时，被老舍对于美好初恋的描写所感动，也为他年少时屡屡不曾吐露心事而生气，既是那么喜欢，为什么不表明心迹？也心疼《月牙儿》里面的她，而《我这一辈子》，则让我对巡警这个职业有了新的认识，寻着蛛丝马迹，自己硬是将《正红旗下》里的定大爷的原型与《宗月大师》牵在了一起。</p>
-<p>大抵上一个人只有对生活有了深入的，足够的观察，才能写出让读者共鸣的文字，那些文字在某种层面上其实也表达着作者本人观察这个世界的方式。只是这样一个热爱自然，懂得生活美好与苦涩的人，最后为何会选择投湖来结束自己的生命？搜了下，发现原来真的是不能仅凭一些文字就给一个人盖棺论定，文字只是他的一个方面，而现实生活中他的所作所为才是其自身价值观的写照。了解了下老舍的个人生活，然后明白，作品和人是要分开的。</p>
-<h4 id="沈从文《边城》"><a href="#沈从文《边城》" class="headerlink" title="沈从文《边城》"></a>沈从文《边城》</h4><p>喜欢这个简单而美好的故事，虽然最后的结局并不是那么的美好。</p>
-<p>故事发生在茶峒，主线是翠翠与大老，二老之间的感情发展，但是通篇里面，作为渡船人的爷爷戏份却是最多，想来爷爷这样淳朴耿直之人现如今怕是太少了，而翠翠那个年代的爱情，怕也仅仅停留在那个年代了。看书的过程，更多是像在看一部很舒心的老电影，看那个时代一个小镇上的风俗人情，记得书中提到若是欢喜一个姑娘，就每天夜里在对溪高崖上为她唱歌，唱上三年零六个月。二八年纪里，对爱情的懵懂与憧憬，会让一个人心甘情愿去做些外人看起来很傻的事儿吧，而对于当事人而言，却是甘之如饴，恨不能久久如此。在这个人人被娱乐信息轰炸的年代，手机已经成为个体的一个部分，还会有人愿意夜夜在对岸，为了一个不确定的结果，唱上三年零六个月吗？</p>
-<h4 id="钱钟书《围城》"><a href="#钱钟书《围城》" class="headerlink" title="钱钟书《围城》"></a>钱钟书《围城》</h4><p>是二刷了，第一次看还是好几年前的事了。</p>
-<p>整本书看下来，越看到后面心里越闷闷的。</p>
-<p>最喜赵辛楣，唐晓芙。</p>
-<p>赵辛楣出场并不夺人，但是随着剧情的发展，真是让人越来越喜欢。单恋二十多年的女神跟别人结婚了，他去参加婚礼，心里难过，面上却平平静静，待见到新郎，却又失望至极，怕是不明白女神的择偶标准竟是如此。后面跟方一起去三闾大学，一路同行中，他的处事态度与待人方式，也是让人刮目相看，情商很高。后面在校教学，因汪太太一事而离开，远赴香港，也是走得干干脆脆，及至苏文纨来港拜访，临走时告诉他，自己近来爱读他写给她的信，他的态度呢？他对方渐鸿说她可笑，看到这里，我也不得不佩服，女人大半喜欢显摆他人对自己的爱慕，只是她忘了那爱慕也多跟食物一样，有保质期的，过期了的食物硬是要拿出来在当事人面前显摆，也是够够的了。</p>
-<p>唐晓芙出场并不多，戏份算少的，可是少而精，给人留下极好的印象，这样直爽的姑娘没人会不喜欢吧。</p>
-<p>也许我喜欢他们俩，是觉得他们活得坦率，不拧巴吧。</p>
-<p>方渐鸿作为主角，可却并不讨喜，至少我个人是不大欢喜的。在对待异性上，颇有来者不拒的作风。从鲍小姐一例中可见端倪，而苏文纨呢？他并不爱她，却也不拒绝，最后逼到急处，不得不开口。假定当时他并没有遇到唐晓芙，会不会就这样让苏一直误以为自己也是有意的，半推半就，享受着“高冷美人”的爱慕？幸得唐晓芙并未嫁他，孙柔嘉，呃，我并不喜欢这个姑娘，套路有点深啊。后面他们结婚，常常争吵，都是些鸡毛蒜皮的小事，看到后面会觉得，这城，又何尝不是他们自己要围起来的？</p>
-<h4 id="End"><a href="#End" class="headerlink" title="End"></a>End</h4><p>去整理一些曾经写的小段小段笔记，会发现原来此前的人生并不是那么的虚度，记录真的是个好东西。</p>
-
-          
+          <p>这三本是17年夏脱产在家那会，约朋友一起看完的，整理文档的时候，把三本的读后感简单整理了下。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/11/notes-of-laoshewenji-biancheng-etc/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2827,7 +1832,7 @@ demo.write(&#39;demo.png&#39;)
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>608 words</span>
+              <span>611 words</span>
             </span>
           
 
@@ -2845,92 +1850,14 @@ demo.write(&#39;demo.png&#39;)
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>日志的重要性自不用说，Rails中log的存放地址位于log目录下，有develogment.log， production.log等。开发的时候，我通常会单独开个terminal窗口，跑rails s， 出问题了，就在那个窗口看日志。现在看来，这还是挺低级的。</p>
-<p>近来看一些前辈写的Rails相关知识，有推荐<a href="https://github.com/colbygk/log4r" target="_blank" rel="noopener">log4r</a>，尝试了下， 还不错。日志按照日期分开存放，也很好查找。</p>
-<p>除了rails，其他的ruby项目也可以用log4r（log for ruby），这里只说一下如何在Rails中使用log4r。</p>
-<h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>先吐槽下，看了不少轮子，没见过<a href="https://github.com/colbygk/log4r" target="_blank" rel="noopener">log4r</a>这种的，没有常规的installation，usage，Wiki里面也没有说明。所有的信息，需要自己去doc里面看manual，index， 手法别样，上图感受下：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fp5na0nzx8j30is07pgmm.jpg" alt=""></p>
-<p>好，不废话。看看如何在rails用它。</p>
-<p>四步走。</p>
-<ul>
-<li><p>在gemfile中添加</p>
-<pre><code class="Ruby">gemfile &#39;log4r&#39;
-</code></pre>
-<p>终端bundle, 重启服务器。</p>
-</li>
-<li><p>修改<code>config/application.rb</code></p>
-<pre><code class="Ruby">require &#39;rails/all&#39;
-# add these line for log4r
-require &#39;log4r&#39;
-require &#39;log4r/yamlconfigurator&#39;
-require &#39;log4r/outputter/datefileoutputter&#39;
-
-Bundler.require(:default, Rails.env) if defined?(Bundler)
-module my_app
-  class Application &lt; Rails::Application
-    #...
-    # assign log4r&#39;s logger as rails&#39; logger.
-    include Log4r
-    log4r_config= YAML.load_file(File.join(File.dirname(__FILE__),&quot;log4r.yml&quot;))
-    YamlConfigurator.decode_yaml( log4r_config[&#39;log4r_config&#39;] )
-    config.logger = Log4r::Logger[Rails.env]
-  end
-end
-</code></pre>
-</li>
-<li><p>新增配置文件<code>config/log4r.yml</code>：</p>
-<pre><code class="YMl">log4r_config:
-  # define all loggers ...
-  loggers:
-    - name      : production
-      level     : WARN
-      trace     : &#39;false&#39;
-      outputters :
-      - datefile
-    - name      : development
-      level     : DEBUG
-      trace     : &#39;true&#39;
-      outputters :
-      - datefile
-
-  # define all outputters (incl. formatters)
-  outputters:
-  - type: DateFileOutputte
-    name: datefile
-    dirname: &quot;log&quot;
-    filename: &quot;my_app.log&quot; # notice the file extension is needed!
-    formatter:
-      date_pattern: &#39;%H:%M:%S&#39;
-      pattern     : &#39;%d %l: %m &#39;
-      type        : PatternFormatter
-</code></pre>
-<p>这时，如果重启rails，会发现报错:</p>
-<pre><code>undefined method `formatter&#39; for #&lt;Log4r::Logger:0x007fd97a78e780&gt; (NoMethodError)
-</code></pre><p>我当时也是懵逼，不知道怎么解决，后来Google到了解决方法。<strong>对于Rail4.0+ ，需要添加文件，声明formatter这个method</strong>。</p>
-</li>
-<li><p>新增文件<code>config/initializers/log4r_patch_for_rails4.rb</code>:</p>
-<pre><code class="Ruby">class Log4r::Logger
-  def formatter()
-  end
-end
-</code></pre>
-</li>
-</ul>
-<p>配置完成！重启下服务器，然后你会发现不管做了什么操作，terminal终端什么也没有输出，一直保持如下内容：</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1fp5nyadi35j30ig065aaz.jpg" alt=""></p>
-<p>而log文件夹下会出现按照日期分开的日志文件，类似：my_log_2018-03-08.log， my_log_2018-03-09.log</p>
-<p>日志文件内容类似这样：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tNc79gy1fp5o42hotyj308z023aaa.jpg" alt=""></p>
-<p>因为outputters选择了DateFileOutputte，相比之前在rails s窗口查看，多了时间和logger类型。</p>
-<p>具体的输出格式也可以在<code>config/log4r.yml</code>进行更换，log4r的GitHub库列出来所有的格式：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1fp5o82pf20j30a40a8q3q.jpg" alt=""></p>
-<p>OK，大功告成！！</p>
-<p>另：建了个gist，上述提到的log4r的配置文件代码，可见<a href="https://gist.github.com/Lupeipei/7297b1a784e7bb4da39eeb7d26c8d834" target="_blank" rel="noopener">using log4r on rails</a></p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://web.siwei.me/web_components/log4r.html" target="_blank" rel="noopener">日志：log4r</a></p>
-<p><a href="https://www.ruby-forum.com/topic/61764" target="_blank" rel="noopener">using log4r and rails</a></p>
-
-          
+          <p>初尝log4r。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/10/using-log4r-on-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -3146,7 +2073,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

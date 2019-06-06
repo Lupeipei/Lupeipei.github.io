@@ -89,18 +89,18 @@
 
 
 
-<meta name="description" content="项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查ActiveSupport::MessageVerifier::InvalidSignature， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。 场景：现有model attachment，含">
+<meta name="description" content="Rspec 遇上 Active Storage。">
 <meta name="keywords" content="Rails,ErrorTracking">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature">
 <meta property="og:url" content="http://lupeipei.github.io/2018/06/16/error-record-of-activesupport-messageverifier-invalidsignature/index.html">
 <meta property="og:site_name" content="Lucia">
-<meta property="og:description" content="项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查ActiveSupport::MessageVerifier::InvalidSignature， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。 场景：现有model attachment，含">
+<meta property="og:description" content="Rspec 遇上 Active Storage。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-03-15T10:47:59.000Z">
+<meta property="og:updated_time" content="2019-06-06T02:16:42.496Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature">
-<meta name="twitter:description" content="项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查ActiveSupport::MessageVerifier::InvalidSignature， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。 场景：现有model attachment，含">
+<meta name="twitter:description" content="Rspec 遇上 Active Storage。">
 
 
 
@@ -374,7 +374,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>508 words</span>
+              <span>513 words</span>
             </span>
           
 
@@ -391,7 +391,9 @@
       
 
       
-        <p>项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查<a href="http://api.rubyonrails.org/v5.2/classes/ActiveSupport/MessageVerifier.html" target="_blank" rel="noopener">ActiveSupport::MessageVerifier::InvalidSignature</a>， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。</p>
+        <p>Rspec 遇上 Active Storage。</p>
+<a id="more"></a>
+<p>项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查<a href="http://api.rubyonrails.org/v5.2/classes/ActiveSupport/MessageVerifier.html" target="_blank" rel="noopener">ActiveSupport::MessageVerifier::InvalidSignature</a>， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。</p>
 <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>现有model attachment，含有字段file，title，另有一个model issue，issue与attachment是一对多的关系。</p>
 <p> 在<code>app/models/attachment.rb</code>中，添加了：</p>
 <pre><code class="Ruby">class Attachment &lt; ApplicationRecord
@@ -441,7 +443,7 @@ end
        ActiveSupport::MessageVerifier::InvalidSignature
 </code></pre>
 <p>如果你在<code>issues_controller.rb</code>的issue_params中设置断点，会发现attachment虽然创建成功，但是attachment的file为空，也就是active storage并没有创建对应的blob， file并没有成功attached，可以通过<code>attachment.file.attached?</code>来判断file是否已经attached。</p>
-<h4 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a>解决方法：</h4><p>最后找到的解决的方法其实很简单，来自stack overflow上<a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a>， 只要修改一下attachment测试数据的生成方式即可，修改<code>spec/factories/attachments.rb</code>：</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>最后找到的解决的方法其实很简单，来自stack overflow上<a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a>， 只要修改一下attachment测试数据的生成方式即可，修改<code>spec/factories/attachments.rb</code>：</p>
 <pre><code class="Ruby">FactoryBot.define do
   factory :attachment do
     title &quot;this is a title&quot;
@@ -452,7 +454,7 @@ end
 end
 </code></pre>
 <p>再次跑测试，会发现通过了。</p>
-<h4 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h4><p><a href="https://stackoverflow.com/questions/48162667/active-storage-raises-activesupportmessageverifierinvalidsignature" target="_blank" rel="noopener">Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature</a></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/48162667/active-storage-raises-activesupportmessageverifierinvalidsignature" target="_blank" rel="noopener">Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature</a></p>
 <p><a href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails" target="_blank" rel="noopener">How to properly do model testing with ActiveStorage in rails?</a></p>
 <p><a href="http://edgeapi.rubyonrails.org/classes/ActiveStorage/Attached/One.html#method-i-attach" target="_blank" rel="noopener">Active Storage attached one</a></p>
 
@@ -675,7 +677,7 @@ end
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#场景："><span class="nav-number">1.</span> <span class="nav-text">场景：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法："><span class="nav-number">2.</span> <span class="nav-text">解决方法：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考："><span class="nav-number">3.</span> <span class="nav-text">参考：</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#场景："><span class="nav-number">1.</span> <span class="nav-text">场景：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法"><span class="nav-number">2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
@@ -740,7 +742,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>

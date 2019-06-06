@@ -296,7 +296,7 @@
               
                 
                 <a class="post-title-link" href="/2018/03/08/rendering-layout-for-special-action/" itemprop="url">
-                  Rails中如何给action的render设置特定的layout？
+                  Rails中如何给action设置特定的layout？
                 </a>
               
             
@@ -369,7 +369,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>184 words</span>
+              <span>190 words</span>
             </span>
           
 
@@ -387,41 +387,14 @@
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>默认情况下，controller 中action的layout都是<code>application.html.erb</code>，也可以统一更换，在controller中，添加：</p>
-<pre><code class="Ruby">layout &#39;my_layout&#39;
-</code></pre>
-<p>现在假定，针对action new，需要使用layout：my_layout， 其他的actions都采用application, 如何实现？</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>我曾一厢情愿地以为应该可以这样， 在controller中添加如下语句👇：</p>
-<pre><code class="Ruby">layout &#39;my_layout&#39;, :only =&gt; :new
-</code></pre>
-<p>显然，一厢情愿的结果常常都面临着悲剧。</p>
-<p>正确的脱坑方式是这样的👇：</p>
-<p>在controller中定义一个private method， 然后在该method中进行设置：</p>
-<pre><code class="Ruby">layout :my_layout
-.....
-
- private
-
-def my_layout
-    params[:action] == &#39;new&#39; ? &#39;my_layout&#39; : &#39;application&#39;
-end
-</code></pre>
-<p>如果是指定的多个action都是my_layout呢？</p>
-<p>这么设置：</p>
-<pre><code class="Ruby">layout :my_layout
-.....
-
- private
-
-def my_layout
-    %w[action1 action2 action3……].include?params[:action] ? &#39;my_layout&#39; : &#39;application&#39;
-end
-</code></pre>
-<p>Ok。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9903261/rendering-layout-for-specific-actions" target="_blank" rel="noopener">Rendering Layout for specific actions</a></p>
-
-          
+          <p>render action with custom layout page.</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/08/rendering-layout-for-special-action/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -560,7 +533,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>767 words</span>
+              <span>763 words</span>
             </span>
           
 
@@ -578,135 +551,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>之前写了篇学习笔记<a href="http://luciaca.cn/2018/02/24/using-layer-on-Rails/" target="_blank" rel="noopener">Rails中使用layer弹窗组件</a>， 这篇写写如何在Rails中使用layer的photos来实作图片预览。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>在其文档的<a href="http://www.layui.com/doc/modules/layer.html#layer.photos" target="_blank" rel="noopener">layer.photos</a>中，有用法的详细说明。两种方式：</p>
-<ul>
-<li>直接读取页面图片</li>
-<li>传入json</li>
-</ul>
-<p>来看一下每种方式的具体使用。</p>
-<h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
-<pre><code class="Html">//HTML示例
-&lt;div id=&quot;layer-photos-demo&quot; class=&quot;layer-photos-demo&quot;&gt;
-  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
-  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
-&lt;/div&gt;
-
-&lt;script&gt;
-//调用示例
-layer.photos({
-  photos: &#39;#layer-photos-demo&#39;
-  ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
-});
-&lt;/script&gt;
-</code></pre>
-<p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
-<p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg" alt=""></p>
-<p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
-<p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
-<pre><code class="Html">//HTML示例
-&lt;% @products.each do |product| %&gt;
-    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
-      &lt;% product.images.each do |image |%&gt;
-      &lt;img  onclick= &quot;getImage(&#39;&lt;%= product.id %&gt;&#39;);&quot; layer-src=&quot;&lt;%= image.src %&gt;&quot; src=&quot;&lt;%= image.thumb %&gt;&quot; alt=&quot;图片名&quot;&gt;
-       &lt;% end %&gt;   
-    &lt;/div&gt;
-&lt;% end %&gt;
-
-&lt;script&gt;
-    function getImage(productId){
-        layer.photos({
-            photos: &#39;#product-&#39; + productId,
-            anim:5
-        });
-    }
-&lt;/script&gt;
-</code></pre>
-<h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
-<pre><code class="Javascript">$.getJSON(&#39;/jquery/layer/test/photos.json&#39;, function(json){
-  layer.photos({
-    photos: json
-    ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
-  });
-});
-</code></pre>
-<p>返回的JSON需严格按照如下格式：</p>
-<pre><code class="json">{
-  &quot;title&quot;: &quot;&quot;, //相册标题
-  &quot;id&quot;: 123, //相册id
-  &quot;start&quot;: 0, //初始显示的图片序号，默认0
-  &quot;data&quot;: [   //相册包含的图片，数组格式
-    {
-      &quot;alt&quot;: &quot;图片名&quot;,
-      &quot;pid&quot;: 666, //图片id
-      &quot;src&quot;: &quot;&quot;, //原图地址
-      &quot;thumb&quot;: &quot;&quot; //缩略图地址
-    }
-  ]
-}
-</code></pre>
-<p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
-<p>还是以product为例， 三步走：</p>
-<ul>
-<li><p>给它添加一个preview的action， 在routes中声明</p>
-<p>在<code>routes.rb</code>中添加：</p>
-<pre><code class="Ruby">resources :products do
-  member do
-    get :preview
-  end
- end
-</code></pre>
-</li>
-<li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
-<pre><code class="Ruby">def preview
-  @product = Product.find(params[:id])
-  @images = @product.images.all
-  @photo = {
-      title: @product.title,
-      id: @product.id,
-      start: 0,
-      data: @images.map do |image|
-        {
-            alt: image.title,
-            pid: image.id,
-            src: image.src,
-            thumb: image.thumb
-        }
-      end
-  }
-  render json: @photo
-end
-</code></pre>
-<p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
-</li>
-<li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
-<pre><code class="Html">&lt;% @products.each do |product| %&gt;
-    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
-      &lt;a href=&quot;javascript:getImageJson(&#39;&lt;%= product.id %&gt;&#39;);&quot;&gt;
-      查看产品图片&lt;/a&gt;
-    &lt;/div&gt;
-&lt;% end %&gt;
-
-&lt;script&gt;
-    function getImageJson(productId) {
-        $.getJSON(&#39;/products/&#39; + productId + &#39;/preview&#39;, function(json){
-            layer.photos({
-                photos: json,
-                anim: 5
-            });
-        });
-    }
-&lt;/script&gt;
-</code></pre>
-</li>
-</ul>
-<p>刷新页面确认是否正常。</p>
-<p>OK， 大功告成。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹层组件文档 - layui.layer</a></p>
-
-          
+          <p>之前写了篇学习笔记<a href="http://luciaca.cn/2018/02/24/using-layer-on-Rails/" target="_blank" rel="noopener">Rails中使用layer弹窗组件</a>， 这篇写写如何在Rails中使用layer的photos来实作图片预览。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/06/using-layer-photos-in-rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -845,7 +697,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>779 words</span>
+              <span>800 words</span>
             </span>
           
 
@@ -863,142 +715,14 @@ end
 
       
         
-          
-            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>如标题所述，需要通过接口将图片上传到ROR项目中，如何实现？</p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>先说一个简单的。</p>
-<p>以一个model picture为例，看一下具体步骤：</p>
-<p>model picture的信息：</p>
-<pre><code class="Ruby">Table name pictures
-
-id          :integer
-file_name    :string
-image       :string
-</code></pre>
-<p>这里，设置routes, 建model，建controller的过程省略，可参见：<a href="http://luciaca.cn/2017/12/31/web-api-practice/" target="_blank" rel="noopener">Rails：Web API接口实作</a>。</p>
-<p>分三步走：</p>
-<ul>
-<li><p>装<a href="https://github.com/carrierwaveuploader/carrierwave" target="_blank" rel="noopener">carrierwave</a></p>
-<p>编辑 Gemfile</p>
-<pre><code class="Ruby">gem &#39;carrierwave&#39;
-gem &#39;mini_magick&#39;
-</code></pre>
-<p>终端执行<code>bundle</code>，重启服务器。</p>
-</li>
-<li><p>新增uploader</p>
-<p>执行：<code>rails g uploader PicImage</code></p>
-<p>编辑<code>app/uploaders/pic_image_uploader.rb</code></p>
-<pre><code class="Ruby">class PicImageUploader &lt; CarrierWave::Uploader::Base
-  + include CarrierWave::MiniMagick
-  ......  
-end
-</code></pre>
-<p>编辑 <code>app/models/picture.rb</code>，把 carrierwave 的 Uploader 挂上去。</p>
-<pre><code class="Ruby">class Picture &lt; ApplicationRecord
-  + mount_uploader :image, PicImageUploader
-  ......
-end
-</code></pre>
-</li>
-<li><p>设定create</p>
-<p>编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-<pre><code class="Ruby"># upload image through api
-class Api::V1::PicturesController &lt; ApiController
- before_action :authenticate_user!, only: %i[create]
-
- def create
-   @picture = Picture.new(picture_params)  
-   if @picture.save
-     render json: { file_name: @picture.file_name, image: @picture.image }
-   else
-     render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
-   end
- end
- .......
- private
-
- def picture_params
-   params.permit(:file_name, :image)
- end
-
-end
-</code></pre>
-</li>
-</ul>
-<p>再来个复杂的。👇</p>
-<h4 id="如何通过JSON文件来上传？"><a href="#如何通过JSON文件来上传？" class="headerlink" title="如何通过JSON文件来上传？"></a>如何通过JSON文件来上传？</h4><p>在搜索解答的过程中，发现了另一种方式，假定你需要通过JSON文件的方式去上传图片，如何实现？<br>即接口调用是这样的：<code>/api/v1/pictures.json</code>，由于JSON不支持嵌入式文件，所以会有些波折。</p>
-<p>具体的实现方式是先将需要上传的图片file经base64编译后，调用接口创建一个实例， 然后在picture controller的create中，对传递过来的参数file_base64进行解析， 将解析后的文件写入temfile，并通过<code>ActionDispatch::Http::UploadedFile</code>来新建一个uploader file，如此，一个image从encoding到decoding的过程结束，再使用Picture.new创建即可。</p>
-<p>具体来说，前面的步骤都一样，只是create部分会有些不同。</p>
-<p>先给picture新增一个字段，file_base64, 它是图片经base64编译后得到的字符串。</p>
-<p>执行：</p>
-<pre><code>rails g migration add_file_base64_to_pictures file_base64:string
-rake db:migrate
-</code></pre><p>picture.json文件长这样：</p>
-<pre><code>picture {:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;}
-</code></pre><p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
-  before_action :authenticate_user!, only: %i[create]
-
-  def create
-    if params[:picture][:file_base64]
-      # create a new tempfile named file
-      tempfile = Tempfile.new(&#39;file&#39;)
-      tempfile.binmode
-      # get the file ,decode it with base64, write it to the tempfile
-      tempfile.write(Base64.decode64(params[:picture][:file_base64]))
-      # create a new uploaded file
-      @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
-      @picture = Picture.new(params[:picture])
-      @picture.image = @uploaded_file
-      # delete the tempfile
-      tempfile.delete
-    end
-    if @picture.save
-      render json: @picture
-    else
-      render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
-    end
-  end
-
-end
-</code></pre>
-<p> 这里，create部分显得很臃肿，我们skinny一下，改成这样：</p>
-<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
-  before_action :authenticate_user!, only: %i[create]
-  before_action :process_file, only: %i[create]
-
-  def create
-    if @picture.save
-      render json: @picture
-    else
-      render json: { message: &#39;failed&#39;, error: @picture.errors }, status: 400
-    end
-  end
-
-  private
-
-  def process_file
-    if params[:picture][:file_base64]
-      tempfile = Tempfile.new(&#39;file&#39;)
-      tempfile.binmode
-      tempfile.write(Base64.decode64(params[:picture][:file_base64]))
-      @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
-      @picture = Picture.new(params[:picture])
-      @picture.image = @uploaded_file
-      tempfile.delete
-    end
-  end
-
-end
-</code></pre>
-<p>  呃，貌似process_file还是有点臃肿， 可以继续拆，这里就不实作了。</p>
-<p>  OK. 用postman测试一下，确认正常。</p>
-<p>  这里，你可能会问，编译后的文件在哪呢？在public/uploaders/picture/image下。</p>
-<p>此外，上传的文件不需要 git commit， 在 <code>.gitignore</code> 中添加 <code>public/uploads</code> 这个目录即可。</p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/9758879/sending-files-to-a-rails-json-api" target="_blank" rel="noopener">Sending files to a Rails JSON API</a></p>
-<p><a href="https://stackoverflow.com/questions/9854916/base64-upload-from-android-java-to-ror-carrierwave" target="_blank" rel="noopener">Base64 upload from Android/Java to RoR Carrierwave</a></p>
-<p><a href="https://ruby-doc.org/stdlib-1.9.3/libdoc/tempfile/rdoc/Tempfile.html" target="_blank" rel="noopener">Tempfile</a></p>
-
-          
+          <p>其实想说的是如何通过JSON文件的方式来上传图片。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/04/upload-images-to-rails-API/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1137,7 +861,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>326 words</span>
+              <span>322 words</span>
             </span>
           
 
@@ -1155,87 +879,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
-<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
-<pre><code class="ruby">Table name products
-
-id          :integer
-title       :string
-description :string
-price       :float
-category_id :integer
-
-Table name  categories
-id          :integer
-title       :string
-</code></pre>
-<p><code>app/models/product.rb</code>中：</p>
-<pre><code class="ruby">class Product &lt; ActiveRecord::Base
-  belongs_to :category
-  ......
-end
-</code></pre>
-<p><code>app/models/category.rb</code>中：</p>
-<pre><code class="ruby">class Category &lt; ActiveRecord::Base
-  has_many :products
-  ......
-end
-</code></pre>
-<p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
-<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
-# GET /api/v1/products
-  def index
-    @products = Product.all
-    render json: @products
-  end
-end
-</code></pre>
-<p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
-<p>如何实现？</p>
-<p>试试<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
-<h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>三步走</p>
-<ul>
-<li><p>安装<a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a> gem</p>
-<p>gemfile中添加：</p>
-<pre><code class="Ruby">gem &#39;has_scope&#39;
-</code></pre>
-<p>终端bundle，服务器重启。</p>
-</li>
-<li><p>在model中添加scope</p>
-<p>修改<code>app/models/product.rb</code>：</p>
-<pre><code class="ruby">class Product &lt; ActiveRecord::Base
-  belongs_to :category
-
- + scope :category, -&gt; (category_id) { where(category_id: category_id) }
- + scope :price, -&gt; (from, to) { where(&quot;price &gt;= ? AND price &lt;= ?&quot;, from, to) }
-  ......
-
-end
-</code></pre>
-</li>
-<li><p>在controller中添加has_scope</p>
-<p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
-<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
-  + has_scope :category, only: :index
-  + has_scope :price, using: [:from, :to], only: :index
-
-# GET /api/v1/products
-  def index
-  -  @products = Product.all
-  +  @products = apply_scopes(Product).includes(:category).all
-      # using includes(:category), fix N+1 query problem
-    render json: @products
-  end
-end
-</code></pre>
-<p>好，大功告成，用postman测试下，确认正常，cool！</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://gist.github.com/mamantoha/9c0aec7958c7636cebef" target="_blank" rel="noopener">Rails API Filtering and Sorting</a></p>
-<p><a href="https://github.com/plataformatec/has_scope" target="_blank" rel="noopener">has_scope</a></p>
-
-          
+          <p>做接口的时候，遇到了筛选的问题，不知如何去处理，Google了下，发现了个很简单的解法，实测有效，附上。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/03/implement-Rails-API-filtering/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1374,7 +1025,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,055 words</span>
+              <span>1,061 words</span>
             </span>
           
 
@@ -1392,266 +1043,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>MVC 框架中的一个设计原则：fat model, skinny controller。且不说这原则是不是绝对的正确，不过面对臃肿的controller，IDE也会发出提醒表示抗议。</p>
-<p>比如在Web API中，一般用get获取资料的时候，返回的JSON中，字段会比较多，相应地，你在controller里面写的index或者show 也相对有些臃肿。那么如何简化？</p>
-<p>试试<a href="https://github.com/rails/jbuilder" target="_blank" rel="noopener">Jbuilder</a>。</p>
-<p>下面用个简单的例子来说明下怎么给controller瘦身。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>假定你完成了一个products的API接口，对应的<code>app/controllers/api/v1/products_controller.rb</code>文件内容如下：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-
-  def index
-    @products = Product.all
-    render json: {
-        data: @products.map do |product|
-          {
-              id: product.id,
-              creator: product.user.user_name,
-              name: product.name,
-              description: product.description,
-              price: product.price
-          }
-        end
-    }
-  end
-  def create
-    @product = Product.new(
-        name: params[:name],
-        description: params[:description],
-        price: params[:price]
-    )
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
-    end
-  end
-
-  def show
-    @product = Product.find(params[:id])
-    render json: {
-        id: product.id,
-        creator: product.user.user_name,
-        name: product.name,
-        description: product.description,
-        price: product.price
-    }
-  end
-
-  def update
-    @product = Product.find(params[:id])
-    @product.update(name: params[:name], description: params[:description],price: params[:price])
-    render json: {
-        message: &#39;update product successfully&#39;
-    }
-  end
-
-  def destroy
-    @product = Product.find(params[:id])
-    @product.destroy
-    render json: {
-        message: &#39;product deleted&#39;
-    }
-  end
-end  
-</code></pre>
-<p>看着很冗长啊，怎么瘦？</p>
-<p>分三步走：</p>
-<ul>
-<li>对index, show部分，用Jbuilder，</li>
-<li>对create，update部分，用 strong params</li>
-<li>对show, update, destory部分共有的@product，抽出来，用before_action</li>
-</ul>
-<p>第一步：简化index，show</p>
-<p>这里可以看到show和index中重复代码较多，用上partial</p>
-<ul>
-<li><p>新建文件：<br><code>app/views/api/v1/products/_item.json.jbuilder</code>, <code>app/views/api/v1/products/show.json.jbuilder</code>,<br><code>app/views/api/v1/products/index.json.jbuilder</code>,</p>
-</li>
-<li><p>在<code>app/views/api/v1/products/_item.json.jbuilder</code>，添加如下内容：</p>
-<pre><code class="json">json.id  product.id
-json.creator product.user.user_name
-json.name product.name
-json.description product.description
-json.price product.price
-</code></pre>
-</li>
-<li><p>在<code>app/views/api/v1/products/show.json.jbuilder</code>，添加如下内容：</p>
-<pre><code>json.partial! &#39;item&#39;, product: @product
-</code></pre></li>
-<li><p>在<code>app/views/api/v1/products/index.json.jbuilder</code>， 添加如下内容：</p>
-<pre><code>json.array! @products, partial: &#39;item&#39;, as: :product
-</code></pre></li>
-<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的index和show部分, 删除render：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-
-  def index
-    @products = Product.all
-  end
- .......
-
-  def show
-    @product = Product.find(params[:id])
-  end
-
-.......
-end  
-</code></pre>
-<p>可以用postman测试一下，确保接口仍正常。</p>
-</li>
-</ul>
-<p>第二步：简化create，update， 用params.require</p>
-<ul>
-<li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的create和update部分，如下：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  .....
-  def create
-    @product = Product.new(product_params)
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
-    end
-  end
- .......
-
-  def update
-    @product = Product.find(params[:id])
-    @product.update(product_params)
-    render json: {
-        message: &#39;update product successfully&#39;
-    }
-  end
-
-.......
-  private
-
-  def product_params
-    params.permit(:name, :description, :price)
-  end         
-end  
-</code></pre>
-<p>注意，这里<strong>不能使用params.requrie(:product).permit(:name, :description, :price)</strong>，因为你是调用接口来新建或者修改的。</p>
-<p>可参见这个：<a href="https://stackoverflow.com/questions/38701746/when-json-data-posted-in-rails-throws-param-is-missing-or-the-value-is-empty-st" target="_blank" rel="noopener">When JSON data posted in rails throws param is missing or the value is empty: stall</a></p>
-</li>
-</ul>
-<p>第三步：简化show，update， destroy</p>
-<ul>
-<li><p>把show，update， destroy相同的部分： <code>@product = Product.find(params[:id])</code>抽出来：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  before_action :find_product, only: %i[show update destroy]
-.....
-  def show; end
-
-  def update
-    @product.update(product_params)
-    render json: {
-        message: &#39;update product successfully&#39;
-    }
-  end
-
-  def destroy
-    @product.destroy
-    render json: {
-        message: &#39;product deleted&#39;
-    }
-  end
-
-  private
-.......
-
-  def find_product
-    @product = Product.find(params[:id])
-  end
-end
-</code></pre>
-</li>
-</ul>
-<p>最后瘦身的controller长这样：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  before_action :find_product, only: %i[show update destroy]
-
-  def index
-    @products = Product.all
-  end
-  def create
-    @product = Product.new(product_params)
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: { message: &#39;failed&#39;, errors: @product.errors }, status: 400
-    end
-  end
-
-  def show; end
-
-  def update
-    @product.update(product_params)
-    render json: { message: &#39;update product successfully&#39;}
-  end
-
-  def destroy
-    @product.destroy
-    render json: { message: &#39;product deleted&#39;}
-  end
-
-  private
-
-  def product_params
-    param.permit(:name, :description, :price)
-  end
-
-  def find_product
-    @product = Product.find(params[:id])
-  end
-end
-</code></pre>
-<p>是不是清爽了很多？看着舒服多了，大功告成！</p>
-<p>这里多一句，如果你的某个method部分代码较多，也可以使用拆分的方式， 比如下面这个show：</p>
-<pre><code class="Ruby">def show
-  @category = Category.find(params[:id])
-  @categories = Category.all
-  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
-  @products = @search.result.page(params[:page]).per(50)
-  rate
-end
-</code></pre>
-<p>可以换成：</p>
-<pre><code class="ruby">before_action :fetch_current_category, only: [:show]
-before_action :fetch_categories, only: [:show]
-before_action :fetch_search_results, only: [:show]
-
-def show
-  rate
-end
-
-private
-
-def fetch_current_category
-  @category = Category.find(params[:id])
-end
-
-def fetch_categories
-  @categories = Category.all
-end
-
-def fetch_search_results
-  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
-  @products = @search.result.page(params[:page]).per(50)
-end
-</code></pre>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://stackoverflow.com/questions/30932732/what-is-meant-by-assignment-branch-condition-size-too-high-and-how-to-fix-it" target="_blank" rel="noopener">What is meant by ‘Assignment Branch Condition Size too high’ and how to fix it?</a></p>
-<p>对于”<strong>fat model, skinny controller</strong>“这个原则，也有人反对，提出<strong>“skinny everything”</strong>， 戳链接了解：</p>
-<p><a href="http://blog.joncairns.com/2013/04/fat-model-skinny-controller-is-a-load-of-rubbish/" target="_blank" rel="noopener">“Fat model, skinny controller” is a load of rubbish</a></p>
-
-          
+          <p>瘦身无处不在。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/03/01/skinny-controller-with-jbuilder/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -1790,7 +1189,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>819 words</span>
+              <span>828 words</span>
             </span>
           
 
@@ -1808,85 +1207,14 @@ end
 
       
         
-          
-            <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>今天才知道原来javascript是可以通过href 或者onclick来调用的，还能传递参数，用过后，删掉之前那堆无用的Ajax代码和文件，瞬间觉得这个方法真的好cool，好好用啊， 好比那路痴绕了一个大圈子到达目的地后，发现原来已有一条踩好的捷径。【请无视小白的激动】</p>
-<p>记录下使用href 或者onclick来调用javascript的用法，加深理解。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>分无参和有参：</p>
-<ul>
-<li><p>无参</p>
-<p>以一个简单的alert为例，可以这么写【href】：</p>
-<pre><code class="Html">&lt;a href=&#39;javascript: dosomething();&#39;&gt;click me&lt;/a&gt;
-
-&lt;script&gt;
-    function dosomething(){
-        alert(&quot;hello, world!&quot;);
-    }
-&lt;/script&gt;
-</code></pre>
-<p>上面的代码还可以这么写【onclick】：</p>
-<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;javascript: dosomething()&quot;&gt;click me&lt;/a&gt;
-
-&lt;script&gt;
-    function dosomething(){
-        alert(&quot;hello, world!&quot;);
-    }
-&lt;/script&gt;
-</code></pre>
-<p>或者这样：</p>
-<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;dosomething()&quot;&gt;click me&lt;/a&gt;
-
-&lt;script&gt;
-    function dosomething(){
-        alert(&quot;hello, world!&quot;);
-    }
-&lt;/script&gt;
-</code></pre>
-<p>这样也行：</p>
-<pre><code class="html">&lt;a href=&#39;#&#39; onclick=&quot;javascript: while (true) { alert(&quot;hello, world!&quot;); break javascript; }&quot;&gt;click me&lt;/a&gt;
-</code></pre>
-<p>也可以这样：</p>
-<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/a&gt;
-</code></pre>
-<p>还能这样：</p>
-<pre><code class="Html">&lt;a href=&#39;#&#39; onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/a&gt;
-</code></pre>
-<p>使用onclick时，tag也可以是span，button等，比如：</p>
-<pre><code class="Html">&lt;span onclick=&quot;foo: while (true) { alert(&quot;hello, world!&quot;); break foo; }&quot;&gt;click me&lt;/span&gt;
-</code></pre>
-<p>这里提一下，在搜索相关用法的时候，发现对于onclick， javascript:其实是可以不用添加的，它的作用只是一个label的作用，而且在IE下，使用<code>onclick=&quot;javascript: JsFunc()&quot;</code>还会报错，参见这篇文章<a href="https://crisp.tweakblogs.net/blog/the-useless-javascript-pseudo-protocol.html" target="_blank" rel="noopener">The useless javascript: pseudo-protocol</a>。</p>
-<p>此外，逛stack overflow时，还人提到onclick这种调用JS的方式”is a bad practice”.</p>
-<p>参见<a href="https://stackoverflow.com/questions/134845/which-href-value-should-i-use-for-javascript-links-or-javascriptvoid0" target="_blank" rel="noopener">Which “href” value should I use for JavaScript links, “#” or “javascript:void(0)”?</a></p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79ly1fouoief80vj30j9060gn2.jpg" alt=""></p>
-<p>有一种刚刚挖到宝，然后别人告知你这是一堆废铁的赶脚……</p>
-</li>
-<li><p>有参</p>
-<p>有参和无参的函数调用基本一样，只是多了参数。</p>
-<p>看例子方便理解 ，比如传递了一个user的name[rails]：</p>
-<pre><code class="Html">&lt;a href=&#39;javascript: dosomething(&#39;&lt;%= @user.name %&gt;&#39;);&#39;&gt;click me&lt;/a&gt;
-
-&lt;script&gt;
-    function dosomething(username){
-        alert(&quot;hello, &quot; + username );
-    }
-&lt;/script&gt;
-</code></pre>
-<p>onclick的方式来调用也一样：</p>
-<pre><code class="html">&lt;a href=&#39;#&#39; onclick=&#39;dosomething(&#39;&lt;%= @user.name %&gt;&#39;);&#39;&gt;click me&lt;/a&gt;
-
-&lt;script&gt;
-    function dosomething(username){
-        alert(&quot;hello, &quot; + username );
-    }
-&lt;/script&gt;
-</code></pre>
-<p>一点感想：</p>
-<p>我觉得这种调用JS的方式，最好的地方是传递参数，当你用Ajax只是为了将参数传递给JS时，这真的是很方便的一种解决方法。我之前苦恼怎么传递参数给JS，Ajax是用来在不刷新页面的情况下，更新页面的某一部分，但它也可以用来传递参数，通过用Ajax，好比绕了个弯，去逛了一趟controller，在controller里面把那些需要的参数都整出来，再将它们回传给到 js.erb文件，在js.erb中写JS来实现需求。事后反思为什么我第一时间想到Ajax而不是href 或 onclick的方式，因为我根本不知道这种用法【怪自己太小白】，而Ajax是我用过的，熟悉的，继而想到人们在处理问题的时候，总是偏向于用以往的经验去解决，那些过往的经验就好比你的工具，当你的工具库很小的时候，这样做的弊端就是避开了寻找更好的方法去更高效地解决问题的机会，同时也意味着你失去了扩充工具库的机会。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://crisp.tweakblogs.net/blog/the-useless-javascript-pseudo-protocol.html" target="_blank" rel="noopener">The useless javascript: pseudo-protocol</a></p>
-<p><a href="https://stackoverflow.com/questions/1070760/javascript-function-in-href-vs-onclick/11348403#11348403" target="_blank" rel="noopener">JavaScript function in href vs. onclick</a></p>
-
-          
+          <p>小白 JS 基础知识补充。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/02/27/how-to-call-javascript-through-href-or-onclick/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2025,7 +1353,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>489 words</span>
+              <span>498 words</span>
             </span>
           
 
@@ -2043,52 +1371,14 @@ end
 
       
         
-          
-            <h4 id="layer是什么？"><a href="#layer是什么？" class="headerlink" title="layer是什么？"></a>layer是什么？</h4><p>layer, 一款 web弹窗组件，你可以将它看作bootstrap中的modal， 详情可见：<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网</a>,  <a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>。</p>
-<p>layer是layui的一个内置模块，而layui则是一个前端UI框架，具体可见其<a href="http://www.layui.com/" target="_blank" rel="noopener">官网</a>。</p>
-<h4 id="怎么用？"><a href="#怎么用？" class="headerlink" title="怎么用？"></a>怎么用？</h4><p>由于layer是layui的弹窗组件，所以使用时既可以单独使用，也可以通过layui模块化使用，这里单独使用layer。</p>
-<p>layer的单独使用在其<a href="http://layer.layui.com/hello.html" target="_blank" rel="noopener">快速上手</a>里面有相关说明，这里记录下如何在Rails中使用layer。</p>
-<ul>
-<li><p>下载layer文件包</p>
-<p>layer<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>，点击<strong>绿色下载layer</strong>，或者去<a href="https://github.com/sentsin/layer" target="_blank" rel="noopener">GitHub</a>上下载，下载后解压。</p>
-<p>目前的版本是3.1.1：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tNc79gy1forbutw4b2j30uf03574z.jpg" alt=""></p>
-</li>
-<li><p>将文件放入项目的public目录下</p>
-<p>将解压后的layer文件包，放入项目的public目录下</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tNc79gy1forbxearurj308g03nmx4.jpg" alt=""></p>
-<p>​</p>
-</li>
-<li><p>使用</p>
-<p>引入layer前，需要引入jQuery， 鉴于rails默认引入了jQuery，这里直接引入layer即可。</p>
-<p>在需要使用弹窗的页面对应的layout中，比如<code>application.html.erb</code>，添加：</p>
-<pre><code class="Html">......
-&lt;head&gt;
-......
-&lt;%= javascript_include_tag &#39;application&#39; %&gt;
-+ &lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;
-&lt;/head&gt;
-</code></pre>
-<p><strong>请务必将<code>&lt;script src=&quot;/layer/layer.js&quot;&gt;&lt;/script&gt;</code>置于<code>&lt;%= javascript_include_tag &#39;application&#39; %&gt;</code>之后。</strong></p>
-<p>测试一下是否可以正常使用。在任何一个页面最后，比如landing page着陆页，添加：</p>
-<pre><code class="javascript">......
-&lt;div id=&quot;for_test&quot; class=&quot;btn btn-lg btn-danger&quot;&gt;test&lt;/div&gt;
-&lt;script&gt;
-  $(&#39;#for_test&#39;).on(&#39;click&#39;, function(){
-      layer.msg(&#39;hello world&#39;);
-  });
-&lt;/script&gt;
-</code></pre>
-<p>此时点击该页面的test按钮，会弹出一个含有“hello world”的弹窗，说明可以正常使用了。</p>
-<p>它的弹窗使用有多种，可以在<a href="http://layer.layui.com/" target="_blank" rel="noopener">官网首页</a>玩一下，还是蛮酷的，此外，文档写的也蛮有趣的，可以读读。</p>
-<p>另：如果你使用layer.photos(options) - 相册层时，使用了JSON传入的方式【layer的photos有两种实现方式：JSON传入和直接读取页面图片】，不想肉眼检查自己的JSON文件格式是否正确，推荐使用这个在线json解析和格式验证的网站： <a href="https://www.json.cn/" target="_blank" rel="noopener">JSON.cn</a>。</p>
-</li>
-</ul>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="http://layer.layui.com/" target="_blank" rel="noopener">layer官网</a></p>
-<p><a href="http://www.layui.com/doc/modules/layer.html" target="_blank" rel="noopener">弹出层 layer</a></p>
-<p><a href="http://fly.layui.com/" target="_blank" rel="noopener">FLY 社区</a></p>
-
-          
+          <p>弹窗组件layer使用记录。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/02/24/using-layer-on-Rails/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2214,7 +1504,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1,214 words</span>
+              <span>1,212 words</span>
             </span>
           
 
@@ -2232,38 +1522,14 @@ end
 
       
         
-          
-            <h4 id="引子"><a href="#引子" class="headerlink" title="引子"></a>引子</h4><p>整理文档的时候，翻到了17年年末写的一篇小复盘，决定贴上，他日若有悔意，可做打脸凭证。</p>
-<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>这一篇写给自己。</p>
-<p>关于为什么我要编程。</p>
-<p>记得几年前有篇很火的文章，why everyone should learn programming? 呼吁着人人都应该学一点编程技能。</p>
-<p>编程将会在不久的未来成为一个必备技能。</p>
-<p>所以你必须学习编程。</p>
-<p>可这是别人的版本，不是我的版本。</p>
-<p>我为什么要学？</p>
-<p>也许是大学四年那少有的几次熬夜coding？我早已不记得当时敲的具体是什么了，只记得宿舍的灯已经熄了，室友们已经睡了，安静得只听到键盘的敲击声，而我盯着电脑屏幕，看到那个C++程序运行成功，那一刻，满满的快乐与知足。</p>
-<p>也许是在我脑抽地报了C#选修课？记得第一天去上课，老师点名的时候，我才发现我是唯一一个外班的学生，其他同学都是计算机专业的，但是这并不妨碍我去跟着瞎倒腾。虽然那个学期课堂上的很多知识点我早已忘了，但这一段特别的学习经历却在记忆中留下了痕迹。</p>
-<p>也许是大三时那次Matlab期末考？我还记得有一题作图大题，那题老师曾在实验室解过，代码很长。课后我用了两个for循环，运行结果无误，但是整个代码块简化了很多，看着特别清爽，所以考试时，我继续照着自己的想法来，后面竟然拿到了满分。现在想来，那时候我做的应该算是refactoring。</p>
-<p>乔帮主曾说“  You can’t connect the dots looking forward; you can only connect them looking backwards. So you have to trust that the dots will somehow connect in your future. ”</p>
-<p>也许这些便是后来那些事情发生的引子。</p>
-<p>毕业后， 我做的是市调数据分析的工作，能跟coding搭上边的就是设计网络问卷，可以玩玩JS特效，那时候啥也不懂，只是单纯喜欢看那些英文docs，跟着文档实作，出现预期效果便会欢喜，更多的是图个乐。</p>
-<p>14年，利用下班时间和周末，一个月把VBA学了个大概，然后就开始自顾自地玩起来，把工作中遇到的重复劳动简化，自动化报表，后续被老大发现我竟然还有这技能，索性给我安排coding的工作，然后就是做些小插件，认识了visual studio。</p>
-<p>16年，看了Linus Torvalds的那本《Just for fun》，然后心里痒痒地想着要玩一次Linux系统，给Mac装虚拟机，倒腾Ubuntu，在Edx上刷《Intro to Linux》，看《Linux command line》, 注册cloud9， 我还记得7月的时候，cloud9被Amazon收购了，cloud9的CEO写了封信，结尾处happy coding，莫名觉得激动。</p>
-<p>刷了点Linux，半懂不懂，但也觉得没什么，just for fun，当然也没闲着，瞎逛过多个学习平台，刷了Edx的《Introduction to Computer Science and Programming Using Python》，在Udacity刷了《Introduction to java programming》，安装BlueJ各种玩……</p>
-<p>这么瞎倒腾的结果是，我把bashprofile玩坏了，后来不得不拿着Mac到店里重装系统。</p>
-<p>而对于ROR，最开始的接触是看了Michael Hartl的learn enough to be dangerous 系列，后来在Amazon上买了本原版的《Eloquent Ruby》，这应该是我二十多年来买的最贵的一本书。不过那时候更多的是小打小闹，完全野路子，没有任何目标性地自学，多浅尝辄止，后来机缘巧合，看到了Fullstack线上培训，报名，随后便是几个月的投入，第一次在机场候机时敲代码，第一次参加meetup，第一次用hexo+github搭建了自己的个人网站，第一次与人协作并成功部署了一个乐器售卖平台，第一次按照自己的想法做了个线下meetup的召集令，第一次租阿里云，买域名，买SSL凭证，第一次开始以编程谋生……</p>
-<p>太多的第一次。</p>
-<p>当年那个不小心瞥了一眼C++的大二女孩，一定不会想到多年后她会成为一名程序员。</p>
-<p>Welcome to the new world。</p>
-<p>这个新世界很大，路很长，所以呢？</p>
-<p>可以看很多很多的风景。</p>
-<p>也不是没有顾忌。</p>
-<p>这是个新东西层出不穷的时代，特别是技术领域，很多我们今天习以为常的技术，不久可能就会被丢弃。</p>
-<p>但那又如何？进步不就是推陈出新？科技在进步的同时，人也在进步。</p>
-<p>拥抱变化，努力成为其中的一部分。</p>
-<p>Enjoy。</p>
-
-          
+          <p>整理文档的时候，翻到了17年年末写的一篇小复盘，决定贴上，他日若有悔意，可做打脸凭证。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/02/17/why-I-choose-to-be-a-programmer/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2402,7 +1668,7 @@ end
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>494 words</span>
+              <span>492 words</span>
             </span>
           
 
@@ -2420,41 +1686,14 @@ end
 
       
         
-          
-            <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>鉴于我部署这块踩的坑不少，近来一位小伙伴在部署Rails的时候，就帮忙debug了下，中间遇到了一个问题：<strong>网站部署到Nginx后，页面加载不正常，所有的格式都没有加载进来</strong>。最后Google到了解决方法，觉得有必要记录一下，以备忘。</p>
-<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>本地运行的页面是这样的：👇</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1foccuxti6uj31kw0riqdl.jpg" alt=""></p>
-<p>部署到Nginx后，浏览器打开的页面是这样的：👇</p>
-<p><img src="https://ws2.sinaimg.cn/large/006tKfTcgy1foccunilaij30ui0exq3o.jpg" alt=""></p>
-<p>可以看出部署中，样式没有加载进来。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>起先我以为可以通过assets:precompile来解决，但尝试后发现并不能。</p>
-<p>点击右键，看chrome的console，报错如下：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1focd5l1xrnj30ex02374o.jpg" alt=""></p>
-<p>报错显示是transferred with MIME type text/plain了，查看MIME <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types" target="_blank" rel="noopener">官网</a>, 可以看到它的定义及应用：</p>
-<p><img src="https://ws4.sinaimg.cn/large/006tKfTcgy1focdkrt9erj30li06w0uj.jpg" alt=""></p>
-<p>看它的Discrete types列表：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1focdpcmtmcj30ck07q3ys.jpg" alt=""></p>
-<p>它的multipart types：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1focdpxd603j30d9027jrd.jpg" alt=""></p>
-<p>鉴于文件没有被拆分成多个部分，应该属于是discrete types， 再看console的报错，文件应该是默认用text/plain的方式处理了，看它的语法，你会发现：</p>
-<p><img src="https://ws1.sinaimg.cn/large/006tKfTcgy1focdue52fzj30m002qwew.jpg" alt=""></p>
-<p>二进制的docs都是用<strong>application/octet-stream</strong>的方式处理的，貌似找到钥匙了。可是，这要在哪里修改呢？我还是一头雾水。</p>
-<p>Google后，在这一篇<a href="http://blog.csdn.net/m0_37904728/article/details/78745243" target="_blank" rel="noopener"> Web部署到Nginx后静态文件加载不正常</a>里找到了解答，不废话了，直接上解答：</p>
-<p>编辑<code>/etc/nginx/nginx.conf</code>文件，在http{}中，添加：</p>
-<pre><code class="nginx">include /etc/nginx/mime.types;
-default_type application/octet-stream;
-</code></pre>
-<p>然后再重启Nginx：</p>
-<pre><code class="Shell">sudo service nginx restart
-</code></pre>
-<p>再次刷新网站，OK。</p>
-<p>另，其实我也不大懂MIME，看定义知道是一种多用途互联网邮件扩展的规范，如果你好奇的话，打开你的任意一封email，选择<strong>查看原始邮件</strong>，会发现MIME的影子，有助加深理解。比如我gmail中的一份邮件：</p>
-<p><img src="https://ws3.sinaimg.cn/large/006tKfTcgy1foceevsozwj30pd01wwex.jpg" alt=""></p>
-<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types" target="_blank" rel="noopener">MIME types</a></p>
-<p><a href="http://blog.csdn.net/m0_37904728/article/details/78745243" target="_blank" rel="noopener"> Web部署到Nginx后静态文件加载不正常</a></p>
-<p>BTW,  Google的时候，发现了阮一峰老师的这篇<a href="http://www.ruanyifeng.com/blog/2008/06/mime.html" target="_blank" rel="noopener">MIME笔记</a></p>
-
-          
+          <p>鉴于我部署这块踩的坑不少，近来一位小伙伴在部署Rails的时候，就帮忙debug了下，中间遇到了一个问题：<strong>网站部署到Nginx后，页面加载不正常，所有的格式都没有加载进来</strong>。最后Google到了解决方法，觉得有必要记录一下，以备忘。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/02/12/static-files-are-not-loaded-properly-when-depolyed-with-nginx/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2598,20 +1837,14 @@ default_type application/octet-stream;
 
       
         
-          
-            <p>读的是施咸荣翻译的版本，感觉译得带点京片的味儿， 让我想起老舍《茶馆》中人物的对白。</p>
-<p>剧本很短，两幕，出场五人：戈戈，狄狄，幸运儿，波卓，送口信的小孩。情节也很简单，黄昏时分，戈戈和狄狄这两个流浪汉在一棵树下等待戈多，中间他们还商量着通过上吊来打发漫长的等待，后来遇到了波卓和他的奴隶幸运儿，四人，或者更准确地说是三人，一直有一句没一句地说着话， 没有任何重点，幸运儿只在被他们三个教唆着思考的时候，才开口吐出了一串串话，像是无序蹦出来的字眼，中间波卓还伪文艺了一把，然后波卓带着幸运儿离开，最后小孩过来告诉两个流浪汉，戈多今天不会来了，明天再来，两个流浪汉也各自回去了，这是第一幕。后一幕，人物不变，只是波卓瞎了，幸运儿哑了，他们摔倒了，被扶起后又离开了，小孩来了，同样的，告诉他们戈多今天不会来了，明天再来，两个流浪汉又开始商量着上吊了，嗯，没有绳子，裤带被拉扯断了，得，各自回吧，明个再来。</p>
-<p>整个看完，除偶有些句子会让人发笑，整个的氛围让人觉得很是沉闷，就如同他们自己所说的那样，我们总得做点什么来打发时间，至少不能那么的无聊？脱靴子，试靴子，脱帽子，换帽子，唱歌，蹦跳，吃萝卜，上吊，摔倒，起来，来回踱步……</p>
-<p>整个剧本无法用常规的逻辑去理解，为什么仅仅过了一天，波卓就瞎了？而且虚弱的站不起来需要人搀扶？幸运儿为什么成了哑巴？昨天还在那里被命令着思考说话的人，第二天竟然不能开口了，是在暗示着唯一一个思考的人都不能表达他的思考了吗？戈戈总是间歇性失忆，可又对某些事情记得格外清楚，还有为什么昨天来的小孩竟然已经不认识他们了？好吧，这是荒诞剧。</p>
-<p>看完不得不去看了下作者的简介，窃以为这样的剧本，应该多半与其人生经历有关。果然，贝克特本人长期过着颠沛流离的流浪和逃亡生活，还曾有过在街头散步时，被陌生人用刀刺穿肺部的经历，这样的遇刺经历不得不说是挺荒诞。</p>
-<p>大部分人看完这本书，应该会猜测作者想要表达的是什么，戈多代表着什么呢？希望，命运，还是一个能改写他们人生的契机？文中多次提到戈多来了，他们就得救了。戈多更多的算是他们的一个念想吧，也许他们在等待着改变，改变这无聊的日日消遣，打破这没事可做的状态，可我又暗暗觉得他们既渴望改变又害怕着改变。他们总是说着要怎样怎样，但是他们就是不动，与其被动等待，为什么不主动出击呢？</p>
-<p>《东邪西毒》里，几乎身无分文的孤女，找到欧阳锋，希望可以雇到杀手报仇，固执的她每日都来，但一直没人愿意帮她，她在等，等那个愿意出手的人，最终她等到了洪七，也许看似渺茫的等待也会有所收获。</p>
-<p>“每个人都会为一样东西坚持着，其他人看会觉得是浪费时间，但是她却觉得很重要。”</p>
-<p>换个角度，把戈戈和狄狄的这种等待看着是一种傻愣似的坚持，感觉美好多了。</p>
-<p>如果戈多真的来赴约了，这两个流浪汉应该很开心吧？或者这二位会琢磨着找个地儿狠狠地把戈多揍一顿，因为他老是放他们鸽子，然后再教唆着让戈多回去，他们要继续等待？额，有点太胡扯了。</p>
-<p>人生苦短，愿所等有所获。</p>
-
-          
+          <p>读的是施咸荣翻译的版本，感觉译得带点京片的味儿， 让我想起老舍《茶馆》中人物的对白。</p>
+          <!--noindex-->
+          <div class="post-button mt-0">
+            <a class="btn custom-post-btn" href="/2018/02/10/notes-of-waiting-for-godot/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -2827,7 +2060,7 @@ default_type application/octet-stream;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    190.7k
+    191.1k
   </span>
 
 </div>
