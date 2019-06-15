@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2019-06-09T05:13:17.938Z</updated>
+  <updated>2019-06-15T14:43:45.759Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,30 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Nuxt中引入JS脚本报错 - jQuery requires a window with a document</title>
+    <link href="http://lupeipei.github.io/2019/06/15/error-recording-nuxt-jquery-requires-a-window-with-a-document/"/>
+    <id>http://lupeipei.github.io/2019/06/15/error-recording-nuxt-jquery-requires-a-window-with-a-document/</id>
+    <published>2019-06-15T14:37:13.000Z</published>
+    <updated>2019-06-15T14:43:45.759Z</updated>
+    
+    <content type="html"><![CDATA[<p>不止一次遇到这个问题了。</p><a id="more"></a><p>在nuxt的issue <a href="https://github.com/nuxt/nuxt.js/issues/356" target="_blank" rel="noopener">It’s not clear how to include jQuery code #356</a>里面看到了类似情况，不过这位smth仁兄最后选择了放弃，改用directives，可惜这个issue已经closed，不然可以用我蹩脚的英语来码楼……</p><p>这里记录下我的解决方法。</p><h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在plugins下，添加了JS文件，该文件中引入了 jQuery，定义了多个函数，函数中包含了DOM操作。</p><p>比如这样的一个helper.js 文件：</p><pre><code class="javascript">// plugins/helper.jsimport $ from &#39;jquery&#39;export default {    methods: {        saySomething(words) {      const element = $(`&lt;h2&gt;${content}&lt;/h2&gt;`)      ......    }    }}</code></pre><p>在组件中调用了该文件中的方法 saySomething，页面报出 <strong>jQuery requires a window with a document</strong> 的错误。</p><h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>根据<a href="https://zh.nuxtjs.org/faq/window-document-undefined/" target="_blank" rel="noopener">Window 或 Document 对象未定义？</a>所说的：</p><pre><code>一些只兼容客户端的脚本被打包进了服务端的执行脚本中去。 对于只适合在客户端运行的脚本，需要通过使用 process.client 变量来判断导入</code></pre><p>所以解决方法就很简单了，给saySomething添加上判断可执行的条件即可。</p><p>修改helper.js的saySomething：</p><pre><code class="javascript">// plugins/helper.jsimport $ from &#39;jquery&#39;export default {    methods: {        saySomething(words) {      if (process.client) {        const element = $(`&lt;h2&gt;${content}&lt;/h2&gt;`)          ......      }      }    }}</code></pre><p>OK.</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://zh.nuxtjs.org/faq/window-document-undefined/" target="_blank" rel="noopener">Window 或 Document 对象未定义？</a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;不止一次遇到这个问题了。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Nuxt" scheme="http://lupeipei.github.io/tags/Nuxt/"/>
+    
+      <category term="ErrorTracking" scheme="http://lupeipei.github.io/tags/ErrorTracking/"/>
+    
+  </entry>
   
   <entry>
     <title>hexo图床迁移及页面404修复</title>
@@ -440,28 +464,6 @@
     
     
       <category term="Qs" scheme="http://lupeipei.github.io/tags/Qs/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Nuxt中自定义全选指令</title>
-    <link href="http://lupeipei.github.io/2019/02/23/custom-directive-in-nuxt/"/>
-    <id>http://lupeipei.github.io/2019/02/23/custom-directive-in-nuxt/</id>
-    <published>2019-02-23T02:27:31.000Z</published>
-    <updated>2019-06-08T04:15:17.289Z</updated>
-    
-    <content type="html"><![CDATA[<p>看两个例子来熟悉熟悉nuxt中如何自定义指令，一个简单的focus指令，一个是比较常用的全选功能。</p><a id="more"></a><h4 id="一个简单的focus指令"><a href="#一个简单的focus指令" class="headerlink" title="一个简单的focus指令"></a>一个简单的focus指令</h4><p>在plugins文件夹下，新建文件<code>directives.js</code>，放入如下内容：</p><pre><code class="js">// focus指令的定义参考vuejs官方文档import Vue from &#39;vue&#39;Vue.directive(&#39;focus&#39;, {  inserted: function (el) {    el.focus()  }})</code></pre><p>修改<code>nuxt.config.js</code>文件，添加自定义指令声明：</p><pre><code class="js">  plugins: [    &#39;~/plugins/directives&#39;  ],</code></pre><p>重启nuxt,  好了，可以开始使用了。</p><p>任意页面中添加:</p><pre><code class="html">&lt;input v-focus&gt;</code></pre><p>效果：</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1g0bwp3to18j318y0isaag.jpg" alt=""></p><h4 id="全选实现"><a href="#全选实现" class="headerlink" title="全选实现"></a>全选实现</h4><p>先看效果：</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1g0d5876tz7g30uo0br3yp.gif" alt=""></p><p>思路是给全选按钮一个class: select-all, 每个选项一个class：select-item， 最外面包一层指令: select-all-container. 这样所有相关的checkbox都在指令的el内了，这样就可以定位到对应的元素。</p><p>然后利用bind钩子函数，来给按钮添加change事件。</p><p>具体步骤基本同focus，只是<code>directives.js</code>的内容不一样，这里贴上指令的定义部分和示例的HTML代码：</p><pre><code class="js">// plugins/directives.jsimport Vue from &#39;vue&#39;import $ from &#39;jquery&#39;Vue.directive(&#39;select-all-container&#39;, {  bind: function (el) {    $(el).on(&#39;change&#39;, &#39;.select-item&#39;, function() {      const $items = $(el).find(&#39;.select-item&#39;)      const allChecked = $items.length != 0 &amp;&amp; $items.not(&#39;:checked&#39;).length == 0      $(el).find(&#39;.select-all&#39;).prop(&#39;checked&#39;, allChecked)    })    $(el).on(&#39;change&#39;, &#39;.select-all&#39;, function() {      $(el).find(&#39;.select-item&#39;).prop(&#39;checked&#39;, this.checked)    })  }})</code></pre><p>调用bind钩子函数，给全选及单个子选项添加change事件。</p><p>HTML示例部分：</p><pre><code class="html">&lt;template&gt;  &lt;div v-select-all-container&gt;    &lt;label&gt;      &lt;input type=&quot;checkbox&quot; class=&quot;select-all&quot;&gt; 全选    &lt;/label&gt;    &lt;ul class=&quot;list-unstyled ml-4&quot;&gt;      &lt;li v-for=&quot;student in students&quot; :key=&quot;student.id&quot;&gt;        &lt;label&gt;          &lt;input type=&quot;checkbox&quot; :value=&quot;student.id&quot; class=&quot;select-item&quot;&gt;          {{ student.name }}        &lt;/label&gt;      &lt;/li&gt;    &lt;/ul&gt;  &lt;/div&gt;&lt;/template&gt;&lt;script&gt;  export default {      data() {          return {              students: [{ &#39;id&#39;: 1, &#39;name&#39;: &quot;张三&quot; },                         { &#39;id&#39;: 2, &#39;name&#39;: &quot;李四&quot; },                         { &#39;id&#39;: 3, &#39;name&#39;: &quot;王五&quot; },                         { &#39;id&#39;: 4, &#39;name&#39;: &quot;赵麻子&quot; }]          }      }    }    &lt;/script&gt;    </code></pre><p>好，大功告成。</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/nuxt/nuxt.js/issues/3127" target="_blank" rel="noopener">Where do custom directives belong?</a></p><p><a href="https://vuejs.org/v2/guide/custom-directive.html" target="_blank" rel="noopener">custom-directive</a></p><p><a href="https://segmentfault.com/a/1190000006811318" target="_blank" rel="noopener">用Vue实现全选指令</a></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;看两个例子来熟悉熟悉nuxt中如何自定义指令，一个简单的focus指令，一个是比较常用的全选功能。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Nuxt" scheme="http://lupeipei.github.io/tags/Nuxt/"/>
     
   </entry>
   
