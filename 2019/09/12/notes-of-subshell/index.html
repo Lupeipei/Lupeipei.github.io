@@ -96,7 +96,7 @@
 <meta property="og:site_name" content="Lucia">
 <meta property="og:description" content="总算不是那么的懵逼了。">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-09-12T10:10:58.643Z">
+<meta property="og:updated_time" content="2019-09-12T10:22:48.123Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="有关subshell">
 <meta name="twitter:description" content="总算不是那么的懵逼了。">
@@ -434,35 +434,62 @@ echo $x
 # 输出, 这里，x 依然是10
 10
 </code></pre>
-<p>exported variables 可以传给下一个subshell：</p>
-<p><code>`</code>shell<br>cat var_test3</p>
-<h1 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h1><p>y=9<br>z=8<br>echo x = $x<br>echo y = $y<br>echo z = $z<br>export z<br>sh var_test4</p>
+<p>exported variables 可以一直传给后面的subshell：</p>
+<pre><code class="shell">cat var_test3
+# 输出
+y=9
+z=8
+echo x = $x
+echo y = $y
+echo z = $z
+export z
+sh var_test4
+
+cat var_test4
+# 输出
+echo x = $x
+echo y = $y
+echo z = $z
+
+sh var_test3
+# 输出
+x =
+y = 9
+z = 8
+x =
+y =
+z = 8
+
+x=100
+y=90
+export x
+export y
+sh var_test3
+# 输出
+x = 100
+y = 9
+z = 8
+x = 100
+y = 9
+z = 8
+</code></pre>
+<p>这里会发现 export 给 var_test3 的变量 y，初始值为90 ， 在 var_test3 中被重新赋值为 9，执行var_test4 时，export 给 var_test4 的 y 此时已经是9， 而不是最初的90。</p>
+</li>
+<li><p>执行脚本的时候，将需要export的变量放在脚本执行命令前面。</p>
+<p>还是上面的例子var_test：</p>
+<pre><code class="shell">unset x
+x=99 sh var_test
+# 输出
+99
+100
+
+echo $x
+# 输出, 这里 x 未赋值，默认为 null
+
+</code></pre>
+<p>将需要export 给subshell 的 x，放在执行命令前，上面的<code>x=99 sh var_test</code> 等价于<code>(x=10;export x;sh var_test)</code>， 而(….) 中所做的改变不会更改其parent shell的环境变量。</p>
 </li>
 </ul>
-<p>  cat var_test4</p>
-<h1 id="输出-1"><a href="#输出-1" class="headerlink" title="输出"></a>输出</h1><p>  echo x = $x<br>  echo y = $y<br>  echo z = $z</p>
-<p>  sh var_test3</p>
-<h1 id="输出-2"><a href="#输出-2" class="headerlink" title="输出"></a>输出</h1><p>  x =<br>  y = 9<br>  z = 8<br>  x =<br>  y =<br>  z = 8</p>
-<p>  x=100<br>  y=90<br>  export x<br>  export y<br>  sh var_test3</p>
-<h1 id="输出-3"><a href="#输出-3" class="headerlink" title="输出"></a>输出</h1><p>  x = 100<br>  y = 9<br>  z = 8<br>  x = 100<br>  y = 9<br>  z = 8</p>
-<pre><code>
-  这里会发现 export 给 var_test3 的变量 y，初始值为90 ， 在 var_test3 中被重新赋值为 9，执行var_test4 时，export 给 var_test4 的 y 此时已经是9， 而不是最初的90。
-
-- 执行脚本的时候，将需要export的变量放在脚本执行命令前面。
-
-  还是上面的例子var_test：
-
-  ```shell
-  unset x
-  x=99 sh var_test
-  # 输出
-  99
-  100
-
-  echo $x
-  # 输出, 这里 x 未赋值，默认为 null
-
-</code></pre><p>  将需要export 给subshell 的 x，放在执行命令前，上面的<code>x=99 sh var_test</code> 等价于<code>(x=10;export x;sh var_test)</code>， 而(….) 中所做的改变不会更改其parent shell的环境变量。</p>
 <h4 id="…-VS-…"><a href="#…-VS-…" class="headerlink" title="{….; } VS (…..)"></a>{….; } VS (…..)</h4><ul>
 <li><p>{….; }: 命令在当前shell中执行，在{….; } 中做的改变会影响到当前shell.</p>
 <p>例子：</p>
@@ -772,7 +799,7 @@ sh subshell_example sums
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#基本概念"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取parent-shell的local-variable"><span class="nav-number">2.</span> <span class="nav-text">获取parent shell的local variable</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#输出"><span class="nav-number"></span> <span class="nav-text">输出</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#输出-1"><span class="nav-number"></span> <span class="nav-text">输出</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#输出-2"><span class="nav-number"></span> <span class="nav-text">输出</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#输出-3"><span class="nav-number"></span> <span class="nav-text">输出</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#…-VS-…"><span class="nav-number">1.</span> <span class="nav-text">{….; } VS (…..)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Loop-循环是subshell"><span class="nav-number">2.</span> <span class="nav-text">Loop 循环是subshell</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#基本概念"><span class="nav-number">1.</span> <span class="nav-text">基本概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取parent-shell的local-variable"><span class="nav-number">2.</span> <span class="nav-text">获取parent shell的local variable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#…-VS-…"><span class="nav-number">3.</span> <span class="nav-text">{….; } VS (…..)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Loop-循环是subshell"><span class="nav-number">4.</span> <span class="nav-text">Loop 循环是subshell</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
             
 
           </div>
