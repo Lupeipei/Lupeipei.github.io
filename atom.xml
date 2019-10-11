@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2019-10-07T13:45:42.377Z</updated>
+  <updated>2019-10-11T12:35:06.166Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -17,11 +17,33 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>nuxt中全局设置错误处理页面</title>
+    <link href="http://lupeipei.github.io/2019/10/11/add-global-error-handle-on-nuxt/"/>
+    <id>http://lupeipei.github.io/2019/10/11/add-global-error-handle-on-nuxt/</id>
+    <published>2019-10-11T12:33:29.000Z</published>
+    <updated>2019-10-11T12:35:06.166Z</updated>
+    
+    <content type="html"><![CDATA[<p>文档里其实已经写明了，但还是过一遍吧。</p><a id="more"></a><h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>调接口后，当response返回404，500等status code时，进行统一处理，render到错误页面。</p><h4 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h4><p>Nuxt v2.6.2,  nuxtjs/axios v5.3.6.</p><h4 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h4><p>Nuxt 在context 中添加了一个<code>error(params)</code> 方法，下面正是通过调用这个方法来调错误页面。</p><p>两步即可：</p><ul><li><p>在<code>plugins/axios.js</code>文件中，统一添加错误处理：</p><pre><code class="javascript">export default function ({ $axios, error }) {  $axios.onError(e =&gt; {    if(e.response.status === 403) {      error({ statusCode: 403, message: &quot;forbidden&quot; })    }    if(e.response.status === 404) {      error({ statusCode: 404, message: &quot;not found&quot; })    }    if(e.response.status === 500) {      error({ statusCode: 500, message: &quot;server error&quot; })    }  })}</code></pre><p>每次axios 发送请求后，当response 返回错误时，会调用error这个method，而error 这个方法可以用来调用错误页面 error page。</p></li><li><p>在layouts 中添加 <code>error.vue</code> 文件，这个文件就是出错时render的error page.</p><p><code>error.vue</code>的内容可以长这样：</p><pre><code class="html">&lt;template&gt;  &lt;div class=&quot;container&quot;&gt;    &lt;h1 v-if=&quot;error.statusCode === 403&quot;&gt;Forbidden&lt;/h1&gt;    &lt;h1 v-if=&quot;error.statusCode === 404&quot;&gt;Page not found&lt;/h1&gt;    &lt;h1 v-if=&quot;error.statusCode === 500&quot;&gt;Server Error&lt;/h1&gt;    &lt;nuxt-link to=&quot;/&quot;&gt;Home page&lt;/nuxt-link&gt;  &lt;/div&gt;&lt;/template&gt;&lt;script&gt;export default {  props: [&#39;error&#39;],  layout: &#39;blank&#39;}&lt;/script&gt;</code></pre><p>这里需要注意的是：</p><p>当前版本的nuxt，在<code>error.vue</code>中设置layout是无效的。</p><p>不过这个问题已修复，下一版本应该会发布，戳<a href="https://github.com/nuxt/nuxt.js/issues/2537#ref-issue-499747914" target="_blank" rel="noopener">bug(csr): error page layout not correctly applied #2537</a>  可查看详情。<br>好了，搞定，收工！！</p></li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://nuxtjs.org/guide/views#error-page" target="_blank" rel="noopener">Error page</a></p><p><a href="https://axios.nuxtjs.org/helpers" target="_blank" rel="noopener">Axios Helpers</a></p><p><a href="https://github.com/nuxt/nuxt.js/issues/2537#ref-issue-499747914" target="_blank" rel="noopener">bug(csr): error page layout not correctly applied</a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;文档里其实已经写明了，但还是过一遍吧。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Nuxt" scheme="http://lupeipei.github.io/tags/Nuxt/"/>
+    
+  </entry>
+  
+  <entry>
     <title>读《苏东坡传》</title>
     <link href="http://lupeipei.github.io/2019/10/07/notes-of-the-gay-genius/"/>
     <id>http://lupeipei.github.io/2019/10/07/notes-of-the-gay-genius/</id>
     <published>2019-10-07T13:42:43.000Z</published>
-    <updated>2019-10-07T13:45:42.377Z</updated>
+    <updated>2019-10-08T01:07:57.926Z</updated>
     
     <content type="html"><![CDATA[<p>意料外的一次开坑。</p><a id="more"></a> <p>最后一章说的是东坡逝世，刷完的时候，正好在高铁上，列车行进，发着呆，脑子里突然冒出一个吊诡的想法：人生真是短暂，每个人都是要死的……</p><p>按照常规，应该是先缕缕整本书的脉络，来一遍东坡极简史啥的，考虑到我这么懒一人，整出来一堆密密麻麻的文字，看着也累，就略过吧。</p><p>毕竟林语堂这本，不像历史，更像小说。</p><p>简单说说看完后的一些感受。</p><p>整体是没什么特别的感触，可能是因为东坡太有名了，所以林语堂对他极尽偏爱，东坡被描述成了一个近乎完美的人，当然，东坡应该是担得起这些赞美的，毕竟这样的一位大诗人，谁不喜欢呢？可惜个人对东坡的诗词了解不多，更别说字画那些了，也许是该多刷些东坡先生的文集了。「坑越填越深……」</p><p>书中作者引经据典，中外名人信手拈来，刚开始看会觉得新奇，但是后面会有种串场的错觉，本来好端端地说着北宋，突然冒出来个英国诗人，或者狮子，豹子之类的比喻，沉浸感瞬间就没了，直愣愣地只想来一句，我擦，这什么鬼？！那感觉还真的是奇特，一时无法适应，只能说还无法欣赏这种叙事风格。</p><p>书中让人印象深刻的是对王安石的描述，感觉王荆公真的是背了口好大的锅，被喷得狗血淋头，当然书中对拗相公的评价虽有失偏颇，但提到那些变法涉及的细节，真真是涨知识。看知乎上有人点评说，看完这本，一定要去看《王安石传》。哈哈，尼玛，笑喷！</p><p>回到东坡本身。</p><p>一直觉得苏东坡招人喜欢，是因为他那乐天派的性格，不管遭遇什么样的处境，他都能在当下找到快乐，这份洒脱不羁，谁不喜欢？偏偏拥有这般性格的人，又是个不世出的大才子，还好奇心爆棚，喜欢尝试各种新事物，瑜伽，酿酒，辟谷，炼丹，修仙……不过东坡炼丹修仙这段倒是让我意外了，考虑到当时的背景，文人之间对修仙炼丹药颇有心得的，还交流分享，估计在当时也算是件牛逼哄哄的雅事吧。不过也不得不说，一个人在某些领域可能会达到他人无法企及的高度，但是在另一些领域，却也可以错得离谱。</p><p>整本书里面，并没有提到苏东坡为何如此有才华。更多的是给人一种自小就智力超群，才思敏捷的感觉。但书中有个细节，提到苏东坡晚年被贬到海南岛时，他的儿子苏过陪伴在他身边，苏过将《唐书》抄写了一遍，又抄《汉书》 ，而苏东坡在躺椅上听儿子诵读这些书时，偶尔指出古人的生平细节，评论之。一看没啥，细想觉得真的是厉害。这得读了多少遍才能记得如此清楚？不用猜，东坡小时候读书定然也是抄过那些古籍的，嗯，下次我也来试试这抄书学习法：P</p><p>刷书的时候，在网上Google东坡的诗词，发现中华诗词网上，收录了东坡蛮多的作品，但是网站的体验有些一言难尽，各种广告植入，给自个立个flag，整一波东坡的作品集，希望这个坑能早开早填。</p><p>书中有段写到苏东坡一天夜里睡不着觉，找张怀民，巧的是，张怀民也未寝，两人便相约在月下散步聊天，不知为何，对这段印象还挺深刻的，仿佛看见两位知心好友在月下天南海北，互诉衷肠，宁静美好，就以这首《记承天寺夜游》来为这篇不着调的读后感结个尾吧。</p><blockquote><p>元丰六年十月十二日夜。解衣欲睡。月色入户，欣然起行。念无与为乐者，遂至承天寺寻张怀民。怀民亦未寝，相与步于中庭。庭中如积水空明，水中藻荇交横，盖竹柏影也。<br>何夜无月，何处无竹柏，但少闲人如吾两人耳。</p></blockquote>]]></content>
     
@@ -445,28 +467,6 @@
       <category term="Rails" scheme="http://lupeipei.github.io/tags/Rails/"/>
     
       <category term="ErrorTracking" scheme="http://lupeipei.github.io/tags/ErrorTracking/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《德伯家的苔丝》</title>
-    <link href="http://lupeipei.github.io/2019/06/07/notes-of-tess-of-the-d-Urbervilles/"/>
-    <id>http://lupeipei.github.io/2019/06/07/notes-of-tess-of-the-d-Urbervilles/</id>
-    <published>2019-06-07T13:15:26.000Z</published>
-    <updated>2019-06-09T05:12:40.969Z</updated>
-    
-    <content type="html"><![CDATA[<p>哈代的长篇小说。</p><a id="more"></a> <p>整本书可以一句话概括为：细谈纯洁天真的少女苔丝如何一步步成为手刃恶棍的杀人犯。</p><p>说笑了，这不是什么女性成长史，这是个悲剧故事。</p><p>大致的故事情节简单说一下：</p><p>女主苔丝，小户人家的大女儿，父亲德伯是个酗酒的懒散小买卖人，偶然从牧师那里得知自己是一个古老的骑士世家的后裔，便自觉血统高贵，与众不同，可惜他没能继承父辈的自强习性，想到的不是通过自己的努力去摆脱困境，改善家中的窘况，反而和妻子盘算着让女儿去附近一个富有的同姓德伯家认亲戚，奢望能攀上一门亲事。</p><p>可惜这个德伯家，却是一个冒牌的世家，靠放高利贷起家，家中掌事的是位老太太，这位老太太有个儿子名德贝维尔，风流浪荡，淫乱无度，在苔丝来到他们家中工作了三个月后，这位浪荡子便染指了苔丝。</p><p>失身后的苔丝悲伤愤怒，回到了自己的家中，数月后生下了一名婴儿，婴儿不久后夭折。</p><p>在家中度过了数年足不出户的日子后，苔丝去了离家较远的一个奶牛场，成为了一个挤奶的女工，开始了新的生活，在这里她与26岁的克莱尔重逢，两人互相爱慕，克莱儿决定向她求婚，新婚当夜，苔丝向克莱儿坦白了自己的过往，克莱儿一时无法接受，决然与苔丝分开，被抛弃的苔丝回到了自己的家中，而克莱尔则远赴巴西。</p><p>婚后的一年多时间，苔丝独自在农场做女工，偶遇了德贝维尔，那个当初侵犯了她的人，如今却做起了牧师，可惜依旧心术不正，德贝维尔屡次骚扰苔丝，要求苔丝成为他的妻子，最后苔丝因家中父亲病故，全家无处安身，而远在巴西的克莱尔也没有及时赶回来帮助她，一时绝望，最终妥协，成为了德贝维尔的情妇。</p><p>这段时间里，在巴西历经磨难的克莱尔也开始后悔自己当初抛弃苔丝的行为，回国后，找寻到了自己的妻子，两人重逢，四目相对，物是人非，苔丝在绝望中，杀死了德贝维尔，而自己则在与克莱尔一起逃亡时，被警察逮捕，处以绞刑。</p><p>结尾部分克莱尔和苔丝的妹妹露一起出现了，两人一起开始了新的生活。</p><p>至此，整本书结束。</p><p>整个故事里，苔丝是无辜的，却也是无可奈何的。</p><p>书中开头的章节里，十六岁的苔丝身穿白色长袍，亭亭玉立，参加会社游行，那是她第一次遇见克莱尔，彼时的她怎会知道这个人会是自己此后人生中的软肋。</p><p>也许从初遇时的那次跳舞，就注定了后面她和克莱尔的结局。</p><p>如果当时苔丝坦白时，克莱尔能接受她的过往，整个故事就都不一样了，可惜悲剧才是整本书的底调。</p><p>对于克莱尔的反应，我其实蛮诧异的，只能说一厢情愿得以为克莱尔思想开明了。要知道克莱尔也向苔丝坦白自己曾在巴黎与一个妇人放荡地生活过，为什么苔丝可以原谅他，而他却不能原谅苔丝？在两人都有的不堪过往中，一个是主动的参与者，另一个却是受害者，很好奇克莱尔评判一个人能否被原谅的标准是什么？凭什么苔丝原谅他的那桩风流往事是理所应当，而他却认为苔丝的过往就不可饶恕了呢？更不用说，他后面抛弃了苔丝，自己远赴巴西之前，还要求当时一个爱慕他的姑娘同他一起前往，他那时早已将婚前他对苔丝的那些种种承诺抛到九霄云外了。</p><p>或许，他自始至终爱的，只是幻想中的苔丝，而不是现实中那个活生生的，有着”污点”的苔丝，看得人委实心寒。</p><p>莫名想起陈医生的那句歌词：如果我露出斑点满身，可马上转身？</p><p>借《刀锋》里面那首诗，送给十六岁那年的苔丝：</p><p>美人儿，我们去看那玫瑰花。</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;哈代的长篇小说。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
     
   </entry>
   
