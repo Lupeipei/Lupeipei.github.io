@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-01-02T14:48:26.359Z</updated>
+  <updated>2020-01-05T03:30:47.240Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -17,17 +17,41 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>ssh-keygen踩坑</title>
+    <link href="http://lupeipei.github.io/2020/01/05/error-recording-on-ssh-keygen/"/>
+    <id>http://lupeipei.github.io/2020/01/05/error-recording-on-ssh-keygen/</id>
+    <published>2020-01-05T03:25:29.000Z</published>
+    <updated>2020-01-05T03:30:47.240Z</updated>
+    
+    <content type="html"><![CDATA[<p>记录下这周发布的时候遇到了一个奇葩问题。</p><a id="more"></a><h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用<code>ssh-keygen -t ecdsa -b 521</code> 新生成了一对key，更新了服务器的authorized_keys，登录正常，但是cap deploy时，一直报错：</p><pre><code>Net::SSH::Exception: Cannot decode private key of type ecdsa-sha2-nistp521</code></pre><p>即使按照提示，安装了指定的gem 也没有效果。</p><pre><code>gem &#39;ed25519&#39;gem &#39;bcrypt_pbkdf&#39;</code></pre><p>本机 OpenSSH 版本: 8.1。</p><h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>简单提一下中间的解决过程。</p><p>最开始的时候，采取了重新生成key的方式，bits 改为 256：</p><pre><code>ssh-keygen -t ecdsa -b 256</code></pre><p>结果：无效。</p><p>然后在老大的忽悠下，重装了系统。「成功满足了他老人家看机子不爽，孜孜不倦建议重装的诉求。」</p><p>重装后问题依然存在。</p><p>鉴于老大可以正常发布，对比了private key，得出的结论是format 不一致。</p><p>本机上private key 的format 使用的是 OpenSSH private key，也就是私钥的第一行是</p><pre><code>-----BEGIN OPENSSH PRIVATE KEY-----</code></pre><p>而老大的则是OpenSSL format，也就是private key 第一行以<code>-----BEGIN EC PRIVATE KEY-----</code> 打头。</p><p>搜<a href="https://www.openssh.com/releasenotes.html" target="_blank" rel="noopener">OpenSSH Release Notes</a> ，change log 中提到了，7.8+版本后默认生成的private key format 是OpenSSH，如果需要生成OpenSSL的PEM format，指定format为 PEM 即可。</p><pre><code>ssh-keygen -t ecdsa -b 521 -m PEM</code></pre><p>随后部署，OK。「但感觉还是懵逼的，服务器上sshd版本问题？只支持PEM format ？」</p><h4 id="有关ssh-keygen"><a href="#有关ssh-keygen" class="headerlink" title="有关ssh-keygen"></a>有关ssh-keygen</h4><p>问题解决后，补一补 ssh-keygen 的小知识。</p><p>ssh-keygen 可以根据不同的算法生成key，使用 <code>option -t</code> 可以指定生成的key的type(rsa, dsa, ecdsa and ed25519) .</p><pre><code> -t dsa | ecdsa | ed25519 | rsa</code></pre><p>默认使用的是rsa-sha2-512。</p><pre><code>The available RSA signature variants are “ssh-rsa” (SHA1 signatures, not recommended), “rsa-sha2-256”, and “rsa-sha2-512” (the default)</code></pre><p>四种算法 dsa | ecdsa | ed25519 | rsa 的对比，参考<a href="https://www.ssh.com/ssh/keygen/" target="_blank" rel="noopener">SSH-KEYGEN - GENERATE A NEW SSH KEY</a></p><blockquote><p>rsa:</p><p>an old algorithm based on the difficulty of factoring large numbers. A key size of at least 2048 bits is recommended for RSA; 4096 bits is better.Choosing a different algorithm may be advisable. It is quite possible the RSA algorithm will become practically breakable in the foreseeable future. All SSH clients support this algorithm.</p><p>dsa:</p><p>an old US government Digital Signature Algorithm. It is based on the difficulty of computing discrete logarithms. A key size of 1024 would normally be used with it. DSA in its original form is no longer recommended.【不推荐使用】</p><p>ecdsa:</p><p>a new Digital Signature Algorithm standarized by the US government, using elliptic curves. This is probably a good algorithm for current applications. Only three key sizes are supported: 256, 384, and 521 (sic!) bits. We would recommend always using it with 521 bits, since the keys are still small and probably more secure than the smaller keys (even though they should be safe as well). Most SSH clients now support this algorithm.【可以使用，推荐521bits】</p><p>ed25519:</p><p>this is a new algorithm added in OpenSSH. Support for it in clients is not yet universal. Thus its use in general purpose applications may not yet be advisable.【新算法，支持不广泛，可以尝试使用】</p></blockquote><p>例子：</p><pre><code>ssh-keygen -t rsa -b 4096ssh-keygen -t dsassh-keygen -t ecdsa -b 521ssh-keygen -t ed25519</code></pre><p>生成的key，可以指定comment，比如：</p><pre><code>ssh-keygen -t rsa -b 4096 -C &#39;your_email@example.com&#39;</code></pre><p>这样生成的key 中comment 是指定的邮箱，而不是有关本机的用户信息。</p><p>默认情况下，使用ssh-keygen 生成的public 和 private key，会分别设置访问权限为644和600，这也是为什么，把本地的public key 添加到服务器后，需要自己手动 chmod， 给 authorized_keys 设置 644，而本机生成时则不用。</p><p>最后，说一个根据private key 生成 public key的小技巧。</p><p>如果你不小心丢了public key「虽然概率极低」，可以根据 private key 重新生成，比如：</p><pre><code>key=~/.ssh/id_ecdsassh-keygen -yf $key &gt; $key.pub</code></pre><p>不过需要多一句的是，根据 private key 重新生成的public key 中，comment 默认为空。我试过使用 -C 来指定 comment，但是无效，comment 依然为空，不过comment不影响使用key的正常使用，可以pass。</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.ssh.com/ssh/keygen/" target="_blank" rel="noopener">SSH-KEYGEN - GENERATE A NEW SSH KEY</a></p><p><a href="https://man.openbsd.org/ssh-keygen.1" target="_blank" rel="noopener">ssh-keygen</a></p><p><a href="https://www.amazon.com/UNIX-Linux-System-Administration-Handbook/dp/0134277554" target="_blank" rel="noopener">Unix and Linux System Administration Handbook </a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;记录下这周发布的时候遇到了一个奇葩问题。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="ErrorTracking" scheme="http://lupeipei.github.io/tags/ErrorTracking/"/>
+    
+      <category term="SSH" scheme="http://lupeipei.github.io/tags/SSH/"/>
+    
+  </entry>
+  
+  <entry>
     <title>无条件</title>
     <link href="http://lupeipei.github.io/2020/01/02/no-condition/"/>
     <id>http://lupeipei.github.io/2020/01/02/no-condition/</id>
     <published>2020-01-02T14:35:27.000Z</published>
-    <updated>2020-01-02T14:48:26.359Z</updated>
+    <updated>2020-01-05T03:25:35.080Z</updated>
     
-    <content type="html"><![CDATA[<p>谢谢侬。<br><a id="more"></a><br>年末的时候，网易云一年一度的听歌报告，显示我的年度歌手是陈奕迅，看着这报告，心里笑着：嗯，年年都是你，以后也是你……</p><p>突然就想写点有关陈医生的东西。</p><p>人真是奇怪的动物。</p><p>大学时代的我，还处在无法理解为什么会有人喜欢陈奕迅的阶段，觉得真的是奇葩，那感觉大概就好像我姑姑后来知道我竟然喜欢陈奕迅时，满脸写着匪夷所思一般。那时候《浮夸》很火，常常一个不经意，在操场，或宿舍，或教室，你总能听到一两首他的歌，而当时的我，只觉得就像是一个疯子在嘶吼，毫无美感可言。</p><p>哪料到日后会生生打脸。</p><p>不过好玩的是，带我入坑的第一首粤语歌，并不是Eason的作品，而是张学友翻唱的那首《小城大事》。</p><p>毕竟，那时啃着苹果开演唱会的他，随意自然，实在是不得不让人印象深刻。</p><p>被歌神的声音迷倒后，果断开始听学友的歌，那时H也正好在听，便给我推荐了好几首，可惜听了好些，总觉得哪里不对劲，然后就想着，粤语里面唱歌最牛逼的，除了学友，还有谁？哦，陈奕迅！</p><p>从此，歌单里便是满满的陈胖子。</p><p>当时得知我开始听陈医生，H一脸不屑，说她早已过了听陈医生的年纪。哎，没法子，我一直都这么后知后觉：P</p><p>后面的事便很自然了。</p><p>去看的第一场演唱会，是陈医生的。当时 T 还笑称我叛变，连360度无死角的力宏都不爱了。</p><p>我还记得那次提前到场，看到很多Eason粉，其中有一个妹子，酷酷的，穿着一件大大的白T恤，背面印着“若你喜欢怪人，其实我很美“。嗯，有人拍照时，妹子记得插袋。</p><p>也是在那个时候，突然想学吉他，想唱Eason的歌，恰好那时同事里有一位广东的小姐姐，便厚着脸皮央求她一句句教我《沙龙》里面那些词的发音。</p><p>可惜最后辜负了小姐姐的一番用心，歌倒是会唱了，发音还是一言难尽 ：P</p><p>也还记得当时认识的M，土生土长的广东人，初中开始弹吉他，算半个老吉他手，可惜迷的不是Eason，而是邓紫棋，现在想来，印象深刻的还是那首自弹自唱的《泡沫》， H有段时间总说这首歌听得人心疼。</p><p>听陈医生后，开始慢慢接触很多其他的粤语歌手，然后也开始喜欢听杨千嬅，也会去八卦这两人的故事，会去关注林夕，像其他吃瓜群众一样感慨着为何痴情总是被辜负，也会听着《陀飞轮》被黄伟文的填词惊艳到……</p><p>不过严格来说，现在的我应该都不算是陈胖子的粉，至少不是铁粉，没有了去看演唱会的欲望，也没有买唱片的冲动，只是单纯地，偶尔想听听他的歌而已，不过这偶尔的频率有些高罢了。</p><p>呃，写着写着词穷了。</p><p>对乐理一窍不通的我，好像除了说他的歌好听之外，也找不到其他的词来赞美了。</p><p>但还是会听很久很久，算半个粉了。</p><p>想起那首《歌颂》。</p><p>感谢世上总有歌，把心境道破。</p>]]></content>
+    <content type="html"><![CDATA[<p>谢谢侬。</p><a id="more"></a><p>年末的时候，网易云一年一度的听歌报告，显示我的年度歌手是陈奕迅，看着这报告，心里笑着：嗯，年年都是你，以后也是你……</p><p>突然就想写点有关陈医生的东西。</p><p>人真是奇怪的动物。</p><p>大学时代的我，还处在无法理解为什么会有人喜欢陈奕迅的阶段，觉得真的是奇葩，那感觉大概就好像我姑姑后来知道我竟然喜欢陈奕迅时，满脸写着匪夷所思一般。那时候《浮夸》很火，常常一个不经意，在操场，或宿舍，或教室，你总能听到一两首他的歌，而当时的我，只觉得就像是一个疯子在嘶吼，毫无美感可言。</p><p>哪料到日后会生生打脸。</p><p>不过好玩的是，带我入坑的第一首粤语歌，并不是Eason的作品，而是张学友翻唱的那首《小城大事》。</p><p>毕竟，那时啃着苹果开演唱会的他，随意自然，实在是不得不让人印象深刻。</p><p>被歌神的声音迷倒后，果断开始听学友的歌，那时H也正好在听，便给我推荐了好几首，可惜听了好些，总觉得哪里不对劲，然后就想着，粤语里面唱歌最牛逼的，除了学友，还有谁？哦，陈奕迅！</p><p>从此，歌单里便是满满的陈胖子。</p><p>当时得知我开始听陈医生，H一脸不屑，说她早已过了听陈医生的年纪。哎，没法子，我一直都这么后知后觉：P</p><p>后面的事便很自然了。</p><p>去看的第一场演唱会，是陈医生的。当时 T 还笑称我叛变，连360度无死角的力宏都不爱了。</p><p>我还记得那次提前到场，看到很多Eason粉，其中有一个妹子，酷酷的，穿着一件大大的白T恤，背面印着“若你喜欢怪人，其实我很美“。嗯，有人拍照时，妹子记得插袋。</p><p>也是在那个时候，突然想学吉他，想唱Eason的歌，恰好那时同事里有一位广东的小姐姐，便厚着脸皮央求她一句句教我《沙龙》里面那些词的发音。</p><p>可惜最后辜负了小姐姐的一番用心，歌倒是会唱了，发音还是一言难尽 ：P</p><p>也还记得当时认识的M，土生土长的广东人，初中开始弹吉他，算半个老吉他手，可惜迷的不是Eason，而是邓紫棋，现在想来，印象深刻的还是那首自弹自唱的《泡沫》， H有段时间总说这首歌听得人心疼。</p><p>听陈医生后，开始慢慢接触很多其他的粤语歌手，然后也开始喜欢听杨千嬅，也会去八卦这两人的故事，会去关注林夕，像其他吃瓜群众一样感慨着为何痴情总是被辜负，也会听着《陀飞轮》被黄伟文的填词惊艳到……</p><p>不过严格来说，现在的我应该都不算是陈胖子的粉，至少不是铁粉，没有了去看演唱会的欲望，也没有买唱片的冲动，只是单纯地，偶尔想听听他的歌而已，不过这偶尔的频率有些高罢了。</p><p>呃，写着写着词穷了。</p><p>对乐理一窍不通的我，好像除了说他的歌好听之外，也找不到其他的词来赞美了。</p><p>但还是会听很久很久，算半个粉了。</p><p>想起那首《歌颂》。</p><p>感谢世上总有歌，把心境道破。</p>]]></content>
     
     <summary type="html">
     
-      &lt;p&gt;谢谢侬。&lt;br&gt;
+      &lt;p&gt;谢谢侬。&lt;/p&gt;
     
     </summary>
     
@@ -435,28 +459,6 @@
     
     
       <category term="Shell" scheme="http://lupeipei.github.io/tags/Shell/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《怦然心动的人生整理魔法》</title>
-    <link href="http://lupeipei.github.io/2019/07/16/notes-of-the-life-changing-magic-of-tiding-up/"/>
-    <id>http://lupeipei.github.io/2019/07/16/notes-of-the-life-changing-magic-of-tiding-up/</id>
-    <published>2019-07-16T10:08:51.000Z</published>
-    <updated>2019-07-16T10:11:23.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>谢谢你们曾让我心动。</p><a id="more"></a> <h4 id="全书脉络"><a href="#全书脉络" class="headerlink" title="全书脉络"></a>全书脉络</h4><p>全书5章，整本书的脉络：</p><ul><li><p>第一章列出过往的整理中常见的错误观念，引导读者建立正确的整理观念；</p></li><li><p>第二章以丢弃物品为中心，给出决定物品去留的标准以及丢弃过程中可能遇到的问题；</p></li><li><p>第三章详细讲述如何对衣服，书籍，文件，纪念品等物品进行正确的归类整理；</p></li><li><p>第四章给出了各种收纳建议；</p></li><li><p>第五章列举整理对人生产生的诸多戏剧性影响。</p></li></ul><p>要点部分：</p><p>整理的诀窍：<strong>一次性，短期内，彻底整理</strong>。【这里的短期，以作者的标准，最长为半年。】</p><p>采用正确的方法来整理，关键点只有两个：</p><ul><li>确定物品的弃留</li><li>设定物品放置的位置</li></ul><p>且<strong>两者的顺序不可更改</strong>，必须先完成物品的丢弃工作，才能进行后续的整理收纳。</p><p>决定物品弃留的标准只有一个：<strong>触碰时，是否让你怦然心动</strong>。</p><p>收纳整理的关键只有一个：简化到极限。「极限的标准因人而异」</p><p>具体实操时，作者给出了很多的建议，篇幅较多，不一一列举。</p><p>这里只记录下个人觉得蛮实用的一些建议。</p><h5 id="丢弃物品时的几个tips："><a href="#丢弃物品时的几个tips：" class="headerlink" title="丢弃物品时的几个tips："></a>丢弃物品时的几个tips：</h5><ul><li>把同类物品集中起来，进行一次性判断；</li><li>别让家人看见你丢弃的物品；</li><li>面对不会整理的家人，最有效的方法就是先默默丢弃自己的物品，家人会潜移默化受影响；</li><li>对于那些“没有心动感也不愿丢弃”的物品，思考它们真正的功能，对其表示谢意然后放手；</li><li>除非你产生”只要拥有这些物品，就能过上幸福生活”的感觉，否则，请继续丢弃，直到适量的感悟点到来。</li></ul><h5 id="物品分类整理的几个tips："><a href="#物品分类整理的几个tips：" class="headerlink" title="物品分类整理的几个tips："></a>物品分类整理的几个tips：</h5><ul><li><p>不要因为”扔了可惜”，把衣服降格成家居服；</p></li><li><p>竖着折叠衣服，袜子；</p></li><li><p>衣柜左边放深色材质厚的衣物，右边则放浅色材质薄的衣物。</p></li></ul><h5 id="收纳的几个tips："><a href="#收纳的几个tips：" class="headerlink" title="收纳的几个tips："></a>收纳的几个tips：</h5><ul><li>一个不漏的设定物品的固定位置；</li><li>简化到极限，使自己拥有的物品数量始终处于可控状态；</li><li>就近收纳同类物品，但不要过度考虑行动路线，避开以方便取物为首要标准的陷阱；</li><li>竖着收纳；</li><li>不要使用市售收纳用具，建议用空鞋盒或者苹果公司的很多产品包装盒；</li><li>浴室和厨房水槽什么都不要放。</li></ul><h4 id="感触联想"><a href="#感触联想" class="headerlink" title="感触联想"></a>感触联想</h4><p>列出个人觉得印象深刻的一些点：</p><ul><li>整理之前，请先思考你所想要的理想生活以及为什么你想要过那样的生活；</li><li>为了珍惜真正有价值的物品，必须首先丢弃已经完成了使命的物品；</li><li>丢弃物品，并不意味着过去的人生体验和自我认同就此消失。通过选用有心动感的物品，更明白自己喜欢什么、追求什么；</li><li><p>拥有的物品准确地诉说着你做过的所有选择。因此，整理的过程也可以说是盘点自己得失优劣的过程；</p></li><li><p>整理不过是手段，整理本身不是目的，真正重要的是整理后如何生活下去。</p></li></ul><p>看第五章的时候，对作者提到的那些因为整理而给人生带来的改变，虽诧异，但细想下也觉得合理。与其说一个人通过整理，让房间长久保持整洁的状态，不如说通过整理，TA跟过往的自己来了一次安静的谈话，一次颇有意义的复盘，在这不断的取舍抉择中，更加清楚自己要的到底是什么。</p><p>刷的过程中，不自觉联想起之前不知道在哪里看到的一篇文章，Google了半天也没找出来源，简单凭记忆说一下吧。</p><p>文章讲述了作者自己一天的工作，其中有一个细节，就是他在乘坐地铁时，会检查当天拿到的票据或者其他文件，作者的处理方式很简单，拍照，上传，然后扔掉原件，删除照片。当时觉得很不理解，怎么能这么干脆利落的扔掉？如果需要的时候找不到这些东西怎么办？现在看来，这哥们应该对整理颇有心得。</p><p>看完整本书后，我并没有立即整理房间，毕竟是个大工程，不过倒是整理了下自己那些杂乱的相册，删掉了很多不必要的图片，也发现了这个：</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1g51p27cxzoj30d607sdg6.jpg" alt=""></p><p>估计是曾经刷quora时截图的，感觉很配这本书，附上。</p><p>等我也完成自己的整理工作后，再回来打卡吧。</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;谢谢你们曾让我心动。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
     
   </entry>
   
