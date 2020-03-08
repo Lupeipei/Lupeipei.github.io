@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-02-28T06:59:29.428Z</updated>
+  <updated>2020-03-08T10:47:33.607Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>王爽汇编语言第三版实验7代码实现</title>
+    <link href="http://lupeipei.github.io/2020/03/08/assembly-code-for-lab-7/"/>
+    <id>http://lupeipei.github.io/2020/03/08/assembly-code-for-lab-7/</id>
+    <published>2020-03-08T09:28:47.000Z</published>
+    <updated>2020-03-08T10:47:33.607Z</updated>
+    
+    <content type="html"><![CDATA[<p>花了大半天的时间，终于把这个作业给做了。<br>最初的版本大量使用了loop, 可以说是很低效，很小白了。<br>但一想到这是我目前写到的最复杂的一个汇编程序，还是选择记录下: P。<br>期待刷完整本后，再来看这段代码, 能被自己蠢哭。</p><a id="more"></a><p>结构化数据访问实验的编程实现：</p><p>最初的版本；</p><pre><code>assume cs:codesg, es:table, ss:stacksgdata segmentdb &#39;1975&#39;,&#39;1976&#39;,&#39;1977&#39;,&#39;1978&#39;,&#39;1979&#39;,&#39;1980&#39;,&#39;1981&#39;,&#39;1982&#39; db &#39;1983&#39;,&#39;1984&#39;,&#39;1985&#39;,&#39;1986&#39;,&#39;1987&#39;,&#39;1988&#39;,&#39;1989&#39;,&#39;1990&#39;db &#39;1991&#39;,&#39;1992&#39;,&#39;1993&#39;,&#39;1994&#39;,&#39;1995&#39;;stands for years from 1975 to 1995dd 16,22,382,1356,2390,8000,16000,24486,50065,97479,140417,197514dd 345980,590827,803530,1183000,1843000,2759000,3753000,4649000,5937000;stands for yearly revenue from 1975 to 1995dw 3,7,9,13,28,38,130,220,476,778,1001,1442,2258,2793,4037,5635,8226dw 11542,14430,15257,17800;stands for number of employees from 1975 to 1995data endstable segment  db 21 dup (&#39;year summ ne ?? &#39;)table endsstacksg segment  dw 8 dup (0)stacksg endscodesg segment  start: mov ax, data         mov ds, ax     mov bx, 0     mov bp,0     mov ax, table     mov es, ax     mov ax, stacksg     mov ss, ax     mov sp,0     mov cx, 21      s: push cx          mov si, 0     mov cx, 2     s0: mov ax, ds:[bp+si]          mov es:[bx+si], ax     add si,2     loop s0     pop cx     add bx, 16     add bp, 4     loop s     mov cx, 21     mov bx, 0     s1: push cx         mov si, 0     mov cx, 2     s2: mov ax, ds:[bp+si]     mov es:[bx+5+si], ax     mov ax, ds:[bp+si+2]     mov es:[bx+7+si], ax     add si, 2     loop s2     pop cx     add bx, 16     add bp, 4     loop s1     mov cx, 21     mov bx, 0     s3: mov ax, ds:[bp]     mov es:[bx+10], ax     add bx, 16     add bp, 2     loop s3     mov cx, 21     mov bx, 0     s4: mov ax, es:[bx+5]         mov dx, es:[bx+7]     div word ptr es:[bx+10]     mov es:[bx+13], ax     add bx, 16     loop s4     mov ax, 4c00h     int 21hcodesg endsend start</code></pre><p>看网上别人的解答，基本用21*4来偏移，两次循环搞定, 我起初也是这么想的，结果做的时候，发现脑子不够用，于是改用了最简单也最低效的方式，惭愧。</p><p>重新试着写了一轮，改进后的版本长这样：</p><pre><code>assume cs:codesg, es:table, ss:stacksgdata segmentdb &#39;1975&#39;,&#39;1976&#39;,&#39;1977&#39;,&#39;1978&#39;,&#39;1979&#39;,&#39;1980&#39;,&#39;1981&#39;,&#39;1982&#39; db &#39;1983&#39;,&#39;1984&#39;,&#39;1985&#39;,&#39;1986&#39;,&#39;1987&#39;,&#39;1988&#39;,&#39;1989&#39;,&#39;1990&#39;db &#39;1991&#39;,&#39;1992&#39;,&#39;1993&#39;,&#39;1994&#39;,&#39;1995&#39;;stands for years from 1975 to 1995dd 16,22,382,1356,2390,8000,16000,24486,50065,97479,140417,197514dd 345980,590827,803530,1183000,1843000,2759000,3753000,4649000,5937000;stands for yearly revenue from 1975 to 1995dw 3,7,9,13,28,38,130,220,476,778,1001,1442,2258,2793,4037,5635,8226dw 11542,14430,15257,17800;stands for number of employees from 1975 to 1995data endstable segment  db 21 dup (&#39;year summ ne ?? &#39;)table endsstacksg segment  dw 8 dup (0)stacksg endscodesg segment  start: mov ax, data         mov ds, ax     mov bx, 0     mov bp, 0     mov di, 0     mov ax, table     mov es, ax     mov ax, stacksg     mov ss, ax     mov sp,0     mov cx, 21      s: push cx          mov si, 0     mov cx, 2     s0: mov ax, ds:[bp+si]          mov es:[bx+si], ax     mov ax, ds:[bp+21*4+si]     mov es:[bx+5+si], ax     add si,2     loop s0         mov ax, ds:[di+21*4+21*4]     mov es:[bx+10], ax         mov ax, es:[bx+5]         mov dx, es:[bx+7]     div word ptr es:[bx+10]     mov es:[bx+13], ax     pop cx     add bx, 16     add bp, 4     add di, 2     loop s     mov ax, 4c00h     int 21hcodesg endsend start</code></pre><p>果然虐过一遍，脑子清醒多了。</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;花了大半天的时间，终于把这个作业给做了。&lt;br&gt;最初的版本大量使用了loop, 可以说是很低效，很小白了。&lt;br&gt;但一想到这是我目前写到的最复杂的一个汇编程序，还是选择记录下: P。&lt;br&gt;期待刷完整本后，再来看这段代码, 能被自己蠢哭。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Assembly" scheme="http://lupeipei.github.io/tags/Assembly/"/>
+    
+  </entry>
   
   <entry>
     <title>Mac下搭建汇编环境</title>
@@ -34,9 +56,9 @@
       <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
     
     
-      <category term="CS" scheme="http://lupeipei.github.io/tags/CS/"/>
-    
       <category term="Assembly" scheme="http://lupeipei.github.io/tags/Assembly/"/>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/tags/CS/"/>
     
   </entry>
   
@@ -435,28 +457,6 @@
     
     
       <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ufw常用命令</title>
-    <link href="http://lupeipei.github.io/2019/09/21/ufw-common-commands/"/>
-    <id>http://lupeipei.github.io/2019/09/21/ufw-common-commands/</id>
-    <published>2019-09-21T14:49:13.000Z</published>
-    <updated>2019-09-21T14:52:14.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>刷docker的时候又遇到了ufw，上次踩的坑，这次又稳稳踩中。</p><a id="more"></a> <h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>UFW: uncomplicated Firewall.</p><p>ubuntu默认安装，配置文件地址：<code>/etc/default/ufw</code>.</p><h4 id="常用指令"><a href="#常用指令" class="headerlink" title="常用指令"></a>常用指令</h4><ul><li><p>查看所有指令：</p><pre><code class="shell">ufw --help# 输出Usage: ufw COMMANDCommands: enable                          enables the firewall disable                         disables the firewall default ARG                     set default policy logging LEVEL                   set logging to LEVEL allow ARGS                      add allow rule deny ARGS                       add deny rule reject ARGS                     add reject rule limit ARGS                      add limit rule delete RULE|NUM                 delete RULE insert NUM RULE                 insert RULE at NUM route RULE                      add route RULE route delete RULE|NUM           delete route RULE route insert NUM RULE           insert route RULE at NUM reload                          reload firewall reset                           reset firewall status                          show firewall status status numbered                 show firewall status as numbered list of RULES status verbose                  show verbose firewall status show ARG                        show firewall report version                         display version informationApplication profile commands: app list                        list application profiles app info PROFILE                show information on PROFILE app update PROFILE              update PROFILE app default ARG                 set default application policy</code></pre></li><li><p>查看ufw 状态</p><pre><code class="shell">sudo ufw status</code></pre><p>如果是inactive，可以enable ufw:</p><pre><code class="shell">sudo ufw enable</code></pre><p>ufw 在 active的状态下，默认是deny all incoming connection, allow all outgoing connection.</p><p>也可自行设置：</p><pre><code class="shell">sudo ufw default deny incomingsudo ufw default allow outgoing</code></pre><p>如果enable ufw 后没做其他设置，直接退出服务器，再次ssh 登录，会发现一直time out， 此时需要设置allow SSH connection.</p></li><li><p>allow SSH connection</p><pre><code class="shell">sudo ufw allow ssh</code></pre><p>等同于：</p><pre><code class="shell">sudo ufw allow 22</code></pre><p>其他如：</p><p>allow http：</p><pre><code class="shell">sudo ufw allow http# 等同于sudo ufw allow 80</code></pre><p>allow https:</p><pre><code class="shell">sudo ufw allow https# 等同于sudo ufw allow 443</code></pre><p> allow specific port ranges:</p><pre><code>sudo ufw allow 6000:6007/tcp</code></pre><p>allow specific IP address:</p><pre><code>sudo ufw allow from 14.141.14.15</code></pre><p>allow PG from specific IP address:</p><p>PG 默认在端口5432 监听 .</p><p>假定 IP 地址是：14.141.14.15</p><pre><code>sudo ufw allow from 14.141.14.15 to any port 5432</code></pre><p>更多有关mail 及 PG， SQL，参考 <a href="https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands" target="_blank" rel="noopener">UFW essentials common firewall rules and commands</a>。 </p></li><li><p>删除UFW rules:</p><p>两种方式：使用 delete [number]；delete 搭配 allow.</p><p>例子：</p><pre><code class="shell"># 列出所有的rules，带有number：sudo ufw status numbered# 输出Status: active     To                         Action      From     --                         ------      ----[ 1] 22/tcp                     ALLOW IN    Anywhere[ 2] 80/tcp                     ALLOW IN    Anywhere[ 3] 443/tcp                    ALLOW IN    Anywhere[ 4] 22/tcp (v6)                ALLOW IN    Anywhere (v6)[ 5] 80/tcp (v6)                ALLOW IN    Anywhere (v6)[ 6] 443/tcp (v6)               ALLOW IN    Anywhere (v6)sudo ufw delete 3# 输出Deleting: allow 443/tcpProceed with operation (y|n)? yRule deleted# 或者直接：sudo ufw delete allow https# 等同于：sudo ufw delete allow 80</code></pre></li><li><p>disable ufw</p><p>设置 ufw 状态为 inactive:</p><pre><code>sudo ufw disable</code></pre></li><li><p>reset ufw</p><p>重置：</p><pre><code>sudo ufw reset</code></pre></li><li><p>reload ufw</p><p>通常，修改 <code>/etc/default/ufw</code>配置文件后，需要reload下。</p><pre><code>sudo ufw reload</code></pre></li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands" target="_blank" rel="noopener">UFW essentials common firewall rules and commands</a></p><p><a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu-14-04" target="_blank" rel="noopener">how to set up a firewall with UFW on Ubuntu </a></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;刷docker的时候又遇到了ufw，上次踩的坑，这次又稳稳踩中。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Shell" scheme="http://lupeipei.github.io/tags/Shell/"/>
     
   </entry>
   
