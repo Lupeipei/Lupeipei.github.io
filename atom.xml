@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-03-08T11:16:52.211Z</updated>
+  <updated>2020-03-14T08:56:41.890Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>汇编中的转移指令</title>
+    <link href="http://lupeipei.github.io/2020/03/14/jump-commands-in-assembly-language/"/>
+    <id>http://lupeipei.github.io/2020/03/14/jump-commands-in-assembly-language/</id>
+    <published>2020-03-14T08:53:45.000Z</published>
+    <updated>2020-03-14T08:56:41.890Z</updated>
+    
+    <content type="html"><![CDATA[<p>记录下jmp, jcxz, loop, ret, retf, call等转移指令的概念和使用。</p><a id="more"></a><h4 id="jmp-指令"><a href="#jmp-指令" class="headerlink" title="jmp 指令"></a>jmp 指令</h4><p>概念：</p><p>无条件转移指令，可以只修改IP，或者同时修改CS 和 IP。</p><p>指令格式：</p><p>分为三种：</p><ul><li><p>jmp 标号</p></li><li><p>jmp 16位寄存器/reg</p></li><li><p>jmp 内存单元地址</p></li></ul><p>其中， jmp 标号 又细分为：</p><ul><li><p>jmp short 标号</p><blockquote><p>段内短转移，修改IP， 通常 jmp 标号，指的是短转移。</p><p>8位位移，范围为-128～127。</p><p>如果jmp 后的那条指令的IP地址与标号处的IP地址相距超过127个字节，会出现越栈。</p></blockquote></li><li><p>jmp near ptr 标号</p><blockquote><p>段内近转移，修改IP， 与jmp short 标号 非常相近。</p><p>16位位移，范围为-32768～32767。</p></blockquote></li><li><p>jmp far ptr 标号</p><blockquote><p>段间转移，远转移。</p><p>其中，（CS）= 标号所在段的段地址，（IP）= 标号在段中的偏移地址</p><p>在debug 模式下使用u命令可以比较清晰的看到CS和IP的值。</p></blockquote></li></ul><p>jmp 内存单元地址 也细分为：</p><ul><li><p>jmp word ptr 内存单元地址</p><blockquote><p>段内转移。</p><p>（IP）= （内存单元地址）</p></blockquote></li><li><p>jmp dword ptr 内存单元地址</p><blockquote><p>段间转移。</p><p>（CS）= （内存单元地址 + 2），（IP）= （内存单元地址）</p></blockquote></li></ul><h4 id="jcxz-指令"><a href="#jcxz-指令" class="headerlink" title="jcxz 指令"></a>jcxz 指令</h4><p>概念：</p><p>有条件转移指令，<strong>所有的有条件转移指令都是短转移</strong>。</p><p>指令格式：</p><pre><code>jcxz 标号</code></pre><p>相当于：</p><pre><code>if ((cx)==0) jmp short 标号;</code></pre><h4 id="loop-指令"><a href="#loop-指令" class="headerlink" title="loop 指令"></a>loop 指令</h4><p>概念：</p><p>循环指令，<strong>所有的循环转移指令都是短转移</strong>。</p><p>指令格式：</p><pre><code>loop 标号</code></pre><p>相当于：</p><pre><code>(cx)--;if ((cx)!=0) jmp short 标号；</code></pre><h4 id="ret-指令-amp-retf-指令"><a href="#ret-指令-amp-retf-指令" class="headerlink" title="ret 指令 &amp; retf 指令"></a>ret 指令 &amp; retf 指令</h4><p>概念：</p><p>两者都是转移指令，ret 用栈中的数据修改IP的内容，从而实现近转移。retf 用栈中的数据修改 CS 和 IP的内容，从而实现远转移。</p><p>指令格式：</p><pre><code>retretf</code></pre><p>执行 ret 相当于：</p><pre><code>pop IP</code></pre><p>执行 retf 相当于：</p><pre><code>pop IPpop CS</code></pre><h4 id="call-指令"><a href="#call-指令" class="headerlink" title="call 指令"></a>call 指令</h4><p>概念：</p><p>转移指令，CPU 执行 call 指令时，进行两步操作：先将当前的IP或CS压栈，随后转移。</p><p>指令格式：</p><p>同jmp 一样，分为三种：</p><ul><li><p>call 标号</p></li><li><p>call 16位寄存器/reg</p><blockquote><p>相当于：</p><pre><code>push IPjmp 16位reg</code></pre></blockquote></li><li><p>call 内存单元地址</p></li></ul><p>其中，call 标号 细分为：</p><ul><li><p>call 标号</p><blockquote><p>相当于：</p><pre><code>push IPjmp near ptr 标号</code></pre><p>同ret 正好对应入栈出栈。</p></blockquote></li><li><p>call far ptr 标号</p><blockquote><p>相当于：</p><pre><code>push CSpush IPjmp far ptr 标号</code></pre><p>同retf 正好对应入栈出栈。</p></blockquote></li></ul><p>同样，对应jmp, call 内存单元地址 细分为：</p><ul><li><p>call word ptr 内存单元地址</p><blockquote><p>段内转移。</p><p>相当于：</p><pre><code>push IPjmp word ptr 内存单元地址</code></pre></blockquote></li><li><p>call dword ptr 内存单元地址</p><blockquote><p>段间转移。</p><p>相当于：</p><pre><code>push CSpush IPjmp dword ptr 内存单元地址</code></pre></blockquote></li></ul><p>通常 可以使用call 和 ret 来实现子程序机制，比如：</p><pre><code class="assembly">assume cs:codecode segment  start: ......         ......         call sub         ......         ......         mov ax, 4c00h         int 21h    sub: ......         ......         retcode endsend start</code></pre><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/25726019/" target="_blank" rel="noopener">汇编语言</a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;记录下jmp, jcxz, loop, ret, retf, call等转移指令的概念和使用。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Assembly" scheme="http://lupeipei.github.io/tags/Assembly/"/>
+    
+  </entry>
   
   <entry>
     <title>《汇编语言》第三版实验7代码实现</title>
@@ -435,28 +457,6 @@
     
     
       <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>学车小记</title>
-    <link href="http://lupeipei.github.io/2019/09/27/thoughts-on-driving/"/>
-    <id>http://lupeipei.github.io/2019/09/27/thoughts-on-driving/</id>
-    <published>2019-09-27T15:53:51.000Z</published>
-    <updated>2019-09-27T16:08:09.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>脱坑的感觉贼好。</p><a id="more"></a> <p>今天考科三，一次过，考完很兴奋的跟朋友们报喜，活脱脱范进中举的翻版。</p><p>要知道考试前一天，教练已经跟我说了下补考的事宜，因为在他看来，我考过的几率实在是太低了。压线，挂错档，熄火，跑偏，靠边停车车头压线……所有你能想到的新手易错点，我在练车的过程中，统统犯了个遍，关键还屡犯不止。</p><p>从7月到9月，被教练骂得那叫一个狗血淋头。</p><p>所以考完那一刻，你大概能猜到为什么我跟个傻逼似的逐个汇报自己的战绩。</p><p>不过让我自己稍稍意外的是，考试的时候，我原以为自己会很紧张，结果却淡定的一逼。我那一批4个人，我排第二，前面那位大哥开得不好，两次机会都挂了。轮到我，一路开过，最后靠边停车被扣了10分，嗯，90分，够了，下了车，跑去签字，签完拿包走人。</p><p>从进考场，就仿佛有种很强烈的预感，那预感告诉我，一定会考过，现在想来，也不知这预感从何而来，毕竟考前那天，教练都告诫我不要想着一次过，做好补考的准备，思来想去，可能是大饼给的自信满仓了吧。</p><p>现在安静坐下来，回想这段练车的日子，虽说被骂惨了，心情常常很down，但细想下，还是在练车的过程中，有了一些成长的。</p><p>一个是自己对于问题的看法吧，因为被骂的次数太多，我曾一度怀疑自己是不是天生就是不适合开车，所幸这个念头并未在脑中占据很久，因为想明白了开车只是一个技能，既然是门技能，只要练的多，没有学不会的，心下坦然。所以，如果你也同我一样，练车很不顺，请不要因为别人说你玩不转就真的玩不转了，毕竟事实和看法是两回事。</p><p>另一个比较明显的改变也许是自己不那么的急躁了。</p><p>不知是不是职业病，我发现自己会很着急地想着去完成一些事，生怕来不及。体现在练车上，最明显就是挂挡，恨不能0.5秒挂进档位，多次挂错，多次死性不改，多次被骂，后面开始调整自己，慢一点，慢一点，来得及。果然，慢一点，真的会不一样。</p><p>想起那句我常用来给自己打鸡血的话：</p><p>Each time we face a fear, we gain strength, courage, and confidence in the doing.</p><p>送给那段时间被教练骂得灰头土脸的自己：坚持下来了，干得漂亮！</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;脱坑的感觉贼好。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Life" scheme="http://lupeipei.github.io/categories/Life/"/>
-    
-    
-      <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
     
   </entry>
   
