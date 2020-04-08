@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-04-03T14:25:51.642Z</updated>
+  <updated>2020-04-08T16:41:36.579Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>《汇编语言》第三版课程设计1代码实现</title>
+    <link href="http://lupeipei.github.io/2020/04/09/assembly-code-for-course-design-1/"/>
+    <id>http://lupeipei.github.io/2020/04/09/assembly-code-for-course-design-1/</id>
+    <published>2020-04-08T16:38:04.000Z</published>
+    <updated>2020-04-08T16:41:36.579Z</updated>
+    
+    <content type="html"><![CDATA[<p>果然是绝知此事要躬行。</p><a id="more"></a><h4 id="效果："><a href="#效果：" class="headerlink" title="效果："></a>效果：</h4><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesXnip2020-04-09_00-14-06.jpg" alt=""></p><h4 id="代码实现："><a href="#代码实现：" class="headerlink" title="代码实现："></a>代码实现：</h4><p>两个小小的说明：</p><ul><li><p>所有用到的小程序都是实验10里面的，稍微有点超前的指令是cmp 和 jna 类条件跳转，但是刷了chapter11后，就很容易懂了，另外整个屏幕一行160个字节，正好4列数据，所以每列我配了40个字节，显示出来正好占满整个屏幕。</p></li><li><p>程序是从第1行而不是第0行开始显示数据的，因为执行EXE文件后，屏幕会自动下移一行，光标闪烁等待用户输入，如果从第0行开始显示，1975 那一年的数据就无法看到了。</p></li></ul><p>以下为具体实现：</p><pre><code class="assembly">assume cs:codesg, ds:data, ss:stacksg; 所要显示的原始数据data segmentdb &#39;1975&#39;,&#39;1976&#39;,&#39;1977&#39;,&#39;1978&#39;,&#39;1979&#39;,&#39;1980&#39;,&#39;1981&#39;,&#39;1982&#39; db &#39;1983&#39;,&#39;1984&#39;,&#39;1985&#39;,&#39;1986&#39;,&#39;1987&#39;,&#39;1988&#39;,&#39;1989&#39;,&#39;1990&#39;db &#39;1991&#39;,&#39;1992&#39;,&#39;1993&#39;,&#39;1994&#39;,&#39;1995&#39;;stands for years from 1975 to 1995dd 16,22,382,1356,2390,8000,16000,24486,50065,97479,140417,197514dd 345980,590827,803530,1183000,1843000,2759000,3753000,4649000,5937000;stands for yearly revenue from 1975 to 1995dw 3,7,9,13,28,38,130,220,476,778,1001,1442,2258,2793,4037,5635,8226dw 11542,14430,15257,17800;stands for number of employees from 1975 to 1995db 10 dup(0); 用于暂存十进制数值data endsstacksg segment  dw 16 dup (0)stacksg endscodesg segment  start: mov ax, data         mov ds, ax           mov ax, stacksg           mov ss, ax           mov sp, 20h         mov ax, 0b800h         mov es, ax          ; 初始化用于定位的寄存器, bp 为160，从第一行开始           mov bx, 0           mov bp, 160           mov si, 0         ; 默认在屏幕的1行0列开始显示，cx用于循环，故改用dl保存色值，颜色为绿色           mov dh, 0           mov dl, 2           ; 按行显示，循环21次, cx = 21            mov cx, 21      s: push cx            mov di, 0           call display_years           call display_revenue           call display_employees           call display_per_income           add bp, 160           add si, 4            add bx, 2           pop cx           loop s           mov ax, 4c00h           int 21h; 显示年份display_years: push dx               push si               mov cx, 4    show_year: mov dh, ds:[si]                 mov es:[bp + di], dh                 mov es:[bp + di + 1], dl                 add di, 2                 inc si                 loop show_year           ; 在年份后的空白处显示空字符  show_empty0: mov byte ptr es:[bp+di], &#39; &#39;                 mov es:[bp + di + 1], dl                 add di, 2                   cmp di, 40                   jna show_empty0                 pop si                 pop dx    end_years: ret; 显示年收入display_revenue: push ax                 push dx                     push cx                     mov ax, ds:[21*4+si] ; 年收入是两个字，高位存在dx中，低位存在ax                     mov dx, ds:[21*4+si+2]                     mov cx, 10                     call dtoc  ; 使用实验10的小程序3显示十进制的字符串                     pop cx                     pop dx                     pop ax                     call show_str ; 使用实验10的小程序1显示十进制的字符串            ; 在年收入后的空白处显示空字符   show_empty1: mov byte ptr es:[bp+di], &#39; &#39;                  mov es:[bp + di + 1], dl                  add di, 2                    cmp di, 80                    jna show_empty1   end_revenue: ret; 显示员工数量display_employees: push ax                   push dx                       push cx                       mov ax, ds:[21*8+bx]                       mov dx, 0                        mov cx, 10                       call dtoc  ; 使用实验10的小程序3显示十进制的字符串                       pop cx                       pop dx                       pop ax                       call show_str ; 使用实验10的小程序1显示十进制的字符串            ; 在员工数量后的空白处显示空字符    show_empty2: mov byte ptr es:[bp+di], &#39; &#39;                  mov es:[bp + di + 1], dl                  add di, 2                    cmp di, 120                     jna show_empty2  end_employees: ret; 显示年均人收入display_per_income: push ax                    push dx                        push cx                        mov ax, ds:[21*4+si]                        mov dx, ds:[21*4+si + 2]                        mov cx, ds:[21*8+bx]                        call divdw ; 使用实验10的小程序2先得出人均年收入，高位存放在dx, 低位存放在ax                        mov cx, 10                        call dtoc  ; 使用实验10的小程序3显示十进制的字符串                        pop cx                        pop dx                        pop ax                        call show_str ; 使用实验10的小程序1显示十进制的字符串            ; 在年均人收入后的空白处显示空字符    show_empty3: mov byte ptr es:[bp+di], &#39; &#39;                   mov es:[bp + di + 1], dl                   add di, 2                     cmp di, 160                      jna show_empty3end_per_income: ret   dtoc: push si           push di           push bp            mov si, 0           mov di, 0           mov bp, cx     s0: mov cx, bp          call divdw           add cx, 30h           push cx           inc si ; si 用来记录总的十进制数的字符串个数, 出栈时用到           mov cx, ax           jcxz s1           jmp short s0     s1: pop ax         mov ds:[21*10 + di], al           dec si           mov cx, si           jcxz ok           inc di           jmp short s1     ok: pop bp         pop di         pop si         ret    divdw: push bx          push ax          mov ax, dx            mov dx, 0            div cx            mov bx, ax            pop ax            div cx            mov cx, dx            mov dx, bx            pop bx          ret show_str: push cx           push si             mov si, 0           mov ch, 0 display: mov cl, ds:[21*10 + si]            jcxz finish            mov es:[bp + di], cl            mov es:[bp + di + 1], dl             mov ds:[21*10+si], ch            inc si            add di, 2            jmp short display  finish: pop si           pop cx          retcodesg endsend start</code></pre>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;果然是绝知此事要躬行。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Assembly" scheme="http://lupeipei.github.io/tags/Assembly/"/>
+    
+  </entry>
   
   <entry>
     <title>learning styles</title>
@@ -435,28 +457,6 @@
     
     
       <category term="Documentary" scheme="http://lupeipei.github.io/tags/Documentary/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>nuxt中全局设置错误处理页面</title>
-    <link href="http://lupeipei.github.io/2019/10/11/add-global-error-handle-on-nuxt/"/>
-    <id>http://lupeipei.github.io/2019/10/11/add-global-error-handle-on-nuxt/</id>
-    <published>2019-10-11T12:33:29.000Z</published>
-    <updated>2019-10-14T02:40:59.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>文档里其实已经写明了，但还是过一遍吧。</p><a id="more"></a><h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>调接口后，当response返回404，500等status code时，进行统一处理，render到错误页面。</p><h4 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h4><p>Nuxt v2.6.2,  nuxtjs/axios v5.3.6.</p><h4 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h4><p>Nuxt 在context 中添加了一个<code>error(params)</code> 方法，下面正是通过调用这个方法来调错误页面。</p><p>两步即可：</p><ul><li><p>在<code>plugins/axios.js</code>文件中，统一添加错误处理：</p><pre><code class="javascript">export default function ({ $axios, error }) {  $axios.onError(e =&gt; {    if(e.response.status === 403) {      error({ statusCode: 403, message: &quot;forbidden&quot; })    }    if(e.response.status === 404) {      error({ statusCode: 404, message: &quot;not found&quot; })    }    if(e.response.status === 500) {      error({ statusCode: 500, message: &quot;server error&quot; })    }  })}</code></pre><p>每次axios 发送请求后，当response 返回错误时，会调用error这个method，而error 这个方法可以用来调用错误页面 error page。</p></li><li><p>在layouts 中添加 <code>error.vue</code> 文件，这个文件就是出错时render的error page.</p><p><code>error.vue</code>的内容可以长这样：</p><pre><code class="html">&lt;template&gt;  &lt;div class=&quot;container&quot;&gt;    &lt;h1 v-if=&quot;error.statusCode === 403&quot;&gt;Forbidden&lt;/h1&gt;    &lt;h1 v-if=&quot;error.statusCode === 404&quot;&gt;Page not found&lt;/h1&gt;    &lt;h1 v-if=&quot;error.statusCode === 500&quot;&gt;Server Error&lt;/h1&gt;    &lt;nuxt-link to=&quot;/&quot;&gt;Home page&lt;/nuxt-link&gt;  &lt;/div&gt;&lt;/template&gt;&lt;script&gt;export default {  props: [&#39;error&#39;],  layout: &#39;blank&#39;}&lt;/script&gt;</code></pre><p>这里需要注意的是：</p><p>当前版本的nuxt，在<code>error.vue</code>中设置layout是无效的。</p><p>不过这个问题已修复，下一版本应该会发布，戳<a href="https://github.com/nuxt/nuxt.js/issues/2537#ref-issue-499747914" target="_blank" rel="noopener">bug(csr): error page layout not correctly applied #2537</a>  可查看详情。<br>「2019-10-14更新： 在2.10.0版本中，已经修复了该问题，可查看<a href="https://github.com/nuxt/nuxt.js/releases" target="_blank" rel="noopener">release</a>了解」<br>好了，搞定，收工！！</p></li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://nuxtjs.org/guide/views#error-page" target="_blank" rel="noopener">Error page</a></p><p><a href="https://axios.nuxtjs.org/helpers" target="_blank" rel="noopener">Axios Helpers</a></p><p><a href="https://github.com/nuxt/nuxt.js/issues/2537#ref-issue-499747914" target="_blank" rel="noopener">bug(csr): error page layout not correctly applied</a></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;文档里其实已经写明了，但还是过一遍吧。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Nuxt" scheme="http://lupeipei.github.io/tags/Nuxt/"/>
     
   </entry>
   
