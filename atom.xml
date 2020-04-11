@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-04-08T16:41:36.579Z</updated>
+  <updated>2020-04-11T02:21:25.716Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>8086CPU的中断处理笔记</title>
+    <link href="http://lupeipei.github.io/2020/04/11/notes-of-interrupt-handler-in-assembly-language/"/>
+    <id>http://lupeipei.github.io/2020/04/11/notes-of-interrupt-handler-in-assembly-language/</id>
+    <published>2020-04-11T02:18:12.000Z</published>
+    <updated>2020-04-11T02:21:25.716Z</updated>
+    
+    <content type="html"><![CDATA[<p>《汇编语言》第三版有关中断处理的学习笔记。</p><a id="more"></a><h4 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h4><ul><li><p>什么是中断？</p><blockquote><p>一种来自CPU内部或者外部的中断信息，被CPU检测到，CPU在执行完当前正在执行的指令后，可以立即对所接收到的信息进行处理。</p><p>Wiki上的解释更为简单点：</p><p>In digital computers, an interrupt is an input signal to the processor indicating an event that needs immediate attention. </p></blockquote></li><li><p>中断可分为哪些类型？</p><blockquote><p>按照是否发生在CPU内部，分为：</p><ul><li><p>内中断：发生在CPU内部的中断， 比如溢出。</p></li><li><p>外中断：发生在CPU外部的中断，比如外部设备输入</p></li></ul></blockquote></li><li><p>中断处理的基本机制是什么？</p><p>一般分四步：</p><ul><li>获取中断类型码 N</li><li>标志寄存器入栈，TF，IF 设置为0 </li><li>CS，IP入栈</li><li>(IP)= (N <em> 4), (CS) = (N </em> 4 + 2)</li></ul><p>其中，外中断与内中断在第一步，即获取中断类型码N稍有不同， 因为外中断的中断信息来自CPU外部，中断类型码通过<strong>数据总线</strong>送入CPU的， 而内中断的中断类型码是直接在CPU内部产生的。</p><p>中断后面的三步可转换成如下汇编语言：</p><pre><code class="assembly">; 标志寄存器入栈pushf; 设置 TF，IF 为0，TF，IF为标志寄存器的8，9位pushfpop bxand bh, 11111100bpush bxpopf; CS，IP入栈push CSpush IP</code></pre><p>这里解释下为什么要设置 TF=0， IF=0。</p><ul><li><p>TF 与单步中断有关</p><p>单步中断的类型码为1， CPU检测TF，如果 TF =1，则产生单步中断，CPU会去执行1号中断处理程序，故这里将TF设置为0。</p></li><li><p>IF与外中断相关</p><p>CPU可以不响应的外中断称为 可屏蔽中断。CPU通过IF的值决定是否响应可屏蔽中断。</p><p>当 IF=1，CPU执行完当前指令后，响应中断，引发中断过程。IF=0，CPU不响应可屏蔽中断。</p><p>所以这里设置IF=0，这样，在进入中断例程后，便禁止了其他的可屏蔽中断。</p></li></ul></li><li><p>如何根据中断类型码找到对应的中断例程的入口地址？</p><blockquote><p>通过中断向量表 IDT Interrupt description table。</p><p>对8086机，中断向量表指定存放在内存地址0处，共有256种中断类型，一个表项存放一个中断例程的入口地址，即CS：IP，故整个中断向量表占用  4 byte * 256 = 1024 byte，即内存地址从0000:0000 到 0000:03FF的1024个单元中存放着中断向量表。</p></blockquote></li><li><p>中断例程有哪些？</p><p>中断例程分两种：</p><ul><li><p>程序员自己编写的</p></li><li><p>系统自带的：可由 BIOS 或 DOS提供。</p><blockquote><p>BIOS：基本输入输出系统，存放在ROM中。</p><p>BIOS 中主要包括的中断：</p><ul><li>外部中断和内部中断的中断例程</li><li>用于对硬件设备进行 I/O操作的中断例程 「比如在屏幕进行打印，int 10h」</li><li>其他和硬件系统相关的中断例程</li></ul><p>操作系统DOS 也提供了中断处理，注意，和硬件设备相关的DOS 中断例程中，一般都调用了BIOS中的中断例程。</p><p>BIOS, DOS 提供的中断例程，都是使用<strong>ah</strong> 来传递子程序的编号。</p><p>比如(ah)=9, 表示调用第 N 号中断例程的9号子程序。</p><p>8086支持的中断例程列表：<a href="http://www.ablmcc.edu.hk/~scy/CIT/8086_bios_and_dos_interrupts.htm" target="_blank" rel="noopener">bios and dos interrupts</a></p></blockquote></li></ul></li><li><p>程序员如何自己编写中断处理程序？</p><p>三步走：</p><ul><li><p>编写中断处理程序</p></li><li><p>将中断处理程序复制到指定的内存地址中</p></li><li>设置中断向量表</li></ul><p>这里，将中断处理程序复制到内存中哪个地方合适？</p><p>内存地址从0000:0000 到 0000:03FF的1024个单元中，存放着256种中断类型的入口地址，但实际上，系统要处理的中断事件远没有达到256个，<strong>一般情况下，从0000:0200 到 0000:02FF 的256个字节所对应的中断向量表项都是空的</strong>，可以安放在此处。</p></li><li><p>有哪些常见的中断例程？</p><p>int 10h: </p><blockquote><p> BIOS 提供， (ah)=2h, 表示调用第 10h 号中断例程的2号子程序，置光标， (ah)=9h, 表示调用第 10h 号中断例程的9号子程序，在光标位置显示字符。</p></blockquote><p>int 21h:</p><blockquote><p> DOS 提供,  (ah)=4ch, 表示调用第 21h 号中断例程的4c号子程序，即退出程序， (ah)=9h, 表示调用第 21h 号中断例程的9号子程序，在光标位置显示字符串。</p></blockquote><p>int 9h: </p><blockquote><p>BIOS 提供。从60h端口读出输入的扫描码，并将其转化为相应的ASCII码或状态信息，存储在内存的指定空间（键盘缓冲区/状态字节）中。</p></blockquote><p>Int 16h</p><blockquote><p>BIOS提供，该中断例程包含的0号子程序，可以从键盘缓冲区中读取一个键盘的输入。</p></blockquote></li></ul><h4 id="端口读写"><a href="#端口读写" class="headerlink" title="端口读写"></a>端口读写</h4><p>外中断的处理，涉及到端口读写，来了解下。</p><p>CPU 可以直接读写3个地方的数据：</p><ul><li>CPU内部的寄存器</li><li>内存单元</li><li>端口</li></ul><p>CPU 对端口的读写只有两个指令： in (读取), out（写入）.</p><p>读写端口，只能通过 ax / al, 即读入的信息和写入的信息都通过  ax / al 传递。</p><p>端口地址范围：0～65535</p><ul><li><p>0～255的端口读写： </p><pre><code class="assembly">in al, 20hout 20h, al</code></pre></li><li><p>256～65535的端口读写： </p><pre><code class="assembly">mov dx, 3ffh ;需要一个16位寄存器来存放端口地址in al, dxout dx, al</code></pre></li></ul><h4 id="有关外中断"><a href="#有关外中断" class="headerlink" title="有关外中断"></a>有关外中断</h4><p>主要为处理外部设备的输入输出，比如键盘的输入。</p><p>外设与CPU交互通过端口实现：</p><blockquote><p>外设的输入先送入相关的接口芯片的端口，CPU通过访问端口来读取外设的输入。</p><p>同样，CPU向外设的输出也不是直接送入外设，而是先送入端口，再由相关芯片送入外设，即端口相当于一个中间站。CPU通过端口与外设联系。</p></blockquote><p>外中断分为两类：</p><ul><li><p>可屏蔽中断： CPU 可以不响应的外中断</p><blockquote><p>通过 标志寄存器中的 IF位来判断是否屏蔽。</p><p>8086CPU提供了设置IF的指令：</p><p>sti ，设置 IF=1</p><p>cli，设置 IF=0</p><p>几乎所有由外设引发的外中断，都是可屏蔽中断。</p></blockquote></li><li><p>不可屏蔽中断：CPU必须响应的外中断</p><blockquote><p>对于8086CPU， 不可屏蔽中断的中断类型码固定为2。</p><p>不可屏蔽中断是系统中，有必须处理的紧急情况发生时，用来通知CPU的中断信息。</p></blockquote></li></ul><p>以键盘输入引发的中断为例：</p><p>松开或者按下键盘时，会产生一个扫描码，该扫描码会被送入60h 端口，引发9号中断，CPU检测到该中断后，如果IF=1，则响应中断，引发中断过程，去执行int 9h 中断例程。</p><p>即整个流程为：</p><ul><li>键盘产生扫描码</li><li>扫描码送至60h端口</li><li>引发9号中断</li><li>CPU执行BIOS提供的 int 9h 中断例程</li></ul><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://book.douban.com/subject/25726019/" target="_blank" rel="noopener">《汇编语言》(第3版)</a></p><p><a href="https://en.wikipedia.org/wiki/X86_instruction_listings" target="_blank" rel="noopener">x86 instruction listings</a></p><p><a href="http://www.ablmcc.edu.hk/~scy/CIT/8086_bios_and_dos_interrupts.htm" target="_blank" rel="noopener">bios and dos interrupts</a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;《汇编语言》第三版有关中断处理的学习笔记。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Assembly" scheme="http://lupeipei.github.io/tags/Assembly/"/>
+    
+  </entry>
   
   <entry>
     <title>《汇编语言》第三版课程设计1代码实现</title>
@@ -428,28 +450,6 @@
     <summary type="html">
     
       &lt;p&gt;《宇宙的构造》第二集 Illusion of Time 的观片笔记。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Documentary" scheme="http://lupeipei.github.io/categories/Documentary/"/>
-    
-    
-      <category term="Documentary" scheme="http://lupeipei.github.io/tags/Documentary/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>观《宇宙的构造》I</title>
-    <link href="http://lupeipei.github.io/2019/10/13/notes-of-the-fabric-of-the-cosmos-what-is-space/"/>
-    <id>http://lupeipei.github.io/2019/10/13/notes-of-the-fabric-of-the-cosmos-what-is-space/</id>
-    <published>2019-10-13T06:31:51.000Z</published>
-    <updated>2019-10-13T06:37:37.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>本以为很催眠，没想到刷完四集后，很是提神醒脑，觉得有必要记录一下。</p><a id="more"></a> <p>这是2011年出品的纪录片，共4集，每集时长在55分钟左右，主要讲述了空间，时间，量子力学理论以及多重宇宙论，这些新知识对于我这般高中物理都不及格的人来说，真的是很美很特别，五星推荐。</p><p>二刷的时候，记录下来的基本都是翻译的摘录，没想码完竟有上万字，为便于翻阅，计划分集呈现。「考虑到摘录难免顾此失彼，不能完整呈现这一视频系列的精彩，还是强烈建议看原视频  <a href="https://www.bilibili.com/video/av1935063/" target="_blank" rel="noopener">宇宙的构造</a>。」</p><p>以下为《宇宙的构造》第一集 What is space? 的观片笔记。</p><h4 id="What-is-Space-无限空间"><a href="#What-is-Space-无限空间" class="headerlink" title="What is Space? - 无限空间"></a>What is Space? - 无限空间</h4><p><strong>总览</strong>：</p><p>从牛顿对于空间的定义到爱因斯坦推翻牛顿的理论，再到Casimir的薄片推测，希格斯场和暗能量的存在，一步步深入向观众解释了什么是空间。</p><p><strong>摘录片段</strong>：「感觉有些混乱，凑合着看吧：P」</p><p>space is something.</p><p>空间可以弯曲，扭曲，震荡，它构成了宇宙的基本构造。</p><p>牛顿对于空间的定义：space is an empty stage, a container,  the framework for everything that happens in the cosmos.</p><p>牛顿定义中的空间具有 absolute，eternal and unchanging 的特性.</p><p>而对于光速的研究，让爱因斯坦推翻了牛顿的空间理论。</p><p>一个基本的事实：无论相对于何种事物，光速永远不变。</p><p>如何解释这一事实？</p><p>爱因斯坦提出了假设：<strong>时间和空间可以协同作用，以保证光速的绝对恒定</strong>。</p><p>时间不是绝对不变的，空间也不是绝对不变的，空间影响着物体的运动，这种空间时间一体化的理论，震惊了科学界。</p><p>回到引力，为什么月球会围着地球转？</p><p>被困扰了数十年后，爱因斯坦提出了一个新的引力理论：引力的奥秘隐藏在空间的本质之中。</p><p>引力的真正原因：引力是物体扭曲时空而造成的，是时空的另一种表现形式。<strong>月球围绕着地球运转，不是由于某种神秘力量牵引，而是因为它沿着围着地球产生的时空凹陷转动。</strong></p><p>空间不再是绝对的，而是有了自己的属性，好比一张橡胶毯一样可弯曲。</p><p>黑洞周围的引力无限大，按照爱因斯坦的推算，一个不断旋转的黑洞，可以撕扯它周围的空间。</p><p>那么，如何验证爱因斯坦提出的这一引力理论的正确性？</p><p>在1950年后期，一个名为伦纳德-希夫的物理学家，寻找到了一种更为简便的方法去验证爱因斯坦的理论。</p><p>这个方法的基本思路是这样的：</p><p>把一个类似陀螺的高精度陀螺仪送到外太空，通常情况下，陀螺仪的轴线指向固定的方向，但是如果地球使空间扭曲了，陀螺仪的轴线也会随之变化，而陀螺仪的偏转角度是可以被测量的。这里有一个问题，根据爱因斯坦的理论，地球对空间的影响极其微小，测量陀螺仪的偏转角度相当于从62英里之外测量一个硬币的直径。最后，研究小组经过两年的研究，解决了这个问题，将四个独立的陀螺仪装在一个卫星上，卫星的中轴指向一个恒星。如果空间发生扭曲，时间一久， 陀螺仪将不再指向这颗恒星。</p><p>想法随后变成了计划，Gravity Probe B 引力探测B计划开始了。</p><p>40多年后，这个曾9次被NASA撤掉的计划终于迎来了属于它的时刻。</p><p>从这次试验中得到的观察数据，最后证明了爱因斯坦理论的正确性。</p><p>「用40多年的时间去验证一个理论的正确性，敬佩不已」</p><p><strong>在量子力学的世界里，空间充斥着各种运动，粒子从无到有，相互碰撞，一起陨灭，空间促使物体发生移动</strong>。「第3集详细介绍了量子力学理论」</p><p>1948年，科学家 Hendrik Casimir 推测，如果你有两个普通的金属薄片，使他们尽可能相互紧贴在一起，紧密地容不下任何事物，此时特定能量级的粒子会被挤出来。薄片内部几乎是真空，外部则充斥着杂乱无章的运动。Casimir 认为这两块薄片将会相互聚拢，被我们通常认为是近乎真空的空间所吸引。</p><p>几年后，科学家进行了实验，证明了Casimir 的理论是正确的。</p><p>当时的物理界尚没有人能够解答这样的问题：什么创造了质量？为什么不同的粒子拥有不同的质量？</p><p>1964年，年轻的英国物理学家 Peter Higgs, 提出了空间中存在一种绝对的基本粒子。</p><p>Peter Higgs 提出了一个全新的角度看待空间，将空间想象成大海，而粒子沉没其中，当它们在海里移动时，它们获得了质量，粒子越是努力向前推进，海洋对它们的阻力越大，它们获得的质量也越大。Higgs 的这个理论，可以解释什么创造了质量，不同的粒子为何拥有不同的质量。</p><p>如今，Higgs提出的这个理论被称为 <strong>Higgs field</strong> 希格斯场，即在空虚的空间中，存在一种赋予你质量的作用。</p><p>那么问题来了，如何证明希格斯场的存在，证明这个理论是正确的？</p><p>至少目前没有。</p><p>不过科学家们通过加速器让粒子猛烈地相互碰撞，试图将希格斯场的一小块敲松动，以此来产生一个希格斯粒子，从而来论证其理论的正确性。</p><p>但是最后的实验结果证明，空间中确实含有一种成分，一种更为神秘莫测的基本成分。</p><p>「要从宇宙大爆炸说起。」</p><p>宇宙起源于大约140亿年前的大爆炸，大爆炸后，空间向外无限地扩张，从此空间一直不停地膨胀，多年来，科学家们认为空间的膨胀速度会在引力作用下变慢，但事实是，通过观察收集超恒星的爆炸数据，科学家们发现宇宙一直在加速膨胀。</p><p>科学家们达成了一个共识，宇宙中存在着某种物质，抵消了普通物质的引力对于空间的影响，这种填充空间的神秘物质，被称为暗能量 <strong>dark energy</strong>. 也就是上诉粒子碰撞实验中，发现的基本成分。「多重宇宙里面也提到了dark enery」</p><p>爱因斯坦提出空间在竭力使星系相互分离，根据他提出的引力理论，宇宙应该既不膨胀，也不收缩。爱因斯坦的时代，科学家们普遍认为宇宙是不变的，而根据爱因斯坦的方程，宇宙是在不断膨胀或者收缩，而不是静止的，为了解释宇宙是稳定的，爱因斯坦修正了方程式，提出了一种反重力<strong>anti-gravity</strong>，这种反重力抵消了常规重力对宇宙的作用，两者相互制衡使得宇宙得以保持稳定。这个改正量被爱因斯坦称为宇宙常数 <strong>cosmological constant</strong>。这个被爱因斯坦认为是最大错误的宇宙常数，被认为是理解宇宙膨胀的关键。</p><p>「最后的一个惊喜。」</p><p><strong>现实世界是二维的，而这个三维的，立体的世界，只不过是在空间的边缘地区存留的一种全息影像。</strong></p><p>我们所知道的，所熟悉的一切，也许只是一些已有信息的投影，被投射在一个纤薄，遥不可及的二维平面上。</p><p>该理论的验证藏在黑洞的现代理论中。</p><p>设想将一个钱包扔进黑洞，会发生什么？</p><p><strong>钱包掉进黑洞之后，它含有的所有信息的一个副本会被分解，然后存储在黑洞的表面，这个过程很像计算机存储信息，因此，钱包会存在两个地方，三维版本的那个在黑洞内已经永远丢失，而二维版本的依然作为信息保存在黑洞的表面。</strong></p><p>通过对照黑洞外发生的事情，你可以描述黑洞内正在发生的一切。理论上，对于例子中的那个钱包，你可以在黑洞的外部，重造它。更意外的是，黑洞内的空间依然按照黑洞外的空间的法则和规律运作。</p><p>由上面的黑洞理论，可推出，对于宇宙中的一切，从星辰陨石到人类，甚至空间本身，只不过是一些存储在遥远的二维平面上的信息投射在我们面前。换句话说，<strong>三维世界是个幻象，绝对的真实存在于宇宙表面的二维世界中。</strong></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;本以为很催眠，没想到刷完四集后，很是提神醒脑，觉得有必要记录一下。&lt;/p&gt;
     
     </summary>
     
