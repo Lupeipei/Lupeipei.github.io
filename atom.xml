@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2020-06-10T07:17:53.921Z</updated>
+  <updated>2020-06-10T07:49:07.874Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -17,13 +17,35 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>给《Listening to music》建了个电台</title>
+    <link href="http://lupeipei.github.io/2020/06/10/create-an-radio-channel-for-listening-to-music/"/>
+    <id>http://lupeipei.github.io/2020/06/10/create-an-radio-channel-for-listening-to-music/</id>
+    <published>2020-06-10T07:25:31.000Z</published>
+    <updated>2020-06-10T07:49:07.874Z</updated>
+    
+    <content type="html"><![CDATA[<p>终于没忍住，建了个电台。</p><a id="more"></a><p>距离刷这个课程已经过去好几个月了，我依然是懵逼的： P。</p><p>因为是公开课，就去<a href="https://oyc.yale.edu/" target="_blank" rel="noopener">Open Yale Courses </a> 里，找了下教授的课程，有公开的音频文件和课程介绍，就搬运了下。</p><p>附上电台地址：<a href="http://music.163.com/radio/794820730?userid=95304519" target="_blank" rel="noopener">《Listening to music - Yale courses》</a></p><p>可以通勤路上听了。</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;终于没忍住，建了个电台。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Music" scheme="http://lupeipei.github.io/categories/Music/"/>
+    
+    
+      <category term="Music" scheme="http://lupeipei.github.io/tags/Music/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Nginx + passenger  部署 Rails  踩坑</title>
     <link href="http://lupeipei.github.io/2020/06/06/problem-occured-when-deploy-rails-with-nginx-and-passenger/"/>
     <id>http://lupeipei.github.io/2020/06/06/problem-occured-when-deploy-rails-with-nginx-and-passenger/</id>
     <published>2020-06-06T08:10:22.000Z</published>
-    <updated>2020-06-10T07:17:53.921Z</updated>
+    <updated>2020-06-10T07:50:01.769Z</updated>
     
-    <content type="html"><![CDATA[<p>时隔大半年，终于填了这个坑……</p><a id="more"></a><p>去年10月读完《苏东坡传》的时候，就想着做个小的诗词网站，中间因为懒，拖拖拉拉了很久，时隔大半年，算是马马虎虎填了坑，想着，页面丑是丑了些，呃，不管了，先部署了，让它来到这个世界再说。</p><p>因为钟情陶潜的《归去来兮辞》，就厚脸皮拿来做了title， 附上站点：<a href="https://www.welcomeback.cn/" target="_blank" rel="noopener">归去来兮</a> 「呃，暂时无法访问，备案中…… 2020-06-08」</p><p>这里记录下用 Nginx + passenger 部署时踩的坑。</p><h4 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h4><p> Ubuntu 1804， 参考官网给的<a href="https://www.phusionpassenger.com/library/install/nginx/install/oss/bionic/" target="_blank" rel="noopener">Installing Passenger + Nginx on Ubuntu 18.04</a> 安装了 Nginx + passenger。</p><h4 id="Failed-to-parse-PID"><a href="#Failed-to-parse-PID" class="headerlink" title="Failed to parse PID"></a>Failed to parse PID</h4><p>nginx restart 后，执行:</p><pre><code>sudo service nginx status</code></pre><p>看到报错，显示：</p><pre><code>nginx.service: Failed to parse PID from file /run/nginx.pid: Invalid argument</code></pre><p>参考 <a href="https://bugs.launchpad.net/ubuntu/+source/nginx/+bug/1581864" target="_blank" rel="noopener">nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument</a>, 貌似是Ubuntu的一个bug。</p><p>commits 部分给到的解决方法：</p><pre><code class="shell">mkdir /etc/systemd/system/nginx.service.dprintf &quot;[Service]\nExecStartPost=/bin/sleep 0.1\n&quot; &gt; /etc/systemd/system/nginx.service.d/override.confsystemctl daemon-reload</code></pre><p>「执行 最后一步 daemon-reload时需要输入密码，输入服务器登陆密码即可。」</p><p>重启nginx:</p><pre><code class="shell">sudo service nginx restartsudo service nginx status</code></pre><p>OK.</p><h4 id="cannot-load-such-file-–-bundler-setup"><a href="#cannot-load-such-file-–-bundler-setup" class="headerlink" title="cannot load such file – bundler/setup"></a>cannot load such file – bundler/setup</h4><p>使用  Capistrano deploy 之后，访问网站，报错 500，查看nginx 日志，看到如下的报错信息：</p><pre><code>The application encountered the following error: cannot load such file -- bundler/setup (LoadError)</code></pre><p>但是 bundler 明明已经安装好，Google 半天，找到的解决方法，有些一言难尽。</p><p>后面想了想，安装 passenger 的时候需要设置 passenger_ruby，而我是用 rbenv 安装的ruby，大概是这里出了问题，bingo!</p><ul><li><p>终端执行<code>which ruby</code>,  复制地址</p></li><li><p>打开 <code>/etc/nginx/conf.d/mod-http-passenger.conf</code> 文件</p><p>找到<code>passenger_ruby /usr/bin/passenger_free_ruby;</code>， 修改  passenger_ruby 为正确的ruby 路径。</p></li></ul><p>重启 nginx，再次访问，OK！</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://bugs.launchpad.net/ubuntu/+source/nginx/+bug/1581864" target="_blank" rel="noopener">nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument</a></p><p><a href="https://www.phusionpassenger.com/library/install/nginx/install/oss/bionic/" target="_blank" rel="noopener">Installing Passenger + Nginx on Ubuntu 18.04</a></p>]]></content>
+    <content type="html"><![CDATA[<p>时隔大半年，终于填了这个坑……</p><a id="more"></a><p>去年10月读完《苏东坡传》的时候，就想着做个小的诗词网站，中间因为懒，拖拖拉拉了很久，时隔大半年，算是马马虎虎填了坑，想着，页面丑是丑了些，呃，不管了，先部署了，让它来到这个世界再说。</p><p>因为钟情陶潜的《归去来兮辞》，就厚脸皮拿来做了title， 附上站点：<a href="https://www.welcomeback.cn/" target="_blank" rel="noopener">归去来兮</a> 「呃，暂时无法访问，备案中…… 2020-06-10」</p><p>这里记录下用 Nginx + passenger 部署时踩的坑。</p><h4 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h4><p> Ubuntu 1804， 参考官网给的<a href="https://www.phusionpassenger.com/library/install/nginx/install/oss/bionic/" target="_blank" rel="noopener">Installing Passenger + Nginx on Ubuntu 18.04</a> 安装了 Nginx + passenger。</p><h4 id="Failed-to-parse-PID"><a href="#Failed-to-parse-PID" class="headerlink" title="Failed to parse PID"></a>Failed to parse PID</h4><p>nginx restart 后，执行:</p><pre><code>sudo service nginx status</code></pre><p>看到报错，显示：</p><pre><code>nginx.service: Failed to parse PID from file /run/nginx.pid: Invalid argument</code></pre><p>参考 <a href="https://bugs.launchpad.net/ubuntu/+source/nginx/+bug/1581864" target="_blank" rel="noopener">nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument</a>, 貌似是Ubuntu的一个bug。</p><p>commits 部分给到的解决方法：</p><pre><code class="shell">mkdir /etc/systemd/system/nginx.service.dprintf &quot;[Service]\nExecStartPost=/bin/sleep 0.1\n&quot; &gt; /etc/systemd/system/nginx.service.d/override.confsystemctl daemon-reload</code></pre><p>「执行 最后一步 daemon-reload时需要输入密码，输入服务器登陆密码即可。」</p><p>重启nginx:</p><pre><code class="shell">sudo service nginx restartsudo service nginx status</code></pre><p>OK.</p><h4 id="cannot-load-such-file-–-bundler-setup"><a href="#cannot-load-such-file-–-bundler-setup" class="headerlink" title="cannot load such file – bundler/setup"></a>cannot load such file – bundler/setup</h4><p>使用  Capistrano deploy 之后，访问网站，报错 500，查看nginx 日志，看到如下的报错信息：</p><pre><code>The application encountered the following error: cannot load such file -- bundler/setup (LoadError)</code></pre><p>但是 bundler 明明已经安装好，Google 半天，找到的解决方法，有些一言难尽。</p><p>后面想了想，安装 passenger 的时候需要设置 passenger_ruby，而我是用 rbenv 安装的ruby，大概是这里出了问题，bingo!</p><ul><li><p>终端执行<code>which ruby</code>,  复制地址</p></li><li><p>打开 <code>/etc/nginx/conf.d/mod-http-passenger.conf</code> 文件</p><p>找到<code>passenger_ruby /usr/bin/passenger_free_ruby;</code>， 修改  passenger_ruby 为正确的ruby 路径。</p></li></ul><p>重启 nginx，再次访问，OK！</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p> <a href="https://bugs.launchpad.net/ubuntu/+source/nginx/+bug/1581864" target="_blank" rel="noopener">nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument</a></p><p><a href="https://www.phusionpassenger.com/library/install/nginx/install/oss/bionic/" target="_blank" rel="noopener">Installing Passenger + Nginx on Ubuntu 18.04</a></p>]]></content>
     
     <summary type="html">
     
@@ -439,28 +461,6 @@
     
     
       <category term="ErrorTracking" scheme="http://lupeipei.github.io/tags/ErrorTracking/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读 《the Dip》</title>
-    <link href="http://lupeipei.github.io/2019/12/06/notes-of-the-dip/"/>
-    <id>http://lupeipei.github.io/2019/12/06/notes-of-the-dip/</id>
-    <published>2019-12-06T04:44:59.000Z</published>
-    <updated>2019-12-06T04:52:08.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>一本有关弃坑和填坑的小书。</p><a id="more"></a><p>作者给了一些方法，一些鸡血，读来挺提神。</p><p>书中提到的点蛮多，反复强调quitting，这里简单记录下自己觉得重点的东西。</p><h4 id="何时弃坑？"><a href="#何时弃坑？" class="headerlink" title="何时弃坑？"></a>何时弃坑？</h4><p>当你去完成一件事情时，有三张曲线图可以基本概括你面对的所有场景。</p><ul><li>The Dip</li></ul><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNbRwly1g9m6bn5aplj30w80cugmi.jpg" alt="image-20191205213646047"></p><p><strong>Almost everything in life worth doing is controlled by the Dip.</strong></p><p>「但并不是所有呈现出 The Dip 曲线的事情，都值得你去做。资源是有限的，选择适合你的那些。」</p><ul><li>The CUL-DE-SAC</li></ul><p>CUL-DE-SAC 意为法语中的“dead end”。</p><p>“dead end”指那些既不会变得很糟糕，也不会变得很美好的场景。「人的主观能动性无法改善事物的发展。」</p><blockquote><p>It’s a situation where you work and you work and you work and nothing much changes. It doesn’t get a lot better, it doesn’t get a lot worse. It just is.</p></blockquote><p>显然，把时间和精力放在不会改善的事物上，是不明智的，机会成本太大。</p><p><strong>The opportunity cost of investing your life in something that’s not going to get better is just too high.</strong></p><ul><li><p>The Cliff</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNbRwgy1g9mtlp5017j30wq0ga75a.jpg" alt="image-20191205215836995"></p><p>这条曲线不是很好理解。</p><p>什么样的情况下，随着你的投入，先是结果越来越好，直至达到顶峰，然后陡然迅速下滑？书中举了一个例子，有关抽烟带给人的愉快感，随着抽烟的时长越来越长，愉悦感是递增的，一直递增到顶峰，随后急速下滑。「有点像经济学里面提到的边际效益递减，但是这里显然是一条很陡的下滑线，哪里是递减，简直是速减。」</p></li></ul><p>很显然，不管是The CUL-DE-SAC还是The Cliff，你都要选择果断的弃坑。</p><p>只有The Dip才是值得你去填的坑，The Dip creates scarcity; scarcity creates value。</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNbRwly1g9m7beikx0j30w00fgwgk.jpg" alt="image-20191205221110760"></p><p>「这里稍稍要注意下，有些事值得去做，它本身是The Dip，但是鉴于你的能力和资源，对你而言它可能就是The CUL-DE-SAC，这种在涉及到个体天赋的领域里，比如艺术，可能更为明显，所以找到你的The Dip也很重要。」</p><ul><li>quitting a tactic VS quitting a Strategy</li></ul><p>策略性退出与战略性退出。</p><blockquote><p>Not giving up and abandoning your long-term strategy (wherever you might be using that strategy—a career, an income, a relationship, a sale) but quitting the tactics that aren’t working.</p></blockquote><p>不放弃长期的战略，实时调整你的策略，终止那些无效的策略。</p><ul><li><p>quitting before you start</p><p>最终极的弃坑策略：从一开始就不要开坑。</p></li></ul><h4 id="正确看待-The-Dip"><a href="#正确看待-The-Dip" class="headerlink" title="正确看待 The Dip"></a>正确看待 The Dip</h4><p>The Dip 既是死亡之谷，也是极大的机会。</p><p>它是死亡之谷，帮你远远抛开其他的竞争对手。「有些类似穷查理里面提到的护城河」</p><blockquote><p>to create a Dip so long and so deep that the nascent competition can’t catch up.</p></blockquote><p>它是 Big opportunity. 只要你能 get through the Dip。</p><blockquote><p>If you can get through the Dip, if you can keep going when the system is expecting you to stop, you will achieve extraordinary results. People who make it through the Dip are scarce indeed, so they generate more value.</p></blockquote><p><strong>Embrace the Dip and treat it like the opportunity that it really is.</strong></p><p>The Dip 不是静态的，而是动态的，灵活的，它根据你的投入来回应你。</p><blockquote><p>The Dip is flexible. It responds to the effort you put into it. In fact, it’s quite likely (in almost every case) that aggressive action on your part can make the Dip a lot worse. Or a lot better.</p></blockquote><p>Let us make the Dip a lot better.</p><h4 id="Get-Through-The-Dip"><a href="#Get-Through-The-Dip" class="headerlink" title="Get Through The Dip"></a>Get Through The Dip</h4><p>几点建议：</p><ul><li><p>Don’t switch lines frequently.</p><p>不要频繁在多个The Dip间切换，最终只会导致更多资源的白白浪费。</p></li><li><p>If you are not able to  get through the Dip in an exceptional way, quit, quit right now.</p><p>如果确信自己不能搞定 The Dip，果断弃坑，立刻，马上。</p></li><li><p>Short-term pain has more impact on most people than long-term benefits do.</p><p>对大部分人来说，相比长期的收益，短期的痛苦给人带来的影响更大更直接，更容易让人倾向于放弃。那么要如何破局？善于坚持的人懂得让自己的目标可视化，阶段化目标的完成。「再一次，feedback is important.」</p><p><strong>Persistent people are able to visualize the idea of light at the end of the tunnel when others can’t see it.</strong></p><p>诚如书中所提到的，跑全马时，怎么能在20 英里 的时候放弃，是不是？</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNbRwgy1g9mr89wa2yj30x80hcac0.jpg" alt="image-20191206094008879"></p></li></ul><h4 id="一点感想"><a href="#一点感想" class="headerlink" title="一点感想"></a>一点感想</h4><p>书的开头提到了这么一段：</p><blockquote><p>Quit the wrong stuff.</p><p>Stick with the right stuff.</p><p>Have the guts to do one or the other.</p></blockquote><p>算是整本书的一个小小总结。</p><p>在时间和精力有限的情况下，弃坑很重要，放弃一个你永远都攀不过的山峰，将时间和精力集中起来，专注于那些有难度，但可以攀过的山峰。</p><p>作者在书中举了很多例子来支持自己的观点，印象特别的是畅销书作家 Michael Crichton，一个从Harvard 医学院毕业，在 Salk 生物学研究所进行了博士后研究，已经 攀过 The Dip 的人，但他放弃了眼前已铺好的康庄大道，大好前程，选择遵从内心，成为一名作家。「再一次，决策时，忽略沉没成本。」</p><p>最终的最终，还是那句，人生苦短，去他的机会成本，世俗成败，follow your heart, embrace the Dip you love。</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;一本有关弃坑和填坑的小书。&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
     
   </entry>
   
