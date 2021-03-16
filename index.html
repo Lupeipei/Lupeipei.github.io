@@ -272,6 +272,356 @@
   
 
   <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2021/03/16/create-self-signed-certificate-for-ip/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lucia">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2021/03/16/create-self-signed-certificate-for-ip/" itemprop="url">
+                  为IP地址生成自签名证书
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2021-03-16T19:40:27+08:00">
+                2021-03-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1,276 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>为指定的域名或者IP地址生成自签名证书, 要求使用HTTPS协议访问时, 主流浏览器Chrome, firefox等不弹出警告.</p>
+<p>这里的自签名证书是指可根据IP或域名动态生成的二级证书.不借由第三方权威颁发机构生成.</p>
+<p>举个简单的场景, A机在指定端口起了服务后, B机在浏览器中想要通过HTTPS协议访问A机服务器, 浏览器不警告.</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316175549.png" alt=""></p>
+<p>通常的服务器证书, 我们是向let’s Encript或其他权威机构申请, 而这里, 要求A机服务器的证书是由自己生成的CA机构颁发.</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>解决思路:</p>
+<p>先生成一个根证书颁发机构 (Root certificate authority), 然后基于颁发机构生成二级证书, 在二级证书中绑定域名或者IP地址.</p>
+<p>针对问题描述中的提到的例子, 相当于在A机生成根证书颁发机构RCA 和基于该颁发机构生成的绑定A机IP地址的二级证书,然后B机通过某种方式下载了该 RCA, 同时系统设置信任[相当危险], 这样便可走HTTPS协议访问A机的服务了.</p>
+<p>下面分传统的openssl和nodejs两个方式来实现下.</p>
+<ul>
+<li><p>Openssl方式</p>
+<p>先生成根证书:</p>
+<p>新增一个shell 脚本文件generate_root_ca.sh, 放入如下内容, 然后执行脚本即可.[具体各参数的含义, 可参考<a href="https://www.openssl.org/docs/man1.1.1/man5/x509v3_config.html" target="_blank" rel="noopener">x509v3 config</a>]</p>
+<pre><code class="shell">#!/bin/sh
+
+echo &quot;[req]
+default_bits  = 2048
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
+[req_distinguished_name]
+countryName = XX
+stateOrProvinceName = N/A
+localityName = N/A
+organizationName = Self-signed Cert
+commonName = Self-signed Cert
+[v3_req]
+basicConstraints = CA:TRUE
+&quot; &gt; root.cnf
+
+openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout rootCA.key -out rootCA.crt -config root.cnf
+
+rm root.cnf
+</code></pre>
+<p>此处的关键在于<code>basicConstraints</code> 设置为 <code>CA:TRUE</code></p>
+<p>也可以直接在终端生成, 执行:</p>
+<pre><code class="shell"># 生成private key, 可以添加选项 -des3 来给 private key 设置密码.这里略过
+openssl genrsa  -out rootCA.key 2048
+
+# 生成cert, -days 用于设置过期时间, 指定加密算法为 sha256, 执行后会有提示, 设置即可
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 730 -out rootCA.crt
+</code></pre>
+</li>
+</ul>
+<p>  生成后得让计算机信任这个机构. 以MacOS为例:</p>
+<p>  打开keychain Access,  file &gt; import items 选中生成的rootCA.crt文件, 双击该文件, 选择 Always Trust.</p>
+<p>  <img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316181828.png" alt=""></p>
+<p>  这样,基于该机构颁发的证书, 都是被本机信任的.</p>
+<p>  现在我们来生成基于该CA颁发的证书:</p>
+<p>  以IP地址为例, 新增shell脚本文件 generate_ip_cert.sh, 添加如下内容:</p>
+<pre><code class="shell">  IP=$(echo $1)
+  echo &quot;
+  authorityKeyIdentifier=keyid,issuer
+  basicConstraints=CA:FALSE
+  keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+  subjectAltName = @alt_names
+  [alt_names]
+  IP.1 = $IP
+  &quot; &gt; cert.cnf
+
+  openssl genrsa -out key.pem 2048
+  openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;
+  openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf
+  rm cert.cnf
+</code></pre>
+<p>  执行<code>./generate_ip_cert.sh IPAddress</code> [IPAddress为你需要为其生成证书的IP地址]</p>
+<p>  如果为指定的域名生成证书, 只需修改alt_names部分即可:</p>
+<pre><code class="shell">  DNS=$(echo $1)
+
+  echo &quot;
+  authorityKeyIdentifier=keyid,issuer
+  basicConstraints=CA:FALSE
+  keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+  subjectAltName = @alt_names
+  [alt_names]
+  DNS.1 = $DNS
+  &quot; &gt; cert.cnf
+
+  openssl genrsa -out key.pem 2048
+  openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;
+  openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf
+  rm cert.cnf
+</code></pre>
+<p>  同样也可以在终端一步步走openssl 生成, 这里略过.</p>
+<p>  随后将生成的cert.pem, key.pem放进服务器的配置中即可.</p>
+<ul>
+<li><p>Nodejs 方式</p>
+<p>原理同上面的一样, 这里用一个小的express实例来实验下.</p>
+<p>为了生成证书, 首先我们需要引用了一个开源的package: <a href="https://github.com/jfromaniello/selfsigned" target="_blank" rel="noopener">selfsigned</a>,  因为原来的库并不支持基于Root CA生成证书, 这里我们用<a href="https://github.com/Envek" target="_blank" rel="noopener">Andrey Novikov</a> fork后的改进版本.</p>
+<p>直接起一个express, entry point为app.js. 在package.json中添加:</p>
+<pre><code class="json">&quot;selfsigned&quot;: &quot;https://github.com/Envek/selfsigned.git#7477718&quot;
+</code></pre>
+<p>随后npm install.</p>
+<p>app.js中添加如下内容:</p>
+<pre><code class="javascript">const express = require(&#39;express&#39;)
+const https = require(&#39;https&#39;)
+const fs = require(&#39;fs&#39;)
+const ip = require(&#39;ip&#39;)
+const selfsigned = require(&#39;selfsigned&#39;)
+
+const app = express()
+const address = ip.address()
+const port = 3008
+
+fs.mkdirSync(&#39;./ca&#39;, { recursive: true })
+const rootCA = selfsigned.generate(
+  [
+    { name: &#39;commonName&#39;, value: &#39;Self-signedCert&#39; },
+    { name: &#39;countryName&#39;, value: &#39;XX&#39; },
+    { name: &#39;organizationName&#39;, value: &#39;Myorg&#39; },
+  ],
+  {
+    keySize: 2048,
+    algorithm: &#39;sha256&#39;,
+    extensions: [
+      {
+        name: &#39;basicConstraints&#39;,
+        cA: true,
+      },
+    ]
+  }
+)
+
+fs.writeFileSync(&#39;./ca/rootCA.crt&#39;, rootCA.cert)
+
+const pems = selfsigned.generate(
+  [
+    { name: &#39;commonName&#39;, value: &#39;Self-signedCert&#39; },
+    { name: &#39;countryName&#39;, value: &#39;XX&#39; },
+    { name: &#39;organizationName&#39;, value: &#39;Myorg&#39; },
+  ],
+  {
+    keySize: 2048,
+    ca: rootCA,
+    algorithm: &#39;sha256&#39;,
+    extensions: [
+      {
+        name: &#39;basicConstraints&#39;,
+        cA: false,
+      },
+      {
+        name: &quot;keyUsage&quot;,
+        keyCertSign: false,
+        digitalSignature: true,
+        nonRepudiation: true,
+        keyEncipherment: true,
+        dataEncipherment: true,
+      },
+      {
+        name: &quot;extKeyUsage&quot;,
+        serverAuth: true,
+        clientAuth: true,
+        codeSigning: true,
+        timeStamping: true,
+      },
+      {
+        name: &quot;subjectAltName&quot;,
+        altNames: [
+          {
+            type: 7,
+            ip: address,
+          },
+        ],
+      },
+    ],
+  }
+)
+
+fs.writeFileSync(&#39;./ca/cert.pem&#39;, pems.cert)
+fs.writeFileSync(&#39;./ca/key.pem&#39;, pems.private)
+
+app.get(&#39;/&#39;, (req, res) =&gt; {
+  res.send(&#39;Hello World!&#39;)
+})
+
+https.createServer({
+  key: fs.readFileSync(&#39;./ca/key.pem&#39;),
+  cert: fs.readFileSync(&#39;./ca/cert.pem&#39;)
+}, app).listen(port, () =&gt; {
+  console.log(`listening on https://${address}:${port}`)
+})
+</code></pre>
+<p><strong>将项目的ca目录下的rootCA.crt 拖到 keychain中, 并设置为信任的机构.</strong></p>
+<p>终端执行<code>node app.js</code>:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316191512.png" alt=""></p>
+<p>浏览器访问正常.可以点开🔒️的图标, 查看我们生成的二级证书:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316192959.png" alt=""></p>
+</li>
+</ul>
+<p>最后, 值得一提的是Firefox, 系统设置信任对Firefox并不起效, 需要在perferences 中将生成的rootCA.crt 导入进去才可以. [此为危险操作]</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316191730.png" alt=""></p>
+<p>####　参考</p>
+<ul>
+<li><a href="https://book.douban.com/subject/10746113/" target="_blank" rel="noopener">HTTP权威指南</a></li>
+<li><p><a href="https://www.openssl.org/docs/man1.1.1/man5/x509v3_config.html" target="_blank" rel="noopener">x509v3 config</a></p>
+</li>
+<li><p><a href="https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/" target="_blank" rel="noopener">How to Create Your Own SSL Certificate Authority for Local HTTPS Development</a></p>
+</li>
+<li><p><a href="https://gist.github.com/sethvargo/81227d2316207b7bd110df328d83fad8" target="_blank" rel="noopener">Use openssl to create an x509 self-signed certificate authority (CA)</a></p>
+</li>
+<li><a href="https://github.com/jfromaniello/selfsigned" target="_blank" rel="noopener">selfsigned repos</a></li>
+</ul>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2021/02/10/pike-and-eel/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1648,159 +1998,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2020/05/29/install-old-version-of-link-grammar-on-mac-os/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Lucia">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Lucia">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2020/05/29/install-old-version-of-link-grammar-on-mac-os/" itemprop="url">
-                  Mac 安装 link-grammar 踩坑
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2020-05-29T20:11:19+08:00">
-                2020-05-29
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/CS/" itemprop="url" rel="index">
-                    <span itemprop="name">CS</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-            <span class="post-letters-count">
-              &nbsp; | &nbsp;
-              <span>364 words</span>
-            </span>
-          
-
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>发现原来 homebrew 还能这么玩，记录下。</p>
-          <!--noindex-->
-          <div class="post-button mt-0">
-            <a class="btn custom-post-btn" href="/2020/05/29/install-old-version-of-link-grammar-on-mac-os/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
@@ -1850,7 +2047,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">248</span>
+                <span class="site-state-item-count">249</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1983,7 +2180,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    280.3k
+    281.5k
   </span>
 
 </div>
