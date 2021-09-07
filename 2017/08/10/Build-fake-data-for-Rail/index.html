@@ -1,0 +1,915 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="使用 seeds 和 rake task 生成测试数据。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ROR技能树：批量生成测试数据">
+<meta property="og:url" content="http://lupeipei.github.io/2017/08/10/Build-fake-data-for-Rail/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="使用 seeds 和 rake task 生成测试数据。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2017-08-10T12:37:02.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:11:09.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2017/08/10/Build-fake-data-for-Rail/"/>
+
+
+
+
+
+  <title> ROR技能树：批量生成测试数据 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/08/10/Build-fake-data-for-Rail/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                ROR技能树：批量生成测试数据
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-08-10T20:37:02+08:00">
+                2017-08-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.1k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>使用 seeds 和 rake task 生成测试数据。</p>
+<span id="more"></span>
+
+<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>使用ROR进行网站开发时，不可避免地需要生成测试数据，常用的方法有两种：</p>
+<ul>
+<li>使用seed.rb</li>
+<li>使用rake task</li>
+</ul>
+<p>下面以 Job这个model为例，看看如何用seed，rake task来批量生成测试数据，并对比两者之间的优劣。</p>
+<p>Job所含字段：</p>
+<pre><code>string   &quot;title&quot;
+text     &quot;description&quot;
+datetime &quot;created_at&quot;,                    
+datetime &quot;updated_at&quot;,                    
+integer  &quot;wage_upper_bound&quot;
+integer  &quot;wage_lower_bound&quot;
+string   &quot;contact_email&quot;
+boolean  &quot;is_hidden
+</code></pre>
+<hr>
+<h3 id="测试数据生成"><a href="#测试数据生成" class="headerlink" title="测试数据生成"></a>测试数据生成</h3><h4 id="Seeds-rb"><a href="#Seeds-rb" class="headerlink" title="Seeds.rb"></a>Seeds.rb</h4><p>在seeds.rb中，将不同的字段放在Array中，然后循环调用这些Array，生成测试数据。</p>
+<p>比如下面这种， 将Job的<code>title</code>， <code>description</code> 放在数组jobs_info中，然后循环赋值，具体步骤如下：</p>
+<p>1、将如下代码贴到<code>seed.rb</code>文档中（为增加可读性，此处jobs_info仅放了3个种子）：</p>
+<pre><code class="Ruby">jobs_info = [[&quot;Web Application Developer&quot;,&quot;Creates, maintains and implements web-based application systems. Resolves issues and recommends enhancements, when necessary. Has knowledge of HTML, Java and related concepts. Relies on knowledge and professional discretion to plan and accomplish goals. Usually reports to a department head. Significant ingenuity and flexibility is expected. May require a bachelor’s degree in a related area and at least 2-4 years of relevant experience.&quot;
+],[ &quot;Android Developer&quot;,&quot;Designs and builds applications for the Android platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;
+],[&quot;iOS Developer&quot;,&quot;Designs and builds applications for the iOS platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;
+]]
+
+create_jobs = 10.times to |i|
+    job_test=jobs_info[rand(0..2)]
+    Job.create!([title: job_test[0],description: job_test[1], wage_upper_bound: rand(50..99)*100,wage_lower_bound: rand(10..49)*100, is_hidden:&quot;false&quot;)
+end
+
+
+create_jobs = 10.times to |i|
+    job_test=jobs_info[rand(0..2)]
+    Job.create!([title: job_test[0],description: job_test[1], wage_upper_bound: rand(50..99)*100,wage_lower_bound: rand(10..49)*100, is_hidden:&quot;true&quot;)
+end
+</code></pre>
+<p>2、终端运行:</p>
+<pre><code>rake db:migrate
+rake db:seed
+</code></pre>
+<p>3、重启服务器<code>rails s</code></p>
+<p>大功告成！</p>
+<h4 id="rake-task"><a href="#rake-task" class="headerlink" title="rake task"></a>rake task</h4><p>这里我们需要用到强大的faker。点击，看<a target="_blank" rel="noopener" href="https://github.com/stympy/faker">faker</a>文档的具体说明。</p>
+<p>此外，类似的gem还有<a target="_blank" rel="noopener" href="https://github.com/sevenwire/forgery/tree/master">forgery</a> , <a target="_blank" rel="noopener" href="https://github.com/tomharris/random_data">random_data</a>。</p>
+<p>1、在gemfile中添加faker</p>
+<pre><code>gem &#39;faker&#39;
+</code></pre>
+<p>终端<code>bundle install</code></p>
+<p>2、建立一个rake task，这里我们建立一个faker_jobs的任务，终端运行：</p>
+<pre><code>rails g task dev fake_jobs
+</code></pre>
+<p>生成lib/tasks/dev.rake文件，内容如下：</p>
+<pre><code class="Ruby">namespace :dev do
+  desc &quot;TODO&quot;
+  task fake_jobs: :environment do
+  end
+ end
+</code></pre>
+<p>3、根据Job的字段，添加相应的Faker数据。比如下面这样：</p>
+<pre><code class="Ruby">namespace :dev do
+  desc &quot;TODO&quot;
+  task fake_jobs: :environment do
+    Job.delete_all
+
+    Jobs = []
+
+    100.times do |i|
+      Jobs &lt;&lt; Job.create!(:title =&gt; Faker::Job.title,
+                          :description =&gt; Faker::Job.key_skill,
+                          :wage_upper_bound =&gt; Faker::Number.between(10000,30000),
+                          :wage_lower_bound =&gt; Faker::Number.between(1000,10000),
+                          :contact_email =&gt; Faker::Internet.email,
+                          :is_hidden =&gt; [true, false].sample,
+                          :created_at =&gt; Time.now - rand(10).days - rand(24).hours)
+  end
+ end
+end
+</code></pre>
+<p>4、终端运行：<code>rake dev:fake_orders</code></p>
+<p>5、重启服务器<code>rails s</code> , 搞定！</p>
+<h3 id="优劣对比"><a href="#优劣对比" class="headerlink" title="优劣对比"></a>优劣对比</h3><p>两者有何不同？哪个更优？</p>
+<p>【以下纯属个人理解，有不正确之处，非常欢迎指正】</p>
+<p>从个人的使用来看，根据不同的需要去使用相应的方式来生成。</p>
+<ul>
+<li>seeds：种子方式的好处是，你已经将model的一个或多个字段的取值固定，这样每次生成的都是固定范围的，特别当model中含有一一对应的变量时，比如你做一个商店网站，商品和商品图片是对应的，用faker来随机生成，那简直就是灾难，只能通过seeds。但seeds不好的地方也很明显，你得先把这些字段的取值放进去，不管是通过copy的方式还是手敲（应该没人手敲吧？：P），如果仅仅是用来做测试，这样就有点废了。</li>
+<li>rake task：优点是代码清爽，简单直接；缺点在于Faker/random_data／forgery的随机生成，会无视各个字段之间的关系。如果字段之间存在一定的关联，那你用这些gem的后果不是清爽，而是很酸爽。</li>
+</ul>
+<p>相比seeds，个人其实更喜欢用rake task，毕竟这些数据只是用来测试，而且大部分字段之间并没有很直接的逻辑关系，当然也因为<code>less code less bug</code> （捂脸）。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/08/08/User-Story/" rel="next" title="开发工具之User Story">
+                <i class="fa fa-chevron-left"></i> 开发工具之User Story
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/08/23/git-commands-summary/" rel="prev" title="git常用命令及报错记录">
+                git常用命令及报错记录 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E7%94%9F%E6%88%90"><span class="nav-number"></span> <span class="nav-text">测试数据生成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Seeds-rb"><span class="nav-number">1.</span> <span class="nav-text">Seeds.rb</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#rake-task"><span class="nav-number">2.</span> <span class="nav-text">rake task</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8A%A3%E5%AF%B9%E6%AF%94"><span class="nav-number"></span> <span class="nav-text">优劣对比</span></a></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

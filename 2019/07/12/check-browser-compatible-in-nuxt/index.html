@@ -1,0 +1,904 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Nuxt," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="浏览器版本兼容问题很常见，这里记录下近期踩的坑：在nuxt 项目中，如何处理低版本浏览器的不兼容问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nuxt中低版本浏览器不兼容问题的处理">
+<meta property="og:url" content="http://lupeipei.github.io/2019/07/12/check-browser-compatible-in-nuxt/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="浏览器版本兼容问题很常见，这里记录下近期踩的坑：在nuxt 项目中，如何处理低版本浏览器的不兼容问题。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-07-12T01:47:50.000Z">
+<meta property="article:modified_time" content="2019-07-12T02:11:17.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Nuxt">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2019/07/12/check-browser-compatible-in-nuxt/"/>
+
+
+
+
+
+  <title> Nuxt中低版本浏览器不兼容问题的处理 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2019/07/12/check-browser-compatible-in-nuxt/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Nuxt中低版本浏览器不兼容问题的处理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-07-12T09:47:50+08:00">
+                2019-07-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.1k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>浏览器版本兼容问题很常见，这里记录下近期踩的坑：在nuxt 项目中，如何处理低版本浏览器的不兼容问题。</p>
+<span id="more"></span>
+
+<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>网页在chrome 75 及 Safari 12 中均可以正常显示，但对 360安全浏览器 8.1版本的支持并不友好，360中存在的主要问题是上下滚动条消失，鉴于360 8.1 版本的浏览器使用的内核是 chrome 45，故 下载了chrome 45 测试，发现chrome 45 也存在相同的问题，故问题转变为 如何处理内核 为chrome 45- 的浏览器不兼容问题。</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>最直接的方式：通过 userAgent 判断浏览器类型及版本，然后针对不兼容的低版本浏览器，显示页面，提示用户进行版本升级或者更换其他的浏览器。</p>
+<p>思路没有问题，网上也搜出来了一堆判断浏览器类型及版本的示例代码，但这些处理方式的基本思路是先判断浏览器类型，然后判断版本，而这里需要处理的是 内核 为chrome的浏览器，可能是chrome，可能是360， 也可能是opera，只要版本低于45，则要求升级或更换。故，首先得去解析userAgent。</p>
+<p><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/User-Agent">User Agent mozilla </a>  中给出了UA的基本组成 以及 主流浏览器的UA 字符串：</p>
+<p>Web端 User -Agent 基本组成规则：</p>
+<pre><code>Mozilla/&lt;version&gt; (&lt;system-information&gt;) &lt;platform&gt; (&lt;platform-details&gt;) &lt;extensions&gt;
+</code></pre>
+<p>部分主流浏览器的UA示例：「在 <a href="%5Bhttp://tools.jb51.net/table/useragent%5D(http://tools.jb51.net/table/useragent)">常用浏览器(PC,移动) user-agent</a> 可以查到 UC，腾讯TT等部分国内浏览器的UA。」</p>
+<ul>
+<li><p>Chrome</p>
+<blockquote>
+<p>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36</p>
+</blockquote>
+</li>
+<li><p>Firefox</p>
+<blockquote>
+<p>Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0</p>
+</blockquote>
+</li>
+<li><p>Opera</p>
+<blockquote>
+<p>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36 OPR/38.0.2220.41</p>
+</blockquote>
+</li>
+<li><p>Safari</p>
+<blockquote>
+<p>Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1</p>
+</blockquote>
+</li>
+<li><p>IE</p>
+<blockquote>
+<p>Mozilla/5.0 (compatible; MSIE 9.0; Windows Phone OS 7.5; Trident/5.0; IEMobile/9.0)</p>
+</blockquote>
+</li>
+</ul>
+<p>根据UA 的基本组成规则，可以考虑解析整个UA，分成三部分：</p>
+<pre><code> Mozilla/&lt;version&gt; (&lt;system-information&gt;)
+
+ &lt;platform&gt; (&lt;platform-details&gt;)
+ 
+ &lt;extensions&gt;
+</code></pre>
+<p>部分浏览器可能仅有第一部分，比如IE，这样可以根据 system-information 来判断是否为IE，并获取其版本，而针对chrome 部分，在解析得到的extensions 中进行二次解析，先根据空白符分割成数组，再针对数组中的每一个对象，进行split(‘/‘)，取到每一个extension的name 和version，最后只需要判断chrome 是否存在该数组中，存在则取其对应version，判断version是否过低即可。</p>
+<p>具体的解析代码这里就不列出来了。</p>
+<p>另一个需要说明的地方，是让这段处理浏览器不兼容的代码具有可扩展性。</p>
+<p>比如这次处理的是chrome 45 以下版本，下一次如果发现腾讯TT 4.0 以下版本存在不兼容问题，需要在不修改主代码的情况下，保证功能正常。</p>
+<p>鉴于自己写得很烂，这里直接借用领导的处理方式：</p>
+<ul>
+<li><p>新建变量blacklist，将所有不兼容的浏览器，版本及规则放入blacklist中。</p>
+</li>
+<li><p>新建class AgentInfo，在AgentInfo内部定义extension，test等函数。</p>
+</li>
+<li><p>使用parseAgentInfo方法，解析 userAgent，将解析后的结果塞给 AgentInfo ，进行初始化，得到AgentInfo的实例。</p>
+</li>
+<li><p>针对blacklist中的rules，逐一进行测试，如有未通过测试的，则表示该浏览器过低，跳转至新页面，要求用户升级或者更换浏览器。</p>
+</li>
+</ul>
+<p>大致代码如下：</p>
+<pre><code class="javascript">const blacklist = [
+  &#123; name: &#39;chrome &lt;= 45&#39;, rules: [
+    (info) =&gt; info.extension(&#39;Chrome&#39;).versionNumber &lt;= 45
+  ]&#125;
+]
+
+export default function (&#123; route, req, redirect &#125;) &#123;
+  const userAgent = process.server ? req.headers[&#39;user-agent&#39;] : navigator.userAgent
+  const agentInfo = parseAgentInfo(userAgent)
+  const uncompatible = _.some(blacklist, (item) =&gt; agentInfo.test(item.rules))
+
+  if (uncompatible) &#123;
+    redirect(&#39;/compatible&#39;)
+  &#125;
+&#125;
+</code></pre>
+<p>后面如果需要排除其他不兼容的浏览器，只需更改blacklist即可。</p>
+<p>这部分是中间件的内容，不要忘记在<code>nuxt.config.js</code> 中声明对应的文件名。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/User-Agent">User Agent mozilla </a><br><a href="%5Bhttp://tools.jb51.net/table/useragent%5D(http://tools.jb51.net/table/useragent">常用浏览器(PC,移动) user-agent</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Nuxt/" rel="tag"># Nuxt</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/07/09/how-to-get-better-at-things-you-care-about/" rel="next" title="how to get better at things you care about">
+                <i class="fa fa-chevron-left"></i> how to get better at things you care about
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/07/16/notes-of-the-life-changing-magic-of-tiding-up/" rel="prev" title="读《怦然心动的人生整理魔法》">
+                读《怦然心动的人生整理魔法》 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

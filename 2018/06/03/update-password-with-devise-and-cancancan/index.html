@@ -1,0 +1,950 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="踩坑 Devise 和 cancancan。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="allow user to update password with Devise and cancancan">
+<meta property="og:url" content="http://lupeipei.github.io/2018/06/03/update-password-with-devise-and-cancancan/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="踩坑 Devise 和 cancancan。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg">
+<meta property="article:published_time" content="2018-06-03T12:38:05.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:36:12.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/06/03/update-password-with-devise-and-cancancan/"/>
+
+
+
+
+
+  <title> allow user to update password with Devise and cancancan | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/03/update-password-with-devise-and-cancancan/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                allow user to update password with Devise and cancancan
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-03T20:38:05+08:00">
+                2018-06-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>960 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>踩坑 Devise 和 cancancan。</p>
+<span id="more"></span> 
+
+<h4 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h4><p>使用devise做用户管理，cancancan做权限管理，生成model user，user含有name，avatar等字段，现在需要让user可以修改自己的密码，姓名，头像等。即：</p>
+<ul>
+<li>用户可以不修改密码，只修改姓名或者头像</li>
+<li>用户修改密码时，需要填写原来的密码来进行验证，同时新密码需要输入两次以确认</li>
+</ul>
+<p>也就是，当用户输入current_password, password, password_confirmation中的任意一个时，就进行相关的密码验证，如果三者均为空，则不更新密码部分，更新其他属性。</p>
+<h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>在修改代码前，需要知道这两点：</p>
+<ul>
+<li><p>使用devise作用户管理时，如果你的 <code>app/models/user.rb</code>中，devise添加了validatable:</p>
+<pre><code>devise :xxxx, :..., :validatable
+</code></pre>
+</li>
+</ul>
+<p>那么相当于给user添加了如下的validates：</p>
+<pre><code class="Ruby">validates_uniqueness_of :email, allow_blank: true, if: :email_changed?
+validates_format_of     :email, with: email_regexp, allow_blank: true, if: :email_changed?
+validates_presence_of     :password, if: :password_required?
+validates_confirmation_of :password, if: :password_required?
+validates_length_of       :password, within: password_length, allow_blank: true
+</code></pre>
+<p>这里注意到<code>validates_presence_of     :password, if: :password_required?</code>,当password_required?为true时，password必填。password_required?这个method的源代码如下：</p>
+<pre><code class="Ruby">def password_required?
+  !persisted? || !password.nil? || !password_confirmation.nil?
+end
+</code></pre>
+<p>如果更新的时候，我们不更新密码部分，只更新姓名或者头像，就会报错，因为此时表单送出的password是“”，即空值，但不是nil，这样 !password.nil? 就会为true，导致password_required?为true，所以我们需要重写这个method，当password为空时，也可以更新用户信息。</p>
+<p>在<code>app/models/user.rb</code>中，添加如下代码：</p>
+<pre><code class="Ruby">def password_required?
+  new_record? || password.present? || password_confirmation.present?
+end
+</code></pre>
+<p>这样添加后，当你修改用户信息时，如果password那一栏没有填写，不会出现如下报错：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg"></p>
+<ul>
+<li><p>修改密码时，因为需要输入当前的密码，也就是current_password这个字段，而原先user中是没有添加这个字段的，所以需要在<code>app/models/user.rb</code>中，添加如下代码，保证current_password可读写。</p>
+<pre><code class="Ruby">attr_writer :current_password
+</code></pre>
+</li>
+</ul>
+<p>好了，准备工作完成，算是解决了大半了，我们的重头戏来了。</p>
+<p>新增一个controller account::user 来让让用户完成修改密码的操作：</p>
+<pre><code>rails g controller account::user
+</code></pre>
+<p>在<code>routes.rb</code>中添加路径：【因为修改密码是用户单个个体的行为，所以我们使用resource】</p>
+<pre><code class="Ruby">namespace :account do
+  resource :user
+end
+</code></pre>
+<p>我们添加上view，让用户可以修改个人信息：</p>
+<pre><code>touch app/views/account/users/show.html.erb
+</code></pre>
+<p>在 <code>app/views/account/users/show.html.erb</code> 中添加如下内容：</p>
+<pre><code class="Ruby">&lt;%= simple_form_for @user, url: &#123; action: :update &#125; do |f| %&gt;
+  &lt;%= f.input :name %&gt;
+  &lt;%= f.file_field :avatar %&gt;
+
+  &lt;%= f.input :current_password %&gt;
+  &lt;%= f.input :password %&gt;
+  &lt;%= f.input :password_confirmation %&gt;
+
+  &lt;%= f.submit &quot;更新&quot;, class: &quot;btn btn-success&quot;%&gt;    
+&lt;% end %&gt;
+</code></pre>
+<p>同时需要在其他页面，比如navbar中提供入口，让用户可以进入该页面更新个人信息，这里略去。</p>
+<p>在<code>app/controllers/account/users_controller.rb</code>中，添加如下内容：</p>
+<pre><code class="Ruby">class Account::UsersController &lt; ApplicationController
+  authorize_resource :user, parent: false
+  def show
+    @user = User.find(current_user.id)
+  end
+
+  def update
+    @user = User.find(current_user.id)
+    if user_params.values_at(:current_password, :password, :password_confirmation).any?(&amp;:present?)
+      @user.update_with_password(user_params)
+    else
+      @user.update(user_params)
+    end
+    redirect_to profile_path
+  end
+
+  protected
+
+  def user_params
+    params.require(:user).permit(:name, :avatar, :current_password, :password, :password_confirmation)
+  end    
+end
+</code></pre>
+<p>其中，因为使用cancancan做权限管理，所以这里我们用<code>authorize_resource :user, parent: false</code>来给user授权authorize，让user可以有读写的权利， update action部分中，我们使用了devise的instance method <a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise/blob/715192a7709a4c02127afb067e66230061b82cf2/lib/devise/models/database_authenticatable.rb#L67">update_with_password</a>来修改密码，它会检查用户的:current_password, :password, :password_confirmation这三者的有效性。</p>
+<p>上面的代码看着有些不够简洁，我们稍稍重构下：</p>
+<p>把@user = User.find(current_user.id)拎出来，放在before action里面，把[:current_password, :password, :password_confirmation]这三个密码相关的变量用一个method包起来。</p>
+<pre><code class="ruby">class Account::UsersController &lt; ApplicationController
+  before_action -&gt; &#123; @user = User.find(current_user.id) &#125;
+  authorize_resource :user, parent: false
+
+  def show
+  end
+
+  def update
+    if user_params.values_at(*password_param_lists).any?(&amp;:present?)
+      @user.update_with_password(user_params)
+    else
+      @user.update(user_params)
+    end
+    redirect_to profile_path
+  end
+
+protected
+
+  def user_params
+    params.require(:user).permit(:name, :avatar, *password_param_lists)
+  end
+
+  def password_param_lists
+    [:current_password, :password, :password_confirmation]
+  end
+end
+</code></pre>
+<p>OK!  基本功能实现。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise">devise</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/CanCanCommunity/cancancan">cancancan</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/30/error-recording-can-not-find-migration-rb-file/" rel="next" title="ErrorTracking - Could not find migration.rb">
+                <i class="fa fa-chevron-left"></i> ErrorTracking - Could not find migration.rb
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/09/reference-the-same-model-twice/" rel="prev" title="Rails中同一个model被两次引用">
+                Rails中同一个model被两次引用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.</span> <span class="nav-text">实现步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">3.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

@@ -1,0 +1,890 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="对sidekiq多点了解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails异步处理之sidekiq">
+<meta property="og:url" content="http://lupeipei.github.io/2018/04/06/Asynchronous-processes-about-sidekiq-in-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="对sidekiq多点了解。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fq1vk2qsn9j30u908a0t8.jpg">
+<meta property="article:published_time" content="2018-04-06T07:06:45.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:11:09.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fq1vk2qsn9j30u908a0t8.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/04/06/Asynchronous-processes-about-sidekiq-in-rails/"/>
+
+
+
+
+
+  <title> Rails异步处理之sidekiq | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/04/06/Asynchronous-processes-about-sidekiq-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails异步处理之sidekiq
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-06T15:06:45+08:00">
+                2018-04-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>761 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>对sidekiq多点了解。</p>
+<span id="more"></span>
+
+<h4 id="异步处理是什么"><a href="#异步处理是什么" class="headerlink" title="异步处理是什么"></a>异步处理是什么</h4><p>google到的结果：</p>
+<blockquote>
+<p>Asynchronous refers to processes that do not depend on each other’s outcome, and can therefore occur on different threads simultaneously. It enables various workflow processes to run at the same time. you are simply running the workflow in the background of the calling application.</p>
+</blockquote>
+<p>简单来说，就是多个进程不依赖于各自的输出结果，可以同时出现在不同的线程中，这种方式使得不同的工作流进程可以同步进行。</p>
+<p>在Rails中，可以理解成，当用户送出操作后，Rails 不会立即执行该任务，而是交由另一个进程(process)在背景下进行处理。</p>
+<h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>当任务要执行很久的时候，例如汇出大笔数据、汇入大笔数据等，这时如果不进行异步处理，可能会：</p>
+<ul>
+<li>导致用户体验不佳，浏览器卡住，需要等服务器完成任务才有回应</li>
+</ul>
+<ul>
+<li>影响服务器效能，用户可能等不及又重新刷，导致任务重头执行，而一个HTTP Request 如果长时间执行，会让 Rails 服务器无法服务其他用户</li>
+</ul>
+<h4 id="如何使用"><a href="#如何使用" class="headerlink" title="如何使用"></a>如何使用</h4><p>有两个gem可用：<a target="_blank" rel="noopener" href="https://github.com/tobi/delayed_job">delayed_job</a>， <a target="_blank" rel="noopener" href="https://github.com/mperham/sidekiq">Sidekiq</a>。</p>
+<p>这里说说sidekiq的用法。</p>
+<p>以一个简单的数据导入为例来说明下如何使用。</p>
+<ul>
+<li><p>安装Redis</p>
+<p>sidekiq需要使用Redis来存储所有的job和操作数据，运行：<code>brew install redis</code></p>
+<p>新开一个terminal窗口，执行<code>redis-server /usr/local/etc/redis.conf</code>,默认情况下，Sidekiq 会在本地通过端口6379尝试连接Redis。</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fq1vk2qsn9j30u908a0t8.jpg"></p>
+</li>
+<li><p>安装sidekiq</p>
+<p>在gemfile中添加:</p>
+<pre><code>gem &#39;sidekiq&#39;
+</code></pre>
+<p>执行<code>bundle</code></p>
+</li>
+<li><p>添加配置</p>
+<p>编辑<code>config/environments/development.rb</code>，<code>config/environments/production.rb</code>, 添加：</p>
+<pre><code>config.active_job.queue_adapter = :sidekiq
+</code></pre>
+<p>告知Rails 要用 sidekiq 来做异步处理。</p>
+<p>新建文件<code>config/sidekiq.yml</code>, 添加如下内容：</p>
+<pre><code class="Iml">:queues:
+  - default
+</code></pre>
+<p>重启服务器。</p>
+</li>
+<li><p>新建一个异步处理任务ImportWorkerJob</p>
+<pre><code>rails g job import_worker
+</code></pre>
+<p>编辑<code>app/jobs/import_worker_job.rb</code>，修改perform部分:</p>
+<pre><code class="ruby">def perform(import_id)
+  import = Import.find(import_id)
+  ## do something, eg. import.file!
+end
+</code></pre>
+</li>
+<li><p>如何调用？</p>
+<p>对于需要异步处理的job，使用<code>ImportWorkerJob.perform_later(@import.id)</code>即可。</p>
+</li>
+</ul>
+<h4 id="Redis与memcache"><a href="#Redis与memcache" class="headerlink" title="Redis与memcache"></a>Redis与memcache</h4><p>说到Redis，很容易想到memcache，看看他俩的区别。</p>
+<p>一直以为他俩特别像，都是用来做缓存的。但是Google了下发现，相对而言，Redis能做的更多，表现也更好。</p>
+<p>memcache小巧，允许你存储key/value这样的一堆堆键值，且对value的字符有限制【up to 1M】。重启memcache， 数据全部清空。Redis可以当作cache来用，memcache能做的，它都能做，但对value字符的限制扩展到了512M。重启redis后，默认情况下，数据并不清空，当然，如果你需要它像memcache一样清空，也没问题。它还具有像其他数据库一样的特性，比如集群等。可以在终端运行：<code>redis-cli info</code> 来一览Redis。</p>
+<p>好像我目前都是把redis当缓存服务器来使用的……</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://docs.oracle.com/cd/E24705_01/doc.91/e24264/sync_async_processing.htm#EOTWK00192">Understanding Synchronous and Asynchronous Processing</a></p>
+<p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/10558465/memcached-vs-redis">Memcached vs. Redis?</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.mikeperham.com/2017/04/20/monitoring-redis/">Monitoring Redis</a></p>
+<p>强烈推荐<a target="_blank" rel="noopener" href="https://github.com/mperham">Mike Perham</a>「maintainer of Sidekiq」 的<a target="_blank" rel="noopener" href="https://www.mikeperham.com/">个人blog</a>， 干货很多，里面对于sidekiq和Redis也有详细的讲解。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/05/notes-of-written-on-the-edge-of-life/" rel="next" title="读《写在人生边上》">
+                <i class="fa fa-chevron-left"></i> 读《写在人生边上》
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/04/07/notes-of-the-passionate-programmer/" rel="prev" title="读《我编程，我快乐》">
+                读《我编程，我快乐》 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%A4%84%E7%90%86%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">1.</span> <span class="nav-text">异步处理是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">如何使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Redis%E4%B8%8Ememcache"><span class="nav-number">4.</span> <span class="nav-text">Redis与memcache</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

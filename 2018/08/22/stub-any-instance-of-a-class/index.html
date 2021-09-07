@@ -1,0 +1,919 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="RSpec," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="测试时遇到的一个问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Stub on any instance of a class">
+<meta property="og:url" content="http://lupeipei.github.io/2018/08/22/stub-any-instance-of-a-class/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="测试时遇到的一个问题。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-08-21T23:46:04.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:33:15.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="RSpec">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/08/22/stub-any-instance-of-a-class/"/>
+
+
+
+
+
+  <title> Stub on any instance of a class | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/22/stub-any-instance-of-a-class/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Stub on any instance of a class
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-22T07:46:04+08:00">
+                2018-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>840 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>测试时遇到的一个问题。</p>
+<span id="more"></span> 
+
+<h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><blockquote>
+<p>新建一个对象，该对象新建后会自动保存，现在需要测试其无法保存的情景，使得obj.save返回为false。</p>
+</blockquote>
+<p>踩坑：</p>
+<p>obj这个对象的创建中有一个属性attr设置了必填，同时该attr的值来自另一个对象a， 参考先前的代码，解决的思路是：</p>
+<p>通过<code>a.save(validate: false)</code>, 让a在attr为空时保存，然后obj创建时，会取a的attr作为自己的attr，这样obj保存时必然是false，因为atrr为空，它无法过检验，但是运行后发现，不管是<code>a.save(validate: false)</code>还是<code>a.save!(validate: false)</code>, 再次执行<code>a.save</code>，都会回滚，返回false。虽然它们跳过了validation，但是save时，并没有成功，Google了半天，没有找出好的解决方法。后来，看到同事用stub的方式完美解决了，由衷觉得真是太赞了。</p>
+<p>同一个问题，换个人解决，高下立判，只能说，知道和想到，隔了好几个山头啊。</p>
+<p>记录下allow_any_instance_of的用法。</p>
+<h4 id="allow-any-instance-of"><a href="#allow-any-instance-of" class="headerlink" title="allow_any_instance_of"></a>allow_any_instance_of</h4><p>允许一个class的任何实例stub任何一个method的，可设置返回值，也可以不设置，文档中说可以replace allow，但是allow接受的参数是对象，而allow_any_instance_of则是类。</p>
+<p>看一些老的版本，比如2.99，会发现allow_any_instance_of的”前身”，any_instance.stub，我以为是前身，但是在该版本的Rspec-mock的message exception部分，已经出现了allow_any_instance_of，有些奇怪，不过用起来倒是都好用的，这里一并下记录下两者的用法。</p>
+<ul>
+<li><p>stub 单个method无参</p>
+<p>单个method的stub，看官网的例子：</p>
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+  it &quot;returns a specified value on any instance of a class&quot; do
+    allow_any_instance_of(Object).to receive(:foo).and_return(:return_value)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(:return_value)
+  end
+end
+</code></pre>
+<p>用any_instance.stub 可以这样写：</p>
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  it &quot;returns a specified value on any instance of a class&quot; do
+    Object.any_instance.stub(:foo).and_return(:return_value)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(:return_value)
+  end
+end
+</code></pre>
+</li>
+<li><p>stub单个method有参</p>
+<p>带参数的单个method，这样写：</p>
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+  context &quot;with arguments&quot; do
+    it &quot;returns the stub value when arugments match&quot; do
+      allow_any_instance_of(Object).to receive(:foo).with(:param_one, :param_two).and_return(:return_value_one)
+      allow_any_instance_of(Object).to receive(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
+      obj = Ojbect.new
+      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
+      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
+    end
+  end
+end
+</code></pre>
+<p>换成any_instance.stub，可以这么来：</p>
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  context &quot;with arguments&quot; do
+    it &quot;returns the stub value when arugments match&quot; do
+      Object.any_instance.stub(:foo).with(:param_one, :param_two).and_return(:return_value_one)
+      Object.any_instance.stub(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
+      obj = Ojbect.new
+      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
+      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
+    end
+  end
+end
+</code></pre>
+</li>
+<li><p>stub 多个method无参</p>
+<p>多个method：</p>
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+ it &quot;stub multiple methods&quot; do
+   allow_any_instance_of(Object).to receive_messages(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
+   obj = Ojbect.new
+   expect(obj.foo).to eq(&quot;foo&quot;)
+   expect(obj.bar).to eq(&quot;bar&quot;)
+ end
+end
+</code></pre>
+<p>用any_instance.stub：</p>
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  it &quot;stub multiple methods&quot; do
+    Object.any_instance.stub(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(&quot;foo&quot;)
+    expect(obj.bar).to eq(&quot;bar&quot;)
+  end
+end
+</code></pre>
+<p>any_instance.stub还有一些兄弟姐妹，比如any_instance.unstub，any_instance.stub_chain， 可以戳<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class">这里</a>了解更多。</p>
+</li>
+</ul>
+<h4 id="warning"><a href="#warning" class="headerlink" title="warning"></a>warning</h4><p>官网上提到了慎用allow_any_instance_of,原因除了认为使用该方法<code> is often a design smell</code>，同时也是频频出bug的地方，be careful.</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class">Stub on any instance of a class</a></p>
+<p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-mocks/docs/working-with-legacy-code/any-instance">any instance</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/RSpec/" rel="tag"># RSpec</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/19/rspec-basic/" rel="next" title="Rspec basic">
+                <i class="fa fa-chevron-left"></i> Rspec basic
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/24/ideas-sharing-002/" rel="prev" title="Ideas sharing - 002">
+                Ideas sharing - 002 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#allow-any-instance-of"><span class="nav-number">2.</span> <span class="nav-text">allow_any_instance_of</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#warning"><span class="nav-number">3.</span> <span class="nav-text">warning</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

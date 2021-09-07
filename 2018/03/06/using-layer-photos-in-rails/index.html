@@ -1,0 +1,957 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails,Layer," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="之前写了篇学习笔记Rails中使用layer弹窗组件， 这篇写写如何在Rails中使用layer的photos来实作图片预览。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails中使用layer.photos来预览图片">
+<meta property="og:url" content="http://lupeipei.github.io/2018/03/06/using-layer-photos-in-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="之前写了篇学习笔记Rails中使用layer弹窗组件， 这篇写写如何在Rails中使用layer的photos来实作图片预览。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg">
+<meta property="article:published_time" content="2018-03-06T01:00:28.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:37:58.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta property="article:tag" content="Layer">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/03/06/using-layer-photos-in-rails/"/>
+
+
+
+
+
+  <title> Rails中使用layer.photos来预览图片 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/06/using-layer-photos-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails中使用layer.photos来预览图片
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-06T09:00:28+08:00">
+                2018-03-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>921 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前写了篇学习笔记<a target="_blank" rel="noopener" href="http://luciaca.cn/2018/02/24/using-layer-on-Rails/">Rails中使用layer弹窗组件</a>， 这篇写写如何在Rails中使用layer的photos来实作图片预览。</p>
+<span id="more"></span> 
+
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>在其文档的<a target="_blank" rel="noopener" href="http://www.layui.com/doc/modules/layer.html#layer.photos">layer.photos</a>中，有用法的详细说明。两种方式：</p>
+<ul>
+<li>直接读取页面图片</li>
+<li>传入json</li>
+</ul>
+<p>来看一下每种方式的具体使用。</p>
+<h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
+<pre><code class="Html">//HTML示例
+&lt;div id=&quot;layer-photos-demo&quot; class=&quot;layer-photos-demo&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+//调用示例
+layer.photos(&#123;
+  photos: &#39;#layer-photos-demo&#39;
+  ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+&#125;);
+&lt;/script&gt;
+</code></pre>
+<p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
+<p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg"></p>
+<p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
+<p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
+<pre><code class="Html">//HTML示例
+&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;% product.images.each do |image |%&gt;
+      &lt;img  onclick= &quot;getImage(&#39;&lt;%= product.id %&gt;&#39;);&quot; layer-src=&quot;&lt;%= image.src %&gt;&quot; src=&quot;&lt;%= image.thumb %&gt;&quot; alt=&quot;图片名&quot;&gt;
+       &lt;% end %&gt;   
+    &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;script&gt;
+    function getImage(productId)&#123;
+        layer.photos(&#123;
+            photos: &#39;#product-&#39; + productId,
+            anim:5
+        &#125;);
+    &#125;
+&lt;/script&gt;
+</code></pre>
+<h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
+<pre><code class="Javascript">$.getJSON(&#39;/jquery/layer/test/photos.json&#39;, function(json)&#123;
+  layer.photos(&#123;
+    photos: json
+    ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+  &#125;);
+&#125;);
+</code></pre>
+<p>返回的JSON需严格按照如下格式：</p>
+<pre><code class="json">&#123;
+  &quot;title&quot;: &quot;&quot;, //相册标题
+  &quot;id&quot;: 123, //相册id
+  &quot;start&quot;: 0, //初始显示的图片序号，默认0
+  &quot;data&quot;: [   //相册包含的图片，数组格式
+    &#123;
+      &quot;alt&quot;: &quot;图片名&quot;,
+      &quot;pid&quot;: 666, //图片id
+      &quot;src&quot;: &quot;&quot;, //原图地址
+      &quot;thumb&quot;: &quot;&quot; //缩略图地址
+    &#125;
+  ]
+&#125;
+</code></pre>
+<p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
+<p>还是以product为例， 三步走：</p>
+<ul>
+<li><p>给它添加一个preview的action， 在routes中声明</p>
+<p>在<code>routes.rb</code>中添加：</p>
+<pre><code class="Ruby">resources :products do
+  member do
+    get :preview
+  end
+ end
+</code></pre>
+</li>
+<li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
+<pre><code class="Ruby">def preview
+  @product = Product.find(params[:id])
+  @images = @product.images.all
+  @photo = &#123;
+      title: @product.title,
+      id: @product.id,
+      start: 0,
+      data: @images.map do |image|
+        &#123;
+            alt: image.title,
+            pid: image.id,
+            src: image.src,
+            thumb: image.thumb
+        &#125;
+      end
+  &#125;
+  render json: @photo
+end
+</code></pre>
+<p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
+</li>
+<li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
+<pre><code class="Html">&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;a href=&quot;javascript:getImageJson(&#39;&lt;%= product.id %&gt;&#39;);&quot;&gt;
+      查看产品图片&lt;/a&gt;
+    &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;script&gt;
+    function getImageJson(productId) &#123;
+        $.getJSON(&#39;/products/&#39; + productId + &#39;/preview&#39;, function(json)&#123;
+            layer.photos(&#123;
+                photos: json,
+                anim: 5
+            &#125;);
+        &#125;);
+    &#125;
+&lt;/script&gt;
+</code></pre>
+</li>
+</ul>
+<p>刷新页面确认是否正常。</p>
+<p>OK， 大功告成。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://www.layui.com/doc/modules/layer.html">弹层组件文档 - layui.layer</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+            <a href="/tags/Layer/" rel="tag"># Layer</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/04/upload-images-to-rails-API/" rel="next" title="Rails中实作图片上传API">
+                <i class="fa fa-chevron-left"></i> Rails中实作图片上传API
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/08/rendering-layout-for-special-action/" rel="prev" title="Rails中如何给action设置特定的layout？">
+                Rails中如何给action设置特定的layout？ <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">1.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E8%AF%BB%E5%8F%96%E9%A1%B5%E9%9D%A2%E5%9B%BE%E7%89%87%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">直接读取页面图片：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#JSON%E6%96%87%E4%BB%B6%E4%BC%A0%E5%85%A5"><span class="nav-number">1.2.</span> <span class="nav-text">JSON文件传入</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">2.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

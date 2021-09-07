@@ -1,0 +1,1053 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="写一写Rails中一些常用的查询。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails中一些常用的数据查询命令">
+<meta property="og:url" content="http://lupeipei.github.io/2018/08/04/query-in-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="写一写Rails中一些常用的查询。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg">
+<meta property="article:published_time" content="2018-08-04T09:24:17.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:31:56.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/08/04/query-in-rails/"/>
+
+
+
+
+
+  <title> Rails中一些常用的数据查询命令 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/08/04/query-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails中一些常用的数据查询命令
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-04T17:24:17+08:00">
+                2018-08-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2.4k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>写一写Rails中一些常用的查询。</p>
+<span id="more"></span> 
+
+<h4 id="group"><a href="#group" class="headerlink" title="group"></a>group</h4><p>等同与SQL中的group_by，使用：</p>
+<pre><code class="ruby">Student.group(:gender).count
+</code></pre>
+<p>即：</p>
+<pre><code class="sql">SELECT COUNT (*) AS count_all, gender
+FROM &quot;students&quot; GROUP BY gender
+</code></pre>
+<h4 id="join"><a href="#join" class="headerlink" title="join"></a>join</h4><p>School 与Clazz是一对多的关系。</p>
+<pre><code class="ruby">Clazz.joins(:school)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.*  FROM &quot;clazzes&quot; INNER JOIN &quot;schools&quot;  ON &quot;schools&quot;.&quot;id&quot;=&quot;clazzes&quot;.&quot;school_id&quot;
+</code></pre>
+<p>同样：</p>
+<pre><code class="ruby">School.joins(:clazzes)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;schools&quot;.*  FROM &quot;schools&quot; INNER JOIN &quot;clazzes&quot;  ON &quot;clazzes&quot;.&quot;school_id&quot;=&quot;schools&quot;.&quot;id&quot;
+</code></pre>
+<p>这里joins的参数的单复数很重要，School 与Clazz是一对多的关系，Clazz.joins(:school)，school必须是单数，School.joins(:clazzes)时，clazzes则是复数，即<strong>参数对应的不是表名，而是association names</strong>。</p>
+<p>多对多的joins, 比如找出hello老师所在的所有班级：</p>
+<pre><code class="ruby">Clazz.joins(:teachers).where(teachers: &#123; name: &quot;hello&quot; &#125;)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql"> SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot;
+
+ SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;teacher_id&quot; WHERE &quot;teachers&quot;.&quot;name&quot;=&quot;hello&quot;
+</code></pre>
+<p>多表连接查询，比如查找 1班 A组的老师：</p>
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).where(clazzes: &#123; name: &quot;1班&quot; &#125;, groups: &#123; name: &quot;A组&quot; &#125;)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot;
+INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot;
+</code></pre>
+<p>嵌套连接nested joins， 比如找出第一中学1班 A组的老师：</p>
+<pre><code class="ruby">Teacher.joins( :groups, clazzes: [:school]).where(clazzes: &#123; name: &quot;1班&quot; &#125;, groups: &#123; name: &quot;A组&quot; &#125;,schools: &#123; name: &quot;第一中学&quot; &#125;)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;groups&quot; ON &quot;teachers&quot;.id = &quot;groups&quot;.&quot;teacher_id&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot; INNER JOIN &quot;schools&quot; ON &quot;schools&quot;.&quot;id&quot; = &quot;clazzes&quot;.&quot;school_id&quot; WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot; AND &quot;schools&quot;.&quot;name&quot; = &quot;第一中学&quot;
+</code></pre>
+<p>附上一份各种JOIN的差异对比，帮助我自己记忆：P</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg"></p>
+<p>图片来源: <a target="_blank" rel="noopener" href="https://blog.jooq.org/2016/07/05/say-no-to-venn-diagrams-when-explaining-joins/">say no to venn digrams when explaining joins</a></p>
+<h4 id="includes"><a href="#includes" class="headerlink" title="includes"></a>includes</h4><p>N+1效能查询的解决方法。</p>
+<pre><code class="ruby">clazzes = Clazz.includes(:school).limit(10)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot;
+  WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+</code></pre>
+<p>这里先找到10个clazz，然后根据这10个clazz查找对应的school， 有重复的school_id则去重复查询。</p>
+<p>类似joins，includes也可以关联多表：</p>
+<pre><code class="ruby">Clazz.includes(:school, :orders).limit(10)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+</code></pre>
+<p>嵌套includes：</p>
+<pre><code class="ruby">Clazz.includes(:school, orders: [:product]).limit(10)
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (2741,2742，2743，2744)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN (7,4,16)
+</code></pre>
+<p>nested部分，根据clazz的ID，找到对应的order，然后根据order的ID，再找到product，这里可以看成有一层Order.includes(:product)。</p>
+<p>通过explain方法可以很清楚看到SQL的查询步骤【后面会提到】</p>
+<p>上述nested includes，对应的SQL查询步骤：</p>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
+
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                               QUERY PLAN
+--------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on orders  (cost=47.22..1262.09 rows=392 width=194)
+   Recheck Cond: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+   -&gt;  Bitmap Index Scan on index_orders_on_clazz_id  (cost=0.00..47.12 rows=392 width=0)
+         Index Cond: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+(4 rows)
+
+EXPLAIN for: SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN ($1, $2, $3) [[&quot;id&quot;, 7], [&quot;id&quot;, 4], [&quot;id&quot;, 16]]
+                        QUERY PLAN
+----------------------------------------------------------
+ Seq Scan on products  (cost=0.00..1.62 rows=3 width=391)
+   Filter: (id = ANY (&#39;&#123;7,4,16&#125;&#39;::integer[]))
+(2 rows)
+</code></pre>
+<p>includes后，如果添加where条件，则需要传递一个hash给到where，如果不是hash，则需要使用references强制连接table。</p>
+<p>比如：</p>
+<pre><code class="ruby">Clazz.includes(:school).where(&quot;schools.name =&#39;第一小学&#39;&quot;).references(:schools)
+## 等同于
+Clazz.includes(:school).where(schools: &#123; name: &quot;第一小学&quot;&#125;)
+</code></pre>
+<p>注意到includes接受的参数同joins，是association names，而references则是表名。</p>
+<h4 id="counter-cache"><a href="#counter-cache" class="headerlink" title="counter_cache"></a>counter_cache</h4><p>用来快速获取关联计数，假设school model中有teachers_count这个字段，那么：</p>
+<pre><code class="ruby">class Teacher &lt; ApplicationRecord
+  belongs_to :school, :counter_cache =&gt; true
+end
+</code></pre>
+<p>这样<em>ActiveRecord</em>就会自动更新schools中的teachers_count的值。</p>
+<p>这里counter_cache对应的列名可以自定义，比如说老师和学生之间是一对多的关系，给老师这张表添加一个字段total_students_count ,则可以在student的model中这么设置：</p>
+<pre><code class="ruby">class Student &lt; ApplicationRecord
+  belongs_to :teacher, counter_cache: &quot;total_students_count&quot;
+end
+</code></pre>
+<h4 id="find-each"><a href="#find-each" class="headerlink" title="find_each"></a>find_each</h4><p>find_each 分批查询， 默认每次捞出1000条记录。</p>
+<p>有三个参数可以设置：</p>
+<ul>
+<li>batch_size</li>
+<li>start</li>
+<li>finish</li>
+</ul>
+<p><strong>batch_size</strong></p>
+<p>指定每次捞出的数据量。</p>
+<pre><code>School.find_each(batch_size: 200) do
+end
+</code></pre>
+<p>那么每次则捞出200条记录，对应到SQL中，则是limit的值变成了200。</p>
+<p>默认是按照primary key(id) 升序排序查询结果：</p>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt; 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+……
+</code></pre>
+<p><strong>start</strong></p>
+<p>从哪条记录开始查询， 默认参数是ID。</p>
+<p>比如：</p>
+<pre><code class="ruby">School.find_each(start: 200) do
+end
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
+<p><strong>finish</strong></p>
+<p>指定到哪条记录截止， 默认参数是ID。</p>
+<p>比如：</p>
+<pre><code class="ruby">School.find_each(finish: 2000) do
+end
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
+<p>start搭配finish：</p>
+<pre><code class="ruby">School.find_each(start: 200, finish: 2000) do
+end
+</code></pre>
+<p>对应的SQL：</p>
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 AND &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
+<h4 id="explain方法"><a href="#explain方法" class="headerlink" title="explain方法"></a>explain方法</h4><p>可以用来查看SQL的执行步骤。<br><code>rails c</code>进入console，执行：<code>User.where(id: 1).explain</code>， 会得到如下结果：</p>
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;users&quot;.* FROM &quot;users&quot; WHERE &quot;users&quot;.&quot;id&quot; = $1 [[&quot;id&quot;, 1]]
+                                QUERY PLAN
+--------------------------------------------------------------------------
+ Index Scan using users_pkey on users  (cost=0.42..8.44 rows=1 width=387)
+   Index Cond: (id = 1)
+(2 rows)
+</code></pre>
+<p>显示了数据查询的过程，扫描users的index，最后找到id为1的user。</p>
+<p>看一个joins的例子：</p>
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).explain
+</code></pre>
+<p>对应的输出：</p>
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot; INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teachers&quot;.&quot;clazz_id&quot; INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+                                                   QUERY PLAN
+------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.99..2382.37 rows=1 width=387)
+   -&gt;  Nested Loop  (cost=0.71..2382.05 rows=1 width=391)
+         -&gt;  Seq Scan on groups  (cost=0.00..6.02 rows=302 width=4)
+         -&gt;  Index Scan using teachers_pkey on teachers  (cost=0.42..7.86 rows=1 width=387)
+               Index Cond: (id = groups.teacher_id)
+   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=0.29..0.33 rows=1 width=4)
+         Index Cond: (id = teacherships.clazz_id)
+(7 rows)
+</code></pre>
+<p> 看一个includes的例子，多表includes:</p>
+<pre><code class="ruby">Clazz.includes(:school, :groups).limit(10).explain
+</code></pre>
+<p>对应的输出：</p>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
+
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;groups&quot;.* FROM &quot;groups&quot; WHERE &quot;groups&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                          QUERY PLAN
+----------------------------------------------------------------------------------------------
+ Seq Scan on groups  (cost=0.00..9.79 rows=14 width=36)
+   Filter: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+(2 rows)
+</code></pre>
+<p>可以很清楚地看到分开两步，查询到clazz对应的ID后，分别查询了schools和groups，呃，不多说了，太明显了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://dev.to/eviedently/a-rubyists-guide-to-postgresqls-explain">A Rubyist’s Guide to Postgresql’s Explain</a></p>
+<p><a target="_blank" rel="noopener" href="https://guides.rubyonrails.org/active_record_querying.html">Active Record Query Interface</a></p>
+<p><a target="_blank" rel="noopener" href="https://api.rubyonrails.org/">Ruby on Rails API</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/03/slice-before-after-when-in-ruby/" rel="next" title="Enumberable中的slice_before, slice_when, slice_after">
+                <i class="fa fa-chevron-left"></i> Enumberable中的slice_before, slice_when, slice_after
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/07/error-recording-postgresql-the-database-system-is-starting-up/" rel="prev" title="Postgresql the database system is starting up">
+                Postgresql the database system is starting up <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#group"><span class="nav-number">1.</span> <span class="nav-text">group</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#join"><span class="nav-number">2.</span> <span class="nav-text">join</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#includes"><span class="nav-number">3.</span> <span class="nav-text">includes</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#counter-cache"><span class="nav-number">4.</span> <span class="nav-text">counter_cache</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#find-each"><span class="nav-number">5.</span> <span class="nav-text">find_each</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#explain%E6%96%B9%E6%B3%95"><span class="nav-number">6.</span> <span class="nav-text">explain方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">7.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

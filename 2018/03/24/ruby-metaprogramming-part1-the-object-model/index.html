@@ -1,0 +1,1137 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Ruby,Reading," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="《Ruby元编程》之对象模型笔记。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读《Ruby元编程》之对象模型">
+<meta property="og:url" content="http://lupeipei.github.io/2018/03/24/ruby-metaprogramming-part1-the-object-model/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="《Ruby元编程》之对象模型笔记。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fp7v0xt72bj31hc0u0493.jpg">
+<meta property="article:published_time" content="2018-03-24T04:41:28.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:32:23.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Ruby">
+<meta property="article:tag" content="Reading">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fp7v0xt72bj31hc0u0493.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/03/24/ruby-metaprogramming-part1-the-object-model/"/>
+
+
+
+
+
+  <title> 读《Ruby元编程》之对象模型 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/24/ruby-metaprogramming-part1-the-object-model/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                读《Ruby元编程》之对象模型
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-24T12:41:28+08:00">
+                2018-03-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2.7k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>《Ruby元编程》之对象模型笔记。</p>
+<span id="more"></span> 
+
+<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>看完了<a target="_blank" rel="noopener" href="https://book.douban.com/subject/26575429/">Ruby元编程(第2版)</a>，全书三大part，共13章，第一部分Ruby元编程是重点，也是基础，理解了part 1， part 2的Rails元编程也就七七八八了，part 3是附录，供延伸阅读。</p>
+<p>part 1读起来让人有种醍醐灌顶之感，很是惊喜，part 2告诉了你rails源代码中一些故事，针对这两块简单做了些笔记，打算整理出来，加深理解，也顺带梳理一下Ruby的知识点。</p>
+<p>这篇来写写Ruby中的对象，类及方法调用。</p>
+<h4 id="对象"><a href="#对象" class="headerlink" title="对象"></a>对象</h4><p>对象是由一组实例变量和对自身类的引用构成。</p>
+<ul>
+<li><p>实例变量</p>
+<p>看个书中的例子：</p>
+<pre><code class="Ruby">class MyClass
+    def my_method
+        @v = 1
+    end
+end
+
+object = MyClass.new # 这时object.instance_variables是[]
+object.my_method # 这时object.instance_variables是@v
+</code></pre>
+<p>这里，@v是实例变量，object 创建时，并没有任何实例变量，当object调用my_method时，它有了实例变量@v。你可以通过<code>object.instance_variables</code>来验证。</p>
+</li>
+</ul>
+<ul>
+<li><p>方法</p>
+<p>通过<code>object.methods</code>可以得到对象object的所有方法，这些都是MyClass类的实例方法。</p>
+<p>方法存放在类中，而不是对象中，实例变量则存放在对象中。也就是<strong>同一个类的对象共享同样的方法，但不共享实例变量</strong>。</p>
+</li>
+</ul>
+<h4 id="类"><a href="#类" class="headerlink" title="类"></a>类</h4><p>类是一个对象（Class类的一个实例）加一组实例方法和一个对其超类（superclass）的引用。</p>
+<p>类本身也是对象，它是Class的一个实例。Class.class是Class。</p>
+<p>Class.superclass是Module，因此一个类也是一个模块。</p>
+<p> 在一些静态语言中，比如Java，实例是类的一个不可修改的对象，但是Ruby允许你打开修改， 这种操作又称之为打开类。</p>
+<p>可使用class_eval method来打开任意类。</p>
+<ul>
+<li><p>打开类(open class)与猴子补丁（monkey patch）</p>
+<p>看个简单的例子：</p>
+<pre><code class="Ruby">class A
+  def a; &#39;a&#39;; end
+end
+
+class A
+  def b; &#39;b&#39;; end
+end
+
+obj = A.new
+obj.a
+obj.b
+</code></pre>
+<p>这里，Ruby先是定义了这个类A，并定义了method a，随后，Ruby重新打开了类A，定义了method b。</p>
+<p>打开类是Ruby很强大的利器，可以动态修改已经存在的类，即使是String，Array这类标准库中的类也不例外。</p>
+<p>不过利剑用的不好，容易伤着自己。打开类容易带来<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Monkey_patch"><strong>猴子补丁</strong></a>的问题。</p>
+<p>书中举的例子很好，这里直接引用：</p>
+<pre><code class="Ruby">class Array
+  def replace(original, replacement)
+    self.map &#123;|e| e == original ? replacement : e&#125;
+  end
+end
+</code></pre>
+<p>这里，打开了Array这个标准库中的类，然后定义了一个replace的method，我们知道Array自身已经有一个replace的method了，那么重新定义，会覆盖掉原来的replace，而你的程序中的其他部分极有可能依赖于原来的replace，这可能会导致危险的后果。这种method就属于猴子补丁。</p>
+<p>如何解决？</p>
+<p>两种方法。</p>
+<ul>
+<li><p>换个名字</p>
+<p>比如replace换成substitute，同时仔细检查该类中是否有同名的方法，确保新的名字不存在monkey patch的情况。</p>
+</li>
+<li><p>用<strong>细化（Refinement）</strong></p>
+<p>先定义一个module，然后在这个module里面定义这个method，然后使用using方法来启用这个method，<strong>细化的作用范围只在声明了using的模块内部有效</strong>。看例子：</p>
+<pre><code class="Ruby">module ArrayExtensions
+  refine Array do
+    def replace(original, replacement)
+      self.map &#123;|e| e == original ? replacement : e&#125;
+    end
+  end
+end
+
+module  ArrayStuff
+  using ArrayExtensions
+  [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace(&quot;a&quot;, &quot;d&quot;) # =&gt; [&quot;d&quot;, &quot;b&quot;, &quot;c&quot;]
+end
+
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace([&quot;a&quot;, &quot;d&quot;]) # =&gt; [&quot;a&quot;, &quot;d&quot;]
+</code></pre>
+<p> 前者调用的是在ArrayExtensions中refine的method replace，而且只在声明了using ArrayExtensions的module ArrayStuff有效， 后者调用的则是Array标准库中的replace method。</p>
+<p>它只在你希望它生效的地方生效，这真的蛮好。不过<strong>细化也有其陷阱</strong>，看段代码：</p>
+<pre><code class="Ruby">class MyClass
+  def my_method
+    puts &quot;original my_method&quot;
+  end
+
+  def my_other_method
+    my_method
+  end
+end
+
+module MyClassRefinement
+  refine MyClass do
+    def my_method
+      puts &quot;refined my_method&quot;
+    end
+  end
+end
+
+using MyClassRefinement
+MyClass.new.my_method  # =&gt; &quot;refined my_method&quot;
+MyClass.new.my_other_method # =&gt; &quot;original my_method&quot;
+</code></pre>
+<p>这里，my_other_method对my_method的调用，是在using之后，所以后面还是调用了之前未细化的my_method，所以用细化的时候还是要小心些。</p>
+</li>
+</ul>
+</li>
+<li><p>Superclass</p>
+<p>superclass是一个类方法，可以获取当前类的父类。像上面细化例子里面的MyClass，它的superclass是Object。</p>
+<pre><code class="Ruby">Array.superclass # =&gt; Object
+Object.superclass # =&gt; BasicObject
+BasicObject.superclass # =&gt; nil
+</code></pre>
+<p>以MyClass为例，obj是它的实例对象，对应的class, superclass如下：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fp7v0xt72bj31hc0u0493.jpg"></p>
+</li>
+<li><p>模块Module</p>
+<pre><code>Class.superclass =&gt; Module
+</code></pre>
+<p>Module可以看成是一堆method的集合，类和模块很接近，使用的时候，如果你希望自己的代码包含在别的代码中，使用module，如果希望某段代码被实例化或者被继承，用类。</p>
+</li>
+</ul>
+<ul>
+<li><p>常量</p>
+<p>任何以大写字母开头的引用都是常量，包括<strong>类名</strong>和<strong>模块名</strong>。</p>
+<p>Ruby中的常量类似变量，它的值是可以修改的，那么它与变量有什么区别？最大的区别在于作用域。</p>
+<p>Ruby代码中的常量类似于文件系统中的文件，类和模块就像是目录。类似不同目录下，不同文件可以有相同的名字，不同的模块和类中，也可以有相同名字的常量。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">module M
+  MyContant = &#39;outer contant&#39;
+  class C
+    MyContant = &#39;inner contant&#39;
+  end
+  C::MyContant # =&gt; &quot;inner contant&quot;
+  M::MyContant # =&gt; &quot;outer contant&quot;
+end
+
+M::C::MyContant # =&gt; &quot;inner contant&quot;
+</code></pre>
+<p>这里，常量使用了路径引用的方式。用::进行分割。而M这种用来充当常量容器的模块，被称之为<strong>命名空间</strong>。</p>
+</li>
+<li><p>命名空间</p>
+<p>我觉得命名空间的一个作用是隔离。比如下面这种：</p>
+<pre><code class="Ruby">module N
+  class C
+    puts &quot;in module N&quot;
+  end
+end
+
+module M
+  class C
+    puts &quot;in module M&quot;
+  end
+end
+
+N::C # =&gt; in module N
+M::C # =&gt; in module M
+</code></pre>
+<p>使用命名空间可以轻松解决<strong>类同名</strong>的问题。这里书中提到了一个细节，有关load的使用。</p>
+<p>load用于加载代码，比如<code>load(&#39;demo.rb&#39;)</code>，demo.rb文件中如果定义了常量，就有可能污染当前程序的命名空间，怎么解决？通过参数来强制限定其只在自身范围内有效：<code>load(&#39;demo.rb&#39;, true)</code>.</p>
+</li>
+</ul>
+<h4 id="方法的调用"><a href="#方法的调用" class="headerlink" title="方法的调用"></a>方法的调用</h4><p>方法的调用分为方法的查找和执行。</p>
+<p>在细说之前，先说两个概念：<strong>接受者</strong>，<strong>祖先链</strong></p>
+<p><strong>接收者</strong>：调用方法所在的对象，比如my_array.replace()， 这里my_array就是接收者。</p>
+<p><strong>祖先链</strong>：以任意一个Ruby类为例，它从superclass一路往上找，superclass的superclass，直到BasicObject，其经历的路径，就是该类的祖先链。</p>
+<p>查看某个class的祖先链，使用ancestors【这是一个类方法】。比如：</p>
+<pre><code class="Ruby">Array.ancestors # =&gt; [Array, Enumerable, Object, Kernel, BasicObject]
+</code></pre>
+<p>这里Kernel模块是包含在Object这个class中的。于是，无论哪个对象都可以随意使用Kernel模块中的方法，这些方法又称之为<strong>内核方法</strong>（Kernel Method）.同样，你也可以<strong>打开Kernal，新增方法，这个方法就会对所有的对象可用了</strong>，cool吧？</p>
+<p>祖先链中包含模块，当某个模块包含在某个类中时，Ruby就会把该模块加入到祖先链中。</p>
+<p><strong>模块的位置在include它的类之上。如果是prepend， 则是在prepend它的类之下</strong>。</p>
+<p>【prepend也是很好的方法包装术，后面的章节中它还会出场】</p>
+<p>看几个例子加深理解：</p>
+<pre><code class="Ruby">module M1; end
+
+class C
+  include M1
+end
+
+class D &lt; C; end
+D.ancestors # =&gt; [D, C, M1, Object, Kernel, BasicObject]
+
+
+class C2
+  prepend M1
+end
+
+class D2 &lt; C2; end
+D2.ancestors # =&gt; [D2, M1, C2, Object, Kernel, BasicObject]
+</code></pre>
+<p><strong>一个模块只会在祖先链中出现一次：</strong></p>
+<pre><code class="Ruby">module M1; end
+module M2
+  include M1
+end
+
+module M3
+  prepend M1
+  include M2
+end
+
+M3.ancestors # =&gt; [M1, M3, M2]
+</code></pre>
+<p><strong>人生的出场顺序很重要，祖先链中也是：</strong></p>
+<pre><code class="Ruby">module M1; end
+module M2; end
+
+class C
+  include M1
+  include M2
+end
+
+class C2
+  include M2
+  include M1
+end
+
+C.ancestors # =&gt; [C, M2, M1]
+C2.ancestors # =&gt; [C2, M1, M2]
+</code></pre>
+<p>理解祖先链很有必要，它对于理解后面章节中，特别是单件类，类方法，实例方法等的覆写，扩展等很有帮助。</p>
+<ul>
+<li><p>方法查找</p>
+<p>一句话：<strong>向右一步，再向上</strong></p>
+<p><strong>搞懂了祖先链，其实也就知道了方法的查找</strong>，从接收者对应的class开始（向右一步），一直沿着祖先链往上找，直到找到这个method即可。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">module M1
+  def hello
+    puts &quot;hello, Ruby! this is M1&quot;
+  end
+end
+module M2
+  def hello
+    puts &quot;hello, Ruby! this is M2&quot;
+  end
+end
+
+class C
+  include M1
+  include M2
+end
+
+C.new.hello
+</code></pre>
+<p>这里hello是调用哪个？</p>
+<p>我们知道C.ancestors是 [C, M2, M1]，M2中有hello这个method，所以它会找到最近的那个，也就是M2的hello ，输出：<code>hello, Ruby! this is M2</code>。</p>
+</li>
+<li><p>方法执行</p>
+<p>Ruby中每一行代码都会在一个对象中被执行，这个对象就是所谓的当前对象，可以用self表示。</p>
+<p>任何时刻，只有一个对象可以充当当前对象，当调用一个方法时，接收者就成为了self。</p>
+<p>看个例子【书中的这个例子很好，直接拿来】：</p>
+<pre><code class="Ruby">class C
+  def test_self
+    @var = 1
+    my_method()
+    self
+  end
+
+  def my_method
+    @var = @var + 1
+  end
+end
+
+obj = C.new
+
+obj.test_self # =&gt; #&lt;C:0x007faf9d0588f0 @var=2&gt;
+</code></pre>
+<p>调用test_self时，obj就成为了self，@var成了obj的实例变量，执行my_method时，@var仍然是obj的实例变量， 最后返回self的引用，可以看到@var变为2。</p>
+<p>有关self部分，可以顺带说说两种情况。</p>
+<ul>
+<li><p>顶层上下文（top level context）</p>
+<p>如果没有调用任何方法，此时谁是self？运行irb，问Ruby：</p>
+<pre><code class="Ruby">self # =&gt; main
+self.class  # =&gt; Object
+</code></pre>
+<p>Ruby程序开始运行时，解释器会创建一个名为main的对象作为当前对象，也就是self。这个对象又叫做<strong>顶层上下文</strong>（top level context）。</p>
+</li>
+<li><p>类或模块中，self的角色由这个类或模块本身担任</p>
+</li>
+</ul>
+<p>书中还提到了借助self，重新理解private。即：<strong>不能明确指定接收者来调用私有方法</strong>。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">class C
+  def public_method
+    self.private_method
+  end
+
+  private
+
+  def private_method; end
+  end
+end  
+
+C.new.public_method
+</code></pre>
+<p>运行时会报错：</p>
+<pre><code>private method `private_method&#39; called for #&lt;C:0x007fce270f4478&gt; (NoMethodError)
+</code></pre>
+<p>因为此处用了self，所以调用public_method时，C的对象便成为了self， 而private_method是不能直接被实例对象调用的。去掉public_method中的self即可。</p>
+<p>这部分的主要内容基本如上，是不是感觉学到了好多？: P</p>
+</li>
+</ul>
+<h4 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h4><p>去年打开《Ruby元编程》的时候，看得云里雾里，无法继续，现在再次打开，却有种拨开云雾之感，好似你懂了你曾不懂的，不知如何准确描述这种欣喜的感觉。Whatever，I love it!</p>
+<p>推荐这本<a target="_blank" rel="noopener" href="https://book.douban.com/subject/26575429/">Ruby元编程(第2版)</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ruby/" rel="tag"># Ruby</a>
+          
+            <a href="/tags/Reading/" rel="tag"># Reading</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/24/deal-with-hidden-element-selenium/" rel="next" title="selenium webdriver中有关隐藏元素的处理">
+                <i class="fa fa-chevron-left"></i> selenium webdriver中有关隐藏元素的处理
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/26/ruby-metaprogramming-part2-the-methods/" rel="prev" title="读《Ruby元编程》之方法">
+                读《Ruby元编程》之方法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.</span> <span class="nav-text">对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E7%9A%84%E8%B0%83%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">方法的调用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%93%E5%B0%BE"><span class="nav-number">5.</span> <span class="nav-text">结尾</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

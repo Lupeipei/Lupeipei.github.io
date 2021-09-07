@@ -1,0 +1,935 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="工作中遇到的一个问题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails中的assign_attributes和accepts_nested_attributes_for">
+<meta property="og:url" content="http://lupeipei.github.io/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="工作中遇到的一个问题。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-06-23T03:12:19.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:12:54.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/"/>
+
+
+
+
+
+  <title> Rails中的assign_attributes和accepts_nested_attributes_for | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/06/23/assign-attributes-with-accepts-nested-attributes-for/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails中的assign_attributes和accepts_nested_attributes_for
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-23T11:12:19+08:00">
+                2018-06-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.6k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>工作中遇到的一个问题。</p>
+<span id="more"></span>
+
+<h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>场景类似下面这样：</p>
+<p>现有model project， model member， model user，可以将member看作是user与project之间多对多关系的中间表，现在需要在project新建后，将创建该project的当前用户current_user设为该项目的负责人，也就是在member中新增一条记录。同时在project 的<code>new.html.erb</code>表单中，只有一个name，即项目名称字段。</p>
+<p>如何实现？</p>
+<p>我开始用了极为粗暴简单的方式，在<code>projects_controller.rb</code>的create action中添加了这么一句：</p>
+<pre><code class="Ruby">def create
+  @project.save
+  Member.create!(role: &quot;owner&quot;, project: @project, user: current_user)
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
+<p>这样功能是实现了，但是这明显不是正确的写法，找不到一点rails的影子，完全新手小白的方式。老大提到了用assign_attributes和accepts_nested_attributes_for来实现。改写了，实现了，踩了点坑。</p>
+<p>记录下assign_attributes的用法，主要是与accepts_nested_attributes_for结合使用，在不依靠表单的情况下，更新数据库。</p>
+<h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes">assign_attributes</a>，既可以更新model所有的attributes，也可以用来更新model的部分attributes。光看没什么感觉，拿个例子练练手。</p>
+<p>有一个model movie，字段name, description, name要求不能为空,同时与user之间存在一对多的关联。</p>
+<pre><code class="Ruby">class Movie &lt; ApplicationRecord
+  validates :name, presence: true
+  belongs_to :user
+end  
+</code></pre>
+<p>进入console试试：</p>
+<pre><code class="Ruby">m = Movie.new
+
+### 只更新一部分
+m.assign_attributes(name: &quot;before you&quot;)
+m.attributes
+=&gt; &#123;&quot;id&quot;=&gt;nil, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;nil, &quot;created_at&quot;=&gt;nil, &quot;updated_at&quot;=&gt;nil, &quot;user_id&quot;=&gt;nil&#125;
+
+### 更新全部并保存
+m.assign_attributes(name: &quot;before you&quot;, description: &quot;it is a love story&quot;, user: User.first)
+m.save
+=&gt; true
+m.attributes
+=&gt; &#123;&quot;id&quot;=&gt;7, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;&quot;it is a love story&quot;, &quot;created_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;updated_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;user_id&quot;=&gt;1&#125;
+</code></pre>
+<p>上面的例子是create，如果要update呢？</p>
+<pre><code class="Ruby">m = Movie.first
+=&gt; #&lt;Movie id: 4, name: &quot;once&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-04 07:55:59&quot;, user_id: 1&gt;
+
+m.assign_attributes(name: &quot;one day&quot;)
+m.attributes
+
+=&gt; &#123;&quot;id&quot;=&gt;4, &quot;name&quot;=&gt;&quot;one day&quot;, &quot;description&quot;=&gt;&quot;Apart but still together&quot;, &quot;created_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;updated_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;user_id&quot;=&gt;1&#125;
+
+m.save
+m
+=&gt; #&lt;Movie id: 4, name: &quot;one day&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-23 01:30:41&quot;, user_id: 1&gt;
+</code></pre>
+<p>可以看到成功完成了更新！</p>
+<p>这么看，好像没什么，更新和新建而已，但是结合accepts_nested_attributes_for就很cool了。</p>
+<p>下面的例子均以create为导向，不涉及update。</p>
+<h4 id="单个关联下"><a href="#单个关联下" class="headerlink" title="单个关联下"></a>单个关联下</h4><p>assign_attributes中，针对一对一的关联关系，有一个单独的private method，<a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association">assign_nested_attributes_for_one_to_one_association</a>， private method不能直接调用，用assign_attributes 和accepts_nested_attributes_for也可以实现一样的效果。</p>
+<p>比如有一个model 别名alias , 与user之间是一对一的关系，每次创建alias时，需要关联到user。对应model中的代码如下：</p>
+<pre><code class="Ruby">Class Alias &lt; ActiveRecord::Base
+  belongs_to :user
+  accepts_nested_attributes_for :user
+end
+</code></pre>
+<p>这样使用assign_attributes，如果alias的user已经存在，则会更新，如果不存在，则新建一个对应的user。这里要注意，不要在user里面添加<code>belongs_to :alias</code>， 这样你在传递user_attribute时，会报错，显示alias必须存在，而此时alias还没有创建成功。</p>
+<p>进入console试试, 在alias未创建前，创建一个user：</p>
+<pre><code class="Ruby">a = Alias.new
+
+a.assign_attributes(&#123;name: &quot;ruby&quot;, user_attributes: &#123; email: &quot;world@gmail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;&#125;&#125;)
+
+a.save
+=&gt; true
+a
+=&gt; #&lt;Alias id: 1, name: &quot;ruby&quot;, user_id: 3, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+a.user
+=&gt; #&lt;User id: 3, email: &quot;world@gmail.com&quot;, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+</code></pre>
+<p>可以看到user已经创建完成！</p>
+<p>不过我觉得这种情况，多半是你需要新建一个默认的user，因为参数的值是你传递过去的，已经定义好了，而不是像页面的表单那样。这个方法的好处在于，你不需要在页面表单中添加user部分，让用户选择，直接在创建alias时就与user建立起了关联。</p>
+<h4 id="多关联下"><a href="#多关联下" class="headerlink" title="多关联下"></a>多关联下</h4><p>如同一对一关联中，一对多关系下，也有一个private method：<a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association">assign_nested_attributes_for_collection_association</a>。 官方给到的例子是这样的：</p>
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, &#123;
+  &#39;1&#39; =&gt; &#123; id: &#39;1&#39;, name: &#39;Peter&#39; &#125;,
+  &#39;2&#39; =&gt; &#123; name: &#39;John&#39; &#125;,
+  &#39;3&#39; =&gt; &#123; id: &#39;2&#39;, _destroy: true &#125;
+&#125;)
+</code></pre>
+<p>People 是复数，这里传递的参数是一个hash，可以看出传了三条记录。如果用assign_attributes怎么实现呢？我这里直接用背景中那个问题来举例。【啧啧，在背景里卖关子没给到解答，悄悄把解答放在了这里。】</p>
+<p>在<code>project.rb</code>中，添加<code>accepts_nested_attributes_for :members</code>:</p>
+<pre><code class="Ruby">class Project &lt; ApplicationRecord
+  has_many :members, dependent: :destroy
+  accepts_nested_attributes_for :members
+end
+</code></pre>
+<p>这样，我们可以修改controller中的action create了, 在save之前进行assign_attributes:</p>
+<pre><code class="Ruby">def create
+  @project.assign_attributes(members_attributes: [ &#123; role: &quot;owner&quot;, project: @project, user: current_user &#125; ])
+  @project.save
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
+<p>踩坑的地方就在于members_attributes后面传递的是一个Array数组<code>[ &#123; role: &quot;owner&quot;, project: @project, user: current_user &#125; ]</code>，数组里面的元素才是Hash。启发来自于文档中的这个例子：</p>
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, [
+  &#123; id: &#39;1&#39;, name: &#39;Peter&#39; &#125;,
+  &#123; name: &#39;John&#39; &#125;,
+  &#123; id: &#39;2&#39;, _destroy: true &#125;
+])
+</code></pre>
+<p>OK！</p>
+<p>BTW，还有一个类似assign_attributes的method，update_attributes，官方没有给到例子，可以参考这篇文章<a target="_blank" rel="noopener" href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed">accepts_nested_attributes_for is Creating New Records; Gotcha!</a>，感觉跟assign_attributes还是很像的。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes">assign_attributes</a></p>
+<p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association">assign_nested_attributes_for_one_to_one_association</a></p>
+<p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association">assign_nested_attributes_for_collection_association</a></p>
+<p><a target="_blank" rel="noopener" href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed">accepts_nested_attributes_for is Creating New Records; Gotcha!</a></p>
+<h4 id="一点思考"><a href="#一点思考" class="headerlink" title="一点思考"></a>一点思考</h4><p>当我写出正确解答的时候，再看，发现其实挺简单的，可是我为什么花了差不多两个小时呢？因为我的搜索习惯。</p>
+<p>曾经我的习惯是，出问题了就Google，看stack overflow，对于文档，觉得冗长枯燥，效率低，不愿意去读，其实这样反而是走了弯路。不懂的时候，看文档，看文档，看文档！不要偷懒去看别人写的那些解答和文章，极有可能完全不是你想要的，甚至可能让你离正确的解决方法越来越远。看文档虽然略显枯燥，却最有效，如果文档中没有相关的实例，可以去搜一下别人用例。<br><strong>change your mind, change your habit.</strong></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/18/learn-git-rebase/" rel="next" title="学习git rebase">
+                <i class="fa fa-chevron-left"></i> 学习git rebase
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/24/define-a-helper-method-like-devise-current-user/" rel="prev" title="define a helper method like devise's current_user">
+                define a helper method like devise's current_user <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">基本用法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E4%B8%AA%E5%85%B3%E8%81%94%E4%B8%8B"><span class="nav-number">3.</span> <span class="nav-text">单个关联下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%9A%E5%85%B3%E8%81%94%E4%B8%8B"><span class="nav-number">4.</span> <span class="nav-text">多关联下</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%80%E7%82%B9%E6%80%9D%E8%80%83"><span class="nav-number">6.</span> <span class="nav-text">一点思考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

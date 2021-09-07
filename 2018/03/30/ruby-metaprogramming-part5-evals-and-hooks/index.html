@@ -1,0 +1,1018 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Ruby,Reading," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读《Ruby元编程》之eval和hooks">
+<meta property="og:url" content="http://lupeipei.github.io/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-03-30T11:08:14.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:32:27.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Ruby">
+<meta property="article:tag" content="Reading">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/"/>
+
+
+
+
+
+  <title> 读《Ruby元编程》之eval和hooks | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/03/30/ruby-metaprogramming-part5-evals-and-hooks/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                读《Ruby元编程》之eval和hooks
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-30T19:08:14+08:00">
+                2018-03-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.6k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>《Ruby元编程》第6章编写代码的代码的学习笔记，主要内容是eval和钩子方法。</p>
+<span id="more"></span> 
+
+<h4 id="从需求说起"><a href="#从需求说起" class="headerlink" title="从需求说起"></a>从需求说起</h4><p>本章开始用一个boss提出的问题作为引子，我觉得这个例子很好。简述下问题：</p>
+<p>创建一个名为attr_checked的类宏，这个类宏要满足两个条件：</p>
+<ul>
+<li>接受属性名和代码块，代码块用于验证属性值的有效性</li>
+<li>只有当类包含某个模块，比如checkedAttributes时，才可以使用attr_checked</li>
+</ul>
+<p>解决思路可以转化成：</p>
+<ul>
+<li>如何定义一个类宏方法？【先用eval定义一个内核方法，然后再改造成类宏】</li>
+<li>如何给一个类宏方法添加代码块？【method添加&amp;block参数即可】</li>
+<li>定义模块checkedAttributes，通过钩子方法为指定的类添加attr_checked</li>
+</ul>
+<h4 id="认识下eval"><a href="#认识下eval" class="headerlink" title="认识下eval"></a>认识下eval</h4><p>定义自己的类宏方法前，先来认识下Kernel#eval。</p>
+<p>eval是内核方法，参数是一段ruby代码文本。相比instance_eval， class_eval，<strong>它只能执行代码字符串</strong>。那instance_eval， class_eval是否能执行代码字符串？可以。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">my_array = [1,2,3]
+my_array.instance_eval &quot;self.reduce(&amp;:+)&quot; #= &gt; 6
+eval(&quot;my_array.inject &#123;|sum, x| sum + x&#125;&quot;) #= &gt; 6
+</code></pre>
+<p>这类代码字符串可以携带一个binding对象，然后在该对象的作用域中执行代码。</p>
+<ul>
+<li><p>eval与binding</p>
+<p>Binding是一个用对象表示的作用域，可以通过Kernel#binding 来创建。ruby 还提供了TOPLEVEL_BINDING的预定义常量，表示顶级作用域的Binding对象。</p>
+<p>看代码理解下：</p>
+<pre><code class="Ruby">class MyClass
+  def my_method
+    @x = 1
+    binding
+  end
+end
+obj = MyClass.new.my_method
+eval(&quot;@x&quot;,obj) #= &gt; 1
+eval(&quot;self&quot;, TOPLEVEL_BINDING) #= &gt; main
+</code></pre>
+</li>
+<li><p>eval的麻烦</p>
+<p>最大的问题是安全性，因为执行的是一段字符串，ruby是不会对字符串进行语法检查的，容易引发代码注入攻击。</p>
+<p>看个例子：</p>
+<pre><code class="ruby">def explore_array(method)
+  code = &quot;[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].#&#123;method&#125;&quot;
+  eval code
+end
+
+explore_array(&quot;include?(&#39;a&#39;)&quot;) #= &gt; true
+explore_array(&quot;size&quot;) #= &gt; 3
+explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;) #= &gt; 列出了该文件所在目录下的所有文件
+</code></pre>
+<p>这里，运行类似<code>explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;)</code>这样的恶意代码可能会带来意想不到的后果。所以，能用代码块就用代码块。</p>
+<p>如何防止代码注入攻击？</p>
+<ul>
+<li><p>解析所有的代码字符串，不现实</p>
+</li>
+<li><p>改用动态方法和动态派发来替换eval</p>
+<p>比如上面的例子，explore_array可以这样写：</p>
+<pre><code class="Ruby">def explore_array(method, *arguments)
+  [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].send(method, *arguments)
+end
+
+explore_array(:include?, &#39;a&#39;) #= &gt; true
+explore_array(:size) #= &gt; 3
+</code></pre>
+</li>
+</ul>
+</li>
+<li><p>污染对象和安全级别</p>
+<p>针对eval存在的安全问题，可以采用一些使它变得安全的方法。</p>
+<p>Ruby会自动把不安全的对象标记为污染对象，你可以通过给$SAFE赋值（[0,1, 2,3]）来设置安全级别，禁止某些潜在的危险操作，其中0最低，3最高。</p>
+<p>通过使用安全级别，可以为eval方法创造了一个可控的环境，像这样的环境称之为<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Sandbox_(software_development">沙盒</a>。</p>
+</li>
+</ul>
+<h4 id="用eval来定义add-checked-attr"><a href="#用eval来定义add-checked-attr" class="headerlink" title="用eval来定义add_checked_attr"></a>用eval来定义add_checked_attr</h4><p>「其实，这里我并不是很理解，为什么要调用eval来定义这个method，然后又去掉它？为什么不直接用class_eval的方式来定义？难道这样绕一圈，仅仅是为了向读者介绍eval？」</p>
+<p>不吐糟，直接看解答：</p>
+<pre><code class="Ruby">def add_checked_attr(klass, attr)
+  eval &quot;
+  class #&#123;klass&#125;
+    def #&#123;attr&#125;=(value)
+      raise &#39;Invalid attribute&#39; unless value
+      @#&#123;attr&#125; = value
+    end
+    def #&#123;attr&#125;
+      @#&#123;attr&#125;
+    end
+  end
+  &quot;
+end
+</code></pre>
+<h4 id="去掉eval，加上block"><a href="#去掉eval，加上block" class="headerlink" title="去掉eval，加上block"></a>去掉eval，加上block</h4><p>鉴于eval的问题，改用class_eval来打开类，同时给方法添加一个block</p>
+<pre><code class="Ruby">def add_checked_attr(klass, attr, &amp;validation)
+  klass.class_eval do
+
+    define_method &quot;#&#123;attr&#125;=&quot; do |value|
+      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
+      instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
+    end
+
+    define_method attr do
+      instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
+    end
+
+  end
+end
+</code></pre>
+<h4 id="改造成类宏"><a href="#改造成类宏" class="headerlink" title="改造成类宏"></a>改造成类宏</h4><p>为了让add_checked_attr对所有类都可用，可以将它定义在class中，另修改方法名为attr_checked，去掉类参数。</p>
+<p>解答如下：</p>
+<pre><code class="Ruby">class Class
+  def attr_checked(attr, &amp;validation)
+    define_method &quot;#&#123;attr&#125;=&quot; do |value|
+      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
+      instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
+    end
+
+    define_method attr do
+      instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
+    end
+  end
+end
+</code></pre>
+<p>最后请上我们的hooks。</p>
+<h4 id="钩子方法"><a href="#钩子方法" class="headerlink" title="钩子方法"></a>钩子方法</h4><p>看个例子：</p>
+<pre><code class="Ruby">module M
+  def self.included(othermod)
+    puts &quot;M was included into #&#123;othermod&#125;&quot;
+  end
+end
+
+class C
+  include M
+end
+#= &gt; M was included into C
+</code></pre>
+<p>Module#included在一个module被include时，被自动调用，这种方法称之为钩子方法，因为<strong>它们像钩子一样，钩住一个特定的事件</strong>。类似的方法还有Module#method_added, Module#extend_object等。</p>
+<p>想要捕获单件方法的钩子事件，需要使用BasicObject的singleton_xxx方法，比如singleton_method_added。</p>
+<p>针对上面的例子，可以覆写include方法得到一样的效果：</p>
+<pre><code class="Ruby">module M;end
+
+class C
+  def self.include(*modules)
+    puts &quot;#&#123;modules&#125; was included into C&quot;
+    super
+  end
+  include M
+end
+#= &gt; [M] was included into C
+</code></pre>
+<p>注意这里覆写include中，最后<strong>调用了super</strong>，不然这个module是不会被include的。这种通过覆写添加额外功能的效果，也可以通过环绕别名的方式实现。</p>
+<p>包含并扩展类的方式就用到了钩子，看个例子：</p>
+<pre><code class="Ruby">module M
+  def self.included(klass)
+    klass.extend ClassMethods
+  end
+end
+
+module ClassMethods
+  def my_method
+    puts &quot;it could be a class method&quot;
+  end
+end
+
+class D
+  include M
+end
+
+D.my_method #= &gt; it could be a class method
+</code></pre>
+<p>类D包含了模块M，调用了M的钩子方法:included， 这个钩子方法接着用module ClassMethods扩展了类D，使得module ClassMethods的my_method 成为了类D的类方法。</p>
+<p>Rails中ActiveSupport有一个module Concern，就封装了包含并扩展的技巧。</p>
+<p>使用这种技巧，完成最后一步。</p>
+<pre><code class="Ruby">module CheckedAttributes
+  def self.included(base)
+    base.extend ClassMethods
+  end
+
+  module ClassMethods
+    def attr_checked(attr, &amp;validation)
+      define_method &quot;#&#123;attr&#125;=&quot; do |value|
+        raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
+        instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
+      end
+
+      define_method attr do
+        instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
+      end
+    end
+  end
+end
+</code></pre>
+<p>OK ！</p>
+<h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>整本书到这里，基本算是走完了大半了，后面第二部分是有关rails中的元编程，篇幅就相对而言少了些，作者挑了几个板块说一下。我的感觉是，如果前面的六章理解的七七八八了，可以看一些gem的源代码，有利于加深理解。你会在其中发现很多元编程的身影。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ruby/" rel="tag"># Ruby</a>
+          
+            <a href="/tags/Reading/" rel="tag"># Reading</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/29/ruby-metaprogramming-part4-class-defination/" rel="next" title="读《Ruby元编程》之类定义">
+                <i class="fa fa-chevron-left"></i> 读《Ruby元编程》之类定义
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/31/ruby-metaprogramming-part6-rails/" rel="prev" title="读《Ruby元编程》之Rails源代码赏析">
+                读《Ruby元编程》之Rails源代码赏析 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%8E%E9%9C%80%E6%B1%82%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">从需求说起</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%A4%E8%AF%86%E4%B8%8Beval"><span class="nav-number">2.</span> <span class="nav-text">认识下eval</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%A8eval%E6%9D%A5%E5%AE%9A%E4%B9%89add-checked-attr"><span class="nav-number">3.</span> <span class="nav-text">用eval来定义add_checked_attr</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8E%BB%E6%8E%89eval%EF%BC%8C%E5%8A%A0%E4%B8%8Ablock"><span class="nav-number">4.</span> <span class="nav-text">去掉eval，加上block</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%94%B9%E9%80%A0%E6%88%90%E7%B1%BB%E5%AE%8F"><span class="nav-number">5.</span> <span class="nav-text">改造成类宏</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%92%A9%E5%AD%90%E6%96%B9%E6%B3%95"><span class="nav-number">6.</span> <span class="nav-text">钩子方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">7.</span> <span class="nav-text">后记</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

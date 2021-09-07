@@ -1,0 +1,1154 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails,API," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="话说，好记性不如烂笔头「当然，主要是自己笨」，趁着假期，实作了一个简单的API接口，主要是CRUD + auth 认证部分，以加强对API接口部分的理解。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails：Web API接口实作">
+<meta property="og:url" content="http://lupeipei.github.io/2017/12/31/web-api-practice/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="话说，好记性不如烂笔头「当然，主要是自己笨」，趁着假期，实作了一个简单的API接口，主要是CRUD + auth 认证部分，以加强对API接口部分的理解。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz03kpvxxj30970ba74o.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1uqgyb4j30ms0d2abh.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1vk7e8oj30mi0fmmyj.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1wfaul9j30ms0bs3zj.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1x60l41j30mn0c8jsm.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1yceghkj30mn0bsq41.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1yvtjybj30mt0a4t9l.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz213gb40j30mn0de3zp.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz38xhtclj30mq0b3t9m.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz3xbnayjj30n10c40tv.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz3y7tr8nj30mr0acdgs.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz45zlkyej30mn0bydgy.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz48dnhi8j30mo0dnjsp.jpg">
+<meta property="article:published_time" content="2017-12-31T02:43:45.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:39:30.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta property="article:tag" content="API">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz03kpvxxj30970ba74o.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2017/12/31/web-api-practice/"/>
+
+
+
+
+
+  <title> Rails：Web API接口实作 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2017/12/31/web-api-practice/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails：Web API接口实作
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-12-31T10:43:45+08:00">
+                2017-12-31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.5k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>话说，好记性不如烂笔头「当然，主要是自己笨」，趁着假期，实作了一个简单的API接口，主要是CRUD + auth 认证部分，以加强对API接口部分的理解。</p>
+<span id="more"></span> 
+
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>以用户对一个event活动进行CRUD操作的功能实现为例：</p>
+<p>主要按如下步骤走：</p>
+<ul>
+<li><p>建model event，含字段title, description</p>
+</li>
+<li><p>设置路由，实作event的get, post, patch ,delete接口</p>
+</li>
+<li><p>添加认证API</p>
+</li>
+</ul>
+<p><strong>最后的效果是：</strong></p>
+<blockquote>
+<p> 用户可以通过API接口来新建，修改，查看，删除event</p>
+<p>用户在发出新建，修改，删除请求时，需要认证</p>
+</blockquote>
+<p>P.S：其实可以加个 rspec测试，不过这里我用postman直接测了，省去rspec部分，以免篇幅过长「主要还是因为，呃，你懂的，懒……」</p>
+<p>好，开搞吧。</p>
+<h5 id="一、新建一个project-event-api"><a href="#一、新建一个project-event-api" class="headerlink" title="一、新建一个project event_api"></a>一、新建一个project event_api</h5><pre><code>rails new event_api
+cd event_api
+git init
+</code></pre>
+<p>生成如下文件：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz03kpvxxj30970ba74o.jpg"></p>
+<h5 id="二、建event-model，实作CRUD接口"><a href="#二、建event-model，实作CRUD接口" class="headerlink" title="二、建event model，实作CRUD接口"></a>二、建event model，实作CRUD接口</h5><ul>
+<li><p>建event model,  终端输入：</p>
+<pre><code>git checkout -b event # 切换分支，做烂了可以再开个
+rails g model event title:string description:text uuid:string
+rake db:migrate
+</code></pre>
+<p>「为了安全性，给event加上一个uuid的字段」</p>
+<p>在<code>app/models/event.rb</code>中，给title加上有效性验证，并在创建时自动生成uuid：</p>
+<pre><code class="Ruby">class Event &lt; ApplicationRecord
+  validates_presence_of :title
+  before_validation :generate_uuid, :only =&gt; :create
+  def to_param
+      self.uuid
+  end
+
+  protected
+
+  def generate_uuid
+    self.uuid = SecureRandom.uuid
+  end
+end
+</code></pre>
+</li>
+<li><p>设置路由，在<code>config/routes.rb</code>中添加如下路由：</p>
+<pre><code class="Ruby">  namespace :api, :defaults =&gt; &#123;:format =&gt; :json &#125; do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+    end
+  end
+</code></pre>
+</li>
+<li><p>产生API controller，终端输入：</p>
+<pre><code>rails g controller api --no-assets
+</code></pre>
+<p>修改<code>app/controllers/api_controller.rb</code>:</p>
+<pre><code class="Ruby">- class ApiController &lt; ApplicationController
++ class ApiController &lt; ActionController::Base
+end
+</code></pre>
+<p>改成继承自ActionController::Base，因为API 不需要 <code>protect_from_forgery with: :exception</code> 这一行的 CSRF 浏览器安全检查。</p>
+</li>
+<li><p>实作event的get, post, patch, delete</p>
+<p>终端执行：</p>
+<pre><code>rails g controller api::v1::events --no-assets
+</code></pre>
+<p>在<code>app/controllers/api/v1/events_controller.rb</code>中，填入以下内容：</p>
+<pre><code class="Ruby">class Api::V1::EventsController &lt; ApiController
+
+  def index
+    @events = Event.all
+    render :json =&gt; &#123;
+        :data =&gt; @events.map &#123;|event|
+        &#123;
+            :id =&gt; event.id,
+            :uuid =&gt; event.uuid,
+            :title =&gt; event.title,
+            :event_url =&gt; api_v1_event_url(event.id)
+        &#125;&#125;
+    &#125;
+  end
+
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    if @event.save
+      render :json =&gt; &#123;
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      &#125;
+    else
+      render :json =&gt; &#123;
+          :message =&gt; &quot;创建event失败&quot;, :errors =&gt; @event.errors
+      &#125;, :status =&gt; 400
+    end
+  end
+
+  def show
+    @event = Event.find_by_uuid!(params[:id])
+    render :json =&gt; &#123;
+        :id =&gt; @event.id,
+        :uuid =&gt; @event.uuid,
+        :title =&gt; @event.title,
+        :description =&gt; @event.description
+    &#125;
+  end
+
+  def update
+    @event = Event.find_by_uuid!(params[:id])
+    @event.update(:title =&gt; params[:title],
+                  :description =&gt; params[:description])
+    render :json =&gt; &#123;:message =&gt; &quot;更新event成功&quot;&#125;
+  end
+
+  def destroy
+    @event = Event.find_by_uuid!(params[:id])
+    @event.destroy
+    render :json =&gt; &#123;:message =&gt; &quot;删除event成功&quot;&#125;
+  end
+end
+</code></pre>
+<p>注意，将EventsController 修改为继承自ApiController</p>
+<p>启服务器，<code>rails s</code>, 用postman测试看看：</p>
+<p>create</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1uqgyb4j30ms0d2abh.jpg"></p>
+<p>index</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1vk7e8oj30mi0fmmyj.jpg"></p>
+<p>show：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1wfaul9j30ms0bs3zj.jpg"></p>
+<p>Update:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1x60l41j30mn0c8jsm.jpg"></p>
+<p>发出get请求，看到event的详情中已经修改了title：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1yceghkj30mn0bsq41.jpg"></p>
+<p>destroy：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz1yvtjybj30mt0a4t9l.jpg"></p>
+<p>看event的list, 发现event2018_updated已经删除：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz213gb40j30mn0de3zp.jpg"></p>
+<p>OK！！</p>
+</li>
+</ul>
+<h5 id="三、添加认证API"><a href="#三、添加认证API" class="headerlink" title="三、添加认证API"></a>三、添加认证API</h5><p>这里做event的API时候，都不需要认证的，让我们加上认证部分。</p>
+<ul>
+<li><p>装上devise</p>
+<p>编辑 <code>Gemfile</code> 加上 <code>gem &quot;devise&quot;</code></p>
+<p>终端运行：<code>bundle</code>, 重启服务器，终端执行：</p>
+<pre><code>rails g devise:install
+rails g devise user
+rake db:migrate
+</code></pre>
+</li>
+<li><p>给event和user挂上关系</p>
+<p>在<code>app/models/user.rb</code>加上：</p>
+<pre><code>has_many :events
+</code></pre>
+<p>在<code>app/models/event.rb</code> 加上：</p>
+<pre><code>belongs_to :user
+</code></pre>
+<p> 将user_id添加到event中，终端执行：</p>
+<pre><code>rails g migration add_user_id_to_events user_id:integer
+rake db:migrate
+</code></pre>
+<p>修改<code>app/controllers/api/v1/events_controller.rb</code>， 在create部分填上@event.user = current_user</p>
+<pre><code class="Ruby">......
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    @event.user = current_user
+    if @event.save
+      render :json =&gt; &#123;
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      &#125;
+    else
+      render :json =&gt; &#123;
+          :message =&gt; &quot;活动创建失败&quot;, :errors =&gt; @event.errors
+      &#125;, :status =&gt; 400
+    end
+  end
+  ......
+</code></pre>
+<p>这里也可以设置一下show，index部分，添加上creator的字段，显示是谁创建这个event的。「此处略去，不是重点」</p>
+</li>
+<li><p>给user加上token字段</p>
+<p>终端运行：</p>
+<pre><code>rails g migration add_auth_token_to_users
+</code></pre>
+<p>编辑文件<code>XXXX_add_auth_token_to_users.rb</code>文件:</p>
+<pre><code class="Ruby">class AddAuthTokenToUsers &lt; ActiveRecord::Migration[5.1]
+  def change
+    + add_column :users, :auth_token, :string
+    + add_index :users, :auth_token, :unique =&gt; true
+  end
+end
+</code></pre>
+<p>终端运行：</p>
+<pre><code>rake db:migrate
+</code></pre>
+<p>编辑<code>app/models/user.rb</code>， 给user加上token:</p>
+<pre><code class="Ruby">class User &lt; ApplicationRecord
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable
+
+  has_many :events
+
+  before_create :generate_authentication_token
+
+  def generate_authentication_token
+    self.auth_token = Devise.friendly_token
+  end
+
+end
+</code></pre>
+</li>
+<li><p>实作注册，登录，登出的API</p>
+<p>在 <code>config/routes.rb</code> 加上路由：</p>
+<pre><code class="Ruby">......
+  namespace :api, :defaults =&gt; &#123;:format =&gt; :json &#125; do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+     + post &quot;/signup&quot; =&gt; &quot;auth#signup&quot;
+     + post &quot;/login&quot; =&gt; &quot;auth#login&quot;
+     + post &quot;/logout&quot; =&gt; &quot;auth#logout&quot;
+    end
+  end
+......  
+</code></pre>
+<p>生成auth的controller：</p>
+<pre><code>rails g controller api::v1::auth --no-assets
+</code></pre>
+<p>编辑它：</p>
+<pre><code class="Ruby">class Api::V1::AuthController &lt; ApiController
+  before_action :authenticate_user!, :only =&gt; [:logout]
+
+  def signup
+    user = User.new(:email =&gt; params[:email], :password =&gt; params[:password])
+
+    if user.save
+      render :json =&gt; &#123;:user_id =&gt; user.id &#125;
+    else
+      render :json =&gt; &#123;:message =&gt; &quot;Failed&quot;, :errors =&gt; user.errors&#125;, :status =&gt; 400
+    end
+  end
+
+  def login
+    if params[:email] &amp;&amp; params[:password]
+      user = User.find_by_email(params[:email])
+    end
+    if user &amp;&amp; user.valid_password?(params[:password])
+      render :json =&gt; &#123;
+          :message =&gt; &quot;ok&quot;,
+          :auth_token =&gt; user.auth_token,
+          :user_id =&gt; user.id
+      &#125;
+    else
+      render :json =&gt; &#123;:message =&gt; &quot;Email or Password is wrong&quot;&#125;, :status =&gt; 400
+    end
+  end
+
+  def logout
+    current_user.generate_authentication_token
+    current_user.save!
+    render :json =&gt; &#123;:message =&gt; &quot;logout successful&quot;&#125;
+  end
+end
+</code></pre>
+<p>编辑<code>app/controllers/api_controller.rb</code>， 添加如下验证：</p>
+<pre><code class="Ruby">  before_action :authenticate_user_from_token!
+
+  def authenticate_user_from_token!
+    if params[:auth_token]
+      user = User.find_by_auth_token(params[:auth_token])
+      sign_in(user, store: false) if user
+    end
+  end
+</code></pre>
+<p>这里可以改成将auth_token放在了header中传递，看这篇<a href="https://lupeipei.github.io/2017/12/29/pass-auth-token-through-header-rails-api/">如何将auth token放入headers进行传递？</a></p>
+<p>重启服务器，用postman测试看看：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz38xhtclj30mq0b3t9m.jpg"></p>
+<p>login ,获取auth_token</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz3xbnayjj30n10c40tv.jpg"></p>
+<p>logout, 传递auth_token</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz3y7tr8nj30mr0acdgs.jpg"></p>
+</li>
+</ul>
+<ul>
+<li><p>最后，给event添加上认证，修改<code>app/controllers/api/v1/events_controller.rb</code>中，添加：</p>
+<pre><code class="Ruby">......
+before_action :authenticate_user!, :only =&gt; [:create, :update, :destroy]
+....
+</code></pre>
+<p>用postman测试看看，现在新建event需要传递一个auth_token才行：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz45zlkyej30mn0bydgy.jpg"></p>
+<p> 添加上auth_token， 创建成功：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz48dnhi8j30mo0dnjsp.jpg"></p>
+<p>Patch, delete同理，可以用postman 进行测试看看，这里就不细看了。</p>
+<h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>我这边列出来的都是非常基础的API接口，其他复杂点的都是可以按照这个方式来做的，比如你可以在这个的基础上，添加comment，让用户通过接口给event做评论，点赞，自定义like method等等。</p>
+<p>对于routes的写法，上面我用了rails自身的resource方式：<code>resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]</code>， 也用了较易于理解的逐条列出路径的方式：<code>post &quot;/signup&quot; =&gt; &quot;auth#signup&quot;</code>, 可根据实际情况自行选择.</p>
+<p>Happy coding! : )</p>
+</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+            <a href="/tags/API/" rel="tag"># API</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/12/29/pass-auth-token-through-header-rails-api/" rel="next" title="Rails API：如何将auth token放入headers进行传递？">
+                <i class="fa fa-chevron-left"></i> Rails API：如何将auth token放入headers进行传递？
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/01/02/upload-capybara-screenshot-to-aliyun-oss/" rel="prev" title="将Capybara的screenshot上传至阿里云的OSS">
+                将Capybara的screenshot上传至阿里云的OSS <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">1.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E6%96%B0%E5%BB%BA%E4%B8%80%E4%B8%AAproject-event-api"><span class="nav-number">1.1.</span> <span class="nav-text">一、新建一个project event_api</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%BB%BAevent-model%EF%BC%8C%E5%AE%9E%E4%BD%9CCRUD%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.2.</span> <span class="nav-text">二、建event model，实作CRUD接口</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%B7%BB%E5%8A%A0%E8%AE%A4%E8%AF%81API"><span class="nav-number">1.3.</span> <span class="nav-text">三、添加认证API</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#The-End"><span class="nav-number">2.</span> <span class="nav-text">The End</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

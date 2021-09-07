@@ -1,0 +1,1036 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="用devise做用户登录，遇到的一个问题，记录下场景和leader指导出的解决方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="给新建用户发送密码重置邮件">
+<meta property="og:url" content="http://lupeipei.github.io/2018/11/25/send-password-reset-when-create-new-user/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="用devise做用户登录，遇到的一个问题，记录下场景和leader指导出的解决方法。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-11-25T05:50:44.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:32:37.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/11/25/send-password-reset-when-create-new-user/"/>
+
+
+
+
+
+  <title> 给新建用户发送密码重置邮件 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/11/25/send-password-reset-when-create-new-user/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                给新建用户发送密码重置邮件
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-25T13:50:44+08:00">
+                2018-11-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.3k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>用devise做用户登录，遇到的一个问题，记录下场景和leader指导出的解决方法。</p>
+<span id="more"></span> 
+
+<h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>添加项目成员member时，需要管理员新增用户user。</p>
+<ul>
+<li>管理员在新增用户页面中输入邮箱；</li>
+<li>管理员提交表单，用户的初始密码随机生成，随后给新建的用户发送一份账户激活的邮件；</li>
+<li>新增用户登录注册的邮箱，点击邮件中的链接【看似激活，实则为重置密码的链接】；</li>
+<li>用户重置密码完成，自动登录。</li>
+</ul>
+<p>这里只涉及devise如何发送重置密码的邮件。</p>
+<h4 id="准备工作："><a href="#准备工作：" class="headerlink" title="准备工作："></a>准备工作：</h4><p>三个model：</p>
+<p>对应的表结构：</p>
+<pre><code class="ruby"># == Schema Information
+#
+# Table name: members
+#
+#  id         :integer          not null, primary key
+#  user_id    :integer
+#  project_id :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+
+# Table name: projects
+#
+#  id         :integer          not null, primary key
+#  title      :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string           default(&quot;&quot;), not null
+#  encrypted_password     :string           default(&quot;&quot;), not null
+#  reset_password_token   :string
+#  reset_password_sent_at :datetime
+#  remember_created_at    :datetime
+#  sign_in_count          :integer          default(0), not null
+#  current_sign_in_at     :datetime
+#  last_sign_in_at        :datetime
+#  current_sign_in_ip     :string
+#  last_sign_in_ip        :string
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+</code></pre>
+<h4 id="解决："><a href="#解决：" class="headerlink" title="解决："></a>解决：</h4><p>使用devise自带的sessions。在<code>routes.rb</code>中做如下修改：</p>
+<pre><code class="ruby">### config/routes.rb
+
+devise_for :users, path: &quot;&quot;, controllers: &#123;
+    sessions: &quot;sessions&quot;
+  &#125;
+</code></pre>
+<p>新建一个sessionscontroller：<code>rails g controller sessions</code></p>
+<p> 继承<code>Devise::SessionsController</code>.</p>
+<pre><code class="ruby">### app/controllers/sessions_controller.rb
+
+class SessionsController &lt; Devise::SessionsController
+end
+</code></pre>
+<p>如果希望root页面就是显示注册的页面，可以在<code>routes.rb</code>中添加如下代码：</p>
+<pre><code class="ruby">### config/routes.rb
+
+ devise_scope :user do
+    get &quot;/&quot;, controller: :sessions, action: :new
+  end
+</code></pre>
+<p>激活账户涉及confirmable模块，使用<code>rails g devise user</code> 创建user时，默认没有confirmable的，需要自己手动添加，请在创建user时，确保含有以下字段：</p>
+<pre><code class="ruby">t.string   :confirmation_token
+t.datetime :confirmed_at
+t.datetime :confirmation_sent_at
+t.string   :unconfirmed_email # Only if using reconfirmable
+</code></pre>
+<p>「如果已经创建，使用rail g migration，给user添加上这些字段，同时迁移数据，给现有用户的confirmed_at赋值，不然无法登录。」</p>
+<p>修改<code>user.rb</code>, 添加上模块：<code>:confirmable</code></p>
+<pre><code class="ruby">### app/models/user.rb
+
+class User &lt; ApplicationRecord
+  devise :database_authenticatable, :rememberable, :validatable, :recoverable, :confirmable
+  ......
+end
+</code></pre>
+<p>同时在新增成员的表单中，允许输入用户的邮箱，如果邮箱存在，则直接添加该用户到项目成员中，如果邮箱不存在，则给该邮箱发送确认的邮件。</p>
+<p>修改member.rb, 添加：</p>
+<pre><code class="ruby">### app/models/member.rb
+
+arr_accessor :email
+</code></pre>
+<p>这样member的new.html.erb中就可以使用<code>f.input :email</code>，随后在controller的create action中，通过传过来的email来判断用户是否已经存在。修改create中原来的@member.save，改成@member.submit， 在<code>member.rb</code>中添加submit 函数：</p>
+<pre><code class="ruby">### app/models/member.rb
+
+  def submit(email)
+    password = SecureRandom.hex(4)
+    user = User.where(email: email).first_or_initialize(password: password, password_confirmation: password)
+    user.save
+    self.user = user
+    self.save
+    errors.empty?
+  end
+
+### 这里省略了errors的delegate，如果email是无效的，需要将user的error delegate给member。
+</code></pre>
+<p>在members_controller中，修改create action：</p>
+<pre><code class="ruby">#### app/controllers/projects/members_controller.rb
+
+ def create
+    if @member.submit(member_params[:email])
+      @user = @member.user
+      @user.send_activation_instructions unless @user.confirmed?
+    end
+  end
+</code></pre>
+<p>而对于send_activation_instructions，发送确认邮件的method，可以参考<code>send_devise_notification</code> 在 devise 中的定义：</p>
+<pre><code class="ruby">### app/models/authenticatable.rb
+
+def send_devise_notification(notification, *args)
+  message = devise_mailer.send(notification, self, *args)
+  # Remove once we move to Rails 4.2+ only.
+  if message.respond_to?(:deliver_now)
+    message.deliver_now
+  else
+    message.deliver
+  end
+end
+</code></pre>
+<p>这里<code>message = devise_mailer.send(notification, self, *args)</code>，devise_mailer使用send，调用参数notification传过来的方法名。</p>
+<p>看Devise::Mailer，里面定义了5个methods, 用于发送不同类型的邮件需求:</p>
+<pre><code class="ruby">#### app/mailers/devise/mailer.rb
+
+## 以下是confirmation_instructions。
+
+def confirmation_instructions(record, token, opts=&#123;&#125;)
+  @token = token
+  devise_mail(record, :confirmation_instructions, opts)
+end
+
+.......
+</code></pre>
+<p>参考这个，我们可以写出activation_instructions。</p>
+<p>在 user.rb中，定义: send_activation_instructions。</p>
+<pre><code class="ruby">### app/models/user.rb
+
+def send_activation_instructions
+  token = set_reset_password_token ## 生成 reset_password_token,赋给token变量
+  send_devise_notification(:activation_instructions, token, &#123;&#125;)
+end
+</code></pre>
+<p>新增一个mailer： UserMailer，继承 devise_mailer, 定义 activation_instructions。</p>
+<pre><code class="ruby">### app/mailers/user_mailer.rb
+
+class UserMailer &lt; Devise::Mailer
+
+  def activation_instructions(record, token, opts = &#123;&#125;)
+    @token = token
+    devise_mail(record, :activation_instructions, opts)
+  end
+end
+</code></pre>
+<p>修改<code>user.rb</code>，添加：</p>
+<pre><code class="ruby">### app/models/user.rb
+
+def devise_mailer
+  UserMailer
+end
+</code></pre>
+<p>同时，设置 reconfirmable 为false：</p>
+<pre><code class="ruby">### app/models/user.rb
+  devise :database_authenticatable, :rememberable, :trackable, :validatable, :recoverable, :confirmable, reconfirmable: false
+  ......
+</code></pre>
+<p>这样在member调用submit时，user.save就不会抛出异常，要求confirm这个账户了。</p>
+<p>在user_mailer的添加activation_instructions.html.erb 文件，文件内容可参考devise的<code>confirmation_instructions.html.erb</code>.</p>
+<pre><code class="ruby">### app/views/user_mailer/activation_instructions.html.erb
+
+&lt;p&gt;&lt;%= t(&#39;.greeting&#39;, recipient: @resource.name) %&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;%= t(&#39;.instruction&#39;) %&gt;&lt;/p&gt;
+&lt;p&gt;&lt;%= link_to t(&#39;.action&#39;), edit_reset_password_url(reset_password_token: @token) %&gt;&lt;/p&gt;
+</code></pre>
+<p>这里注意把<code>confirmation_instructions.html.erb</code>中，confirmation_url替换成 edit_reset_password_url，因为我们希望的是用户点击这个链接，跳转到密码修改的页面。</p>
+<p>最后，把reset_password这个功能添加进来。</p>
+<ul>
+<li><p>修改routes.rb，跳过devise自带的confirmations和passwords，用reset_password来完成验证邮箱和密码重置的功能，添加：</p>
+<pre><code class="ruby">### config/routes.rb
+
+  devise_for :users, path: &quot;&quot;, controllers: &#123;
+    sessions: &quot;sessions&quot;
+  &#125;, skip: [ :confirmations, :passwords ]
+
+  devise_scope :user do
+    resource :reset_password
+  end
+</code></pre>
+</li>
+<li><p>新建controller，继承自devise的passwordsController:</p>
+<pre><code class="ruby">class ResetPasswordsController &lt; Devise::PasswordsController
+
+  def update
+    super do |resource|
+      resource.confirm if resource.errors.empty? &amp;&amp; !resource.confirmed?
+    end
+  end
+end
+</code></pre>
+<p>这里重新定义了update, 调用super时，传递了一个block，如果user 没有confirmed过，同时更新密码成功，就调用confirm。在修改密码的同时，完成了用户的邮箱验证。</p>
+</li>
+<li><p>在app/views/reset_passwords下，添加edit.html.erb，用户收到邮件时，点击“确认我的账户”时，会跳转到该页面，在该页面进行密码重置。具体页面内容，此处略。</p>
+</li>
+</ul>
+<p>BTW，有关邮箱的配置，可以参考rails的官方文档。在开发环境下，推荐安装 <a target="_blank" rel="noopener" href="https://github.com/ryanb/letter_opener">letter_opener</a>这个gem, 就可以很轻松地查看是否正确发送了邮件了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise">devise</a></p>
+<p><a target="_blank" rel="noopener" href="https://guides.rubyonrails.org/action_mailer_basics.html">Action Mailer Basics</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/11/Load-resource-in-cancancan/" rel="next" title="Load resource in cancancan">
+                <i class="fa fa-chevron-left"></i> Load resource in cancancan
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/11/27/axios-cors-config/" rel="prev" title="axios跨域请求">
+                axios跨域请求 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">场景：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">准备工作：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">解决：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>

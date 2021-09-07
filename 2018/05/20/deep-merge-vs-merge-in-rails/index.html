@@ -1,0 +1,894 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Rails 小白的填坑之路。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails中merge与deep_merge的差异">
+<meta property="og:url" content="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="Rails 小白的填坑之路。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-05-20T15:20:56.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:16:31.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/"/>
+
+
+
+
+
+  <title> Rails中merge与deep_merge的差异 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/2018/05/20/deep-merge-vs-merge-in-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails中merge与deep_merge的差异
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-20T23:20:56+08:00">
+                2018-05-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>974 words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Rails 小白的填坑之路。</p>
+<span id="more"></span>
+
+<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>前几天被老大问到merge与deep_merge的区别，一时语塞，试了几个例子，大致get到了两者的区别，但是当时没有记录下来，这里做一下笔记，加深印象。</p>
+<h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><ul>
+<li><p>merge用法</p>
+<p>在<a target="_blank" rel="noopener" href="http://api.rubyonrails.org/">docs</a>中搜索merge，可以看到有10个名为merge的method，这里我们要对比deep_merge，所以选择继承自Hash的ActiveSupport::HashWithIndifferentAccess下的method merge。</p>
+<blockquote>
+<p>选自ActiveSupport::HashWithdifferentAccess</p>
+<p><strong>merge</strong>(hash, &amp;block)</p>
+<p>This method has the same semantics of <code>update</code>, except it does not modify the receiver but rather returns a new hash with indifferent access with the result of the merge.</p>
+</blockquote>
+<p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p>
+<p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.merge(h2) #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;
+</code></pre>
+<p>你可以通过block来指定merge的规则：</p>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.merge(h2) &#123;|k,v1,v2| v1+v2&#125; #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;
+h1.merge(h2) &#123;|k,v1,v2| v1&#125; #=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+</code></pre>
+</li>
+<li><p>deep_merge用法</p>
+<p>官方给到的解释和例子是这样的：</p>
+<blockquote>
+<p>deep_merge(other_hash, &amp;block)</p>
+<p>Returns a new hash with <code>self</code> and <code>other_hash</code> merged recursively.</p>
+</blockquote>
+<p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p>
+<p>还是以上面的例子为例：</p>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.deep_merge(h2) #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;
+</code></pre>
+<p>同样，你也可以通过block来指定deep_merge的规则：</p>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.deep_merge(h2) &#123;|k,v1,v2| v1+v2&#125; #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;
+h1.deep_merge(h2) &#123;|k,v1,v2| v1&#125; #=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+</code></pre>
+</li>
+<li><p>二者差异</p>
+<p>从上面的例子看，似乎两者没有什么区别。</p>
+<p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p>
+<p>但是针对nested hash，两者就不一样了。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">h1 = &#123; a: true, b: &#123; c: [1, 2, 3], x: [1, 2, 3] &#125; &#125;
+h2 = &#123; a: false, b: &#123; x: [3, 4, 5] &#125; &#125;
+h1.merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:x=&gt;[3, 4, 5]&#125;&#125;
+h1.deep_merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]&#125;&#125;
+</code></pre>
+<p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p>
+<p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p>
+<p>再看个例子：</p>
+<pre><code class="ruby">h1 = &#123; a: true, b: &#123; c: [1,2,3], x: &#123; y: 1 &#125; &#125; &#125;
+h2 = &#123; a: false, b: &#123; x: &#123; y: 2, z: 1&#125; &#125; &#125;
+h1.deep_merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;&#123;:y=&gt;2, :z=&gt;1&#125;&#125;&#125;
+</code></pre>
+<p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li>
+<li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p>
+</li>
+<li><p>针对嵌套的hash： 针对相同的key，merge不会检查，直接处理，根据merge规则返回value，deep_merge则会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
+</li>
+</ul>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://api.rubyonrails.org/">Ruby on Rails API</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/19/usage-of-activestorage-on-rails5dot2/" rel="next" title="使用ActiveStorage记录">
+                <i class="fa fa-chevron-left"></i> 使用ActiveStorage记录
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/30/error-recording-can-not-find-migration-rb-file/" rel="prev" title="ErrorTracking - Could not find migration.rb">
+                ErrorTracking - Could not find migration.rb <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">272</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">63</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A3%E6%96%87"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    326.6k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
