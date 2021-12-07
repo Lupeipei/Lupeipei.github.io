@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2021-10-15T09:35:55.949Z</updated>
+  <updated>2021-12-07T08:45:21.293Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>新手入坑Vim</title>
+    <link href="http://lupeipei.github.io/2021/12/07/vim-tips-and-tricks/"/>
+    <id>http://lupeipei.github.io/2021/12/07/vim-tips-and-tricks/</id>
+    <published>2021-12-07T08:37:32.000Z</published>
+    <updated>2021-12-07T08:45:21.293Z</updated>
+    
+    <content type="html"><![CDATA[<p>本文对 Vim 新手有一些帮助, 高手请忽略.</p><span id="more"></span> <p>之前一直使用 Atom 搭配 Vim 模式来工作, 前段时间彻底跟  Atom 拜拜, 重新配置了 Vim,用了一段时间, 渐渐习惯. 这里记录下使用过程中的一些感受和小技巧, 方便新手快速入坑.</p><p>本文基于 Vim 8.2.</p><h4 id="配置vimrc"><a href="#配置vimrc" class="headerlink" title="配置vimrc"></a>配置vimrc</h4><p>大部分新手一上来多是刷大牛们的<code>.vimrc</code>配置, 然后直接用, 把vim配置得非常 Modern, 我初来也是, 甚至连里面很多配置的语法都不大懂, 一上来什么都不管, 一顿瞎操作, 能用就行. 只能说 Copy + Paste 懒人模式害人不浅啊. 后面慢慢摸出感觉, 砍掉了很多插件, 只留下自己看得懂, 常用到的.</p><p>建议新手只配置一些简单的,  后面有需要再慢慢添加, 多看文档, 确保你知道安装的插件是用来做什么的.</p><p>一些常用插件:</p><ul><li><p><a href="https://github.com/tpope/vim-commentary">tpope/vim-commentary</a></p></li><li><p><a href="https://github.com/tpope/vim-surround">tpope/vim-surround</a></p></li><li><p><a href="https://github.com/preservim/nerdtree">preservim/nerdtree</a></p></li><li><p><a href="https://github.com/mattn/emmet-vim">mattn/emmet-vim</a></p></li></ul><p>主题系列, 推荐 <a href="https://github.com/vim-airline/vim-airline">vim-airline/vim-airline</a> 搭配 <a href="https://github.com/vim-airline/vim-airline-themes">vim-airline/vim-airline-themes</a></p><p>有关语言的插件, Github 自行搜索 vim-[language], 比如 vim-ruby, vim-go…..</p><h4 id="一些指令操作与技巧"><a href="#一些指令操作与技巧" class="headerlink" title="一些指令操作与技巧"></a>一些指令操作与技巧</h4><p>基本操作, 光标移动hjkl之类, 这里就略过了.简单提一些其他的操作指令.</p><p>保存并退出Vim:</p><blockquote><p>除了<code>:wq</code>, 还可以 ZZ (shift+z 两次) </p></blockquote><p>返回 Normal mode :</p><blockquote><p>除了常见的 <code>esc</code>, <code>Ctrl-[</code>, <code>Ctrl-c</code> 也可以.</p></blockquote><p>打开文件:</p><blockquote><p>最简单的是: <code>vim .</code>  打开当前目录, 或者 <code>vim file</code> 打开文件.</p><p>Vim 命令本身可以接受参数, 比如 <code>+&#123;cmd&#125;</code> 或者 <code>-c &#123;cmd&#125;</code> , 打开文件并执行相应命令.</p><pre><code class="shell">vim +&#123;cmd&#125; filevim -c &#123;cmd&#125; file</code></pre><p>这里的cmd 指的是在命令行模式下的命令, 比如打开文件 <code>text.txt</code> 并跳转到第10行:</p><pre><code class="shell">vim +10 text.txtvim -c 10 text.txt</code></pre><p>命令行模式下打开文件:</p><p>推荐用<code>:e xxx </code>,   同时结合 <a href="https://github.com/preservim/nerdtree">preservim/nerdtree</a> , 可以打开文件<code>:e file </code>, 也可以打开目录<code>:e folder </code>, 基本满足需求.</p></blockquote><p>无插件下查找文件:</p><blockquote><p>使用自带的 <code>find</code>, 记得搭配 set path , 设置好需要查找的目录, 同时巧用Tab 键补全. 比如:</p><pre><code>:set path+=app/models/:find tes&lt;Tab&gt;</code></pre></blockquote><p>搜索与替换:</p><blockquote><p>搜索: </p><p>在当前文件中搜索, 使用自带的<code>/content</code>,   <code>? content</code> </p><p>全文搜索, 建议用插件吧, 推荐 <a href="https://github.com/eugen0329/vim-esearch">eugen0329/vim-esearch</a>, 我自己用起来目前觉得够用,顺手.如果非要用自带的<code>:vim </code> 或者 <code>:grep</code> 可能导致弃坑…..</p><p>替换:</p><ul><li><code>:s/pattern/replace/g</code> - 全局替换当前行所有匹配.</li><li><code>:%s/pattern/replace/g</code> - 全局替换当前文件所有匹配.</li><li><code>:%s//replace/g</code> - 全局替换当前文件最后一次搜索结果.</li></ul></blockquote><p>撤销与反撤销</p><blockquote><p>u 撤销(Undo), 如果需要撤销刚刚的撤销操作 (Redo), 使用 <code>Ctrl-r</code></p></blockquote><p>Tab 创建与切换:</p><blockquote><p><code>:tabnew file</code> : 在新的 tab 中打开文件</p><p>打开文件时, 开多个tabs, 可以用:<code>vim -p file1 file2</code></p><p>跳转到 下一个 tab 用 <code>gt</code>, 前一个 tab 用 <code>gT</code></p></blockquote><p>窗口拆分与切换:</p><blockquote><p>Ctrl-w + n: 拆分窗口, 新增窗口</p><p>Ctrl-w + s:  将当前窗口分成水平窗口</p><p>Ctrl-w  + v: 将当前窗口分成竖直窗口</p><p>Ctrl-w + q /  c :  退出/关闭 当前窗口</p><p>Ctrl-w + h/j/k/l:  窗口左右上下切换</p></blockquote><p>Buffer切换:</p><blockquote><p><code>:bn</code> 切换到下一个buffer</p><p><code>:bp</code>切换到前一个buffer</p><p><code>:bd</code>  删除当前buffer, 可以<code>:bd + &#123;BufferNumber&#125;</code>, 删除指定 bufferNumber 的Buffer.</p><p>命令行使用<code>:ls</code> 列出buffer 列表, 如何去对应的Buffer?</p><p><code>:buffer + &#123;BufferNumber&#125;</code>  或者按键 bufferNumber  + <code>Ctrl-^</code>, 去指定 bufferNumber的Buffer.</p><p> <code>Ctrl-^</code> 也可以用来返回前一个编辑的buffer.</p></blockquote><p>Vim 和 终端切换:</p><blockquote><p>挂起Vim的三种方法:</p><ul><li><code>:suspend</code> </li><li><code>:stop</code>  </li><li>Ctrl-z</li></ul><p>终端输入: fg&lt;cr&gt; 返回到Vim. (&lt;cr&gt; 指 Enter键)</p></blockquote><p>执行命令:</p><blockquote><p><code>:!cmd</code>  其中 cmd 为 shell 命令.</p><p>对文件的操作, 可以考虑安装 <a href="https://github.com/tpope/vim-eunuch">tpope/vim-eunuch</a> 试试.[vim-eunuch 偶尔会让人抓狂..]</p></blockquote><p>屏幕刷新恢复:</p><blockquote><p>如果一顿操作后, 整个屏幕黑了(sooner or later….), 使用 <code>Ctrl+l</code>  或者命令 <code>:redraw</code>,  甚至强制刷新 <code>:redraw!</code>  回到现实. </p></blockquote><p>vim 文档阅读:</p><blockquote><p><code>:h(elp) &#123;content&#125;</code>  {content} 为需要搜索的内容.</p><p>比如 <code>:h i_CTRL-P</code> 查看 Insert 模式下 Ctrl-P 做什么. 如果查看Normal 模式下Ctrl-P 做什么, 用 <code>:h CTRL-P</code> </p><p>阅读文档时, 如何跳转?</p><p><code>Ctrl-]</code> 跳转到光标对应的文档</p><p><code>Ctrl-o</code> 返回上一个位置</p></blockquote><h4 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h4><p>Enjoy.</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本文对 Vim 新手有一些帮助, 高手请忽略.&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>读《一间只属于自己的房间》</title>
@@ -428,28 +450,6 @@
     <summary type="html">
     
       &lt;p&gt;Thank you for delivering happiness to the world.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《假如岁月足够长》</title>
-    <link href="http://lupeipei.github.io/2021/05/07/notes-of-zheng-and-yuan/"/>
-    <id>http://lupeipei.github.io/2021/05/07/notes-of-zheng-and-yuan/</id>
-    <published>2021-05-07T12:29:28.000Z</published>
-    <updated>2021-05-07T12:33:04.654Z</updated>
-    
-    <content type="html"><![CDATA[<p>五星推荐.</p><span id="more"></span><p>读它的过程就好像, 五月恬静的午后, 蓝天白云, 微风阵阵, 而你静静坐在窗前, 放空, 什么也不做, 什么也不必想.</p><p>彼时楼下邻家小院中的月季, 红色, 香槟色, 开得整个院子生机满满, 空气里夹杂着淡淡的月季花和香樟花的味道.</p><p>舒心而踏实.</p><p>这时候, 源二郎和国政在做什么呢? 大概是在一起喝茶吧?</p><p>整本书讲述了两个老头儿之间长达半个多世纪的友谊, 平淡而温暖.</p><p>国政和源二郎同住Y镇, 从小一起长大, 国政遵循着传统父母对孩子的期待路线按部就班地走着, 上好大学, 进好公司, 有个好家庭, 娶了个”老实的好姑娘”清子, 有了两个女儿, 但年老时, 清子离家出走, 跟女儿女婿一起生活. 他一人过上了独居生活. 源二郎则在东京大空袭中失去了家人, 战后修复时期, 拜师学习传统手艺谋生, 并娶了自己心爱的女人花枝. 后来妻子因病去世, 两人没有孩子, 他收了个徒弟彻平, 彻平与在美容店上班的麻美是男女朋友, 起初两人的婚事遭到双方父母的反对, 但几经努力, 两人最终得到了家人的祝福, 并在故事的最后, 举行了简单的婚礼.</p><p>书中写了三对恋人的爱情. 源二郎和花枝, 国政与清子, 彻平和麻美.</p><p>三段爱情都很好, 有情意浓浓, 有细水长流, 有相濡以沫.</p><p>特别钟意源二郎和花枝的故事.</p><p>花枝是一个安静内敛的姑娘, 传统乖巧, 清新秀丽, 源二郎则一穷二白, 换女友如换衣服, 性格放荡不羁, 用国政的话来说, 是“野生动物”. 这段感情自然得到了女方父母强烈的反对, 但花枝最终还是遵从自己的内心, 瞒着父母, 离家出走, 坐一条小船横渡荒川, 义无反顾嫁给了源二郎.</p><p>单单是因为相信爱.</p><p>婚后的花枝一直和源二郎过着幸福的生活, 直到病逝.</p><p>真好.</p><p>好姑娘, 你信的良人未让你失望.</p><p>而清子和国政之间的爱情, 更为循规蹈矩些.</p><p>两人相亲认识, 门当户对, 定下婚期, 结婚生子, 但清子其实并没有过得那么幸福, 最后她离家出走,选择去过自己想要的生活, 算是迟来的叛逆,  但后来她答应给彻平做媒人时, 仍是念着国政的吧.而国政当初以为清子其貌不扬, 后面发现自己的老婆原来这么美时, 是不是也会后悔未曾好好珍惜?</p><p>不过书中主要表达的并不是爱情, 而是两位老友之间相伴走过彼此的人生.</p><p>深情不过长伴.</p><p>不管是友情还是爱情, 那个你愿意花最长的时间陪伴在其左右的人, 定是生命中重要的人.</p><p>这样的陪伴, 又何尝不是在滋养着彼此的人生?</p><p>喜欢故事的结尾:</p><blockquote><p>“喂，政，赶紧上来。”源二郎招了招手，“今晚要不要睡我家，喝上一杯？”</p><p>“嗯，好啊。”国政像是要把水路看穿，“帮我拿一下袋子。”</p><p>“你腰腿也太弱了吧，要是我肯定能拎着袋子一起上船。”</p><p>“随你说好了，等你哪天闪了腰，看你会不会为这份想当然的自信感到后悔。”</p><p>没过多久，小船便开进Y镇的水路。</p><p>“砰砰——”小船的引擎声悠闲地回荡在水面，载着他们俩穿过家家户户。</p></blockquote><p>喂, 政, 不能怂啊, 什么时候接清子回家?</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;五星推荐.&lt;/p&gt;
     
     </summary>
     
