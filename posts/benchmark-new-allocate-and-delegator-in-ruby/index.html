@@ -1,0 +1,988 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Ruby," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。 说三个：benchmark，new &amp; allocate， delegator。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ruby盲点梳理">
+<meta property="og:url" content="http://lupeipei.github.io/posts/benchmark-new-allocate-and-delegator-in-ruby/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。 说三个：benchmark，new &amp; allocate， delegator。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr438e3d72j30fv09ewg0.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr43phbujxj308e034t8q.jpg">
+<meta property="article:published_time" content="2018-05-08T13:29:49.000Z">
+<meta property="article:modified_time" content="2019-06-08T06:34:50.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Ruby">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr438e3d72j30fv09ewg0.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/benchmark-new-allocate-and-delegator-in-ruby/"/>
+
+
+
+
+
+  <title> Ruby盲点梳理 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/benchmark-new-allocate-and-delegator-in-ruby/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Ruby盲点梳理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-08T21:29:49+08:00">
+                2018-05-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.7k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>前两天被小伙伴问到ruby的一些常用概念，觉得自己对某些方法和概念还是理解的不够清晰，想起之前写gem的时候，一度掉进了delegator的坑里，对某些类的使用，依然停留在相识未深知的阶段，于是刷了点文档，梳理下一些概念。</p>
+<p>说三个：benchmark，new &amp; allocate， delegator。</p>
+<span id="more"></span>
+
+<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="Benchmark"></a>Benchmark</h4><p>Benchmark是一个module，提供了诸多方法，用于获取ruby代码的执行时间。</p>
+<p>比较常用的三个方法：</p>
+<ul>
+<li>benchmark(caption = “”, label_width = nil, format = nil, *labels) { |report| … }</li>
+<li>bm(label_width = 0, *labels) { |report| … }</li>
+<li>bmbm(width = 0) { |job| … }</li>
+</ul>
+<p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
+<p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
+<p>看例子感受下三者：</p>
+<pre><code class="Ruby">require &#39;benchmark&#39;
+include Benchmark
+
+n = 500000
+
+Benchmark.benchmark(CAPTION, 6, FORMAT) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+
+Benchmark.bm(6) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+
+
+Benchmark.bmbm(6) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+</code></pre>
+<p>输出的结果：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr438e3d72j30fv09ewg0.jpg"></p>
+<p>这么看，感觉times也没有特别比for快多少……</p>
+<h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
+<p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
+<p>new对应的sourcecode如下：</p>
+<pre><code class="C">static VALUE
+rb_class_s_new(int argc, const VALUE *argv, VALUE klass)
+&#123;
+    VALUE obj;
+
+    obj = rb_class_alloc(klass);
+    rb_obj_call_init(obj, argc, argv);
+
+    return obj;
+&#125;
+</code></pre>
+<p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
+<p>看个例子感受下两者的差异：</p>
+<pre><code class="ruby">### 根据官方文档稍稍改编了下
+klass = Class.new do
+  def initialize(*args)
+    @initialized = true
+  end
+
+  def initialized?
+    @initialized || false
+  end
+end
+
+klass.allocate #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;
+klass.allocate.initialized? #=&gt; false
+klass.new #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 @initialized=true&gt;
+klass.new.initialized? #=&gt; true
+</code></pre>
+<h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
+<p>先来看看SimpleDelegator。</p>
+<p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">class Stats
+  def initialize
+    @source = SimpleDelegator.new([])
+  end
+
+  def stats(records)
+    p &quot;before setobj: #&#123;@source.size&#125;&quot;
+    @source.__setobj__(records)
+    p &quot;after setobj: #&#123;@source.size&#125;&quot;
+  end
+end
+
+s = Stats.new
+
+s.stats(%w&#123;Hello ruby world&#125;)
+#=&gt; &quot;before setobj: 0&quot;
+#=&gt; &quot;after setobj: 3&quot;
+</code></pre>
+<p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
+<p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
+<p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
+<p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
+<p>先看个Forwardable的例子：</p>
+<pre><code class="Ruby">require &#39;forwardable&#39;
+
+class RecordCollection
+  attr_accessor :records
+  extend Forwardable
+  def_delegator :@records, :[], :record_number
+  def_delegators :@records, :size, :&lt;&lt;, :map
+end
+
+obj = RecordCollection.new
+obj.records = [1,2,4]
+obj.record_number(0) #=&gt; 1， 相当于执行[1,2,4](0)
+obj.size #=&gt; 3 ， 相当于执行[1,2,4].size
+obj &lt;&lt; 5 #=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5
+obj.map &#123; |x| x + 1&#125; #=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;
+</code></pre>
+<p>这里 <code> def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
+<pre><code class="Ruby">def_delegator :@records, :size
+def_delegator :@records, :&lt;&lt;
+def_delegator :@records, :map
+</code></pre>
+<p>再来看一个SingleForwardable的例子：</p>
+<pre><code class="Ruby">class A
+  def self.hi
+    puts &quot;hello&quot;
+  end
+end
+
+module B
+  extend SingleForwardable
+  def_delegator :A, :hi
+end
+
+B.hi #=&gt; hello
+</code></pre>
+<p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
+<p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
+<p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
+<p>以上面的例子为例：</p>
+<pre><code class="Ruby">class A
+  def self.hi
+    puts &quot;hello&quot;
+  end
+end
+
+module B
+  extend SingleForwardable
+  def_delegator :A, :hi
+
+  def self.hi
+    puts &quot;world&quot;
+  end
+
+end
+
+B.hi #=&gt; world
+</code></pre>
+<h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr43phbujxj308e034t8q.jpg"></p>
+<p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/1582">1582</a>年，是这么说的：</p>
+<blockquote>
+<p>However, this year saw the <strong>beginning of the Gregorian Calendar switch</strong>, when the Papal bull known as Inter gravissimas introduced the Gregorian calendar, adopted by Spain, Portugal, the Polish–Lithuanian Commonwealth and most of present-day Italy from the start. In these countries, <strong>the year continued as normal until Thursday, October 4. However, the next day became Friday, October 15</strong> (like a common year starting on Friday), in those countries (France followed two months later, letting Sunday, December 9 be followed by Monday, December 20).</p>
+</blockquote>
+<p>这种操作真6，老祖宗们会玩。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://devdocs.io/ruby~2.5/">ruby 2.5</a></p>
+<p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/1582">1582</a></p>
+<p>谢谢D推荐的<a target="_blank" rel="noopener" href="http://devdocs.io/">devdocs</a>， 用来阅读文档真的是超赞！推荐使用<a target="_blank" rel="noopener" href="http://devdocs.io/">devdocs</a>：P</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ruby/" rel="tag"># Ruby</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/upgrade-wget-on-ubuntu/" rel="next" title="漏洞处理-GNU Wget缓冲区错误漏洞on Ubuntu">
+                <i class="fa fa-chevron-left"></i> 漏洞处理-GNU Wget缓冲区错误漏洞on Ubuntu
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/visit-github-through-terminal-using-https-proxy/" rel="prev" title="Mac OSX终端访问GitHub走shadowsocks代理">
+                Mac OSX终端访问GitHub走shadowsocks代理 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">278</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">64</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Benchmark"><span class="nav-number">1.</span> <span class="nav-text">Benchmark</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#new-amp-allocate"><span class="nav-number">2.</span> <span class="nav-text">new &amp; allocate</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Delegator"><span class="nav-number">3.</span> <span class="nav-text">Delegator</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A2%98%E5%A4%96"><span class="nav-number">4.</span> <span class="nav-text">题外</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    345.1k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
+
+
+

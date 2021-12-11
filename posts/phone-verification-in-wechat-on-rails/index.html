@@ -1,0 +1,1148 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails,WeChat," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="这周在做微信公众号那块，手机验证是比较难啃的一块，Google后也没找到合适的指导，趁着周末，写下来，供日后参考。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Rails微信网页开发之手机验证">
+<meta property="og:url" content="http://lupeipei.github.io/posts/phone-verification-in-wechat-on-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="这周在做微信公众号那块，手机验证是比较难啃的一块，Google后也没找到合适的指导，趁着周末，写下来，供日后参考。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqbzr7ii8rj30a90g6755.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqbzim2z67g30ab0gwdje.gif">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqccjt2h6sj30b90fl750.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqcc4szg58j30a50hfmxp.jpg">
+<meta property="article:published_time" content="2018-04-14T10:31:24.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:31:33.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta property="article:tag" content="WeChat">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqbzr7ii8rj30a90g6755.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/phone-verification-in-wechat-on-rails/"/>
+
+
+
+
+
+  <title> Rails微信网页开发之手机验证 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/phone-verification-in-wechat-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Rails微信网页开发之手机验证
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-04-14T18:31:24+08:00">
+                2018-04-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2.4k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>这周在做微信公众号那块，手机验证是比较难啃的一块，Google后也没找到合适的指导，趁着周末，写下来，供日后参考。</p>
+<span id="more"></span> 
+
+<p>以下以一个测试公众号虫虫宠物生活馆的手机认证为例。</p>
+<h4 id="场景描述"><a href="#场景描述" class="headerlink" title="场景描述"></a>场景描述</h4><p>用户登录公众号后，需要绑定会员，会员数据库中含有用户的手机号等信息，需要用户先输入手机进行验证。</p>
+<p>然后根据手机号来判定用户是否是会员。</p>
+<p>类似下面这种：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqbzr7ii8rj30a90g6755.jpg"></p>
+<h4 id="实现效果"><a href="#实现效果" class="headerlink" title="实现效果"></a>实现效果</h4><p>用户输入手机后，点击获取验证码，第三方短信服务平台发送验证码信息，用户收到信息，输入验证码，完成绑定。</p>
+<p>最后大致如下，这里没有用手机录屏了，在微信开发者工具上简单做个了动图，<strong>中间的白屏有些奇怪，手机上没有出现这种情况</strong>：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqbzim2z67g30ab0gwdje.gif"></p>
+<h4 id="解决步骤"><a href="#解决步骤" class="headerlink" title="解决步骤"></a>解决步骤</h4><p>分解下任务：</p>
+<ul>
+<li>点击获取验证码，验证手机号的有效性，并发送验证码到用户的手机上</li>
+<li>输入验证码后，用户点击确认，验证手机号与验证码的有效性，无误后，跳转至主页</li>
+</ul>
+<p>下面的代码示例，还是在<a target="_blank" rel="noopener" href="https://github.com/goofansu/wechat-starter">wechat-starter</a>的基础上进行功能添加 ，有关微信网页授权部分，可参见<a target="_blank" rel="noopener" href="https://luciaca.cn/2018/04/10/using-wechat-starter-to-integrate-public-account-on-rails/">Rails对接微信公众号简易指南</a>，这里只说手机验证。</p>
+<p>不得不说，好的轮子真的可以节省很多时间，Thanks for OpenSource , Thanks for sharing ：P</p>
+<p>好，一步步来。</p>
+<p><strong>Step1、建手机验证的model phone_tokens</strong></p>
+<p>终端执行：</p>
+<pre><code>rails g model phone_token
+</code></pre>
+<p>在生成的migration文档中，修改成这样：</p>
+<pre><code class="Ruby">lass CreatePhoneTokens &lt; ActiveRecord::Migration[5.1]
+  def change
+    create_table :phone_tokens do |t|
+      t.string :phone
+      t.string :token
+      t.datetime :expired_at
+      t.timestamps
+    end
+    add_index :phone_tokens, [:phone, :token]
+  end
+end
+</code></pre>
+<p>执行：</p>
+<pre><code>rake db:migrate
+</code></pre>
+<p>修改<code>app/models/phone_tokenk.rb</code>, 要求token ，phone 必填：</p>
+<pre><code class="Ruby">class PhoneToken &lt; ApplicationRecord
+  validates_presence_of :token
+  validates_presence_of :phone
+end
+</code></pre>
+<p>修改<code>config/route.rb</code> ， 添加：</p>
+<pre><code class="Ruby">resources :phone_tokens, only: [:create]
+</code></pre>
+<p><strong>Step2、建controller phone_tokens，实现手机验证码发送</strong></p>
+<p>执行：</p>
+<pre><code>rails g controller phone_tokens
+</code></pre>
+<p>修改<code>app/controllers/phone_tokens_controller.rb</code></p>
+<pre><code class="ruby">class PhoneTokensController &lt; ApplicationController
+
+  before_action :verify_phone_unrepeated
+
+  def create
+    unless params[:phone] =~ User::CELLPHONE_RE
+      render json: &#123;status: &#39;error&#39;, message: &#39;手机号格式不正确！&#39;&#125;
+      return
+    end
+    if session[:token_created_at] &amp;&amp; session[:token_created_at] + 60 &gt; Time.now.to_i
+      render json: &#123;status: &#39;error&#39;, message: &#39;您已经申请过验证码，请60s后再试！&#39;&#125;
+      return
+    end
+
+     ## 生成验证码
+    token = sms_send(params[:phone])
+    ## 初次生成验证码，新增record，验证码过期二次生成token，则更新record
+    PhoneToken.add_or_update params[:phone], token
+    render json: &#123;status: &#39;ok&#39;&#125;
+  end
+
+  private
+
+  def verify_phone_unrepeated
+    phone = User.find_by(phone: params[:phone])
+    render :json =&gt; &#123; status: &#39;repeated&#39;&#125; if phone.present?
+  end
+end
+</code></pre>
+<p>这里添加了手机重复绑定的检查。其中，User::CELLPHONE_RE是定义在<code>user.rb</code>, 用正则验证手机号码有效，稍后会加上。</p>
+<p>另外，生成验证码的method sms_send 我们在下一步调用第三方短信服务来实现。</p>
+<p>而对于add_or_update 类方法，我们在<code>app/models/phone_token.rb</code>中定义，实现新增和更新：</p>
+<p>修改<code>app/models/phone_token.rb</code>：</p>
+<pre><code class="ruby">class PhoneToken &lt; ApplicationRecord
+  validates_presence_of :token
+  validates_presence_of :phone
+
+  def self.add_or_update(phone, token)
+    record = find_by(phone: phone)
+    if record
+      record.update_attributes token: token, expired_at: Time.now + 10.minutes
+    else
+      create phone: phone, token: token, expired_at: Time.now + 10.minutes
+    end
+  end
+end
+</code></pre>
+<p><strong>Step3、调用第三方短信服务</strong></p>
+<p>这里，以阿里云的短信服务为例，官方文档的接口调用代码示例是Java，也没找到ruby的，google了下，有一个现成的gem <a target="_blank" rel="noopener" href="https://github.com/VICTOR-LUO-F/aliyun-sms">aliyun-sms</a>，用这个。</p>
+<p>购买服务后，进行设置，你会得到四个参数值：</p>
+<ol>
+<li>ACCESS_KEY_SECRET</li>
+<li>ACCESS_KEY_ID</li>
+<li>SIGN_NAME</li>
+<li>TEMPLATE_CODE</li>
+</ol>
+<p>开始调用吧！</p>
+<p>修改gemfile：</p>
+<pre><code>gem &#39;aliyun-sms&#39;
+</code></pre>
+<p>执行<code>bundle</code>，服务器重启.</p>
+<p>修改<code>config/applicaton.yml</code>，将重要的参数值放进去，供调用：</p>
+<pre><code class="Yml">access_key_secret: &quot;ACCESS_KEY_SECRET&quot;
+access_key_id: &quot;ACCESS_KEY_ID&quot;
+sign_name: &quot;SIGN_NAME&quot;
+template_code: &quot;TEMPLATE_CODE&quot;
+</code></pre>
+<p>新增文件<code>config/initializers/aliyun-sms.rb</code>, 内容如下：</p>
+<pre><code class="ruby">Aliyun::Sms.configure do |config|
+  config.access_key_secret = Figaro.env.access_key_secret
+  config.access_key_id = Figaro.env.access_key_id
+  config.action = &#39;SendSms&#39;                       # default value
+  config.format = &#39;XML&#39;                           # http return format, value is &#39;JSON&#39; or &#39;XML&#39;
+  config.region_id = &#39;cn-hangzhou&#39;                # default value
+  config.sign_name = Figaro.env.sign_name
+  config.signature_method = &#39;HMAC-SHA1&#39;           # default value
+  config.signature_version = &#39;1.0&#39;                # default value
+  config.version = &#39;2017-05-25&#39;                   # default value
+end
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://github.com/VICTOR-LUO-F/aliyun-sms">aliyun-sms</a> 提供了调用方法Aliyun::Sms.send，我稍微进行了封装，封装后的method只有一个参数phone number。</p>
+<p>新增<code>lib/sms.rb</code>, 内容如下：</p>
+<pre><code class="Ruby">module Send
+  module Sms
+    def sms_send(phone)
+      template_code = Figaro.env.template_code
+      code = rand(100000..999999)
+      template_param = &#123;&quot;code&quot; =&gt; code.to_s&#125;.to_json
+      Aliyun::Sms.send(phone, template_code, template_param)
+      code
+    end
+  end
+end
+
+class Object
+  include Send::Sms
+end
+</code></pre>
+<p>修改<code>app/controllers/phone_tokens_controller.rb</code>, 添加上relative_require, 加载下：</p>
+<pre><code class="Ruby">require_relative &#39;../../lib/sms&#39;
+</code></pre>
+<p>OK，短信发送完成！</p>
+<p>下面给授权页面添加上手机验证的表单。</p>
+<p><strong>Step4、在授权页面添加手机验证</strong></p>
+<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 添加上手机验证：</p>
+<pre><code class="html">&lt;%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %&gt;
+  &lt;div class=&quot;weui-cells_title&quot;&gt;请输入您的手机号，绑定会员&lt;/div&gt;
+  &lt;div class=&quot;weui-cells weui-cells_form&quot;&gt;
+    &lt;div class=&quot;weui-cell weui-cell_vcode&quot;&gt;
+      &lt;div class=&quot;weui-cell__hd&quot;&gt;
+        &lt;%= f.label :手机号, class: &#39;weui-label&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__bd weui-cell_primary&quot;&gt;
+        &lt;%= f.text_field :phone, class: &#39;weui-input&#39;,id: &#39;user_cellphone&#39;,type: &quot;tel&quot;, placeholder: &#39;请输入手机号&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__ft&quot;&gt;
+        &lt;input type=&quot;button&quot; style=&quot;background: none; border: none &quot; value=&quot;获取验证码&quot; class=&quot;weui-vcode-btn&quot; id=&quot;token_btn&quot;&gt;获取验证码&lt;/input&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;div class=&quot;weui-cell weui-cell_vcode&quot;&gt;
+      &lt;div class=&quot;weui-cell__hd&quot;&gt;
+        &lt;%= f.label :验证码, class: &#39;weui-label&#39; %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;weui-cell__bd weui-cell_primary&quot;&gt;
+        &lt;%= f.text_field :token, class:&quot;weui-input&quot;, type: &quot;number&quot;, placeholder: &quot;请输入验证码&quot; %&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+  &lt;/div&gt;
+
+    &lt;label for=&quot;weuiAgree&quot; class=&quot;weui-agree&quot;&gt;
+      &lt;input id=&quot;weuiAgree&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot; class=&quot;weui-agree__checkbox&quot;&gt;
+      &lt;span class=&quot;weui-agree__text&quot;&gt;
+        获得您的公开信息（昵称，头像等）
+    &lt;/span&gt;
+    &lt;/label&gt;
+
+  &lt;div class=&quot;weui-btn-area&quot;&gt;
+    &lt;%= f.submit &quot;确认&quot;, class: &#39;weui-btn weui-btn_primary&#39; %&gt;
+    &lt;a href=&quot;javascript:wx.closeWindow();&quot; class=&quot;weui-btn weui-btn_plain-default&quot;&gt;关闭&lt;/a&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+</code></pre>
+<p>点击获取验证码的按钮，调用phone_tokens的create 方法，发送验证码，同时phone_token插入或更新一个record。</p>
+<p>修改<code>app/views/devise/registrations/new.html.erb</code>, 在最下面添加如下代码：「这里也一并加上手机验证码的60秒倒计时特效和手机号的验证」</p>
+<pre><code class="Html">&lt;script&gt;
+        (function()&#123;
+            // 手机验证码
+            var CELLPHONE_RE = /^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/;
+            var token_wait = 60, token_interval;
+            var $token_btn = $(&#39;#token_btn&#39;);
+            $token_btn.click(function () &#123;
+                var $this = $(this), cellphone = $(&#39;#user_cellphone&#39;).val();
+                $.ajax(&#123;
+                    url: &quot;/phone_tokens?phone=&quot; + cellphone,
+                    method: &#39;post&#39;,
+                    beforeSend: function () &#123;
+                        if (!CELLPHONE_RE.test(cellphone)) &#123;
+                            alert(&quot;手机号码格式错误,请重填!&quot;);
+                            $(&#39;#user_cellphone&#39;).val(&quot;&quot;);
+                            return false;
+                        &#125;
+                        $this.attr(&#39;value&#39;,&quot;已发送&quot;).prop(&#39;disabled&#39;, true);
+                    &#125;,
+                    success: function (data) &#123;
+                        if (data.status == &#39;error&#39;) &#123;
+                            alert(data.message);
+                            $token_btn.attr(&#39;value&#39;,&#39;获取验证码&#39;).prop(&#39;disabled&#39;, false);
+                        &#125;else if(data.status == &#39;repeated&#39;)&#123;
+                            alert(&quot;您的手机号已经验证过，无需验证&quot;);
+                        &#125;else
+                        &#123;
+                            $token_btn.attr(&#39;value&#39;,&#39;已发送&#39;).prop(&#39;disabled&#39;, true);
+                            $this.trigger(&#39;start_token_timer&#39;);
+                        &#125;
+                    &#125;
+                &#125;)
+            &#125;)
+                .on(&#39;start_token_timer&#39;, function () &#123;
+                    token_interval = setInterval(function () &#123;
+                        $token_btn.trigger(&#39;token_timer&#39;);
+                    &#125;, 1000);
+                &#125;)
+                .on(&#39;token_timer&#39;, function () &#123;
+                    token_wait--;
+                    if (token_wait &lt;= 0) &#123;
+                        clearInterval(token_interval);
+                        $token_btn.attr(&#39;value&#39;,&#39;获取验证码&#39;).prop(&#39;disabled&#39;, false);
+                        token_wait = 60;
+                    &#125; else &#123;
+                        $token_btn.attr(&#39;value&#39;,&#39;重新发送 &#39; + token_wait + &#39; 秒&#39;).prop(&#39;disabled&#39;, true);
+                    &#125;
+                &#125;)
+        &#125;)()
+    &lt;/script&gt;
+</code></pre>
+<p>以上，手机验证码的发送基本完成，下面来完成验证码的验证，即用户填写的验证码就是发送给他的验证码。</p>
+<p><strong>Step5、给User添加字段phone，并验证token填写正确</strong></p>
+<p>执行：</p>
+<pre><code>rails g migration add_phone_to_users
+</code></pre>
+<p>在生成的migration文档中，修改成这样：</p>
+<pre><code class="Ruby">class AddPhoneToUsers &lt; ActiveRecord::Migration[5.1]
+  def change
+    add_column :users, :phone, :string
+  end
+end
+</code></pre>
+<p>执行：</p>
+<pre><code>rake db:migrate
+</code></pre>
+<p>修改<code>app/controllers/users/registrations_controller.rb</code>的configure_sign_up_params method：</p>
+<pre><code class="Ruby">def configure_sign_up_params
+  devise_parameter_sanitizer.permit(:sign_up, keys: %i[phone token])
+end
+</code></pre>
+<p>这样在授权页面用户必须输入手机和验证码才能通过。</p>
+<p>修改<code>app/models/user.rb</code>，添加验证码的检验，如下：</p>
+<pre><code class="Ruby">class User &lt; ActiveRecord::Base
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable, :omniauthable
+
+  attr_accessor :token
+  CELLPHONE_RE = /^1[3|4|5|6|7|8][0-9]&#123;9&#125;$/
+
+  before_validation :set_password
+  validates_presence_of :phone
+  validate :validate_phone, on: :create
+
+  def self.from_omniauth(auth)
+    ......
+  end
+
+  def self.new_with_session(params, session)
+    ......
+  end
+
+  def email_required?
+    false
+  end
+
+  private
+  def set_password
+    self.password ||= Devise.friendly_token[0, 20]
+  end
+
+  def validate_phone
+    if phone.nil?
+      errors.add :base, &#39;手机号不能为空&#39;
+    elsif !PhoneToken.find_by(phone: phone, token: token)
+      errors.add :phone, &#39;手机验证码不正确或已过期,请重填&#39;
+    end
+  end
+
+end
+</code></pre>
+<p>通过validate_phone 这个method，来检验用户输入的token是否正确。</p>
+<p>OK，基本功能已经完成！</p>
+<p>最后，简单的美化一下弹窗。</p>
+<p><strong>Step6、美化报错的弹窗</strong></p>
+<p>上面<code>new.html.erb</code>中的alert是自带的弹窗，无法定制，很是难看，此外，当用户输入错误的验证码后，<code>user.rb</code>中error message也会弹出，置于页面顶层，很难看：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqccjt2h6sj30b90fl750.jpg"></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Tencent/weui">weui</a>提供了<a target="_blank" rel="noopener" href="https://github.com/Tencent/weui/wiki/Dialog">Dialog</a>组件，我们用这个。</p>
+<p>鉴于这里涉及的代码较多，就不放了，参看这个<a target="_blank" rel="noopener" href="https://gist.github.com/Lupeipei/d8fcb48b588c2c0fb217052baa482eed">gist</a>，修改<code>app/views/devise/registrations/new.html.erb</code>, 最后的效果长这样：</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fqcc4szg58j30a50hfmxp.jpg"></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p>因为没有搜到合适的教程，所以参考的是付费课程<a target="_blank" rel="noopener" href="https://fullstackhelper.herokuapp.com/lessons/3">手机短信验证码注册、短信通知</a>，跟着修修改改做的，该课程的最终参考来源：<a target="_blank" rel="noopener" href="https://eggman.tv/">蛋人网</a>。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+            <a href="/tags/WeChat/" rel="tag"># WeChat</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/set-up-https-on-github-pages-with-custom-domains-for-free/" rel="next" title="给你的GitHub page blog自定义域名配上HTTPS">
+                <i class="fa fa-chevron-left"></i> 给你的GitHub page blog自定义域名配上HTTPS
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/boohee-interview/" rel="prev" title="记一次薄荷面试">
+                记一次薄荷面试 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">278</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">64</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E6%8F%8F%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">场景描述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%95%88%E6%9E%9C"><span class="nav-number">2.</span> <span class="nav-text">实现效果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%AD%A5%E9%AA%A4"><span class="nav-number">3.</span> <span class="nav-text">解决步骤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    345.1k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
+
+
+

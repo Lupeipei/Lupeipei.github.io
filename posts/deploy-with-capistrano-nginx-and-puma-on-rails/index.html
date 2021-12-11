@@ -1,0 +1,1047 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Rails,Nginx,Puma," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Capistrano, Nginx and Puma部署Rails 5.2。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2">
+<meta property="og:url" content="http://lupeipei.github.io/posts/deploy-with-capistrano-nginx-and-puma-on-rails/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="Capistrano, Nginx and Puma部署Rails 5.2。">
+<meta property="og:locale">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fszddggcj1j30cw05fmx9.jpg">
+<meta property="article:published_time" content="2018-07-08T13:35:10.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:16:49.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Rails">
+<meta property="article:tag" content="Nginx">
+<meta property="article:tag" content="Puma">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/deploy-with-capistrano-nginx-and-puma-on-rails/"/>
+
+
+
+
+
+  <title> Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/deploy-with-capistrano-nginx-and-puma-on-rails/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Ubuntu16.04下使用Capistrano, Nginx and Puma部署Rails 5.2
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-08T21:35:10+08:00">
+                2018-07-08
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.3k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Capistrano, Nginx and Puma部署Rails 5.2。</p>
+<span id="more"></span>
+
+<p>部署前的前提条件：</p>
+<ul>
+<li>一个可以正常运行的rails项目，项目代码push到了代码托管平台如GitHub，GitLab上</li>
+<li>租云服务器，安装Ubuntu 16.04的操作系统</li>
+</ul>
+<p>假定现在有一个rails project ，名为demo，本地运行正常。</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fszdf2dqv1j30ci04rdfx.jpg"></p>
+<p>以下操作均以demo这个rails项目为例。</p>
+<h4 id="添加用户"><a href="#添加用户" class="headerlink" title="添加用户"></a>添加用户</h4><p>添加用户deploy。</p>
+<p>用root权限登录后，终端执行：</p>
+<pre><code>adduser deploy
+</code></pre>
+<p>新增 <code>/etc/sudoers.d/deploy</code>，添加如下内容， 让新用户可以使用sudo：</p>
+<pre><code class="shell">deploy ALL=(ALL:ALL) ALL
+</code></pre>
+<p>免密码登录：</p>
+<p>新用户登录，在当前目录下，执行：</p>
+<pre><code>mkdir ~/.ssh
+touch ~/.ssh/authorized_keys
+</code></pre>
+<p>回到本地，把公钥复制出来，执行：</p>
+<pre><code>cat ~/ssh/id_rsa.pub
+</code></pre>
+<p> 回到服务器，执行：</p>
+<pre><code>vi ~/.ssh/authorized_keys
+</code></pre>
+<p>把公钥放进去。</p>
+<p>修改权限：</p>
+<pre><code>chmod 700 ~/.ssh
+chmod 644 ~/.ssh/authorized_keys
+</code></pre>
+<p>退出后，重新登录，会发现不需要输入密码 了。</p>
+<h4 id="更新和安装Liunx套件"><a href="#更新和安装Liunx套件" class="headerlink" title="更新和安装Liunx套件"></a>更新和安装Liunx套件</h4><p>先更新系统， 再升级。</p>
+<p>终端执行：</p>
+<pre><code>sudo apt-get update -y
+sudo apt-get upgrade -y
+</code></pre>
+<h4 id="安装Ruby-on-Rails-所需要的东西："><a href="#安装Ruby-on-Rails-所需要的东西：" class="headerlink" title="安装Ruby on Rails 所需要的东西："></a>安装Ruby on Rails 所需要的东西：</h4><pre><code class="Shell">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev
+</code></pre>
+<h4 id="安装Ruby"><a href="#安装Ruby" class="headerlink" title="安装Ruby"></a>安装Ruby</h4><p>安装 RVM:</p>
+<pre><code class="Shell">sudo apt-get install libgdbm-dev libncurses5-dev automake libtool bison libffi-dev
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB
+curl -sSL https://get.rvm.io | bash -s stable
+</code></pre>
+<p>成功时，会弹出如下信息：</p>
+<pre><code>Upgrade of RVM in /home/deploy/.rvm/ is complete.
+</code></pre>
+<p>安装ruby，这里选2.4.0：</p>
+<pre><code class="Shell">source ~/.rvm/scripts/rvm
+rvm requirements
+rvm install 2.4.0
+rvm use 2.4.0 --default
+</code></pre>
+<p>安装bundler：</p>
+<pre><code class="Shell">gem install bundler --no-ri --no-rdoc
+</code></pre>
+<h4 id="安装数据库MySQl"><a href="#安装数据库MySQl" class="headerlink" title="安装数据库MySQl"></a>安装数据库MySQl</h4><pre><code class="Shell">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server
+</code></pre>
+<p>执行 <code>mysql -u root -p</code> 进入 mysql console 后，输入：</p>
+<pre><code class="Shell">CREATE DATABASE demo CHARACTER SET utf8mb4;
+</code></pre>
+<p>这里demo记得换成你的数据库名称。</p>
+<p>运行后，会弹出Query OK的信息，exit，退出。</p>
+<h4 id="安装Nignx"><a href="#安装Nignx" class="headerlink" title="安装Nignx"></a>安装Nignx</h4><pre><code class="Shell">sudo apt-get install nginx
+sudo service nginx start
+</code></pre>
+<h4 id="安装Capistrano"><a href="#安装Capistrano" class="headerlink" title="安装Capistrano"></a>安装Capistrano</h4><p>本地 gemfile中，添加：</p>
+<pre><code class="Ruby">gem &#39;mysql2&#39;
+gem &#39;puma&#39;, &#39;~&gt; 3.11&#39;
+group :development do
+  gem &#39;capistrano&#39;,&#39;3.11.0&#39;
+  gem &#39;capistrano-rvm&#39;, &#39;0.1.2&#39;
+  gem &#39;capistrano-rails&#39;,&#39;1.4.0&#39;
+  gem &#39;capistrano3-puma&#39;, &#39;3.1.1&#39;
+end
+</code></pre>
+<p>保存后，<code>bundle install</code>.</p>
+<p>创建 capfile：</p>
+<pre><code class="Shell">bundle exec cap install
+</code></pre>
+<p>配置Capfile:</p>
+<pre><code class="Ruby">require &quot;capistrano/rvm&quot;
+require &#39;capistrano/rails&#39;
+require &#39;capistrano/puma&#39;
+require &#39;capistrano/puma/nginx&#39;
+install_plugin Capistrano::Puma
+install_plugin Capistrano::Puma::Nginx
+</code></pre>
+<p>配置<code>config/deploy.rb</code>:</p>
+<pre><code class="Ruby">set :application, &quot;demo&quot;  ## demo 换成你的项目名
+set :repo_url, &quot;https://github.com/xxxxx/demo&quot; ## 这里写上项目代码的托管地址
+append :linked_dirs, &quot;log&quot;, &quot;tmp/pids&quot;, &quot;tmp/cache&quot;, &quot;tmp/sockets&quot;, &quot;public/system&quot;, &quot;public/uploads&quot;, &quot;vendor/bundle&quot;
+append :linked_files, &quot;config/database.yml&quot;, &quot;config/master.key&quot;
+
+set :rvm_type, :user
+set :rvm_ruby_version, &#39;2.4.0&#39;
+</code></pre>
+<p>配置 <code>config/deploy/staging.rb</code>:</p>
+<pre><code class="Ruby">server &#39;106.15.182.207&#39;, user: &#39;deploy&#39;, roles: %w&#123;app db web&#125;
+set :deploy_to, &quot;/home/deploy/demo/#&#123;fetch(:rails_env)&#125;&quot;
+set :branch, :master
+set :stage, :staging
+set :ssh_options, &#123;
+    keys: %w(/home/deploy/.ssh/authorized_keys),
+    auth_methods: %w(publickey)
+&#125;
+</code></pre>
+<p>这里的key，就是你放在远端服务器上的SSH公钥，也是放在远端代码仓库上的公钥。</p>
+<p>在远端服务器上创建<code>/home/deploy/demo/shared/config/database.yml</code>:</p>
+<pre><code class="Iml">staging:
+  adapter: mysql2
+  encoding: utf8
+  pool: &lt;%= ENV.fetch(&quot;RAILS_MAX_THREADS&quot;) &#123; 5 &#125; %&gt;
+  username: root
+  password: password
+  socket: /var/run/mysqld/mysqld.sock
+  database:  deploy_demo
+</code></pre>
+<p>password换成你之前设置的root密码。</p>
+<p>创建 <code>/home/deploy/demo/shared/config/master.key</code> , 把本机的master key贴进去，这里master.key取代了之前的secrets。</p>
+<p>修改demo目录下所有文件的权限：</p>
+<pre><code>cd /home/deploy/demo
+chown -R deploy:deploy .
+</code></pre>
+<p>其中，第一个deploy是指用户名，第二个deploy是指group 名，deploy默认属于deploy组。</p>
+<p>回到本地执行：</p>
+<pre><code class="Shell">cap staging deploy:check
+cap staging puma:config
+cap staging puma:nginx_config
+cap staging deploy
+</code></pre>
+<p>如果运行：<code>cap staging puma:nginx_config</code>时报错，显示如下出错信息：</p>
+<pre><code>00:00 puma:nginx_config
+      Uploading /tmp/nginx_demo_staging 100.0%
+      01 sudo mv /tmp/nginx_demo_staging /etc/nginx/sites-available/demo_staging
+      01 sudo
+      01 :
+      01 no tty present and no askpass program specified
+</code></pre>
+<p>尝试添加了要求密码输入，也没有效果，建议直接自己手动添加文档。</p>
+<p><code>cap staging puma:nginx_config</code>这一步 本身要做的就是添加了一个nginx的config文件，我们可以自己手动添加：</p>
+<pre><code>cd etc/nginx/sites-available
+touch demo_staging
+</code></pre>
+<p>在demo_staging中，填入如下内容：</p>
+<pre><code>upstream puma_deploy_demo_staging &#123;
+  server unix:/home/deploy/demo/shared/tmp/sockets/puma.sock fail_timeout=0;
+&#125;
+
+server &#123;
+  listen 80;
+  server_name 106.15.182.207;
+  root /home/deploy/demo/current/public;
+  try_files $uri/index.html $uri @puma_demo_staging;
+
+  client_max_body_size 4G;
+  keepalive_timeout 10;
+
+  error_page 500 502 504 /500.html;
+  error_page 503 @503;
+
+  location @puma_deploy_demo_staging &#123;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $host;
+    proxy_redirect off;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;Upgrade&quot;;
+    proxy_set_header X-Forwarded-Proto http;
+    proxy_pass http://puma_demo_staging;
+    # limit_req zone=one;
+    access_log /home/deploy/demo/shared/log/nginx.access.log;
+    error_log /home/deploy/demo/shared/log/nginx.error.log;
+  &#125;
+location ^~ /assets/ &#123;
+    gzip_static on;
+    expires max;
+    add_header Cache-Control public;
+  &#125;
+
+  location = /50x.html &#123;
+    root html;
+  &#125;
+    location = /404.html &#123;
+    root html;
+  &#125;
+
+  location @503 &#123;
+    error_page 405 = /system/maintenance.html;
+    if (-f $document_root/system/maintenance.html) &#123;
+      rewrite ^(.*)$ /system/maintenance.html break;
+    &#125;
+    rewrite ^(.*)$ /503.html break;
+  &#125;
+
+  if ($request_method !~ ^(GET|HEAD|PUT|PATCH|POST|DELETE|OPTIONS)$ )&#123;
+    return 405;
+  &#125;
+
+  if (-f $document_root/system/maintenance.html) &#123;
+    return 503;
+  &#125;
+&#125;
+</code></pre>
+<p>保存后，退出， 建立link：</p>
+<pre><code>sudo ln -s /etc/nginx/sites-available/demo_staging /etc/nginx/sites-enabled/demo_staging
+</code></pre>
+<p>继续执行：</p>
+<pre><code>cap staging deploy
+</code></pre>
+<p>完成后，重启nginx:</p>
+<pre><code>sudo service nginx restart
+</code></pre>
+<p>打开浏览器：</p>
+<p>  <img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fszddggcj1j30cw05fmx9.jpg"></p>
+<p>OK！！</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/deploying-a-rails-app-on-ubuntu-14-04-with-capistrano-nginx-and-puma">Deploying a Rails App on Ubuntu 14.04 with Capistrano, Nginx, and Puma</a></p>
+<p><a target="_blank" rel="noopener" href="https://gist.github.com/thanhtoan1196/3018539d62c55c77cc62942472981e16">Deploy a Rails App with Puma and Nginx on Ubuntu 16.04</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Rails/" rel="tag"># Rails</a>
+          
+            <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+          
+            <a href="/tags/Puma/" rel="tag"># Puma</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/error-recording-of-dangerous-query-method/" rel="next" title="Dangerous query method called with non-attribute argument(s)">
+                <i class="fa fa-chevron-left"></i> Dangerous query method called with non-attribute argument(s)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/mac-admin-recreate/" rel="prev" title="Mac更换用户名后丢失管理员权限">
+                Mac更换用户名后丢失管理员权限 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">278</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">64</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E7%94%A8%E6%88%B7"><span class="nav-number">1.</span> <span class="nav-text">添加用户</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%92%8C%E5%AE%89%E8%A3%85Liunx%E5%A5%97%E4%BB%B6"><span class="nav-number">2.</span> <span class="nav-text">更新和安装Liunx套件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Ruby-on-Rails-%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E4%B8%9C%E8%A5%BF%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">安装Ruby on Rails 所需要的东西：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Ruby"><span class="nav-number">4.</span> <span class="nav-text">安装Ruby</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%95%B0%E6%8D%AE%E5%BA%93MySQl"><span class="nav-number">5.</span> <span class="nav-text">安装数据库MySQl</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Nignx"><span class="nav-number">6.</span> <span class="nav-text">安装Nignx</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Capistrano"><span class="nav-number">7.</span> <span class="nav-text">安装Capistrano</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">8.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    345.1k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
+
+
+

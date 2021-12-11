@@ -1,0 +1,1085 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Ruby,Reading," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="《Ruby元编程》之可调用对象笔记。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="读《Ruby元编程》之可调用对象">
+<meta property="og:url" content="http://lupeipei.github.io/posts/ruby-metaprogramming-part3-callable-objects/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="《Ruby元编程》之可调用对象笔记。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-03-27T01:21:12.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:32:23.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Ruby">
+<meta property="article:tag" content="Reading">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/ruby-metaprogramming-part3-callable-objects/"/>
+
+
+
+
+
+  <title> 读《Ruby元编程》之可调用对象 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/ruby-metaprogramming-part3-callable-objects/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                读《Ruby元编程》之可调用对象
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-27T09:21:12+08:00">
+                2018-03-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Reading/" itemprop="url" rel="index">
+                    <span itemprop="name">Reading</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>2.5k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>《Ruby元编程》之可调用对象笔记。</p>
+<span id="more"></span> 
+
+<h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p>这是《Ruby元编程》第4章代码块的学习笔记，我看完整章，觉得用可调用对象来概括整章可能更合适，所以， 我把标题改了。</p>
+<p>好，进入正题。</p>
+<h4 id="可调用对象"><a href="#可调用对象" class="headerlink" title="可调用对象"></a>可调用对象</h4><p>四种：</p>
+<ul>
+<li>代码块</li>
+<li>proc：Proc类的对象，同时也是创建Proc类的一个method</li>
+<li>lambda：Proc类的对象，同时也是创建Proc类的一个method</li>
+<li>方法</li>
+</ul>
+<p>看个例子先。</p>
+<p>同一个method，四种调用方式，注意最后一个调用方式有些不同：</p>
+<pre><code class="Ruby"># 代码块
+class C1
+  def my_method(x)
+    yield(x)
+  end
+end
+
+obj = C1.new
+obj.my_method(&quot;Ruby&quot;) &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125; # =&gt; hello, Ruby
+
+# proc
+class C1
+  def my_method(x)
+    yield(x)
+  end
+end
+
+my_proc = Proc.new &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125;
+obj = C1.new
+obj.my_method(&quot;Ruby&quot;, &amp;my_proc) # =&gt; hello, Ruby
+
+# lambda
+class C1
+  def my_method(x)
+    yield(x)
+  end
+end
+
+my_lambda = lambda &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125;
+obj = C1.new
+obj.my_method(&quot;Ruby&quot;, &amp;my_lambda) # =&gt; hello, Ruby
+
+
+# 方法
+class C2
+  def my_method(x)
+    puts &quot;hello, #&#123;x&#125;&quot;
+  end
+end
+
+obj = C2.new
+m = obj.method :my_method
+m.call(&quot;Ruby&quot;) # =&gt; hello, Ruby
+</code></pre>
+<p>来认识下这四位小伙伴。</p>
+<h4 id="代码块Blocks"><a href="#代码块Blocks" class="headerlink" title="代码块Blocks"></a>代码块Blocks</h4><p>Ruby中绝大多数都是对象，block则是个特例。【判断某个事物是不是对象，可以用<code>x.is_a? Object</code>来判断】</p>
+<p>戳这里<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/3429553/is-everything-an-object-in-ruby">Is everything an object in ruby?</a>看stack overflow上人们怎么说，不过对于Amadan的answer，我觉得不是特别准确，他提到“<strong>Methods</strong>, operators and blocks <strong>aren’t</strong>, but can be wrapped by objects (Proc).” 而实际上，如果你进irb, 运行<code>puts.is_a? Object</code>，你会发现它返回true，即puts是method，也是对象。</p>
+<p>貌似跑题了，回正题。</p>
+<ul>
+<li><p>代码块的定义</p>
+<p>代码块可以用大括号{}定义， 也可以用do … end关键字定义。</p>
+<p>代码块可以有参数。</p>
+<p>代码块最后一行代码执行的结果会被作为返回值。</p>
+<p>只有在调用一个方法时，才可以定义一个块，块会被直接传递给这个方法，该方法会用yield关键字调用这个块。</p>
+<p>可以通过内核方法block_given?来判断当前调用的方法中是否包含块。比如：</p>
+<pre><code class="Ruby">def my_method
+  return yield if block_given?
+  &#39;no block&#39;
+end
+
+my_method # =&gt; no block
+my_method &#123;&quot;Here&#39;s a block&quot;&#125; # =&gt; Here&#39;s a block
+</code></pre>
+</li>
+<li><p>代码块是闭包closures</p>
+<p>运行代码需要一个执行环境：局部变量，实例变量，self等，这些简称为绑定（binding）。</p>
+<p>那么，块在哪里获得它的绑定呢？</p>
+<p>定义一个块时，它会获取当前环境中的绑定，带着它们四处游荡。<strong>当块被传给一个方法时，它会带着这些绑定一块进入该方法。</strong>【注意它的这个特性，这也是为什么它被称之为闭包的原因】</p>
+</li>
+<li><p>作用域scope</p>
+<p>ruby中没有嵌套式的作用域，它的作用域是截然分开的。一旦进入一个新的作用域，原先的绑定就会被替换。</p>
+<ul>
+<li><p>作用域门</p>
+<p>程序会在三个地方关闭前一个作用域，同时开启一个新的作用域：</p>
+<ul>
+<li>类定义class</li>
+<li>模块定义module</li>
+<li>方法def</li>
+</ul>
+<p>这三种情况分别以class，module， def关键字作为标志，每个关键字都对应一个作用域门。</p>
+<p>在class/module 与def之间有个小区别：类定义／模块定义中，代码会立即执行，但是在方法中则不会。</p>
+</li>
+<li><p>扁平化作用域与共享作用域</p>
+<p><strong>用Class.new方法代替class关键字, Module.new方法代替module关键字, define_method方法代替def关键字</strong>， 就是扁平化作用域。即<strong>用方法调用来替代了作用域门</strong>，使得一个作用域看到另一个作用域里的变量，好似两个作用域挤压在一起，它们可以共享各自的变量。</p>
+<p>看个例子理解下：</p>
+<pre><code class="ruby">my_var = &quot;hello, ruby&quot;
+class C
+  # 需要在这里打印出my_var
+  def my_method(x)
+    # 在这里也要打印出my_var
+  end
+end
+</code></pre>
+<p>这里，my_var存在于顶级作用域中，但是一旦进入class／def这个作用域，my_var就不存在了。</p>
+<p>你也许会说，把my_var 变成全局变量$my_var, 呃，coding的一个原则就是<strong>能不用全局变量就不要用全局变量，存在安全隐患，即使是顶级实例变量，也应当避免少用</strong>。</p>
+<p>我们来扁平化作用域：</p>
+<pre><code class="Ruby">my_var = &quot;hello, ruby&quot;
+C = Class.new do
+  puts &quot;#&#123;my_var&#125;&quot; # =&gt; hello, ruby
+  define_method :my_method do
+    puts &quot;#&#123;my_var&#125;&quot;
+  end
+end
+C.new.my_method # =&gt; hello, ruby
+</code></pre>
+<p>说完扁平化作用域，来看看共享作用域。</p>
+<p>当一个扁平作用域中，定义了多个方法，把这些方法用一个作用域门保护起来，它们就可以共享绑定，这种处理作用域的方法称之为共享作用域。</p>
+<p>看个例子：</p>
+<pre><code class="Ruby">def shared_banding
+  shared = 1
+  define_method :my_method do
+    shared
+  end
+  define_method :my_other_method do |x|
+    shared += x
+  end
+end
+shared_banding # =&gt; 调用方法，切换到def shared_banding的作用域
+my_method # =&gt; 1
+my_other_method(4) # =&gt; 5
+</code></pre>
+<p>理解了扁平作用域，来看看<a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval">instance_eval</a>与<a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_exec">instance_exec</a>方法。</p>
+</li>
+</ul>
+</li>
+<li><p>instance_eval 与instance_exec</p>
+<p>两者都是BasicObject的instance methods，打破封装的杠把子。instance_exec比instance_eval稍微灵活些，可以传递参数，Ruby <a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval">BasicObject 的doc</a> 里面也有举例。</p>
+<p>看段书中的代码理解下：</p>
+<pre><code class="Ruby">class C
+  def initialize
+    @v =1
+  end
+end
+
+obj = C.new
+obj.instance_eval do
+  self
+  @v
+end
+
+v = 2
+obj.instance_eval &#123; @v &#125;  #=&gt; 1
+obj.instance_eval &#123; @v =v &#125;  #=&gt; 2
+obj.instance_eval &#123; @v &#125;  #=&gt; 2
+obj.instance_exec(5) &#123;|x| @v + x&#125; #=&gt; 7
+</code></pre>
+<p>直接改变了obj中的实例变量@v，而针对传递给instance_eval与instance_exec的代码块，它有一个名字，叫做<strong>上下文探针</strong>（context probe），好似它们可以深入到对象的代码块中，对对象进行操作。</p>
+</li>
+<li><p>洁净室</p>
+<p>洁净室是一个用来执行块的环境，类似一个白板类，比如BasicObject。当你希望多个方法在执行时，不共享实例变量，可以考虑洁净室。</p>
+<p>OK，block部分暂时告一段落，我们看Proc。</p>
+</li>
+</ul>
+<h4 id="Proc-与lambda"><a href="#Proc-与lambda" class="headerlink" title="Proc 与lambda"></a>Proc 与lambda</h4><p>lambda与Proc很相近，一起说。</p>
+<p>由于代码块不是对象，当你想将代码块存起来以后调用时，就需要对象，有需求便有供应，Proc类应运而生。</p>
+<p>它是由块转换来的对象，可以与块进行互相切换。建一个Proc的对象，有四种方法：</p>
+<pre><code class="Ruby"># Proc.new
+p1 = Proc.new &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
+p1.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+
+# proc method
+p2 = proc &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
+p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+
+# lambda method
+p3 = lambda &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
+p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+
+# stabby lambda
+p4 = -&gt; (x) &#123;puts &quot;#&#123;x&#125;&quot;&#125;
+p4.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+</code></pre>
+<p>关于Proc，说两点：块与Proc的转换，proc与lambda的区别【这是个频繁被问的问题……】</p>
+<ul>
+<li><p>块与Proc的转换</p>
+<p>先从块的传递开始。</p>
+<p>在方法中，可以通过yield来直接运行一个代码块，但是当你想把代码块传递给一个方法时，就需要给代码块起一个名字，附加到一个绑定上。怎么破？</p>
+<p>解决的方法是<strong>给方法添加一个特殊的参数，这个参数位于参数列表最后，且用&amp;表示</strong>。【还记得<code>block_given?</code>吗？】</p>
+<p>&amp; 操作符的含义是：<strong>这是一个Proc对象，我想把它当作代码块使用，去掉&amp;操作符，就能得到一个Proc对象</strong> 【这里暗含着块与Proc的转换】</p>
+<p>看例子：</p>
+<pre><code class="ruby"># 去掉&amp; 得到一个Proc对象
+def my_method(&amp;my_proc)
+  my_proc
+end
+
+my_proc = my_method &#123;|x| puts &quot;#&#123;x&#125;&quot; &#125;
+my_proc.class # =&gt; Proc
+my_proc.call(&quot;hi&quot;) # =&gt; hi
+
+# &amp; 把Proc转化为块传递给方法
+def my_method(a)
+  puts &quot;#&#123;a&#125;, #&#123;yield&#125;&quot;
+end
+
+my_proc = proc &#123;&quot;world&quot;&#125;
+my_method(&quot;hi&quot;, &amp;my_proc) # =&gt; hi, world
+</code></pre>
+</li>
+<li><p>Proc与lambda的对比</p>
+<p>先说个区别：用lambda方法（包括 -&gt;）创建的Proc称为lambda，而用其他方法创建的则是Proc。可以用Proc#lambda来检测。</p>
+<pre><code class="Ruby"># proc method
+p2 = proc &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
+p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+p2.lambda? # =&gt; false
+
+# lambda method
+p3 = lambda &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
+p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+p3.lambda? # =&gt; true
+</code></pre>
+<p>最重要的区别有两个：</p>
+<ul>
+<li><p>return有不同的含义</p>
+<p>在proc中，return不是从proc中返回，而是从定义proc的作用域返回。</p>
+<p>觉得书中的例子不够典型，改良了下，可以很明显看出二者的区别：</p>
+<pre><code class="ruby">def my_double
+  a = lambda &#123;return 10&#125;
+  result = a.call
+  return result * 2
+end
+my_double # =&gt; 20
+
+def my_other_double
+  my_proc = Proc.new &#123;return 10&#125;
+  result = my_proc.call
+  return result * 2 # =&gt; 这段代码不会运行！
+end
+my_other_double # =&gt; 10
+</code></pre>
+</li>
+<li><p>参数问题</p>
+<p>在参数问题上，lambda比proc要严格，而proc则宽容很多。</p>
+<p>比如：</p>
+<pre><code class="Ruby">p = Proc.new &#123;|a, b| puts &quot;#&#123;a&#125;:#&#123;b&#125;&quot;&#125;
+p.call(1,2,3) # =&gt; 1:2
+p.call(1) # =&gt; 1:
+
+p2 = lambda &#123;|a, b| puts &quot;#&#123;a&#125;:#&#123;b&#125;&quot;&#125;
+p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (ArgumentError)
+</code></pre>
+<p>Google下，会发现很多前辈都写过这方面的文章，这里就不多说了，stack overflow上也有一些精彩的answer：<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/1740046/whats-the-difference-between-a-proc-and-a-lambda-in-ruby">What’s the difference between a proc and a lambda in Ruby?</a>， 可加深理解。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="方法method"><a href="#方法method" class="headerlink" title="方法method"></a>方法method</h4><p>  第3章刚刚提到过dynamic methods和ghost methods。不过这里要讲的是方法的另一种定义方式：<strong>使用method方法来定义，调用时call</strong>。最开始那个class C2例子中的my_method就是这样调用的。</p>
+<p>  方法这部分没有什么特别的，书中提到了自由方法unbound method，即一个方法从最初定义它的类或者module中脱离出来。</p>
+<p>  使用Method#unbound可以把一个方法变成自由方法， 使用UnboundMethod#bind可以把它再绑定到一个对象上，不过绑定的对象需要是该类及其子类的对象，而module则不需要。</p>
+<p>  原谅我不是很理解自由方法存在的意义。书中也提到了它只在极个别场合发挥作用，这里不展开细说了。</p>
+<h4 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h4><p>书中最后那个DSL例子，个人感觉很不错，特别是使用共享作用域，消除全局变量的代码重构，很精彩，推荐阅读。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Ruby/" rel="tag"># Ruby</a>
+          
+            <a href="/tags/Reading/" rel="tag"># Reading</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/ruby-metaprogramming-part2-the-methods/" rel="next" title="读《Ruby元编程》之方法">
+                <i class="fa fa-chevron-left"></i> 读《Ruby元编程》之方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/differences-among-require-load-autoload-extend-include-prepend-in-ruby/" rel="prev" title="Ruby中require,load,autoload,extend,include,prepend的区别">
+                Ruby中require,load,autoload,extend,include,prepend的区别 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">278</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">64</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">写在前面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E8%B0%83%E7%94%A8%E5%AF%B9%E8%B1%A1"><span class="nav-number">2.</span> <span class="nav-text">可调用对象</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E5%9D%97Blocks"><span class="nav-number">3.</span> <span class="nav-text">代码块Blocks</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Proc-%E4%B8%8Elambda"><span class="nav-number">4.</span> <span class="nav-text">Proc 与lambda</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%96%B9%E6%B3%95method"><span class="nav-number">5.</span> <span class="nav-text">方法method</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BB%93%E5%B0%BE"><span class="nav-number">6.</span> <span class="nav-text">结尾</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    345.1k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
+
+
+

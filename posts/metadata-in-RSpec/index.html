@@ -1,0 +1,986 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="RSpec," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="之前看shared_context那块，对使用metadata来调用shared_context不是很理解，Google下相关文档，终于整明白了，记录下metadata的定义和使用。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RSpec中的metadata">
+<meta property="og:url" content="http://lupeipei.github.io/posts/metadata-in-RSpec/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="之前看shared_context那块，对使用metadata来调用shared_context不是很理解，Google下相关文档，终于整明白了，记录下metadata的定义和使用。">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-08-25T12:10:03.000Z">
+<meta property="article:modified_time" content="2019-06-08T04:21:31.000Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="RSpec">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/metadata-in-RSpec/"/>
+
+
+
+
+
+  <title> RSpec中的metadata | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/metadata-in-RSpec/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                RSpec中的metadata
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-25T20:10:03+08:00">
+                2018-08-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.3k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>之前看shared_context那块，对使用metadata来调用shared_context不是很理解，Google下相关文档，终于整明白了，记录下metadata的定义和使用。</p>
+<span id="more"></span> 
+
+<h4 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h4><p>官网上V3.8 的rspec-core中<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/v/3-8/docs/metadata">metadata</a>部分，含三部分current_example, described class, User-defined metadata，但是没有明确的定义metadata[也可能是我没找到……]。</p>
+<p><a target="_blank" rel="noopener" href="https://www.tutorialspoint.com/rspec/rspec_metadata.htm">tutorials point</a>针对metadata给到的定义：</p>
+<pre><code>data about your describe, context and it blocks.
+</code></pre>
+<p><a target="_blank" rel="noopener" href="https://pragprog.com/book/rspec3/effective-testing-with-rspec-3">Effective Testing with RSpec 3</a> 在chapter8中提到Metadata解决了RSpec中的一个特殊问题：</p>
+<blockquote>
+<p> Keep information about the context your specs are running in</p>
+</blockquote>
+<p>类似一个信息存储盒，里面存储了如下信息：</p>
+<ul>
+<li>Example configuration(for example, marked as skipped or pending)</li>
+<li>Source code locations</li>
+<li>Status of the previous run</li>
+<li>How one example runs differently than others</li>
+</ul>
+<p>可以把metadata看成一个带着example group相关信息的hash对象。</p>
+<p>Metadata中默认的keys包括：</p>
+<blockquote>
+<p> :description, :full_description, :described_class, :file_path, :example_group, :last_run_status ……..</p>
+</blockquote>
+<p>想要查看metadata的内容，需要通过当前的example来调用metadata这个method，而example对象的引用，可以通过 it, subject, let , before, after, around 后接block来获取。</p>
+<p>看个简单的例子感受下。</p>
+<p>安装Rspec后，在rails项目中随意跑一个example，比如：</p>
+<pre><code class="ruby">## spec/metadata_spec.rb
+
+require &#39;rails_helper&#39;
+
+RSpec.describe :hash do
+  it &quot;hello&quot; do |example|
+    pp example.metadata
+  end
+end
+</code></pre>
+<p>执行后，输出如下结果：</p>
+<pre><code class="ruby">&#123;:block=&gt;
+  #&lt;Proc:0x007fcd83b1dc28@/Users/xxxx/xxx/spec/metadata_spec.rb:4&gt;,
+ :description_args=&gt;[&quot;hello&quot;],
+ :description=&gt;&quot;hello&quot;,
+ :full_description=&gt;&quot;hash hello&quot;,
+ :described_class=&gt;:hash,
+ :file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
+ :line_number=&gt;4,
+ :location=&gt;&quot;./spec/metadata_spec.rb:4&quot;,
+ :absolute_file_path=&gt;&quot;/Users/xxxx/xxx/spec/metadata_spec.rb&quot;,
+ :rerun_file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
+ :scoped_id=&gt;&quot;1:1&quot;,
+ ...........
+ :last_run_status=&gt;&quot;unknown&quot;&#125;
+</code></pre>
+<p>这里输出的都是metadata默认的内容，你也可以自定义metadata。</p>
+<p>Rspec官网上举了一些例子，这里看一个简单的，给你的example加上tag fast：</p>
+<pre><code class="ruby">## spec/metadata_spec.rb
+
+require &#39;rails_helper&#39;
+
+RSpec.describe :hash do
+  it &quot;hello&quot;, fast: true do |example|
+    pp example.metadata
+  end
+end
+
+## 也可以写成it &quot;hello&quot;, :fast do  |example|, Rspec默认缺省的value为true
+</code></pre>
+<p>执行后，会发现输出结果中有<code>:fast=&gt;true</code>。</p>
+<p>如果是在RSpec.describe中添加fast，则内嵌的所有example的metadata中都会带有<code>:fast=&gt;true</code>。</p>
+<h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>通过metadata可以给example或者example group添加同样的metadata，这样执行时，可以选择执行匹配要求的example了，此外也可以将module批量include到指定的example group中【后面会提到】。</p>
+<p>那么，如何实现批量添加呢？</p>
+<p>使用Rspec的<a target="_blank" rel="noopener" href="https://www.rubydoc.info/github/rspec/rspec-core/RSpec%2FCore%2FConfiguration:define_derived_metadata">config.define_derived_metadata</a>。</p>
+<p>看两个场景：</p>
+<ul>
+<li>给某个目录下的所有example group都添加上同一个metadata</li>
+<li>有条件地添加特定的metadata</li>
+</ul>
+<p><strong>指定目录下的所有example group都添加上同一个metadata</strong></p>
+<p>用过Rspec都知道，所有spec/controllers下的文件，都不需要添加type: :controller 这个metadata，RSpec会给所有该目录下的example group默认添加上type: :controller,这个是怎么实现的呢？</p>
+<p>像这样：</p>
+<pre><code class="ruby">### spec/spec_helper.rb
+
+RSpec.configure do |config|
+  config.define_derived_metadata(file_path: /spec\/controllers/) do |meta|
+    meta[:type] = :controller
+  end
+end
+</code></pre>
+<p>再比如：给spec/unit下的所有example group都添加上focus这个tag。</p>
+<pre><code class="ruby">### spec/spec_helper.rb
+
+RSpec.configure do |config|
+  config.define_derived_metadata(file_path: /spec\/unit/) do |meta|
+    meta[:focus] = true
+  end
+end
+</code></pre>
+<p><strong>有条件地添加特定的metadata</strong></p>
+<p>这里看一个实用性的例子，有关<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/expectation-framework-integration/aggregating-failures">aggregate_failures</a>【没用过aggregate_failures？参考部分附上了aggregate_failure的简单说明，可有助理解】。</p>
+<p>要求除了已经添加aggregate_failures为false的example group，所有其他的example group都将aggregate_failure设置为true。</p>
+<p>比如在clazz_a和clazz_b中，添加了aggregate_failures为false， 现在希望除了clazz_a和clazz_b外，其他都默认指定aggregate_failures为true。</p>
+<pre><code class="ruby">### spec/models/clazz_a_spec.rb
+RSpec.descirbe :clazz_a, aggregate_failures: false do
+  context &quot;xxx&quot; do
+    ......
+  end
+end
+
+### spec/models/clazz_b_spec.rb
+RSpec.descirbe :clazz_b, aggregate_failures: false do
+  context &quot;xxx&quot; do
+    ......
+  end
+end
+</code></pre>
+<p>实现的方式也很简单：</p>
+<pre><code class="ruby">### spec/spec_helper.rb
+
+RSpec.configure do |config|
+  config.define_derived_metadata do |meta|
+    meta[:aggregate_failures] = true unless meta.key?(:aggregate_failures)
+  end
+end
+</code></pre>
+<p>如果example group中已经添加了aggregate_failures，则pass，否则添加aggregate_failures为true。</p>
+<p>Cool!</p>
+<h4 id="back-to-shared-context"><a href="#back-to-shared-context" class="headerlink" title="back to shared_context"></a>back to shared_context</h4><p>回到之前困惑的shared_context 中。</p>
+<p>我们知道，通过使用include_context “xxx” 可以调用定义的shared_context，同样，也可以通过给example添加metadata来调用。</p>
+<p>比如：</p>
+<pre><code class="ruby">#### spec/support/shared_stuff.rb
+
+RSpec.shared_context &quot;shared stuff&quot; do
+  let(:h) &#123; &#123; :hello =&gt; &quot;world&quot; &#125; &#125; ## 没啥意义的context，仅仅用来举例
+end
+RSpec.configure do |config|
+  config.include_context &quot;shared stuff&quot;, include_shared: true
+end
+</code></pre>
+<p>使用时，只要给example group添加上<code>include_shared: true</code>这个metadata即可, 效果等同于调用了<code>include_context &quot;shared stuff&quot;</code>。</p>
+<pre><code class="ruby">#### spec/shared_stuff_example.rb
+
+require &#39;rails_helper&#39;
+require &quot;support/shared_stuff.rb&quot;
+
+RSpec.describe &quot;this is an example&quot;, :include_shared do
+  it &#123; expect(h[:hello]).to eq &quot;world&quot; &#125;
+end
+</code></pre>
+<p>执行，pass。</p>
+<p>上面的例子，可以理解为所有添加了<code>include_shared： true</code>的example group 都执行了<code>include_context &quot;shared stuff&quot;</code> ,事实上，确实如此。</p>
+<p>再看一个更常见的例子：</p>
+<p>我们在一个module Signin中定义了一些实现不同用户登录的methods【比如sgin_in_admin, sign_in_guest……】，现在希望在spec/controller下的所有example group中都可以调用这些method的。</p>
+<p>使用metadata可以这样实现：</p>
+<pre><code class="ruby">### spec/support/sign_in.rb
+
+module SignIn
+  ..... ### methods
+end
+
+RSpec.configure do |config|
+  config.include SignIn, type: :controller
+end
+</code></pre>
+<p>这样，所有metadata中type为controller的example group便都会执行<code>include SignIn</code>了。</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/metadata">Rspec core metadata</a></p>
+<p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/example-groups/shared-context">Rspec core shared context</a></p>
+<p><a target="_blank" rel="noopener" href="https://pragprog.com/book/rspec3/effective-testing-with-rspec-3">Effective Testing with RSpec 3</a></p>
+<p>附：</p>
+<p>这里简单说明下aggregate_failure是干嘛用的。常规情况下，当执行一组exceptions时，在执行到第一个失败的exception后程序就跳出这个example了，不会继续执行后面的exception，直接开始执行下一个example，而通过aggregate_failure，程序会执行完该组所有的exceptions，然后列出所有failures的exceptions，再去执行下一个example。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>微信扫一扫</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>支付宝扫一扫</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/RSpec/" rel="tag"># RSpec</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/ideas-sharing-002/" rel="next" title="Ideas sharing - 002">
+                <i class="fa fa-chevron-left"></i> Ideas sharing - 002
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/posts/trouble-with-validates-presence-of/" rel="prev" title="踩坑之validates_presence_of">
+                踩坑之validates_presence_of <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">278</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">64</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">1.</span> <span class="nav-text">是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#back-to-shared-context"><span class="nav-number">3.</span> <span class="nav-text">back to shared_context</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    345.1k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
+  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
+  <script type="text/javascript">
+  $(window).load(function(){
+     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
+     prettyPrint();
+   })
+  </script>
+</body>
+</html>
+
+
+
