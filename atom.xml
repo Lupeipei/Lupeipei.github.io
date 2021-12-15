@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2021-12-12T02:18:52.634Z</updated>
+  <updated>2021-12-15T10:45:35.388Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,115 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>mapping</title>
+    <link href="http://lupeipei.github.io/posts/mapping-of-vimscript-learning/"/>
+    <id>http://lupeipei.github.io/posts/mapping-of-vimscript-learning/</id>
+    <published>2021-12-15T10:37:10.000Z</published>
+    <updated>2021-12-15T10:45:35.388Z</updated>
+    
+    <content type="html"><![CDATA[<p>mapping  顾名思义, <code>map a b</code>, 当我执行 a 操作时, 它会做 b 操作会做的事.</p><p>看个例子, 在 Vim 命令行中, 输入:</p><pre><code>:map \ dd</code></pre><p>表示, 在 normal 模式下, 按下<code>\</code>, 就会删除当前光标所在的行.</p><p>mapping的设置, 跟模式有关系.</p><p><code>map</code>: normal mode 下的 mapping, 只在 normal 模式下有效.</p><p><code>nmap</code> : normal mode 下的 mapping, 只在 normal 模式下有效.</p><p><code>vmap</code> : visual mode 下的 mapping, 只在 visual 模式下有效.</p><p><code>imap</code> : insert mode 下的 mapping, 只在 insert 模式下有效.</p><p>map 有一个大坑, 叫做 Recursion, 书中给了一个例子, 比如:</p><pre><code>:nmap dd O&lt;esc&gt;jddk</code></pre><p>normal 模式下, 按下dd, 等同于执行了<code>O&lt;esc&gt;jddk</code> , 而 <code>O&lt;esc&gt;jddk</code> 也有 <code>dd</code>, Vim 就会再次 mapping, 如此无穷尽….</p><p>解决方法是使用<code>noremap</code>,  nonrecursive mapping. 修改上面那个命令:</p><pre><code>:nnoremap dd O&lt;esc&gt;jddk</code></pre><p>这样就正常了. 鉴于 noremap 能避雷,  作者给到的意见时, <strong>Always</strong> using  noremap instead of map. </p><p>再看个例子:</p><pre><code>:nnoremap &lt;C-s&gt;  :suspend&lt;CR&gt;</code></pre><p>上述命令表示, normal 模式下, 按住 Ctrl + s, 就等同于在命令行输入了<code>:suspend</code> 然后回车 ,这里  <code>&lt;CR&gt;</code> 表示Enter回车键.</p><p>都说到<code>&lt;CR&gt;</code> , 不妨来看看 VimScript 中 的 一些常用的 keycodes :</p><pre><code>&lt;Esc&gt; : 代表 Esc 键&lt;C-&#123;key&#125;&gt; : Ctrl + 任意键, 通常是字母键&lt;S-&#123;key&#125;&gt; : Shift + 任意键, 通常是字母键&lt;CR&gt; : Enter键,也可以用&lt;Enter&gt;, &lt;Return&gt; 来表示&lt;Space&gt; : 空格键&lt;Leader&gt; : Leader 键&lt;Left&gt; : 左移方向键, 类似有&lt;Right&gt;, &lt;Up&gt;, &lt;Down&gt;</code></pre><p>那么, 如何知道 VimScript 中所有 key 的特殊标记? 用万能的<code>:help</code>  就好了, 命令行输入:</p><pre><code>:h key-notation</code></pre><p>可以查看所有的 key-notation.</p><p>我还记得刚入门时, 有时候看到别人的 vimrc 文件中, 有些 keycode 是全部小写的, 比如 <code>&lt;cr&gt;</code>, <code>&lt;esc&gt;</code>, 当时觉得, 有的人大写, 有的人小写, 哪种才是规范的呢? 直到看了文档, 才知道官方是首字母大写, 也算解了我的一个小困惑.</p><p>Vim 中有个特殊的 mapping, <code>&lt;Nop&gt;</code>, 表示什么也不做. 比如:</p><pre><code>:inoremap &lt;Esc&gt; &lt;Nop&gt;</code></pre><p>Insert 模式下, 按下 Esc 键, 什么也没有做. [慎用!!!]</p><p>现在, 我们可以用学到的知识来写个简单的禁止使用上下左右键的功能:</p><p>在 <code>.vimrc</code> 文件中, 添加如下代码:</p><pre><code class="vim">&quot; disable up, down, leaf, right&quot; normal modennoremap &lt;Up&gt; &lt;Nop&gt;nnoremap &lt;Down&gt; &lt;Nop&gt;nnoremap &lt;Left&gt; &lt;Nop&gt;nnoremap &lt;Right&gt; &lt;Nop&gt;&quot; visual modevnoremap &lt;Up&gt; &lt;Nop&gt;vnoremap &lt;Down&gt; &lt;Nop&gt;vnoremap &lt;Left&gt; &lt;Nop&gt;vnoremap &lt;Right&gt; &lt;Nop&gt;&quot; insert modeinoremap &lt;Up&gt; &lt;Nop&gt;inoremap &lt;Down&gt; &lt;Nop&gt;inoremap &lt;Left&gt; &lt;Nop&gt;inoremap &lt;Right&gt; &lt;Nop&gt;</code></pre><p>这样就只能用 hjkl 了.</p><p>好了, 除了 Operator-Pending Mappings 外, 基本算是缕清了, 整点好吃的, 犒劳下自己吧.</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;mapping  顾名思义, &lt;code&gt;map a b&lt;/code&gt;, 当我执行 a 操作时, 它会做 b 操作会做的事.&lt;/p&gt;
+&lt;p&gt;看个例子, 在 Vim 命令行中, 输入:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:map \ dd
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;表示,
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>set option</title>
+    <link href="http://lupeipei.github.io/posts/set-option-of-vimscript-learning/"/>
+    <id>http://lupeipei.github.io/posts/set-option-of-vimscript-learning/</id>
+    <published>2021-12-15T10:36:51.000Z</published>
+    <updated>2021-12-15T10:37:55.116Z</updated>
+    
+    <content type="html"><![CDATA[<p>新手基本都会在大佬们的.vimrc 文件中看到不少 set option. </p><p>我们可以把 option 看作是 built-in configuration.</p><p>option 可以是布尔值, 类似开关, <code>set &#123;option&#125;</code>, <code>set no&#123;option&#125;</code>, 也可以赋值 <code>set &#123;option&#125;= &#123;value&#125;</code>. 以 number 为例:</p><p>在 Vim 命令行中, 输入:</p><pre><code class="shell"># 输出 number 的当前值:set number?# 添加行号显示 :set number# 关闭行号显示, 通用模式no&#123;option&#125;:set nonumber# 切换:set number!# 重置成默认值:set number&amp;# 重置所有的 option 为系统默认值:set all&amp;</code></pre><p>这里简单提一下, 比较常用的 path. </p><p>在 Vim 命令行中, 输入当前Path:</p><pre><code>:set path?</code></pre><p>输出结果:</p><p><code> path=.,/usr/include,,</code></p><p>其中:</p><ul><li><p>. 指的是当前打开文件所在的目录.</p></li><li><p>/usr/include 是 C Libraries 头文件目录</p></li><li><p>, 指得是当前目录</p></li></ul><p>建议将经常访问的目录添加到 path, 比如:</p><pre><code>:set path+=app/models/</code></pre><p>这样就用<code>find</code> 就顺手多了.</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;新手基本都会在大佬们的.vimrc 文件中看到不少 set option. &lt;/p&gt;
+&lt;p&gt;我们可以把 option 看作是 built-in configuration.&lt;/p&gt;
+&lt;p&gt;option 可以是布尔值, 类似开关, &lt;code&gt;set &amp;#123;option
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>echo vs echom</title>
+    <link href="http://lupeipei.github.io/posts/echo-of-vimscript-learning/"/>
+    <id>http://lupeipei.github.io/posts/echo-of-vimscript-learning/</id>
+    <published>2021-12-15T10:32:36.000Z</published>
+    <updated>2021-12-15T10:37:14.620Z</updated>
+    
+    <content type="html"><![CDATA[<p>echo 和 echom 都用于输出, 但是 echom 输入的内容, 会被保存在 messages 中.</p><p>在 Vim 命令行中, 输入:</p><pre><code>:echo &quot;hello, world through echo&quot;:echom &quot;hello, world through echom&quot;:messages</code></pre><p>可以在 messages 中看到 echom 输出的内容.</p><p>我之前会觉得 echo 没啥用, 直到看到 Max Cantor 的一个分享视频 <a href="https://www.youtube.com/watch?v=XA2WjJbmmoM&list=WL">How to Do 90% of What Plugins Do (With Just Vim)</a> , 他当时尝试用  <code>:echo expand(&#39;%&#39;)</code> 输出当前文件的相对路径, 看到结果的那一刻,  Max 情不自禁 yes了一下, 那个开心啊, 多像跑通代码的我们, 一下子让我记住了expand(“%”), 也对echo 有了印象……..</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;echo 和 echom 都用于输出, 但是 echom 输入的内容, 会被保存在 messages 中.&lt;/p&gt;
+&lt;p&gt;在 Vim 命令行中, 输入:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;:echo &amp;quot;hello, world through echo&amp;quot;
+:
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>前言</title>
+    <link href="http://lupeipei.github.io/posts/preface-of-vimscript-learning/"/>
+    <id>http://lupeipei.github.io/posts/preface-of-vimscript-learning/</id>
+    <published>2021-12-15T10:26:07.000Z</published>
+    <updated>2021-12-15T10:33:40.948Z</updated>
+    
+    <content type="html"><![CDATA[<p>这里是刷 <a href="https://github.com/sjl">Steve Losh</a>的  <a href="https://learnvimscriptthehardway.stevelosh.com/">Learn Vimscript the Hard Way </a> 的笔记系列.</p><p>写之前特意查了下, 已经有网友将本书翻译成了中文, 但主页已经打不开, 倒是在看云上保留了原来的译文, 如果想阅读中文版本, 这里附上<a href="https://www.kancloud.cn/kancloud/learn-vimscript-the-hard-way/49321">链接</a>.</p><p>当然, 个人非常推荐阅读原文, 50多篇, 每篇篇幅都比较短, 阅读过程中, 作者还会偶尔来点调皮话, 整点哲理鸡汤啥的, 叫人读着读着就笑了, 哈哈…..</p><p>总之, 阅读原版是一件很开心的事情, 不要让自己错过.&gt;^.^&lt;</p><p>鉴于我自己也是一个Vim 新手, 所以我多是以我个人的理解去对书中的内容做一些整理, 偶尔加点新东西, 同时尽量顺着原作者的写作风格, 力求简明清晰说人话, 篇幅适中易阅读, 达到入门 VimScript 的目标.</p><p>本文适合有 Vim 使用经验(至少 Vim 使用一两个月) 的新手围观.</p><p>原书基于Vim 7.3,  本系列基于 Vim 8.2. 某些内容会与原文稍有差异.</p><p>开始吧.</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;这里是刷 &lt;a href=&quot;https://github.com/sjl&quot;&gt;Steve Losh&lt;/a&gt;的  &lt;a href=&quot;https://learnvimscriptthehardway.stevelosh.com/&quot;&gt;Learn Vimscript the Hard
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>读 《Man&#39;s Search For Meaning》</title>
@@ -358,98 +467,6 @@
     <summary type="html">
     
       &lt;p&gt;踩着台风来临前的周末, 去了趟镇江. 简单记录下.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Life" scheme="http://lupeipei.github.io/categories/Life/"/>
-    
-    
-      <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>使用 Github Action 打包IOS项目踩坑</title>
-    <link href="http://lupeipei.github.io/posts/github-actions-fastlane-ios-application/"/>
-    <id>http://lupeipei.github.io/posts/github-actions-fastlane-ios-application/</id>
-    <published>2021-07-16T09:25:36.000Z</published>
-    <updated>2021-07-16T09:29:43.027Z</updated>
-    
-    <content type="html"><![CDATA[<p>折腾了好些天, 最终成功编译打包 IOS应用 上传到 TestFlight , 记录下中途踩的坑.</p><span id="more"></span><p>题外话:</p><p>Github Action 官方给到的 MacOS 的 Per-minute rate 是 Linux 的10倍, 老大说把闲置的一台 Mac mini 用上, 所以后面改用了 self-hosted runner. 省了笔琐碎银子, 也方便了 Debug…..</p><p>主要的坑是两步验证 和 KeyChain问题.</p><h4 id="两步验证"><a href="#两步验证" class="headerlink" title="两步验证"></a>两步验证</h4><p>苹果官方强制要求两步验证登录 Apple 开发者帐号, 但是使用 Github actions 在非交互模式下, 你是无法输入验证码的, Fastlane 官方提供了解决方法: <a href="https://docs.fastlane.tools/app-store-connect-api/">App Store Connect API</a></p><p>按照文档提示配置下, 没啥问题. 这里简单提下我的做法.</p><p>在App Store Connect 中获取到 key_id, issuer_id, key(.p8文件的内容)</p><p>在Fastlane文件中添加如下代码:</p><pre><code class="kotlin">lane :beta do |options|  app_store_connect_api_key(    key_id: ENV[&#39;ASCAPI_KEY_ID&#39;],    issuer_id: ENV[&#39;ASCAPI_ISSUER_ID&#39;],    key_filepath: &#39;authkey.p8&#39;,    duration: 1200, # optional (maximum 1200)    in_house: false # optional but may be required if using match/sigh  )  match(type: &quot;appstore&quot;)  enable_automatic_code_signing  gym(scheme: &quot;Leaf&quot;) # Build your app  pilot  .....end</code></pre><p>调用 <code>app_store_connect_api_key</code> 后, 需要认证的 Action, 比如pilot, 会自动加载 <code>Actions.lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]</code>. 所以务必将 <code>app_store_connect_api_key</code> 放在所有需认证的 Action 之前.</p><p>这里 ENV 的变量 <code>ASCAPI_KEY_ID</code>,  <code>ASCAPI_ISSUER_ID</code> 都可以设置在 Github 的 secrets 中.</p><p>而文件 <code>authkey.p8</code> 可以使用 <code>gpg</code> 加密解密.</p><p>本地终端执行:</p><pre><code class="shell">gpg -c --armor authkey.p8</code></pre><p>会要求输入 passphrase, 最后生成文件 authkey.p8.asc.  这个 passphrase 需要添加到 secrets 中, 后续解密要用到.</p><p>在<code>.gitignore</code> 中添加 authkey.p8, 忽略该文件, 将 authkey.p8.asc 文件提交.</p><p>然后在 github action 的 Workflow 配置文件中解密:</p><pre><code class="yaml">- name: decrypt auth file  run: |    gpg -d --passphrase $&#123;&#123; secrets.DEPLOY_ENC_KEY &#125;&#125; --batch authkey.p8.asc &gt; authkey.p8</code></pre><p>这里 secrets 的 DEPLOY_ENC_KEY 就是刚刚加密时用的 passphrase .</p><p>如果觉得麻烦, 也可以将 key_filepath 改成 key 参数, 把 authkey.p8 中的内容贴到 secrets 中也可以. 具体可参看官方文档:</p><pre><code class="kotlin">  app_store_connect_api_key(    key_id: ENV[&#39;ASCAPI_KEY_ID&#39;],    issuer_id: ENV[&#39;ASCAPI_ISSUER_ID&#39;],    key: ENV[&#39;ASCAPI_KEY&#39;],    duration: 1200, # optional (maximum 1200)    in_house: false # optional but may be required if using match/sigh  )</code></pre><h4 id="Keychain-问题"><a href="#Keychain-问题" class="headerlink" title="Keychain 问题"></a>Keychain 问题</h4><p>这个是花时间最久的地方,  遇到坑了.</p><p>首先在 Self-hosted runner 中, 跑一次编译打包, 一路下来, 成功发布到了TestFlight.</p><p>但使用 Github Action 时, 报错:</p><pre><code>▸ Running script &#39;[CP] Embed Pods Frameworks&#39;** ARCHIVE FAILED **The following build commands failed:    PhaseScriptExecution [CP]\ Embed\ Pods\ Frameworks /Users/***/Library/Developer/Xcode/DerivedData/Leaf-acuongxlhifqldeauyqugojdtjev/Build/Intermediates.noindex/ArchiveIntermediates/Leaf/IntermediateBuildFilesPath/Leaf.build/Release-iphoneos/Leaf.build/Script-46D1B8D72193B7966B5CC35AB1794FCF.sh(1 failure)[17:40:06]: Exit status: 65</code></pre><p> match 通过, 但 build app 报错.</p><p>改用 SSH 远程执行命令, 去打包, 报了同样的错误. 也就是在非交互模式下, build 失败, 交互模式下,build 成功.</p><p>Google 了半天, 基本都说是 key-chain 的问题.</p><p>有的解决方法中, 提到了使用 Fastlane 官方的 <a href="https://docs.fastlane.tools/actions/setup_ci/">setup_ci</a>  action, 可以创建临时的key-chain. 尝试了下, 没有效果.</p><p>最后的解决方法参考了<a href="https://imtx.me/blog/how-to-unlock-macos-keychain-with-remote-login/">远程终端登录下如何解锁 macOS Keychain</a> .</p><p>Self-hosted runner 需要运行 <code>./run.sh</code> 来监听Workflow,  tmux 建 Session , 开两个Window, 一个跑   <code>./run.sh</code> , 另一个Window中, 执行</p><pre><code class="shell">security unlock-keychain login.keychain</code></pre><p>会提示输入用户的登录密码, 输入即可.</p><p>在 Github Action 中再次执行 Workflow,  OK.</p><p>当然, 也可以直接在 Workflow配置文件中添加如下步骤 [ 在跑 fastlane 步骤之前]:</p><pre><code class="yaml">- run: security unlock-keychain -p $&#123;&#123; secrets.PASSWD &#125;&#125; ~/Library/Keychains/login.keychain</code></pre><p>PASSWD 为用户的登录密码.</p><p>OK.</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考:"></a>参考:</h4><ul><li><a href="https://docs.fastlane.tools/app-store-connect-api/">fastlane Using App Store Connect API</a></li><li><a href="https://imtx.me/blog/how-to-unlock-macos-keychain-with-remote-login/">远程终端登录下如何解锁 macOS Keychain</a></li></ul>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;折腾了好些天, 最终成功编译打包 IOS应用 上传到 TestFlight , 记录下中途踩的坑.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Git" scheme="http://lupeipei.github.io/tags/Git/"/>
-    
-      <category term="IOS" scheme="http://lupeipei.github.io/tags/IOS/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>浪费风起的时候</title>
-    <link href="http://lupeipei.github.io/posts/poetry-by-liyuansheng/"/>
-    <id>http://lupeipei.github.io/posts/poetry-by-liyuansheng/</id>
-    <published>2021-07-08T12:31:04.000Z</published>
-    <updated>2021-07-08T12:45:10.851Z</updated>
-    
-    <content type="html"><![CDATA[<p>不小心刷到一首李云胜的诗, 读完很喜欢, 分享下.</p><span id="more"></span><h4 id="我想和你虚度时光"><a href="#我想和你虚度时光" class="headerlink" title="我想和你虚度时光"></a>我想和你虚度时光</h4><p>我想和你虚度时光，比如低头看鱼</p><p>比如把茶杯留在桌子上，离开</p><p>浪费它们好看的阴影</p><p>我还想连落日一起浪费，比如散步</p><p>一直消磨到星光满天</p><p>我还要浪费风起的时候</p><p>坐在走廊发呆，直到你眼中乌云</p><p>全部被吹到窗外</p><p>我已经虚度了世界，它经过我</p><p>疲倦，又像从未被爱过</p><p>但是明天我还要这样，虚度</p><p>满目的花草，生活应该像它们一样美好</p><p>一样无意义，像被虚度的电影</p><p>那些绝望的爱和赴死</p><p>为我们带来短暂的沉默</p><p>我想和你互相浪费</p><p>一起虚度短的沉默，长的无意义</p><p>一起消磨精致而苍老的宇宙</p><p>比如靠在栏杆上，低头看水的镜子</p><p>直到所有被虚度的事物</p><p>在我们身后，长出薄薄的翅膀</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;不小心刷到一首李云胜的诗, 读完很喜欢, 分享下.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Life" scheme="http://lupeipei.github.io/categories/Life/"/>
-    
-    
-      <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《与小泽征尔共度的午后音乐时光》</title>
-    <link href="http://lupeipei.github.io/posts/notes-of-afternoon-with-Seiji-Ozawa/"/>
-    <id>http://lupeipei.github.io/posts/notes-of-afternoon-with-Seiji-Ozawa/</id>
-    <published>2021-06-24T10:46:46.000Z</published>
-    <updated>2021-06-24T10:52:59.476Z</updated>
-    
-    <content type="html"><![CDATA[<p>大概是目前最短的一篇读后感.</p><span id="more"></span><p>读完的几点感触:</p><ul><li>听好的音乐. 大量听. 反复听.</li><li>学习欣赏歌剧作品</li><li>英文很重要</li><li>导师很重要</li><li>勤奋</li><li>古哼哼是天才</li><li>马勒的交响曲可以听听, 膜拜下</li></ul><p>最后贴上书中小泽征尔的一段回忆:</p><blockquote><p>卡耐基音乐厅指挥家的办公室里设有钢琴, 我常在深夜上那儿去,练到心满意足为止.</p></blockquote><p>这种从练习中获得的心满意足, 应该同他研读乐谱时所获得的心灵上的满足, 类似吧.</p><p>精神上纯粹的喜悦是件奢侈品.</p><p>这种喜悦会上瘾.</p><p>在 Youtube 上无意瞥见06年内田光子和大师合作的 Beethoven Piano Concerto 5 , 附上<a href="https://www.youtube.com/watch?v=mQHrNdjUPDc">链接</a>.</p><p>油管上有蛮多 Seiji Ozawa 指挥的现场视频, 可以过过瘾, 感受下大师的魅力.</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;大概是目前最短的一篇读后感.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Music" scheme="http://lupeipei.github.io/tags/Music/"/>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>你好啊, 小羊</title>
-    <link href="http://lupeipei.github.io/posts/hello-little-sheep/"/>
-    <id>http://lupeipei.github.io/posts/hello-little-sheep/</id>
-    <published>2021-05-16T10:36:21.000Z</published>
-    <updated>2021-05-17T01:09:47.818Z</updated>
-    
-    <content type="html"><![CDATA[<p>花了一两个月的时间, 把去年下半年至今刷的一些书给稍微整理了下.</p><span id="more"></span><p>一些尚未整理的, 怕也只能留待年底的时候再填坑了.</p><p>刷书的过程是快乐的, 整理的过程却不尽然.</p><p>不过最后整理完的感觉是舒服的.</p><p>这样的后果, 自然是CS方面的书都没啃完, APUE没刷到尾, CSAPP开了个头, Algorithm4光看不上手……</p><p>有得有失.</p><p>不过该填的坑, 还是要填的, 毕竟关乎吃饭 : P.</p><p>慢一点就慢一点吧, 最重要的是保有最初的那份好奇.</p><p>说点其他的.</p><p>五一小长假, 回老家待了几天.</p><p>过得很舒心.</p><p>5号那天下午, 天气很好, 跑去大坝上, 满眼是绿草地, 不远处有两只羊在躺着晒太阳. 壮着胆子走近, 小一点的那只起身嚼草, 大点的那只, 竟然站起来凑近了我, 可惜我太怂, 伸出手本想摸它额头, 结果犹豫了下, 又缩回去 , 它倒是很主动, 向前咬住了我的鞋子, 嚼了嚼, 松开了, 哈哈.</p><p>那一刻莫名觉得很开心, 大概是太久没这么跟小动物玩了.</p><p>想起Naval说的那句 “to do things for their own sake.”</p><p>是啊, 人生是一连串的霎那, doing things for the sheer fun of it.</p><p>小羊, 很高兴认识你啊, 下次回家有机会遇见, 摸摸你额头好不好?</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;花了一两个月的时间, 把去年下半年至今刷的一些书给稍微整理了下.&lt;/p&gt;
     
     </summary>
     
