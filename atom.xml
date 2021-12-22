@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2021-12-21T13:22:28.593Z</updated>
+  <updated>2021-12-22T01:50:33.186Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -18,10 +18,10 @@
   
   <entry>
     <title>Leaders</title>
-    <link href="http://lupeipei.github.io/posts/leaders-of-vimscript-learning/"/>
-    <id>http://lupeipei.github.io/posts/leaders-of-vimscript-learning/</id>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-leaders/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-leaders/</id>
     <published>2021-12-21T13:10:12.000Z</published>
-    <updated>2021-12-21T13:22:28.593Z</updated>
+    <updated>2021-12-22T01:50:33.186Z</updated>
     
     <content type="html"><![CDATA[<p>来到了常见的 Leader.</p><p>初学时, 我简单地把 Leader 理解成一个 namespace, 好比 tmux 的 <code>Ctrl+b</code>. 现在看, 也没有偏差太多.</p><p>你可以把 Leader 看成是 Vim 内置的 prefix key.</p><p>Leader 的值存在 mapleader 变量中, 如果 mapleader 未初始化或者值为空, 则默认为 反斜杠 <code>\</code> .</p><p>这里注意: mapleader 是一个 variable, 不是一个 option, 使用 <code>:set mapleader?</code> 会报错的.</p><p>相应的, 如果想要修改 Leader 键, 可以通过给 mapleader 赋值来实现.</p><p>编辑<code>.vimrc</code>, 添加如下代码:</p><pre><code>let mapleader=&quot;-&quot;nnoremap &lt;Leader&gt;d dd</code></pre><p>保存退出, source 后, 打开文件, 在 Normal 模式下, 按 <code>-d</code>, 等同于执行 <code>dd</code>. 即删除当前行. 此时 <code>&lt;Leader&gt;</code> 已变成了<code>-</code> 了, 如果按<code>\d</code> , 会发现无效.</p><p>mapleader 还有一个小兄弟, 叫 maplocalleader,  在 Vim中用特殊的字符串 <code>&lt;LocalLeader&gt;</code> 来表示.</p><p>同样, 可以通过赋值 maplocalleader 来设置   <code>&lt;LocalLeader&gt;</code>  :</p><pre><code>:let maplocalleader = &quot;\\&quot;</code></pre><p>那  <code>&lt;LocalLeader&gt;</code>  是用来干嘛的呢?</p><p>作者在书中提到  <code>&lt;LocalLeader&gt;</code>  用来作为特定文件类型中的前置键.</p><blockquote><p>This is meant to be a prefix for mappings that only take effect for certain types of files, like Python files or HTML files.</p></blockquote><p>这个同官方文档中给出的, 稍稍有些区别.</p><p>Vim 官方文档提到的是 <code>&lt;LocalLeader&gt;</code>  用于只针对当前 buffer 有效的mappings.</p><blockquote><p><code>&lt;LocalLeader&gt;</code>  is to be used for mappings which are local to a buffer.  Example:<br>:map <buffer> <code>&lt;LocalLeader&gt;</code>A  oanother line<Esc></p></blockquote><p>但是文档中也提到了:</p><blockquote><p>In a global plugin <code>&lt;Leader&gt;</code> should be used and in a filetype plugin <code>&lt;LocalLeader&gt;</code>.</p></blockquote><p>全局插件使用 <code>&lt;Leader&gt;</code>  , 特定文件类型的插件, 使用 <code>&lt;LocalLeader&gt;</code>  .[有关Plugin, 后面会单独再介绍]</p><p>当然, 平日里我基本用不到<code>&lt;LocalLeader&gt;</code> , 这里就不折腾了.</p><p>可以查看官方文档了解更多.</p><pre><code>:h mapleader:h maplocalleader</code></pre>]]></content>
     
@@ -45,10 +45,10 @@
   
   <entry>
     <title>mapping</title>
-    <link href="http://lupeipei.github.io/posts/mapping-of-vimscript-learning/"/>
-    <id>http://lupeipei.github.io/posts/mapping-of-vimscript-learning/</id>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-mapping/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-mapping/</id>
     <published>2021-12-15T10:37:10.000Z</published>
-    <updated>2021-12-15T10:45:35.388Z</updated>
+    <updated>2021-12-22T01:50:28.768Z</updated>
     
     <content type="html"><![CDATA[<p>mapping  顾名思义, <code>map a b</code>, 当我执行 a 操作时, 它会做 b 操作会做的事.</p><p>看个例子, 在 Vim 命令行中, 输入:</p><pre><code>:map \ dd</code></pre><p>表示, 在 normal 模式下, 按下<code>\</code>, 就会删除当前光标所在的行.</p><p>mapping的设置, 跟模式有关系.</p><p><code>map</code>: normal mode 下的 mapping, 只在 normal 模式下有效.</p><p><code>nmap</code> : normal mode 下的 mapping, 只在 normal 模式下有效.</p><p><code>vmap</code> : visual mode 下的 mapping, 只在 visual 模式下有效.</p><p><code>imap</code> : insert mode 下的 mapping, 只在 insert 模式下有效.</p><p>map 有一个大坑, 叫做 Recursion, 书中给了一个例子, 比如:</p><pre><code>:nmap dd O&lt;esc&gt;jddk</code></pre><p>normal 模式下, 按下dd, 等同于执行了<code>O&lt;esc&gt;jddk</code> , 而 <code>O&lt;esc&gt;jddk</code> 也有 <code>dd</code>, Vim 就会再次 mapping, 如此无穷尽….</p><p>解决方法是使用<code>noremap</code>,  nonrecursive mapping. 修改上面那个命令:</p><pre><code>:nnoremap dd O&lt;esc&gt;jddk</code></pre><p>这样就正常了. 鉴于 noremap 能避雷,  作者给到的意见时, <strong>Always</strong> using  noremap instead of map. </p><p>再看个例子:</p><pre><code>:nnoremap &lt;C-s&gt;  :suspend&lt;CR&gt;</code></pre><p>上述命令表示, normal 模式下, 按住 Ctrl + s, 就等同于在命令行输入了<code>:suspend</code> 然后回车 ,这里  <code>&lt;CR&gt;</code> 表示Enter回车键.</p><p>都说到<code>&lt;CR&gt;</code> , 不妨来看看 VimScript 中 的 一些常用的 keycodes :</p><pre><code>&lt;Esc&gt; : 代表 Esc 键&lt;C-&#123;key&#125;&gt; : Ctrl + 任意键, 通常是字母键&lt;S-&#123;key&#125;&gt; : Shift + 任意键, 通常是字母键&lt;CR&gt; : Enter键,也可以用&lt;Enter&gt;, &lt;Return&gt; 来表示&lt;Space&gt; : 空格键&lt;Leader&gt; : Leader 键&lt;Left&gt; : 左移方向键, 类似有&lt;Right&gt;, &lt;Up&gt;, &lt;Down&gt;</code></pre><p>那么, 如何知道 VimScript 中所有 key 的特殊标记? 用万能的<code>:help</code>  就好了, 命令行输入:</p><pre><code>:h key-notation</code></pre><p>可以查看所有的 key-notation.</p><p>我还记得刚入门时, 有时候看到别人的 vimrc 文件中, 有些 keycode 是全部小写的, 比如 <code>&lt;cr&gt;</code>, <code>&lt;esc&gt;</code>, 当时觉得, 有的人大写, 有的人小写, 哪种才是规范的呢? 直到看了文档, 才知道官方是首字母大写, 也算解了我的一个小困惑.</p><p>Vim 中有个特殊的 mapping, <code>&lt;Nop&gt;</code>, 表示什么也不做. 比如:</p><pre><code>:inoremap &lt;Esc&gt; &lt;Nop&gt;</code></pre><p>Insert 模式下, 按下 Esc 键, 什么也没有做. [慎用!!!]</p><p>现在, 我们可以用学到的知识来写个简单的禁止使用上下左右键的功能:</p><p>在 <code>.vimrc</code> 文件中, 添加如下代码:</p><pre><code class="vim">&quot; disable up, down, leaf, right&quot; normal modennoremap &lt;Up&gt; &lt;Nop&gt;nnoremap &lt;Down&gt; &lt;Nop&gt;nnoremap &lt;Left&gt; &lt;Nop&gt;nnoremap &lt;Right&gt; &lt;Nop&gt;&quot; visual modevnoremap &lt;Up&gt; &lt;Nop&gt;vnoremap &lt;Down&gt; &lt;Nop&gt;vnoremap &lt;Left&gt; &lt;Nop&gt;vnoremap &lt;Right&gt; &lt;Nop&gt;&quot; insert modeinoremap &lt;Up&gt; &lt;Nop&gt;inoremap &lt;Down&gt; &lt;Nop&gt;inoremap &lt;Left&gt; &lt;Nop&gt;inoremap &lt;Right&gt; &lt;Nop&gt;</code></pre><p>这样就只能用 hjkl 了.</p><p>好了, 除了 Operator-Pending Mappings 外, 基本算是缕清了, 整点好吃的, 犒劳下自己吧.</p>]]></content>
     
@@ -74,10 +74,10 @@
   
   <entry>
     <title>set option</title>
-    <link href="http://lupeipei.github.io/posts/set-option-of-vimscript-learning/"/>
-    <id>http://lupeipei.github.io/posts/set-option-of-vimscript-learning/</id>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-set-option/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-set-option/</id>
     <published>2021-12-15T10:36:51.000Z</published>
-    <updated>2021-12-15T10:37:55.116Z</updated>
+    <updated>2021-12-22T01:50:17.426Z</updated>
     
     <content type="html"><![CDATA[<p>新手基本都会在大佬们的.vimrc 文件中看到不少 set option. </p><p>我们可以把 option 看作是 built-in configuration.</p><p>option 可以是布尔值, 类似开关, <code>set &#123;option&#125;</code>, <code>set no&#123;option&#125;</code>, 也可以赋值 <code>set &#123;option&#125;= &#123;value&#125;</code>. 以 number 为例:</p><p>在 Vim 命令行中, 输入:</p><pre><code class="shell"># 输出 number 的当前值:set number?# 添加行号显示 :set number# 关闭行号显示, 通用模式no&#123;option&#125;:set nonumber# 切换:set number!# 重置成默认值:set number&amp;# 重置所有的 option 为系统默认值:set all&amp;</code></pre><p>这里简单提一下, 比较常用的 path. </p><p>在 Vim 命令行中, 输入当前Path:</p><pre><code>:set path?</code></pre><p>输出结果:</p><p><code> path=.,/usr/include,,</code></p><p>其中:</p><ul><li><p>. 指的是当前打开文件所在的目录.</p></li><li><p>/usr/include 是 C Libraries 头文件目录</p></li><li><p>, 指得是当前目录</p></li></ul><p>建议将经常访问的目录添加到 path, 比如:</p><pre><code>:set path+=app/models/</code></pre><p>这样就用<code>find</code> 就顺手多了.</p>]]></content>
     
@@ -101,10 +101,10 @@
   
   <entry>
     <title>echo vs echom</title>
-    <link href="http://lupeipei.github.io/posts/echo-of-vimscript-learning/"/>
-    <id>http://lupeipei.github.io/posts/echo-of-vimscript-learning/</id>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-echo/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-echo/</id>
     <published>2021-12-15T10:32:36.000Z</published>
-    <updated>2021-12-15T10:37:14.620Z</updated>
+    <updated>2021-12-22T02:27:20.426Z</updated>
     
     <content type="html"><![CDATA[<p>echo 和 echom 都用于输出, 但是 echom 输入的内容, 会被保存在 messages 中.</p><p>在 Vim 命令行中, 输入:</p><pre><code>:echo &quot;hello, world through echo&quot;:echom &quot;hello, world through echom&quot;:messages</code></pre><p>可以在 messages 中看到 echom 输出的内容.</p><p>我之前会觉得 echo 没啥用, 直到看到 Max Cantor 的一个分享视频 <a href="https://www.youtube.com/watch?v=XA2WjJbmmoM&list=WL">How to Do 90% of What Plugins Do (With Just Vim)</a> , 他当时尝试用  <code>:echo expand(&#39;%&#39;)</code> 输出当前文件的相对路径, 看到结果的那一刻,  Max 情不自禁 yes了一下, 那个开心啊, 多像跑通代码的我们, 一下子让我记住了expand(“%”), 也对echo 有了印象……..</p>]]></content>
     
@@ -129,10 +129,10 @@
   
   <entry>
     <title>前言</title>
-    <link href="http://lupeipei.github.io/posts/preface-of-vimscript-learning/"/>
-    <id>http://lupeipei.github.io/posts/preface-of-vimscript-learning/</id>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-preface/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-preface/</id>
     <published>2021-12-15T10:26:07.000Z</published>
-    <updated>2021-12-15T10:33:40.948Z</updated>
+    <updated>2021-12-22T01:50:23.869Z</updated>
     
     <content type="html"><![CDATA[<p>这里是刷 <a href="https://github.com/sjl">Steve Losh</a>的  <a href="https://learnvimscriptthehardway.stevelosh.com/">Learn Vimscript the Hard Way </a> 的笔记系列.</p><p>写之前特意查了下, 已经有网友将本书翻译成了中文, 但主页已经打不开, 倒是在看云上保留了原来的译文, 如果想阅读中文版本, 这里附上<a href="https://www.kancloud.cn/kancloud/learn-vimscript-the-hard-way/49321">链接</a>.</p><p>当然, 个人非常推荐阅读原文, 50多篇, 每篇篇幅都比较短, 阅读过程中, 作者还会偶尔来点调皮话, 整点哲理鸡汤啥的, 叫人读着读着就笑了, 哈哈…..</p><p>总之, 阅读原版是一件很开心的事情, 不要让自己错过.&gt;^.^&lt;</p><p>鉴于我自己也是一个Vim 新手, 所以我多是以我个人的理解去对书中的内容做一些整理, 偶尔加点新东西, 同时尽量顺着原作者的写作风格, 力求简明清晰说人话, 篇幅适中易阅读, 达到入门 VimScript 的目标.</p><p>本文适合有 Vim 使用经验(至少 Vim 使用一两个月) 的新手围观.</p><p>原书基于Vim 7.3,  本系列基于 Vim 8.2. 某些内容会与原文稍有差异.</p><p>开始吧.</p>]]></content>
     
