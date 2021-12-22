@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2021-12-22T01:50:33.186Z</updated>
+  <updated>2021-12-22T12:52:34.799Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>editing your vimrc</title>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-edit-your-vimrc/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-edit-your-vimrc/</id>
+    <published>2021-12-22T12:46:36.000Z</published>
+    <updated>2021-12-22T12:52:34.799Z</updated>
+    
+    <content type="html"><![CDATA[<p>这一章结合前面所学的, 实现了两个功能: edit and source your vimrc.</p><p>当你编辑文件时, 如果想要修改 <code>.vimrc</code> 文件, 并使刚刚修改的配置生效, 有什么快捷的方式?</p><p>作者给了如下解决方法.</p><p>编辑<code>.vimrc</code>, 添加如下代码:</p><pre><code>nnoremap &lt;Leader&gt;ev :vsplit $MYVIMRC&lt;CR&gt;nnoremap &lt;Leader&gt;sv :source $MYVIMRC&lt;CR&gt;</code></pre><p>其中, MYVIMRC 是Vim 提供的环境变量, 指的是 <code>.vimrc</code> 文件的位置, 可通过<code>:echo $MYVIMRC</code> 查看 MYVIMRC 的值.</p><p>这里提供了两个 mappings, 按<code>&lt;Leader&gt;ev</code> , 会打开一个新的split, 编辑  <code>.vimrc</code>  文件. 按<code>&lt;Leader&gt;sv</code> , source   <code>.vimrc</code>文件 .</p><p>不得不说, 真的超方便.</p><p>有了范例, 我也倒腾了一个编辑 <code>.tmux.conf</code> 的mapping.</p><pre><code>nnoremap &lt;Leader&gt;et :vsplit $HOME/.tmux.conf&lt;CR&gt;</code></pre><p>按<code>&lt;Leader&gt;et</code> , 编辑  <code>.tmux.conf</code>  文件.</p><p>同样也可以来个source:</p><pre><code>nnoremap &lt;Leader&gt;st :!tmux source-file $HOME/.tmux.conf&lt;CR&gt;</code></pre><p> 但是通常需要 source  <code>.tmux.conf</code> 的场合, 也多是在 tmux 中, 直接快捷键 <code>Crtl-b + r</code> 就可以了.所以  source <code>.tmux.conf</code> 的这个 mapping 也可以不配置.</p><p>OK,  本章结束, 你也来配置个玩一玩吧^_^</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;这一章结合前面所学的, 实现了两个功能: edit and source your vimrc.&lt;/p&gt;
+&lt;p&gt;当你编辑文件时, 如果想要修改 &lt;code&gt;.vimrc&lt;/code&gt; 文件, 并使刚刚修改的配置生效, 有什么快捷的方式?&lt;/p&gt;
+&lt;p&gt;作者给了如下解决方法.
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>Leaders</title>
@@ -457,28 +484,6 @@
     
     
       <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>用 Express 搭建一个 nsfw 服务</title>
-    <link href="http://lupeipei.github.io/posts/build-nsfw-express-server/"/>
-    <id>http://lupeipei.github.io/posts/build-nsfw-express-server/</id>
-    <published>2021-08-07T08:23:55.000Z</published>
-    <updated>2021-08-07T08:28:32.572Z</updated>
-    
-    <content type="html"><![CDATA[<p>工作中遇到的一个问题, 这里简单记录下解决过程.</p><span id="more"></span><p>起因是后台频现用户上传了违规图片, 收到了七牛的警告邮件. 老大要求搭建一个nsfw(Not-Safe-For-Work)服务, 在图片上传到七牛云存储前, 先调用这个服务, 确定图片没有违规, 再上传.</p><h4 id="搭建服务"><a href="#搭建服务" class="headerlink" title="搭建服务"></a>搭建服务</h4><p>找到了全网star最多的一个开源项目 <a href="https://github.com/infinitered/nsfwjs">nsfwjs</a>,  文档中给到了一个完整的 Express 的例子. 照着来就好.</p><p>参考 <a href="https://expressjs.com/">Express Docs</a> 官方文档, 使用express-generator 快速搭个架子, 将 <a href="https://github.com/infinitered/nsfwjs">nsfwjs</a> 文档中给到的<a href="https://github.com/infinitered/nsfwjs/blob/master/example/node_demo/server.js">server.js</a> 部分的示例代码放进去. 本地起服务 <code>node server.js</code>, 使用 curl 测试, 结果符合预期:</p><pre><code class="shell">curl --request POST localhost:8080/nsfw --header &#39;Content-Type: multipart/form-data&#39; --data-binary &#39;image=@/full/path/to/picture.jpg&#39;</code></pre><h4 id="支持多格式"><a href="#支持多格式" class="headerlink" title="支持多格式"></a>支持多格式</h4><p><a href="https://github.com/infinitered/nsfwjs">nsfwjs</a> 给到的例子中, 只支持JPEG格式的文件,  改用 <a href="https://github.com/dy/image-decode">image-decode</a> 换掉  jpeg-js. 可支持jpeg, jpg, png, gif, bmp, tiff, webp 格式的图片, 基本满足需求.</p><pre><code class="shell">yarn remove jpeg-jsyarn add image-decode</code></pre><p>修改 convert 部分的代码如下:</p><pre><code class="javascript">const decode = require(&#39;image-decode&#39;)......const convert = async (img) =&gt; &#123;  const &#123; data, width, height &#125; = decode(img)  const numChannels = 3  const numPixels = width * height  const values = new Int32Array(numPixels * numChannels)  for (let i = 0; i &lt; numPixels; i++)    for (let c = 0; c &lt; numChannels; ++c)      values[i * numChannels + c] = data[i * 4 + c]  return tf.tensor3d(values, [height, width, numChannels], &#39;int32&#39;)&#125;</code></pre><h4 id="CROS-配置"><a href="#CROS-配置" class="headerlink" title="CROS 配置"></a>CROS 配置</h4><p>在本地起了 Vue 的一个项目, 在这个 Vue 项目中, 使用 axios 给 nsfw 项目发请求的时候, 会出现 CROS 的报错.</p><p>当时直接 Google, StackOverflow 上一堆提到全局设置 header 的, 试了下, 结果无效, 踩了点坑…. 其实直接使用 <a href="https://github.com/expressjs/cors">cors</a> 就能简单粗暴地解决:</p><pre><code>yarn add cors</code></pre><p>修改 server.js:</p><pre><code class="javascript">var cors = require(&#39;cors&#39;);......var app = express();......// cors settingsvar corsOptionsDelegate = function (req, callback) &#123;  const corsOptions = &#123; origin: true, credentials: true &#125;  callback(null, corsOptions)&#125;app.use(cors(corsOptionsDelegate));......</code></pre><p> 这里设置了<code>&#123; origin: true, credentials: true &#125;</code>, <a href="https://github.com/expressjs/cors">cors</a> 的文档中, 默认配置中 origin 为 *, credentials 未设置.</p><p>直接使用默认配置会报错:</p><pre><code>Response to preflight request doesn&#39;t pass access control check: The value of the &#39;Access-Control-Allow-Origin&#39; header in the response must not be the wildcard &#39;*&#39; when the request&#39;s credentials mode is &#39;include&#39;</code></pre><p>干脆直接都设置成true.</p><p>再次使用 axios 发送请求, OK.</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/infinitered/nsfwjs">nsfwjs</a></p><p><a href="https://expressjs.com/">Express Docs</a></p><p><a href="https://github.com/dy/image-decode">image-decode</a></p><p><a href="https://github.com/expressjs/cors">cors</a></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;工作中遇到的一个问题, 这里简单记录下解决过程.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Rails" scheme="http://lupeipei.github.io/tags/Rails/"/>
     
   </entry>
   
