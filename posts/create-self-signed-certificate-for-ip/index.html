@@ -394,36 +394,11 @@
 <li><p>Openssl方式</p>
 <p>先生成根证书:</p>
 <p>新增一个shell 脚本文件generate_root_ca.sh, 放入如下内容, 然后执行脚本即可.[具体各参数的含义, 可参考<a target="_blank" rel="noopener" href="https://www.openssl.org/docs/man1.1.1/man5/x509v3_config.html">x509v3 config</a>]</p>
-<pre><code class="shell">#!/bin/sh
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line">echo &quot;[req]</span><br><span class="line">default_bits  = 2048</span><br><span class="line">distinguished_name = req_distinguished_name</span><br><span class="line">x509_extensions = v3_req</span><br><span class="line">prompt = no</span><br><span class="line">[req_distinguished_name]</span><br><span class="line">countryName = XX</span><br><span class="line">stateOrProvinceName = N/A</span><br><span class="line">localityName = N/A</span><br><span class="line">organizationName = Self-signed Cert</span><br><span class="line">commonName = Self-signed Cert</span><br><span class="line">[v3_req]</span><br><span class="line">basicConstraints = CA:TRUE</span><br><span class="line">&quot; &gt; root.cnf</span><br><span class="line"></span><br><span class="line">openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout rootCA.key -out rootCA.crt -config root.cnf</span><br><span class="line"></span><br><span class="line">rm root.cnf</span><br></pre></td></tr></table></figure>
 
-echo &quot;[req]
-default_bits  = 2048
-distinguished_name = req_distinguished_name
-x509_extensions = v3_req
-prompt = no
-[req_distinguished_name]
-countryName = XX
-stateOrProvinceName = N/A
-localityName = N/A
-organizationName = Self-signed Cert
-commonName = Self-signed Cert
-[v3_req]
-basicConstraints = CA:TRUE
-&quot; &gt; root.cnf
-
-openssl req -x509 -nodes -days 730 -newkey rsa:2048 -keyout rootCA.key -out rootCA.crt -config root.cnf
-
-rm root.cnf
-</code></pre>
 <p>此处的关键在于<code>basicConstraints</code> 设置为 <code>CA:TRUE</code></p>
 <p>也可以直接在终端生成, 执行:</p>
-<pre><code class="shell"># 生成private key, 可以添加选项 -des3 来给 private key 设置密码.这里略过
-openssl genrsa  -out rootCA.key 2048
-
-# 生成cert, -days 用于设置过期时间, 指定加密算法为 sha256, 执行后会有提示, 设置即可
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 730 -out rootCA.crt
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 生成private key, 可以添加选项 -des3 来给 private key 设置密码.这里略过</span></span><br><span class="line">openssl genrsa  -out rootCA.key 2048</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 生成cert, -days 用于设置过期时间, 指定加密算法为 sha256, 执行后会有提示, 设置即可</span></span><br><span class="line">openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 730 -out rootCA.crt</span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>  生成后得让计算机信任这个机构. 以MacOS为例:</p>
 <p>  打开keychain Access,  file &gt; import items 选中生成的rootCA.crt文件, 双击该文件, 选择 Always Trust.</p>
@@ -431,39 +406,12 @@ openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 730 -out rootCA.crt
 <p>  这样,基于该机构颁发的证书, 都是被本机信任的.</p>
 <p>  现在我们来生成基于该CA颁发的证书:</p>
 <p>  以IP地址为例, 新增shell脚本文件 generate_ip_cert.sh, 添加如下内容:</p>
-<pre><code class="shell">IP=$(echo $1)
-echo &quot;
-authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
-keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-subjectAltName = @alt_names
-[alt_names]
-IP.1 = $IP
-&quot; &gt; cert.cnf
+  <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">IP=$(echo $1)</span><br><span class="line">echo &quot;</span><br><span class="line">authorityKeyIdentifier=keyid,issuer</span><br><span class="line">basicConstraints=CA:FALSE</span><br><span class="line">keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment</span><br><span class="line">subjectAltName = @alt_names</span><br><span class="line">[alt_names]</span><br><span class="line">IP.1 = $IP</span><br><span class="line">&quot; &gt; cert.cnf</span><br><span class="line"></span><br><span class="line">openssl genrsa -out key.pem 2048</span><br><span class="line">openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;</span><br><span class="line">openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf</span><br><span class="line">rm cert.cnf</span><br></pre></td></tr></table></figure>
 
-openssl genrsa -out key.pem 2048
-openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;
-openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf
-rm cert.cnf
-</code></pre>
 <p>  执行<code>./generate_ip_cert.sh IPAddress</code> [IPAddress为你需要为其生成证书的IP地址]</p>
 <p>  如果为指定的域名生成证书, 只需修改alt_names部分即可:</p>
-<pre><code class="shell">DNS=$(echo $1)
+  <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">DNS=$(echo $1)</span><br><span class="line"></span><br><span class="line">echo &quot;</span><br><span class="line">authorityKeyIdentifier=keyid,issuer</span><br><span class="line">basicConstraints=CA:FALSE</span><br><span class="line">keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment</span><br><span class="line">subjectAltName = @alt_names</span><br><span class="line">[alt_names]</span><br><span class="line">DNS.1 = $DNS</span><br><span class="line">&quot; &gt; cert.cnf</span><br><span class="line"></span><br><span class="line">openssl genrsa -out key.pem 2048</span><br><span class="line">openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;</span><br><span class="line">openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf</span><br><span class="line">rm cert.cnf</span><br></pre></td></tr></table></figure>
 
-echo &quot;
-authorityKeyIdentifier=keyid,issuer
-basicConstraints=CA:FALSE
-keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
-subjectAltName = @alt_names
-[alt_names]
-DNS.1 = $DNS
-&quot; &gt; cert.cnf
-
-openssl genrsa -out key.pem 2048
-openssl req -new -key key.pem -out csr.pem -subj &quot;/C=XX/ST=MyST&quot;
-openssl x509 -req -in csr.pem -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out cert.pem -days 730 -sha256 -extfile cert.cnf
-rm cert.cnf
-</code></pre>
 <p>  同样也可以在终端一步步走openssl 生成, 这里略过.</p>
 <p>  随后将生成的cert.pem, key.pem放进服务器的配置中即可.</p>
 <ul>
@@ -471,98 +419,12 @@ rm cert.cnf
 <p>原理同上面的一样, 这里用一个小的express实例来实验下.</p>
 <p>为了生成证书, 首先我们需要引用了一个开源的package: <a target="_blank" rel="noopener" href="https://github.com/jfromaniello/selfsigned">selfsigned</a>,  因为原来的库并不支持基于Root CA生成证书, 这里我们用<a target="_blank" rel="noopener" href="https://github.com/Envek">Andrey Novikov</a> fork后的改进版本.</p>
 <p>直接起一个express, entry point为app.js. 在package.json中添加:</p>
-<pre><code class="json">&quot;selfsigned&quot;: &quot;https://github.com/Envek/selfsigned.git#7477718&quot;
-</code></pre>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;selfsigned&quot;</span>: <span class="string">&quot;https://github.com/Envek/selfsigned.git#7477718&quot;</span></span><br></pre></td></tr></table></figure>
+
 <p>随后npm install.</p>
 <p>app.js中添加如下内容:</p>
-<pre><code class="javascript">const express = require(&#39;express&#39;)
-const https = require(&#39;https&#39;)
-const fs = require(&#39;fs&#39;)
-const ip = require(&#39;ip&#39;)
-const selfsigned = require(&#39;selfsigned&#39;)
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> express = <span class="built_in">require</span>(<span class="string">&#x27;express&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> https = <span class="built_in">require</span>(<span class="string">&#x27;https&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">&#x27;fs&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> ip = <span class="built_in">require</span>(<span class="string">&#x27;ip&#x27;</span>)</span><br><span class="line"><span class="keyword">const</span> selfsigned = <span class="built_in">require</span>(<span class="string">&#x27;selfsigned&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = express()</span><br><span class="line"><span class="keyword">const</span> address = ip.address()</span><br><span class="line"><span class="keyword">const</span> port = <span class="number">3008</span></span><br><span class="line"></span><br><span class="line">fs.mkdirSync(<span class="string">&#x27;./ca&#x27;</span>, &#123; <span class="attr">recursive</span>: <span class="literal">true</span> &#125;)</span><br><span class="line"><span class="keyword">const</span> rootCA = selfsigned.generate(</span><br><span class="line">  [</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;commonName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Self-signedCert&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;countryName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;XX&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;organizationName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Myorg&#x27;</span> &#125;,</span><br><span class="line">  ],</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">keySize</span>: <span class="number">2048</span>,</span><br><span class="line">    <span class="attr">algorithm</span>: <span class="string">&#x27;sha256&#x27;</span>,</span><br><span class="line">    <span class="attr">extensions</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&#x27;basicConstraints&#x27;</span>,</span><br><span class="line">        <span class="attr">cA</span>: <span class="literal">true</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">fs.writeFileSync(<span class="string">&#x27;./ca/rootCA.crt&#x27;</span>, rootCA.cert)</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> pems = selfsigned.generate(</span><br><span class="line">  [</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;commonName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Self-signedCert&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;countryName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;XX&#x27;</span> &#125;,</span><br><span class="line">    &#123; <span class="attr">name</span>: <span class="string">&#x27;organizationName&#x27;</span>, <span class="attr">value</span>: <span class="string">&#x27;Myorg&#x27;</span> &#125;,</span><br><span class="line">  ],</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="attr">keySize</span>: <span class="number">2048</span>,</span><br><span class="line">    <span class="attr">ca</span>: rootCA,</span><br><span class="line">    <span class="attr">algorithm</span>: <span class="string">&#x27;sha256&#x27;</span>,</span><br><span class="line">    <span class="attr">extensions</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&#x27;basicConstraints&#x27;</span>,</span><br><span class="line">        <span class="attr">cA</span>: <span class="literal">false</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&quot;keyUsage&quot;</span>,</span><br><span class="line">        <span class="attr">keyCertSign</span>: <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">digitalSignature</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">nonRepudiation</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">keyEncipherment</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">dataEncipherment</span>: <span class="literal">true</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&quot;extKeyUsage&quot;</span>,</span><br><span class="line">        <span class="attr">serverAuth</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">clientAuth</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">codeSigning</span>: <span class="literal">true</span>,</span><br><span class="line">        <span class="attr">timeStamping</span>: <span class="literal">true</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">name</span>: <span class="string">&quot;subjectAltName&quot;</span>,</span><br><span class="line">        <span class="attr">altNames</span>: [</span><br><span class="line">          &#123;</span><br><span class="line">            <span class="attr">type</span>: <span class="number">7</span>,</span><br><span class="line">            <span class="attr">ip</span>: address,</span><br><span class="line">          &#125;,</span><br><span class="line">        ],</span><br><span class="line">      &#125;,</span><br><span class="line">    ],</span><br><span class="line">  &#125;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">fs.writeFileSync(<span class="string">&#x27;./ca/cert.pem&#x27;</span>, pems.cert)</span><br><span class="line">fs.writeFileSync(<span class="string">&#x27;./ca/key.pem&#x27;</span>, pems.private)</span><br><span class="line"></span><br><span class="line">app.get(<span class="string">&#x27;/&#x27;</span>, <span class="function">(<span class="params">req, res</span>) =&gt;</span> &#123;</span><br><span class="line">  res.send(<span class="string">&#x27;Hello World!&#x27;</span>)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line">https.createServer(&#123;</span><br><span class="line">  <span class="attr">key</span>: fs.readFileSync(<span class="string">&#x27;./ca/key.pem&#x27;</span>),</span><br><span class="line">  <span class="attr">cert</span>: fs.readFileSync(<span class="string">&#x27;./ca/cert.pem&#x27;</span>)</span><br><span class="line">&#125;, app).listen(port, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`listening on https://<span class="subst">$&#123;address&#125;</span>:<span class="subst">$&#123;port&#125;</span>`</span>)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
 
-const app = express()
-const address = ip.address()
-const port = 3008
-
-fs.mkdirSync(&#39;./ca&#39;, &#123; recursive: true &#125;)
-const rootCA = selfsigned.generate(
-  [
-    &#123; name: &#39;commonName&#39;, value: &#39;Self-signedCert&#39; &#125;,
-    &#123; name: &#39;countryName&#39;, value: &#39;XX&#39; &#125;,
-    &#123; name: &#39;organizationName&#39;, value: &#39;Myorg&#39; &#125;,
-  ],
-  &#123;
-    keySize: 2048,
-    algorithm: &#39;sha256&#39;,
-    extensions: [
-      &#123;
-        name: &#39;basicConstraints&#39;,
-        cA: true,
-      &#125;,
-    ]
-  &#125;
-)
-
-fs.writeFileSync(&#39;./ca/rootCA.crt&#39;, rootCA.cert)
-
-const pems = selfsigned.generate(
-  [
-    &#123; name: &#39;commonName&#39;, value: &#39;Self-signedCert&#39; &#125;,
-    &#123; name: &#39;countryName&#39;, value: &#39;XX&#39; &#125;,
-    &#123; name: &#39;organizationName&#39;, value: &#39;Myorg&#39; &#125;,
-  ],
-  &#123;
-    keySize: 2048,
-    ca: rootCA,
-    algorithm: &#39;sha256&#39;,
-    extensions: [
-      &#123;
-        name: &#39;basicConstraints&#39;,
-        cA: false,
-      &#125;,
-      &#123;
-        name: &quot;keyUsage&quot;,
-        keyCertSign: false,
-        digitalSignature: true,
-        nonRepudiation: true,
-        keyEncipherment: true,
-        dataEncipherment: true,
-      &#125;,
-      &#123;
-        name: &quot;extKeyUsage&quot;,
-        serverAuth: true,
-        clientAuth: true,
-        codeSigning: true,
-        timeStamping: true,
-      &#125;,
-      &#123;
-        name: &quot;subjectAltName&quot;,
-        altNames: [
-          &#123;
-            type: 7,
-            ip: address,
-          &#125;,
-        ],
-      &#125;,
-    ],
-  &#125;
-)
-
-fs.writeFileSync(&#39;./ca/cert.pem&#39;, pems.cert)
-fs.writeFileSync(&#39;./ca/key.pem&#39;, pems.private)
-
-app.get(&#39;/&#39;, (req, res) =&gt; &#123;
-  res.send(&#39;Hello World!&#39;)
-&#125;)
-
-https.createServer(&#123;
-  key: fs.readFileSync(&#39;./ca/key.pem&#39;),
-  cert: fs.readFileSync(&#39;./ca/cert.pem&#39;)
-&#125;, app).listen(port, () =&gt; &#123;
-  console.log(`listening on https://$&#123;address&#125;:$&#123;port&#125;`)
-&#125;)
-</code></pre>
 <p><strong>将项目的ca目录下的rootCA.crt 拖到 keychain中, 并设置为信任的机构.</strong></p>
 <p>终端执行<code>node app.js</code>:</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20210316191512.png"></p>
@@ -892,7 +754,7 @@ https.createServer(&#123;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -1025,14 +887,6 @@ https.createServer(&#123;
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

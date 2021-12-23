@@ -355,7 +355,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>394 words</span>
+              <span>393 words</span>
             </span>
           
 
@@ -377,24 +377,16 @@
 
 <p>分两种情况：</p>
 <h4 id="纯-node-js-项目"><a href="#纯-node-js-项目" class="headerlink" title="纯 node.js 项目"></a>纯 node.js 项目</h4><p>node是唯一的依赖，查看官网<a target="_blank" rel="noopener" href="https://docs.travis-ci.com/user/languages/javascript-with-nodejs/">building a javascript and Node.js project</a>，在<code>.travis.yml</code>中添加：</p>
-<pre><code class="yaml">language: node_js
-node_js:
-  - &quot;8&quot;
-  - &quot;6&quot;
-</code></pre>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;8&quot;</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;6&quot;</span></span><br></pre></td></tr></table></figure>
+
 <p>如果需要安装指定版本的nodejs，需要借助于<code>.nvmrc</code>，具体操作见官网，这里主要看非node项目下，如何配置指定版本的node。</p>
 <h4 id="非node项目，项目中依赖node"><a href="#非node项目，项目中依赖node" class="headerlink" title="非node项目，项目中依赖node"></a>非node项目，项目中依赖node</h4><p>比如Rails项目，language为ruby，这时就不能使用上面的方式来设置。</p>
 <p>那么如何设置？</p>
 <p>在docs里面没有搜到，参考了这篇文章<a target="_blank" rel="noopener" href="https://austinpray.com/ops/2015/09/20/change-travis-node-version.html">Travis CI: Node Version Management on Non-Node Projects</a>，搞定。</p>
 <p>具体如下：</p>
 <p>在<code>.travis.yml</code>中添加：</p>
-<pre><code class="yaml">env:
-  - TRAVIS_NODE_VERSION=&quot;8.12.0&quot;
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">env:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">TRAVIS_NODE_VERSION=&quot;8.12.0&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">rm</span> <span class="string">-rf</span> <span class="string">~/.nvm</span> <span class="string">&amp;&amp;</span> <span class="string">git</span> <span class="string">clone</span> <span class="string">https://github.com/creationix/nvm.git</span> <span class="string">~/.nvm</span> <span class="string">&amp;&amp;</span> <span class="string">(cd</span> <span class="string">~/.nvm</span> <span class="string">&amp;&amp;</span> <span class="string">git</span> <span class="string">checkout</span> <span class="string">`git</span> <span class="string">describe</span> <span class="string">--abbrev=0</span> <span class="string">--tags`)</span> <span class="string">&amp;&amp;</span> <span class="string">source</span> <span class="string">~/.nvm/nvm.sh</span> <span class="string">&amp;&amp;</span> <span class="string">nvm</span> <span class="string">install</span> <span class="string">$TRAVIS_NODE_VERSION</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">npm</span> <span class="string">install</span></span><br></pre></td></tr></table></figure>
 
-install:
-  - rm -rf ~/.nvm &amp;&amp; git clone https://github.com/creationix/nvm.git ~/.nvm &amp;&amp; (cd ~/.nvm &amp;&amp; git checkout `git describe --abbrev=0 --tags`) &amp;&amp; source ~/.nvm/nvm.sh &amp;&amp; nvm install $TRAVIS_NODE_VERSION
-  - npm install
-</code></pre>
 <p>这里做了这么几件事：</p>
 <ul>
 <li>设置了环境变量TRAVIS_NODE_VERSION， 指定版本号，这里指定的是8.12.0。</li>
@@ -406,14 +398,7 @@ install:
 </ul>
 <p>OK。</p>
 <p>后面老大给了更好的解决方法，附上：<br>在<code>.travis.yml</code>中添加：</p>
-<pre><code class="yaml">env:
-  - TRAVIS_NODE_VERSION=&quot;8.12.0&quot;
-
-install:
-  - nvm install TRAVIS_NODE_VERSION
-  - nvm alias default TRAVIS_NODE_VERSION
-  - npm install
-</code></pre>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">env:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">TRAVIS_NODE_VERSION=&quot;8.12.0&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">install:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">nvm</span> <span class="string">install</span> <span class="string">TRAVIS_NODE_VERSION</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">nvm</span> <span class="string">alias</span> <span class="string">default</span> <span class="string">TRAVIS_NODE_VERSION</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">npm</span> <span class="string">install</span></span><br></pre></td></tr></table></figure>
 <p>果然，简单多了。不得不说，小白还有很长的路要走。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://austinpray.com/ops/2015/09/20/change-travis-node-version.html">Travis CI: Node Version Management on Non-Node Projects</a></p>
 <p><a target="_blank" rel="noopener" href="https://docs.travis-ci.com/user/languages/javascript-with-nodejs/">building a javascript and Node.js project</a></p>
@@ -725,7 +710,7 @@ install:
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -858,14 +843,6 @@ install:
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

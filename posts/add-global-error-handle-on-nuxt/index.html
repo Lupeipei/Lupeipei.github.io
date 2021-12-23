@@ -381,42 +381,14 @@
 <p>两步即可：</p>
 <ul>
 <li><p>在<code>plugins/axios.js</code>文件中，统一添加错误处理：</p>
-<pre><code class="javascript">export default function (&#123; $axios, error &#125;) &#123;
-  $axios.onError(e =&gt; &#123;
-    if(e.response.status === 403) &#123;
-      error(&#123; statusCode: 403, message: &quot;forbidden&quot; &#125;)
-    &#125;
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="function"><span class="keyword">function</span> (<span class="params">&#123; $axios, error &#125;</span>) </span>&#123;</span><br><span class="line">  $axios.onError(<span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(e.response.status === <span class="number">403</span>) &#123;</span><br><span class="line">      error(&#123; <span class="attr">statusCode</span>: <span class="number">403</span>, <span class="attr">message</span>: <span class="string">&quot;forbidden&quot;</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(e.response.status === <span class="number">404</span>) &#123;</span><br><span class="line">      error(&#123; <span class="attr">statusCode</span>: <span class="number">404</span>, <span class="attr">message</span>: <span class="string">&quot;not found&quot;</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(e.response.status === <span class="number">500</span>) &#123;</span><br><span class="line">      error(&#123; <span class="attr">statusCode</span>: <span class="number">500</span>, <span class="attr">message</span>: <span class="string">&quot;server error&quot;</span> &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-    if(e.response.status === 404) &#123;
-      error(&#123; statusCode: 404, message: &quot;not found&quot; &#125;)
-    &#125;
-
-    if(e.response.status === 500) &#123;
-      error(&#123; statusCode: 500, message: &quot;server error&quot; &#125;)
-    &#125;
-  &#125;)
-&#125;
-</code></pre>
 <p>每次axios 发送请求后，当response 返回错误时，会调用error这个method，而error 这个方法可以用来调用错误页面 error page。</p>
 </li>
 <li><p>在layouts 中添加 <code>error.vue</code> 文件，这个文件就是出错时render的error page.</p>
 <p><code>error.vue</code>的内容可以长这样：</p>
-<pre><code class="html">&lt;template&gt;
-  &lt;div class=&quot;container&quot;&gt;
-    &lt;h1 v-if=&quot;error.statusCode === 403&quot;&gt;Forbidden&lt;/h1&gt;
-    &lt;h1 v-if=&quot;error.statusCode === 404&quot;&gt;Page not found&lt;/h1&gt;
-    &lt;h1 v-if=&quot;error.statusCode === 500&quot;&gt;Server Error&lt;/h1&gt;
-    &lt;nuxt-link to=&quot;/&quot;&gt;Home page&lt;/nuxt-link&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;container&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h1</span> <span class="attr">v-if</span>=<span class="string">&quot;error.statusCode === 403&quot;</span>&gt;</span>Forbidden<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h1</span> <span class="attr">v-if</span>=<span class="string">&quot;error.statusCode === 404&quot;</span>&gt;</span>Page not found<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">h1</span> <span class="attr">v-if</span>=<span class="string">&quot;error.statusCode === 500&quot;</span>&gt;</span>Server Error<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">nuxt-link</span> <span class="attr">to</span>=<span class="string">&quot;/&quot;</span>&gt;</span>Home page<span class="tag">&lt;/<span class="name">nuxt-link</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript"><span class="keyword">export</span> <span class="keyword">default</span> &#123;</span></span><br><span class="line"><span class="javascript">  <span class="attr">props</span>: [<span class="string">&#x27;error&#x27;</span>],</span></span><br><span class="line"><span class="javascript">  <span class="attr">layout</span>: <span class="string">&#x27;blank&#x27;</span></span></span><br><span class="line"><span class="javascript">&#125;</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
-&lt;script&gt;
-export default &#123;
-  props: [&#39;error&#39;],
-  layout: &#39;blank&#39;
-&#125;
-&lt;/script&gt;
-</code></pre>
 <p>这里需要注意的是：</p>
 <p>当前版本的nuxt，在<code>error.vue</code>中设置layout是无效的。</p>
 <p>不过这个问题已修复，下一版本应该会发布，戳<a target="_blank" rel="noopener" href="https://github.com/nuxt/nuxt.js/issues/2537#ref-issue-499747914">bug(csr): error page layout not correctly applied #2537</a>  可查看详情。<br>「2019-10-14更新： 在2.10.0版本中，已经修复了该问题，可查看<a target="_blank" rel="noopener" href="https://github.com/nuxt/nuxt.js/releases">release</a>了解」<br>好了，搞定，收工！！</p>
@@ -733,7 +705,7 @@ export default &#123;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -866,14 +838,6 @@ export default &#123;
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

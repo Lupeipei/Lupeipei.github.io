@@ -355,7 +355,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>233 words</span>
+              <span>229 words</span>
             </span>
           
 
@@ -376,45 +376,18 @@
 <span id="more"></span> 
 
 <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>看个例子：</p>
-<pre><code class="ruby">### app/models/company.rb
-class Company &lt; ActiveRecord::Base
-  ……
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/company.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  ……</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### app/models/firm.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Firm</span> &lt; Company</span></span><br><span class="line">  ……</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-### app/models/firm.rb
-class Firm &lt; Company
-  ……
-end
-</code></pre>
 <p>在company中，有一个字段type，按照惯例，会开启单表继承STI功能，Firm不再只是Company的一个普通的子类subclass，它与Company共享着同一个表单。</p>
 <p>这时，需要给company添加了一个attribute，比如 creator，同时迁移数据，firm中的creator内容，需要单独调用form中的方法get_creator：</p>
-<pre><code class="ruby">class AddCreatorToCompanies &lt; ActiveRecord::Migration[5.2]
-  class Company &lt; ActiveRecord::Base; end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorToCompanies</span> &lt; ActiveRecord::Migration[5.2]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:companies</span>, <span class="symbol">:creator</span>, <span class="symbol">:string</span></span><br><span class="line"></span><br><span class="line">    Comany.where(<span class="symbol">type:</span> <span class="string">&quot;Firm&quot;</span>).find_each <span class="keyword">do</span> <span class="params">|firm|</span></span><br><span class="line">      firm.update(<span class="symbol">creator:</span> firm.get_creator)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def change
-    add_column :companies, :creator, :string
-
-    Comany.where(type: &quot;Firm&quot;).find_each do |firm|
-      firm.update(creator: firm.get_creator)
-    end
-  end
-end
-</code></pre>
 <p>执行时，终端报错，显示：</p>
-<pre><code>Invalid single-table inheritance type: Firm is not a subclass of AddCreatorToCompanies::Company.
-</code></pre>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在Company中添加  <strong>self.inheritance_column</strong>，触发单表继承STI。</p>
-<pre><code class="ruby">class AddCreatorToComanies &lt; ActiveRecord::Migration[5.2]
-  class Company &lt; ActiveRecord::Base
-    self.inheritance_column = &quot;_type&quot;
-  end
+<figure class="highlight mercury"><table><tr><td class="code"><pre><span class="line">Invalid single-table inheritance <span class="keyword">type</span>: Firm <span class="keyword">is</span> <span class="built_in">not</span> a subclass of AddCreatorToCompanies::Company.</span><br></pre></td></tr></table></figure>
 
-  def change
-    add_column :companies, :creator, :string
-    ……
-  end
-end
-</code></pre>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在Company中添加  <strong>self.inheritance_column</strong>，触发单表继承STI。</p>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorToComanies</span> &lt; ActiveRecord::Migration[5.2]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Company</span> &lt; ActiveRecord::Base</span></span><br><span class="line">    <span class="keyword">self</span>.inheritance_column = <span class="string">&quot;_type&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:companies</span>, <span class="symbol">:creator</span>, <span class="symbol">:string</span></span><br><span class="line">    ……</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>再次执行即可。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://api.rubyonrails.org/classes/ActiveRecord/Inheritance.html">Single table inheritance</a></p>
 
@@ -725,7 +698,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -858,14 +831,6 @@ end
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

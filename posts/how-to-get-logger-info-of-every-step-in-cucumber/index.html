@@ -358,7 +358,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>733 words</span>
+              <span>732 words</span>
             </span>
           
 
@@ -397,34 +397,8 @@
 <p>先附上我小白式的破解方法。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>依然采用了test step finished event。</p>
 <p>在<code>features/support</code>下新建<code>event.rb</code>文件，放入以下内容：</p>
-<pre><code class="Ruby">require &#39;logger&#39;
-$logger = Logger.new(STDOUT)
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;logger&#x27;</span></span><br><span class="line"><span class="variable">$logger</span> = Logger.new(STDOUT)</span><br><span class="line"></span><br><span class="line">AfterConfiguration <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.on_event <span class="symbol">:test_step_finished</span> <span class="keyword">do</span> <span class="params">|event|</span></span><br><span class="line">    name = event.test_step.text</span><br><span class="line">    <span class="keyword">if</span> name != <span class="string">&quot;AfterStep hook&quot;</span> &amp;&amp; name != <span class="string">&quot;Before hook&quot;</span> &amp;&amp; name != <span class="string">&quot;After hook&quot;</span></span><br><span class="line">      keyword = event.test_step.source.last.keyword</span><br><span class="line">      status = event.result.to_sym.to_s</span><br><span class="line">      step = keyword + name</span><br><span class="line"></span><br><span class="line">      <span class="comment"># logger info</span></span><br><span class="line">      <span class="keyword">if</span> status == <span class="string">&quot;passed&quot;</span></span><br><span class="line">        <span class="variable">$logger</span>.info(<span class="string">&quot;\n&quot;</span> +  step + <span class="string">&quot;\n&quot;</span>)</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">        exception_message = event.attributes.last.exception.message</span><br><span class="line">        exception_class =  event.attributes.last.exception.<span class="keyword">class</span></span><br><span class="line">        file_line = event.attributes.last.exception.backtrace[-<span class="number">2</span>]</span><br><span class="line">        <span class="comment"># 用sub将出错的文件地址转化为相对地址</span></span><br><span class="line">        file_line.sub! Dir.pwd, <span class="string">&quot;.&quot;</span></span><br><span class="line">        step_line = event.attributes.last.exception.backtrace.last</span><br><span class="line">        message =  step + <span class="string">&quot;\n&quot;</span> + exception_message + <span class="string">&quot;(&quot;</span> + exception_class.to_s + <span class="string">&quot;)\n&quot;</span> +  file_line + <span class="string">&quot;\n&quot;</span> + step_line</span><br><span class="line">        <span class="variable">$logger</span>.info(<span class="string">&quot;\n&quot;</span> + message + <span class="string">&quot;\n&quot;</span> )</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-AfterConfiguration do |config|
-  config.on_event :test_step_finished do |event|
-    name = event.test_step.text
-    if name != &quot;AfterStep hook&quot; &amp;&amp; name != &quot;Before hook&quot; &amp;&amp; name != &quot;After hook&quot;
-      keyword = event.test_step.source.last.keyword
-      status = event.result.to_sym.to_s
-      step = keyword + name
-
-      # logger info
-      if status == &quot;passed&quot;
-        $logger.info(&quot;\n&quot; +  step + &quot;\n&quot;)
-      else
-        exception_message = event.attributes.last.exception.message
-        exception_class =  event.attributes.last.exception.class
-        file_line = event.attributes.last.exception.backtrace[-2]
-        # 用sub将出错的文件地址转化为相对地址
-        file_line.sub! Dir.pwd, &quot;.&quot;
-        step_line = event.attributes.last.exception.backtrace.last
-        message =  step + &quot;\n&quot; + exception_message + &quot;(&quot; + exception_class.to_s + &quot;)\n&quot; +  file_line + &quot;\n&quot; + step_line
-        $logger.info(&quot;\n&quot; + message + &quot;\n&quot; )
-      end
-    end
-  end
-end
-</code></pre>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fnclx8jwzaj30ni0bymyp.jpg"></p>
 <p>这里，分步走。</p>
 <ul>
@@ -744,7 +718,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -877,14 +851,6 @@ end
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

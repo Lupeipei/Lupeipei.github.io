@@ -373,8 +373,8 @@
       
         <p>mapping  顾名思义, <code>map a b</code>, 当我执行 a 操作时, 它会做 b 操作会做的事.</p>
 <p>看个例子, 在 Vim 命令行中, 输入:</p>
-<pre><code>:map \ dd
-</code></pre>
+<figure class="highlight livescript"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">map</span> <span class="string">\</span> dd</span><br></pre></td></tr></table></figure>
+
 <p>表示, 在 normal 模式下, 按下<code>\</code>, 就会删除当前光标所在的行.</p>
 <p>mapping的设置, 跟模式有关系.</p>
 <p><code>map</code>: normal mode 下的 mapping, 只在 normal 模式下有效.</p>
@@ -382,56 +382,33 @@
 <p><code>vmap</code> : visual mode 下的 mapping, 只在 visual 模式下有效.</p>
 <p><code>imap</code> : insert mode 下的 mapping, 只在 insert 模式下有效.</p>
 <p>map 有一个大坑, 叫做 Recursion, 书中给了一个例子, 比如:</p>
-<pre><code>:nmap dd O&lt;esc&gt;jddk
-</code></pre>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nmap</span> dd O<span class="symbol">&lt;esc&gt;</span>jddk</span><br></pre></td></tr></table></figure>
+
 <p>normal 模式下, 按下dd, 等同于执行了<code>O&lt;esc&gt;jddk</code> , 而 <code>O&lt;esc&gt;jddk</code> 也有 <code>dd</code>, Vim 就会再次 mapping, 如此无穷尽….</p>
 <p>解决方法是使用<code>noremap</code>,  nonrecursive mapping. 修改上面那个命令:</p>
-<pre><code>:nnoremap dd O&lt;esc&gt;jddk
-</code></pre>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nnoremap</span> dd O<span class="symbol">&lt;esc&gt;</span>jddk</span><br></pre></td></tr></table></figure>
+
 <p>这样就正常了. 鉴于 noremap 能避雷,  作者给到的意见时, <strong>Always</strong> using  noremap instead of map. </p>
 <p>再看个例子:</p>
-<pre><code>:nnoremap &lt;C-s&gt;  :suspend&lt;CR&gt;
-</code></pre>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:nnoremap</span> &lt;C-s&gt;  <span class="symbol">:suspend&lt;CR&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>上述命令表示, normal 模式下, 按住 Ctrl + s, 就等同于在命令行输入了<code>:suspend</code> 然后回车 ,这里  <code>&lt;CR&gt;</code> 表示Enter回车键.</p>
 <p>都说到<code>&lt;CR&gt;</code> , 不妨来看看 VimScript 中 的 一些常用的 keycodes :</p>
-<pre><code>&lt;Esc&gt; : 代表 Esc 键
-&lt;C-&#123;key&#125;&gt; : Ctrl + 任意键, 通常是字母键
-&lt;S-&#123;key&#125;&gt; : Shift + 任意键, 通常是字母键
-&lt;CR&gt; : Enter键,也可以用&lt;Enter&gt;, &lt;Return&gt; 来表示
-&lt;Space&gt; : 空格键
-&lt;Leader&gt; : Leader 键
-&lt;Left&gt; : 左移方向键, 类似有&lt;Right&gt;, &lt;Up&gt;, &lt;Down&gt;
-</code></pre>
+<figure class="highlight bnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">&lt;Esc&gt;</span> : 代表 Esc 键</span><br><span class="line"><span class="attribute">&lt;C-&#123;key&#125;&gt;</span> : Ctrl + 任意键, 通常是字母键</span><br><span class="line"><span class="attribute">&lt;S-&#123;key&#125;&gt;</span> : Shift + 任意键, 通常是字母键</span><br><span class="line"><span class="attribute">&lt;CR&gt;</span> : Enter键,也可以用<span class="attribute">&lt;Enter&gt;</span>, <span class="attribute">&lt;Return&gt;</span> 来表示</span><br><span class="line"><span class="attribute">&lt;Space&gt;</span> : 空格键</span><br><span class="line"><span class="attribute">&lt;Leader&gt;</span> : Leader 键</span><br><span class="line"><span class="attribute">&lt;Left&gt;</span> : 左移方向键, 类似有<span class="attribute">&lt;Right&gt;</span>, <span class="attribute">&lt;Up&gt;</span>, <span class="attribute">&lt;Down&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>那么, 如何知道 VimScript 中所有 key 的特殊标记? 用万能的<code>:help</code>  就好了, 命令行输入:</p>
-<pre><code>:h key-notation
-</code></pre>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:h</span> key-notation</span><br></pre></td></tr></table></figure>
+
 <p>可以查看所有的 key-notation.</p>
 <p>我还记得刚入门时, 有时候看到别人的 vimrc 文件中, 有些 keycode 是全部小写的, 比如 <code>&lt;cr&gt;</code>, <code>&lt;esc&gt;</code>, 当时觉得, 有的人大写, 有的人小写, 哪种才是规范的呢? 直到看了文档, 才知道官方是首字母大写, 也算解了我的一个小困惑.</p>
 <p>Vim 中有个特殊的 mapping, <code>&lt;Nop&gt;</code>, 表示什么也不做. 比如:</p>
-<pre><code>:inoremap &lt;Esc&gt; &lt;Nop&gt;
-</code></pre>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">inoremap</span> <span class="symbol">&lt;Esc&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>Insert 模式下, 按下 Esc 键, 什么也没有做. [慎用!!!]</p>
 <p>现在, 我们可以用学到的知识来写个简单的禁止使用上下左右键的功能:</p>
 <p>在 <code>.vimrc</code> 文件中, 添加如下代码:</p>
-<pre><code class="vim">&quot; disable up, down, leaf, right
-&quot; normal mode
-nnoremap &lt;Up&gt; &lt;Nop&gt;
-nnoremap &lt;Down&gt; &lt;Nop&gt;
-nnoremap &lt;Left&gt; &lt;Nop&gt;
-nnoremap &lt;Right&gt; &lt;Nop&gt;
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="comment">&quot; disable up, down, leaf, right</span></span><br><span class="line"><span class="comment">&quot; normal mode</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Up&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Down&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Left&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Right&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&quot; visual mode</span></span><br><span class="line"><span class="keyword">vnoremap</span> <span class="symbol">&lt;Up&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">vnoremap</span> <span class="symbol">&lt;Down&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">vnoremap</span> <span class="symbol">&lt;Left&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">vnoremap</span> <span class="symbol">&lt;Right&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&quot; insert mode</span></span><br><span class="line"><span class="keyword">inoremap</span> <span class="symbol">&lt;Up&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">inoremap</span> <span class="symbol">&lt;Down&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">inoremap</span> <span class="symbol">&lt;Left&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br><span class="line"><span class="keyword">inoremap</span> <span class="symbol">&lt;Right&gt;</span> <span class="symbol">&lt;Nop&gt;</span></span><br></pre></td></tr></table></figure>
 
-&quot; visual mode
-vnoremap &lt;Up&gt; &lt;Nop&gt;
-vnoremap &lt;Down&gt; &lt;Nop&gt;
-vnoremap &lt;Left&gt; &lt;Nop&gt;
-vnoremap &lt;Right&gt; &lt;Nop&gt;
-
-&quot; insert mode
-inoremap &lt;Up&gt; &lt;Nop&gt;
-inoremap &lt;Down&gt; &lt;Nop&gt;
-inoremap &lt;Left&gt; &lt;Nop&gt;
-inoremap &lt;Right&gt; &lt;Nop&gt;
-</code></pre>
 <p>这样就只能用 hjkl 了.</p>
 <p>好了, 除了 Operator-Pending Mappings 外, 基本算是缕清了, 整点好吃的, 犒劳下自己吧.</p>
 
@@ -599,7 +576,7 @@ inoremap &lt;Right&gt; &lt;Nop&gt;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -732,14 +709,6 @@ inoremap &lt;Right&gt; &lt;Nop&gt;
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

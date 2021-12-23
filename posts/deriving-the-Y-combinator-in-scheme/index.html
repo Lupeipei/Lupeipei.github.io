@@ -393,340 +393,108 @@
 </blockquote>
 <p>对于任意的函数f,  fix 接受参数 f，返回(fix f)，将 f 作用于 (fix f)，得到的结果仍为(fix f)。</p>
 <p>在scheme中，Y 的定义如下：</p>
-<pre><code class="scheme">(define Y
-  (lambda (le)
-    ((lambda (f)
-      (f f))
-      (lambda (f)
-        (le (lambda (x)
-              ((f f) x)))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (le)</span><br><span class="line">    ((<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">      (<span class="name">f</span> f))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">        (<span class="name">le</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">              ((<span class="name">f</span> f) x)))))))</span><br></pre></td></tr></table></figure>
+
 <p>或者这样：</p>
-<pre><code class="scheme">(define Y
- (lambda (F)
-   (let ((W (lambda (x)
-              (F (lambda arg (apply (x x) arg))))))
-     (W W))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y</span><br><span class="line"> (<span class="name"><span class="builtin-name">lambda</span></span> (F)</span><br><span class="line">   (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">W</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">              (<span class="name">F</span> (<span class="name"><span class="builtin-name">lambda</span></span> <span class="name">arg</span> (apply (x x) arg))))))</span><br><span class="line">     (<span class="name">W</span> W))))</span><br></pre></td></tr></table></figure>
+
 <p>两者其实是一样的。</p>
 <p>来看一个调用Y的实例：</p>
 <p>定义一个函数 Fi，用来计算斐波那契数列：【 F(1)=1，F(2)=1, F(n)=F(n-1)+F(n-2)（n&gt;=3) 】</p>
-<pre><code class="scheme">(define Fi
-  (lambda (func-arg)
-    (lambda (n)
-      (cond
-        ((zero? (sub1 n)) 1)
-        ((zero? (- n 2)) 1)
-        (else (+ (func-arg (sub1 n)) (func-arg (- n 2))))))))
-</code></pre>
-<p>然后执行：</p>
-<pre><code class="scheme">((Y Fi) 10)
-;Value: 55
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Fi</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (func-arg)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (n)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">zero?</span></span> (<span class="name">sub1</span> n)) <span class="number">1</span>)</span><br><span class="line">        ((<span class="name"><span class="builtin-name">zero?</span></span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">2</span>)) <span class="number">1</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name"><span class="builtin-name">+</span></span> (<span class="name">func-arg</span> (<span class="name">sub1</span> n)) (<span class="name">func-arg</span> (<span class="name"><span class="builtin-name">-</span></span> n <span class="number">2</span>))))))))</span><br></pre></td></tr></table></figure>
 
-((Fi (Y Fi)) 10)
-;Value: 55
-</code></pre>
+<p>然后执行：</p>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name">Y</span> Fi) <span class="number">10</span>)</span><br><span class="line"><span class="comment">;Value: 55</span></span><br><span class="line"></span><br><span class="line">((<span class="name">Fi</span> (<span class="name">Y</span> Fi)) <span class="number">10</span>)</span><br><span class="line"><span class="comment">;Value: 55</span></span><br></pre></td></tr></table></figure>
+
 <p>两次调用的输出结果相同。</p>
 <h4 id="推导过程"><a href="#推导过程" class="headerlink" title="推导过程"></a>推导过程</h4><p>以书中定义的length函数为例：</p>
 <p>先定义一个永远不会有值输出，死循环的函数：eternity</p>
-<pre><code class="scheme">(define eternity
-  (lambda (x)
-    (eternity x)))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> eternity</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">    (<span class="name">eternity</span> x)))</span><br></pre></td></tr></table></figure>
+
 <p>length的定义如下：</p>
-<pre><code class="scheme">(define length
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> length</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br></pre></td></tr></table></figure>
+
 <p>这里，我们定义了一个函数，命名为length，而且在该函数内部调用了它自己。</p>
 <p>现在问题来了，如果不允许使用define来定义函数，不给函数命名，如何实现length？</p>
 <p>我们先从最简单的 length0 开始，当 list 为空时，<code>(length l)</code>为 0.</p>
 <p>先来看 length0:</p>
-<pre><code class="scheme">; length0
-;
-(lambda (l)
-  (cond
-    ((null? l) 0)
-    (else (add1 (eternity (cdr l))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; length0</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br></pre></td></tr></table></figure>
+
 <p>调用时， 也很简单：</p>
-<pre><code class="scheme">((lambda (l)
-  (cond
-    ((null? l) 0)
-    (else (add1 (eternity (cdr l)))))) (quote ()))
-;Value: 0
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))) (<span class="name"><span class="builtin-name">quote</span></span> ()))</span><br><span class="line"><span class="comment">;Value: 0</span></span><br></pre></td></tr></table></figure>
+
 <p>由此，继续定义 length&lt;=1 ：</p>
-<pre><code class="scheme">; length&lt;=1
-;
-(lambda (l)
-  (cond
-    ((null? l) 0)
-    (else
-      (add1 (
-        (lambda (l)
-           (cond
-             ((null? l) 0)
-             (else (add1 (eternity (cdr l))))))
-        (cdr l))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; length&lt;=1</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">      (<span class="name">add1</span> (</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">           (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">             ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">             (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br></pre></td></tr></table></figure>
+
 <p>调用  length&lt;=1 ：</p>
-<pre><code class="scheme">((lambda (l)
-  (cond
-    ((null? l) 0)
-    (else
-      (add1 (
-        (lambda (l)
-           (cond
-             ((null? l) 0)
-             (else (add1 (eternity (cdr l))))))
-        (cdr l)))))) (quote (hello)))
-;Value: 1
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">      (<span class="name">add1</span> (</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">           (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">             ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">             (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">cdr</span></span> l)))))) (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">hello</span>)))</span><br><span class="line"><span class="comment">;Value: 1</span></span><br></pre></td></tr></table></figure>
+
 <p>类推 length&lt;=2：</p>
-<pre><code class="scheme">(lambda (l)
-  (cond
-    ((null? l) 0)
-    (else
-      (add1 (
-        (lambda (l)
-          (cond
-            ((null? l) 0)
-            (else
-              (add1 (
-                (lambda (l)
-                   (cond
-                     ((null? l) 0)
-                     (else (add1 (eternity (cdr l))))))
-                (cdr l))))))
-          (cdr l))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">      (<span class="name">add1</span> (</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">            ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">            (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">              (<span class="name">add1</span> (</span><br><span class="line">                (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">                   (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">                     ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">                     (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">                (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">          (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br></pre></td></tr></table></figure>
+
 <p>调用  length&lt;=2 ：</p>
-<pre><code class="scheme">((lambda (l)
-  (cond
-    ((null? l) 0)
-    (else
-      (add1 (
-        (lambda (l)
-          (cond
-            ((null? l) 0)
-            (else
-              (add1 (
-                (lambda (l)
-                   (cond
-                     ((null? l) 0)
-                     (else (add1 (eternity (cdr l))))))
-                (cdr l))))))
-          (cdr l)))))) (quote (hello scheme)))
-;Value: 2
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">    ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">    (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">      (<span class="name">add1</span> (</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">            ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">            (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">              (<span class="name">add1</span> (</span><br><span class="line">                (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">                   (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">                     ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">                     (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">eternity</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">                (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line">          (<span class="name"><span class="builtin-name">cdr</span></span> l)))))) (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">hello</span> scheme)))</span><br><span class="line"><span class="comment">;Value: 2</span></span><br></pre></td></tr></table></figure>
+
 <p>按照这个规律，我们可以一直定义下去，length&lt;=n, n 为无穷大……</p>
 <p>但这显然不是一个函数该有的样子，所以我们换一种方式，来重新定义下 length0:</p>
-<pre><code class="scheme">; redefine length0
-;
-((lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-  eternity)
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; redefine length0</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">  eternity)</span><br></pre></td></tr></table></figure>
+
 <p>这里重新定义了一个函数，这个函数接受一个参数length，返回结果是一个lambda函数。</p>
 <p>上面这段代码，调用了该函数，并将 eternity 作为参数值传递进去。与我们先前定义的 length0 没有区别，仅仅是写法不同而已。</p>
 <p>用这种方式，可以类推出 length&lt;=1, length&lt;=2:</p>
-<pre><code class="scheme">; rewrite length&lt;=1 in the same style
-;
-((lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-  ((lambda (length)
-    (lambda (l)
-      (cond
-        ((null? l) 0)
-        (else (add1 (length (cdr l))))))) eternity))
-;
-; rewrite length&lt;=2 in the same style
-;
-((lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-((lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-  ((lambda (length)
-    (lambda (l)
-      (cond
-        ((null? l) 0)
-        (else (add1 (length (cdr l))))))) eternity)))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; rewrite length&lt;=1 in the same style</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">  ((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))) eternity))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; rewrite length&lt;=2 in the same style</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">  ((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))) eternity)))</span><br></pre></td></tr></table></figure>
+
 <p>顺着这个思路，再一次进行抽象提取，重新定义 length0:</p>
-<pre><code class="scheme">; mk-length for length0
-;
-((lambda (mk-length)
-    (mk-length eternity))
-    (lambda (length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 (length (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; mk-length for length0</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> eternity))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>这里，是将整个 length 的定义，作为 mk-length 的参数值：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1g260f7p56aj30vo0c4my9.jpg"></p>
 <p>它其实是同我们第二次定义的 length0 是一样的：</p>
 <p>只是这里调用了两次，一次将整个 length 的定义，作为 mk-length 的参数值，第二次将 eternity 作为 length 的参数值。</p>
 <p>由此可以类推出length&lt;=1, length&lt;=2:</p>
-<pre><code class="scheme">; mk-length for length&lt;=1
-;
-((lambda (mk-length)
-    (mk-length
-      (mk-length eternity)))
-  (lambda (length)
-    (lambda (l)
-      (cond
-        ((null? l) 0)
-        (else (add1 (length (cdr l))))))))
-;
-; mk-length for length&lt;=2
-;
-((lambda (mk-length)
-  (mk-length
-    (mk-length
-      (mk-length eternity))))
-  (lambda (length)
-    (lambda (l)
-      (cond
-        ((null? l) 0)
-        (else (add1 (length (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; mk-length for length&lt;=1</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span></span><br><span class="line">      (<span class="name">mk-length</span> eternity)))</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; mk-length for length&lt;=2</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">  (<span class="name">mk-length</span></span><br><span class="line">    (<span class="name">mk-length</span></span><br><span class="line">      (<span class="name">mk-length</span> eternity))))</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>这里，eternity 扮演的是参数值的角色，它本身是一个函数，我们使用 mk-length 来替换掉 eternity，当然也是可以的，重新看一下替换掉eternity后的 length0 :</p>
-<pre><code class="scheme">; replace eternity with mk-length
-;
-((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 (length (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; replace eternity with mk-length</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>这里，length也不过是一个参数名，自然也是可以换成mk-length的。</p>
-<pre><code class="scheme">; using mk-length instead of length
-;
-((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 (mk-length (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; using mk-length instead of length</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">mk-length</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>现在，调用上面这个函数，将eternity作为参数值，我们可以得到 length&lt;=1:</p>
-<pre><code class="scheme">; apply mk-length to get length&lt;=1
-;
-((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 ((mk-length eternity) (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; apply mk-length to get length&lt;=1</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> ((<span class="name">mk-length</span> eternity) (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>这里稍稍有点绕，截个图就明白了：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1g20zc49bf6j317q0c4ta9.jpg"></p>
 <p>调用一次试试看：</p>
-<pre><code class="scheme">(((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 ((mk-length eternity) (cdr l)))))))) (quote (apple)))
-;Value: 1
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> ((<span class="name">mk-length</span> eternity) (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))) (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">apple</span>)))</span><br><span class="line"><span class="comment">;Value: 1</span></span><br></pre></td></tr></table></figure>
+
 <p>结果无误。</p>
 <p>现在，我们再将上面 length&lt;=1定义中 的 eternity 替换成 mk-length:</p>
-<pre><code class="scheme">; replace eternity with mk-length
-;
-((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 ((mk-length mk-length) (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; replace eternity with mk-length</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> ((<span class="name">mk-length</span> mk-length) (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>鉴于<code>(f x)</code> 与 <code>(lambda (x) (f x))</code> 是一样的，所以我们使用<code>((lambda (x) ((mk-length mk-length) x)) (cdr l))</code> 来替换掉<code>((mk-length mk-length) (cdr l))</code>。</p>
 <p>替换后的结果如下：</p>
-<pre><code class="scheme">((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 ((lambda (x) ((mk-length mk-length) x)) (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> ((<span class="name"><span class="builtin-name">lambda</span></span> (x) ((<span class="name">mk-length</span> mk-length) x)) (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>再来一次抽取，将<code>(lambda (x) ((mk-length mk-length) x))</code> 作为参数值提取出来：</p>
-<pre><code class="scheme">((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      ((lambda (length)
-        (lambda (l)
-          (cond
-            ((null? l) 0)
-            (else (add1 (length (cdr l)))))))
-        (lambda (x) ((mk-length mk-length) x)))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      ((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">            ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">            (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (x) ((<span class="name">mk-length</span> mk-length) x)))))</span><br></pre></td></tr></table></figure>
+
 <p>你会发现最初定义length的那段代码已经完整浮现了：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1g20zkh1gz2j314c0ei75t.jpg"></p>
 <p>最后一次，将整块length的定义作为参数值，提取出来：</p>
-<pre><code class="scheme">((lambda (le)
-  ((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (le (lambda (x)
-            ((mk-length mk-length) x))))))
- (lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l))))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (le)</span><br><span class="line">  ((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name">le</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">            ((<span class="name">mk-length</span> mk-length) x))))))</span><br><span class="line"> (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br></pre></td></tr></table></figure>
+
 <p>这段代码中，将：</p>
-<pre><code class="scheme"> (lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line"> (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">   (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">     ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">     (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br></pre></td></tr></table></figure>
+
 <p>作为了le的参数值。</p>
 <p>现在，我们移除掉这个参数值，得到如下代码：</p>
-<pre><code class="scheme">(lambda (le)
-  ((lambda (mk-length)
-    (mk-length mk-length))
-    (lambda (mk-length)
-      (le (lambda (x)
-            ((mk-length mk-length) x))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (le)</span><br><span class="line">  ((<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">    (<span class="name">mk-length</span> mk-length))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (mk-length)</span><br><span class="line">      (<span class="name">le</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">            ((<span class="name">mk-length</span> mk-length) x))))))</span><br></pre></td></tr></table></figure>
+
 <p>好了，我们可以撒花🎉啦。</p>
 <p>用 f 替换 mk-length，Y combinator 登场：</p>
-<pre><code class="scheme">; Y combinator
-;
-(define Y
-  (lambda (le)
-    ((lambda (f)
-      (f f))
-      (lambda (f)
-        (le (lambda (x)
-              ((f f) x)))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; Y combinator</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (le)</span><br><span class="line">    ((<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">      (<span class="name">f</span> f))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">        (<span class="name">le</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">              ((<span class="name">f</span> f) x)))))))</span><br></pre></td></tr></table></figure>
+
 <p>整个推导过程结束。</p>
 <p>另，<a target="_blank" rel="noopener" href="https://github.com/pkrumins">Peter Krumins</a> 有一篇文章也详细演示了Y combinator的推导过程，可参阅 <a target="_blank" rel="noopener" href="https://catonmat.net/derivation-of-ycombinator">Deriving the Y-Combinator</a>。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Fixed-point_combinator#Fixed_point_combinators_in_lambda_calculus">fixed-point combinator</a>.  </p>
@@ -1040,7 +808,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -1173,14 +941,6 @@
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

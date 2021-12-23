@@ -360,7 +360,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>940 words</span>
+              <span>935 words</span>
             </span>
           
 
@@ -398,67 +398,26 @@
 <li><p>在gemfile中添加<code>gem &#39;aliyun-oss-sdk&#39;</code>, 终端运行<code>bundle install</code></p>
 </li>
 <li><p>在 <code>features/support</code>中新建文件<code>aliyun.rb</code>，试试上传一张图片：</p>
-<pre><code class="Ruby">require &#39;aliyun/oss&#39;
-aliyun_access_key = &quot;你的access_key&quot;
-aliyun_secret_key = &quot;你的secret_key&quot;
-host = &#39;你的host&#39;
-bucket = &#39;你的bucket&#39;
-client = Aliyun::Oss::Client.new(aliyun_access_key, aliyun_secret_key, host: host, bucket: bucket)
-client.bucket_create_object(&#39;images/image.png&#39;, File.new(/Users/xxx/xxx/image.png), &#123;&#39;Content-Type&#39; =&gt; &#39;image/png&#39; &#125;)
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;aliyun/oss&#x27;</span></span><br><span class="line">aliyun_access_key = <span class="string">&quot;你的access_key&quot;</span></span><br><span class="line">aliyun_secret_key = <span class="string">&quot;你的secret_key&quot;</span></span><br><span class="line">host = <span class="string">&#x27;你的host&#x27;</span></span><br><span class="line">bucket = <span class="string">&#x27;你的bucket&#x27;</span></span><br><span class="line">client = Aliyun::Oss::Client.new(aliyun_access_key, aliyun_secret_key, <span class="symbol">host:</span> host, <span class="symbol">bucket:</span> bucket)</span><br><span class="line">client.bucket_create_object(<span class="string">&#x27;images/image.png&#x27;</span>, File.new(<span class="regexp">/Users/xxx</span><span class="regexp">/xxx/image</span>.png), &#123;<span class="string">&#x27;Content-Type&#x27;</span> =&gt; <span class="string">&#x27;image/png&#x27;</span> &#125;)</span><br></pre></td></tr></table></figure>
+
 <p>这里File.new中的参数，是你想要上传的本地图片的文件路径。</p>
 <p>终端运行该脚本，在你刚刚新建的bucket中，查看“文件管理”，你会发现已经上传成功，很赞有没有？</p>
 </li>
 <li><p>接着我们上传截图，比如登陆测试的scenario长这样：</p>
-<pre><code class="Ruby">  Scenario: 用户输入正确的邮箱和密码完成登录
-    Given 我是已经注册的用户&quot;管理员张三&quot;
-    And  我在登录页面
-    When 我在登录页面的表格中输入邮箱:&quot;admin@123.com&quot;和密码:&quot;Password123456&quot;
-    And 我点击登录按钮，提交表单
-    Then 我可以看到我已经进入了个人的主页
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">Scenario:</span> 用户输入正确的邮箱和密码完成登录</span><br><span class="line">  Given 我是已经注册的用户<span class="string">&quot;管理员张三&quot;</span></span><br><span class="line">  And  我在登录页面</span><br><span class="line">  When 我在登录页面的表格中输入邮箱<span class="symbol">:<span class="string">&quot;admin@123.com&quot;</span></span>和密码<span class="symbol">:<span class="string">&quot;Password123456&quot;</span></span></span><br><span class="line">  And 我点击登录按钮，提交表单</span><br><span class="line">  Then 我可以看到我已经进入了个人的主页</span><br></pre></td></tr></table></figure>
+
 <p>现在我要截图一下登陆页面，可以这么来， 在对应的step的定义中，添加代码：</p>
-<pre><code class="Ruby">And(/^我在登录页面$/) do
-  LoginPage.open
- + LoginPage.on do
- +   file = Capybara::Screenshot.screen_shot_and_save_page
- + end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">And(<span class="regexp">/^我在登录页面$/</span>) <span class="keyword">do</span></span><br><span class="line">  LoginPage.open</span><br><span class="line"> + LoginPage.on <span class="keyword">do</span></span><br><span class="line"> +   file = Capybara::Screenshot.screen_shot_and_save_page</span><br><span class="line"> + <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>到这里你自然会想到，需要将上传这一步进行封装调用，我们先封装一下图片上传。</p>
 <p>考虑到<code>Capybara::Screenshot.screen_shot_and_save_page</code>得到的是一个hash，而我们想要的其实是截图的文件路径，所以用<code>Dir.pwd + file[:image].sub(&#39;.&#39;,&#39;&#39;)</code> 来获取截图路径。</p>
 <p>修改<code>aliyun.rb</code>文件：</p>
-<pre><code class="Ruby">require &#39;aliyun/oss&#39;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;aliyun/oss&#x27;</span></span><br><span class="line"></span><br><span class="line">aliyun_access_key = <span class="string">&quot;你的access_key&quot;</span></span><br><span class="line">aliyun_secret_key = <span class="string">&quot;你的secret_key&quot;</span></span><br><span class="line">host = <span class="string">&#x27;你的host&#x27;</span></span><br><span class="line">bucket = <span class="string">&#x27;你的bucket&#x27;</span></span><br><span class="line"><span class="variable">$client</span> = Aliyun::Oss::Client.new(aliyun_access_key, aliyun_secret_key, <span class="symbol">host:</span> host, <span class="symbol">bucket:</span> bucket)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">AliyunClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">upload_image</span><span class="params">(filename, file)</span></span></span><br><span class="line">      image_file = Dir.pwd + file[<span class="symbol">:image</span>].sub(<span class="string">&#x27;.&#x27;</span>,<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">      <span class="variable">$client</span>.bucket_create_object(filename, File.new(image_file), &#123;<span class="string">&#x27;Content-Type&#x27;</span> =&gt; <span class="string">&#x27;image/png&#x27;</span> &#125;)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> AliyunClient::Client</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-aliyun_access_key = &quot;你的access_key&quot;
-aliyun_secret_key = &quot;你的secret_key&quot;
-host = &#39;你的host&#39;
-bucket = &#39;你的bucket&#39;
-$client = Aliyun::Oss::Client.new(aliyun_access_key, aliyun_secret_key, host: host, bucket: bucket)
-
-module AliyunClient
-  module Client
-    def upload_image(filename, file)
-      image_file = Dir.pwd + file[:image].sub(&#39;.&#39;,&#39;&#39;)
-      $client.bucket_create_object(filename, File.new(image_file), &#123;&#39;Content-Type&#39; =&gt; &#39;image/png&#39; &#125;)
-    end
-  end
-end
-
-class Object
-  include AliyunClient::Client
-end
-</code></pre>
 <p>封装好了，直接调用我们的upload_image吧！</p>
 <p>在刚刚的step的定义中，添加代码：</p>
-<pre><code class="Ruby">And(/^我在登录页面$/) do
-  LoginPage.open
-  LoginPage.on do
-    file = Capybara::Screenshot.screen_shot_and_save_page
- +   upload(&#39;images/image.png&#39;, file)
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">And(<span class="regexp">/^我在登录页面$/</span>) <span class="keyword">do</span></span><br><span class="line">  LoginPage.open</span><br><span class="line">  LoginPage.on <span class="keyword">do</span></span><br><span class="line">    file = Capybara::Screenshot.screen_shot_and_save_page</span><br><span class="line"> +   upload(<span class="string">&#x27;images/image.png&#x27;</span>, file)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>OK!!</p>
 <p>这里，我是上传到images文件夹下，文件名为image.png 。当然具体上传的目标文件及文件夹都是可以自定义的，也是需要自定义的，特别是多次上传，你肯定不希望图片都被覆盖掉了，具体可以查看<a target="_blank" rel="noopener" href="https://github.com/aliyun-beta/aliyun-oss-ruby-sdk">aliyun-oss-ruby-sdk</a>。</p>
 </li>
@@ -777,7 +736,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -910,14 +869,6 @@ end
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 

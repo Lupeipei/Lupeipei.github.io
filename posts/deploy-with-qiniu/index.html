@@ -362,7 +362,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>823 words</span>
+              <span>822 words</span>
             </span>
           
 
@@ -401,38 +401,19 @@
 <p>出现这个情况，是因为我使用了<a target="_blank" rel="noopener" href="https://github.com/laserlemon/figaro">Figaro</a> 管理密码，之前部署到heroku时，终端运行<code>figaro heroku:set -e production</code>就可以了，但是这里，我们怎么把七牛对应的AccessKey，SecretKey等信息放入remote server呢？</p>
 <p>其实，<a target="_blank" rel="noopener" href="https://github.com/laserlemon/figaro">Figaro</a> 的README文档中已经提到了，咱们这么来：</p>
 <p>Step1、在远端的<code>~/yourproject_name/shared/config</code>中，添加<code>application.yml</code>, 内容如下：</p>
-<p>```Ruby<br>production:<br>   qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
-<p>   qiniu_secret_key: xxxx  # 你的 qiniu SecretKey</p>
-<p>   qiniu_bucket: xxxx  # 你的 qiniu bucket</p>
-<p>   qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain</p>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">production:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> <span class="symbol">development:</span></span><br><span class="line">   <span class="symbol">qiniu_access_key:</span> xxxx  <span class="comment"># 你的 qiniu AccessKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_secret_key:</span> xxxx  <span class="comment"># 你的 qiniu SecretKey</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket:</span> xxxx  <span class="comment"># 你的 qiniu bucket</span></span><br><span class="line"></span><br><span class="line">   <span class="symbol">qiniu_bucket_domain:</span> xxxx  <span class="comment"># 你的 qiniu bucket domain</span></span><br></pre></td></tr></table></figure>
+
+<p>这里，虽然我们添加了这个文件，但是由于你的<code>config/deploy.rb</code>中没有设置，所以部署的时候并不会去连接这个文件。</p>
+<p>Step2、在本机上编辑<code>config/deploy.rb</code>，将<code>application.yml</code>添加进去：</p>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">-  append <span class="symbol">:linked_files</span>, <span class="string">&quot;config/database.yml&quot;</span>, <span class="string">&quot;config/secrets.yml&quot;</span></span><br><span class="line">+  append <span class="symbol">:linked_files</span>, <span class="string">&quot;config/database.yml&quot;</span>, <span class="string">&quot;config/secrets.yml&quot;</span>, <span class="string">&quot;config/application.yml&quot;</span></span><br></pre></td></tr></table></figure>
+<p>OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
 </li>
-</ul>
-<p>   development:<br>     qiniu_access_key: xxxx  # 你的 qiniu AccessKey</p>
-<pre><code> qiniu_secret_key: xxxx  # 你的 qiniu SecretKey
-
- qiniu_bucket: xxxx  # 你的 qiniu bucket
-
- qiniu_bucket_domain: xxxx  # 你的 qiniu bucket domain
-</code></pre>
-<pre><code>
-这里，虽然我们添加了这个文件，但是由于你的`config/deploy.rb`中没有设置，所以部署的时候并不会去连接这个文件。
-
-Step2、在本机上编辑`config/deploy.rb`，将`application.yml`添加进去：
-
-```Ruby
--  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;
-+  append :linked_files, &quot;config/database.yml&quot;, &quot;config/secrets.yml&quot;, &quot;config/application.yml&quot;
-</code></pre>
-<p>  OK啦！记得commit 和 push，再运行 <code>cap production deploy</code>，最后在远端服务器运行seed。</p>
-<ul>
 <li><p><strong>TypeError: class or module required for rescue clause</strong></p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fkj0j8b12pj30oa0bujuv.jpg"></p>
 <p>看到报错，第一反应就是google，在<a target="_blank" rel="noopener" href="https://github.com/huobazi/carrierwave-qiniu/issues/17">carrierwave-qiniu configuration error #17</a> 中, 提到<code>qiniu-rs</code>这个gem已经没有人在维护了，要安装最新版的<code>carrierwave-qiniu</code>。好，那就重新安装，又不是第一次被版本坑了: P。</p>
 <p>在gemfile中做如下修改：</p>
-<pre><code>+ gem &#39;carrierwave-qiniu&#39;, &#39;~&gt; 1.1.5&#39;
+<figure class="highlight sml"><table><tr><td class="code"><pre><span class="line">+ gem <span class="symbol">&#x27;carrierwave</span>-qiniu&#x27;, <span class="string">&#x27;~&gt; 1.1.5&#x27;</span></span><br><span class="line"></span><br><span class="line">- gem <span class="symbol">&#x27;qiniu</span>-rs&#x27;</span><br></pre></td></tr></table></figure>
 
-- gem &#39;qiniu-rs&#39;
-</code></pre>
 <p>终端运行<code>bundle install</code>, 报错显示：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fkj1s2ugzfj30me0bq76f.jpg"></p>
 <p>显示没有mime-types，按照提示，运行<code>bundle update</code>， OK！</p>
@@ -752,7 +733,7 @@ Step2、在本机上编辑`config/deploy.rb`，将`application.yml`添加进去�
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    374.9k
+    373.5k
   </span>
 
 </div>
@@ -885,14 +866,6 @@ Step2、在本机上编辑`config/deploy.rb`，将`application.yml`添加进去�
 
   
 
-  <link rel="stylesheet" type="text/css" href="/js/google-code-prettify/tomorrow-night-bright.min.css">
-  <script type="text/javascript" src="/js/google-code-prettify/prettify.js"></script>
-  <script type="text/javascript">
-  $(window).load(function(){
-     $('pre').addClass('prettyprint linenums').attr('style', 'overflow:auto;');
-     prettyPrint();
-   })
-  </script>
 </body>
 </html>
 
