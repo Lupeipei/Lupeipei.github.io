@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>368 words</span>
+              <span>371 words</span>
             </span>
           
 
@@ -401,20 +401,34 @@
 
 <p>看个例子。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>场景：用户A想要通过接口获取到个人信息，代码如下：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">respoonse = RestClient.get &#x27;http:<span class="comment">//example.com/myprofile?access_token=#&#123;access_token&#125;&#x27;</span></span><br><span class="line">profile_response = JSON.parse(respoonse.body)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="JSON"> respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#&#123;access_token&#125;&#39;
+ profile_response = JSON.parse(respoonse.body)
+</code></pre>
 <p>其中，如果<code>access_token</code>过期或者无效，用户希望得到这样的结果：</p>
 <ul>
 <li>返回 400 Bad Request</li>
 <li>返回一个JSON格式的reponse body ，内容像这样：</li>
 </ul>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;	      </span><br><span class="line">   <span class="attr">&quot;code&quot;</span>: <span class="number">400</span>,</span><br><span class="line">   <span class="attr">&quot;error&quot;</span>: &#123;</span><br><span class="line">      <span class="attr">&quot;message&quot;</span>: <span class="string">&quot;The access token could not be decrypted&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;OAuthException&quot;</span></span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="JSON">&#123;          
+   &quot;code&quot;: 400,
+   &quot;error&quot;: &#123;
+      &quot;message&quot;: &quot;The access token could not be decrypted&quot;,
+      &quot;type&quot;: &quot;OAuthException&quot;
+   &#125;
+&#125;
+</code></pre>
 <p>这时，如果你的<code>access_token</code>是过期或者无效的，终端运行的时候，会报错400 Bad Request ，但是却没有返回对应的response。</p>
 <p>如何解决？</p>
 <p>其实，如果你熟悉ruby的异常处理，就会发现很简单，把上述的代码改成如下：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">body = begin</span><br><span class="line">  respoonse = RestClient.get &#x27;http:<span class="comment">//example.com/myprofile?access_token=#&#123;access_token&#125;&#x27;</span></span><br><span class="line">  response.body</span><br><span class="line">rescue RestClient::ExceptionWithResponse  =&gt; e</span><br><span class="line">  e.response.body</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line">profile_response = JSON.parse(body)</span><br></pre></td></tr></table></figure>
+<pre><code class="JSON">body = begin
+  respoonse = RestClient.get &#39;http://example.com/myprofile?access_token=#&#123;access_token&#125;&#39;
+  response.body
+rescue RestClient::ExceptionWithResponse  =&gt; e
+  e.response.body
+end
 
+profile_response = JSON.parse(body)
+</code></pre>
 <p>这里，使用了<code>rescue RestClient::ExceptionWithResponse  =&gt; e </code> 获取异常对象，并赋给了变量e，通过<code>e.response.body</code>来回传需要的error信息。</p>
 <p>大功告成。</p>
 <p>其实，看到这里，你就明白，不仅仅是 400bad request的response内容可以读取，其他如403 Forbidden，404 not found 等的response内容也是可以依葫芦画瓢来做的。：P</p>
@@ -582,7 +596,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -731,7 +745,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

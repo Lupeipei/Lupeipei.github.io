@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>926 words</span>
+              <span>937 words</span>
             </span>
           
 
@@ -406,46 +406,132 @@
 <p>如果你的专案中多处需要用到rest-client，你一定希望可以封装起来，易于调用，让代码更优雅。</p>
 <p>我们开始吧。</p>
 <h4 id="用法简介"><a href="#用法简介" class="headerlink" title="用法简介"></a>用法简介</h4><p><a target="_blank" rel="noopener" href="https://github.com/rest-client/rest-client">Rest-client</a>的<a target="_blank" rel="noopener" href="http://www.rubydoc.info/github/rest-client/rest-client/RestClient#post-class_method">官方文档</a>中， 详细地列出了各个method的参数情况，我们挑出最重要的那四个：</p>
-<figure class="highlight jboss-cli"><table><tr><td class="code"><pre><span class="line"><span class="string">.get</span><span class="params">(url, <span class="attr">headers</span> = &#123;&#125;, &amp;block)</span></span><br><span class="line"><span class="string">.post</span><span class="params">(url, payload, <span class="attr">headers</span> = &#123;&#125;, &amp;block)</span></span><br><span class="line"><span class="string">.put</span><span class="params">(url, payload, <span class="attr">headers</span> = &#123;&#125;, &amp;block)</span></span><br><span class="line"><span class="string">.delete</span><span class="params">(url, <span class="attr">headers</span> = &#123;&#125;, &amp;block)</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>.get(url, headers = &#123;&#125;, &amp;block)
+.post(url, payload, headers = &#123;&#125;, &amp;block)
+.put(url, payload, headers = &#123;&#125;, &amp;block)
+.delete(url, headers = &#123;&#125;, &amp;block)
+</code></pre>
 <p>会发现四个verb请求都带有headers，block，但是这两个参数都不是必填的。比如<code>get</code>， 只给一个URL就满足了。</p>
 <p>在<a target="_blank" rel="noopener" href="https://github.com/rest-client/rest-client">GitHub</a>库上有相关的实例，长这样：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1flbgi7h7mgj30oh07r407.jpg"></p>
 <p>用起来很简单，那么在ruby中如何封装呢？比如有个图书model，我想要对某个书进行修改，使用put时，就要传递至少三个参数，冗长的URL表明是哪本书，你的登录信息，比如sessionId, 要更新的内容。类似这样：</p>
-<figure class="highlight arcade"><table><tr><td class="code"><pre><span class="line">RestClient.post <span class="string">&#x27;http://book.com/books/bookid&#x27;</span>, &#123;:<span class="function"><span class="params">sessionId</span> =&gt;</span> <span class="string">&#x27;XXXXXXXX&#x27;</span>, :<span class="function"><span class="params">token</span> =&gt;</span> <span class="string">&quot;xxxx&quot;</span>&#125;,&#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;XXX&quot;</span>, <span class="string">&quot;description:&quot;</span> <span class="string">&quot;XXXXX&quot;</span> .......&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code>RestClient.post &#39;http://book.com/books/bookid&#39;, &#123;:sessionId =&gt; &#39;XXXXXXXX&#39;, :token =&gt; &quot;xxxx&quot;&#125;,&#123;&quot;name&quot;: &quot;XXX&quot;, &quot;description:&quot; &quot;XXXXX&quot; .......&#125;
+</code></pre>
 <p>代码看着很不整洁，如何改进？</p>
 <p>别急，先来看看在ruby中如何实现全局调用一个method。</p>
 <h4 id="call-method-from-the-global-scope"><a href="#call-method-from-the-global-scope" class="headerlink" title="call method from the global scope"></a>call method from the global scope</h4><p>比如你定义了method C</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">	puts <span class="string">&quot;hello, <span class="subst">#&#123;name&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def C(name)
+    puts &quot;hello, #&#123;name&#125;&quot;
+end
+</code></pre>
 <p>你想要在专案的多个文件中均可以调用这个method C，怎么实现？</p>
 <p>使用module，这么来，在文件A.rb中，放入如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">A</span></span></span><br><span class="line">	<span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">		<span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">			puts <span class="string">&quot;hello, <span class="subst">#&#123;name&#125;</span>&quot;</span></span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">module A
+    module B
+        def C(name)
+            puts &quot;hello, #&#123;name&#125;&quot;
+        end
+    end
+end
+</code></pre>
 <p>这时候，你引用C，需要写成A::B.C， 呃，这不是我们想要的结果，继续优化。</p>
 <p>在Ruby中，任何一个method都绑定了一个对象。当我们调用比较常见的method，比如<code>puts</code>， <code>require</code>时，其实我们是在调用<code>main.puts</code>, <code>main.require</code>, 也就是它们有一个默认的object，叫做main。</p>
 <p>那我们也想给C挂上这样的object，让它也可以像puts一样被直接调用，怎么做？</p>
 <p>让Object这个class中，包含我们的A::B即可，修改文件A.rb：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">A</span></span></span><br><span class="line">	<span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">		<span class="function"><span class="keyword">def</span> <span class="title">C</span><span class="params">(name)</span></span></span><br><span class="line">			puts <span class="string">&quot;hello, <span class="subst">#&#123;name&#125;</span>&quot;</span></span><br><span class="line">		<span class="keyword">end</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">	<span class="keyword">include</span> A::B</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module A
+    module B
+        def C(name)
+            puts &quot;hello, #&#123;name&#125;&quot;
+        end
+    end
+end
 
+class Object
+    include A::B
+end
+</code></pre>
 <p>这样当你在其他文件中，比如app.rb中调用C时，只要加上如下代码即可：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;A&#x27;</span> <span class="comment">#C定义的文件名</span></span><br><span class="line">extend A::B</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">require &#39;A&#39; #C定义的文件名
+extend A::B
+</code></pre>
 <p>好，回到我们的restclient, 现在就很好做了。</p>
 <h4 id="简化restclient的调用"><a href="#简化restclient的调用" class="headerlink" title="简化restclient的调用"></a>简化restclient的调用</h4><p>知道如何对method进行global 调用，我们可以这么玩。</p>
 <p>新建<code>myclient.rb</code>文件，内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rest-client&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
 
+module MyClient
+  module Client
+  end
+end
+</code></pre>
 <p>里面没有任何method，我们加上get。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rest-client&#x27;</span></span><br><span class="line"><span class="variable">$apiurl</span> = <span class="symbol">http:</span>/<span class="regexp">/example.com/api</span>. <span class="comment">#这是你API的URL，请自行修改</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(url, headers = <span class="literal">nil</span>)</span></span></span><br><span class="line">      response = RestClient.get(</span><br><span class="line">          <span class="variable">$apiurl</span> + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">   <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyClient::Client</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
+$apiurl = http://example.com/api. #这是你API的URL，请自行修改
+module MyClient
+  module Client
+    def get(url, headers = nil)
+      response = RestClient.get(
+          $apiurl + url,
+          headers
+      )
+    end
+   end
+ end
 
+class Object
+  include MyClient::Client
+end
+</code></pre>
 <p>这时，如果要在其他文件调用，比如app.rb文件中，使用get,就可以这么用了。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">require_relative <span class="string">&#x27;my_client&#x27;</span></span><br><span class="line">extend MyClient::Client</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line">headers =  &#123;<span class="symbol">:<span class="string">&#x27;session&#x27;</span></span> =&gt; <span class="string">&#x27;XXXX&#x27;</span>&#125;</span><br><span class="line">get(<span class="string">&quot;/books&quot;</span>, headers)</span><br><span class="line">.....</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require_relative &#39;my_client&#39;
+extend MyClient::Client
 
+......
+headers =  &#123;:&#39;session&#39; =&gt; &#39;XXXX&#39;&#125;
+get(&quot;/books&quot;, headers)
+.....
+</code></pre>
 <p>同样的，将post，put， delete 加入，补全代码，如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rest-client&#x27;</span></span><br><span class="line"><span class="variable">$apiurl</span> = <span class="symbol">http:</span>/<span class="regexp">/example.com/api</span>. <span class="comment">#这是你API的URL，请自行修改</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClient</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Client</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">get</span><span class="params">(url, headers = <span class="literal">nil</span>)</span></span></span><br><span class="line">      response = RestClient.get(</span><br><span class="line">          <span class="variable">$apiurl</span> + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">post</span><span class="params">(url, payload, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.post(</span><br><span class="line">          <span class="variable">$apiurl</span> + url,</span><br><span class="line">          payload,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">put</span><span class="params">(url, payload, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.put(</span><br><span class="line">          <span class="variable">$apiurl</span> + url,</span><br><span class="line">          payload,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">delete</span><span class="params">(url, headers = <span class="literal">nil</span> )</span></span></span><br><span class="line">      response = RestClient.delete(</span><br><span class="line">          <span class="variable">$apiurl</span> + url,</span><br><span class="line">          headers</span><br><span class="line">      )</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyClient::Client</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;rest-client&#39;
+$apiurl = http://example.com/api. #这是你API的URL，请自行修改
+module MyClient
+  module Client
+    def get(url, headers = nil)
+      response = RestClient.get(
+          $apiurl + url,
+          headers
+      )
+    end
 
+    def post(url, payload, headers = nil )
+      response = RestClient.post(
+          $apiurl + url,
+          payload,
+          headers
+      )
+    end
+
+    def put(url, payload, headers = nil )
+      response = RestClient.put(
+          $apiurl + url,
+          payload,
+          headers
+      )
+    end
+
+    def delete(url, headers = nil )
+      response = RestClient.delete(
+          $apiurl + url,
+          headers
+      )
+    end
+  end
+end
+
+class Object
+  include MyClient::Client
+end
+</code></pre>
 <p>搞定，可以欢快地调用啦！！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/18964016/how-can-i-add-a-method-to-the-global-scope-in-ruby">How can I add a method to the global scope in Ruby?</a></p>
 
@@ -607,7 +693,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -756,7 +842,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

@@ -1,0 +1,871 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Vim," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Vim 的 Abbreviations 特性, 同 mappings 有些相似, 但是主要用于插入, 替换. 这里按照原书的思路简单说一下应用. 先来看个例子. 在命令行模式下, 输入: :iabbrev ned end  然后在insert 模式下, 输入 ned 后回车或者退出insert 模式, 会发现 ned 已经变成了 end. [多嘴一句: 为什么是insert 模式下呢? 因为iab">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Abbreviations">
+<meta property="og:url" content="http://lupeipei.github.io/posts/vimscript-learning-on-abbrev/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="Vim 的 Abbreviations 特性, 同 mappings 有些相似, 但是主要用于插入, 替换. 这里按照原书的思路简单说一下应用. 先来看个例子. 在命令行模式下, 输入: :iabbrev ned end  然后在insert 模式下, 输入 ned 后回车或者退出insert 模式, 会发现 ned 已经变成了 end. [多嘴一句: 为什么是insert 模式下呢? 因为iab">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-12-23T14:01:41.000Z">
+<meta property="article:modified_time" content="2021-12-23T14:05:29.705Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Vim">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/vimscript-learning-on-abbrev/"/>
+
+
+
+
+
+  <title></title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <div class="container   ">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner" style="display: none;"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-series">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-file-text"></i> <br />
+            
+            专题
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner" style="width: 100%;">
+        <div class="sidebar-book">
+  
+    <div class="sidebar-book-header">
+      <div class="title">VimScript 学习笔记</div>
+    </div>
+  
+
+  <div class="sidebar-book-body">
+    <div class="book-catalog-body">
+      <div class="book-toc-content">
+        <ul>
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-preface/" class="text">前言</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-echo/" class="text">echo vs echom</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-set-option/" class="text">set option</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-mapping/" class="text">mapping</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-leaders/" class="text">Leaders</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-edit-your-vimrc/" class="text">editing your vimrc</a>
+              </li>
+            
+          
+            
+            
+              <li class="active">
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-abbrev/" class="text">Abbreviations</a>
+              </li>
+            
+          
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+        <div class="content-wrap" style="margin-left: 280px; padding: 30px;">
+          <div id="content" class="content">
+            
+<div class="content-book">
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-book " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/vimscript-learning-on-abbrev/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Abbreviations
+              
+            
+          </h1>
+        
+      <div class="post-meta"></div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Vim 的 Abbreviations 特性, 同 mappings 有些相似, 但是主要用于插入, 替换.</p>
+<p>这里按照原书的思路简单说一下应用.</p>
+<p>先来看个例子.</p>
+<p>在命令行模式下, 输入:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">iabbrev</span> ned end</span><br></pre></td></tr></table></figure>
+
+<p>然后在insert 模式下, 输入 ned 后回车或者退出insert 模式, 会发现 ned 已经变成了 end. [多嘴一句: 为什么是insert 模式下呢? 因为iabbrev 前面有个i….]</p>
+<p>这个功能可以很方便纠正一些拼写错误.</p>
+<p>鉴于我常常容易打出 ned, 所以我把这个 iabbrev 放在了 <code>.vimrc</code> 中. 哈哈.</p>
+<p>不过需要注意的是, 用 abbreviation 替换的, 不可以是关键字 keyword, 包括所有的 ASCII 字符, 下划线(_)等.</p>
+<p>可以通过<code>:h isfname</code> 来查看 Vim 中的所有关键字.</p>
+<p>为了省去大伙看文档懵逼的时间, 作者在文中贴心地给了一个简单的记忆方法: 用 abbreviation 来替换的, 不可以是单个字母, 数字或者下划线.</p>
+<p>说到这里, 你大概会猜, 支持扩展缩略的插件, 比如 <a target="_blank" rel="noopener" href="https://github.com/mattn/emmet-vim">mattn/emmet-vim</a> 应该是 Abbreviations 的一个典型应用吧.</p>
+<p>我当时就是这么想的, 屁颠屁颠跑去看 <a target="_blank" rel="noopener" href="https://github.com/mattn/emmet-vim">mattn/emmet-vim</a> 的源代码想验证下猜想, 结果发现没有 iabbrev 的身影, 取而代之的是 substitute() 函数.🤪 [核心代码都是autoload目录下, 如果你也好奇的话….]</p>
+<p>切回 Abbreviations.</p>
+<p>如果想要清除刚刚的缩写设置, 可以使用:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:iunabbrev</span> ned</span><br></pre></td></tr></table></figure>
+
+<p>如果想要清除所有的缩写设置, 可以使用:</p>
+<figure class="highlight clojure"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:abclear</span></span><br></pre></td></tr></table></figure>
+
+<p>其中, <code>ab</code> 是 <code>abbrev</code> 的缩写形式….</p>
+<p>上面 ned 那个例子里, 用mapping 也可以实现一样的功能.</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:inoremap</span> ned <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>那为什么不用 mapping呢?</p>
+<p>因为 mappings 不会考虑需要替换的字符的上下文情况.[Mappings don’t take into account what characters come before or after the map]</p>
+<p>作者在书中给了个例子. 但是这个例子很奇怪, inoremap 无效.</p>
+<p>所以, 我来整了个简单点的.</p>
+<p>在命令行模式下, 输入:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">inoremap</span> <span class="built_in">log</span> logger.<span class="keyword">debug</span></span><br></pre></td></tr></table></figure>
+
+<p>在 insert 模式下, 输入 log, log会自动更换成 logger.debug, 但是当你输入 blog 时, 发现也被自动替换成了blogger.debug.</p>
+<p>这显然不是我们想要的.</p>
+<p>换成 <code>iabbrev</code> 就可以避免这个坑.</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">iunmap</span> <span class="built_in">log</span></span><br><span class="line">:<span class="keyword">iabbrev</span> <span class="built_in">log</span> logger.<span class="keyword">debug</span></span><br></pre></td></tr></table></figure>
+
+<p>此处用 <code>iunmap</code> 来清除刚刚设置的mapping.</p>
+<p>这时在 insert 模式下, 输入 blog, 发现不会被替换了.</p>
+<p>Bravo~</p>
+<p>OK, Abbreviations 可以告一段落. 自己试着写几个 abbrev 来帮助更正拼写吧😄️</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Vim/" rel="tag"># Vim</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        
+      
+
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+      
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/vimscript-learning-on-edit-your-vimrc/" rel="next" title="editing your vimrc">
+                <i class="fa fa-chevron-left"></i> editing your vimrc
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+</div>
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    375.5k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+
+

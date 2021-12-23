@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>711 words</span>
+              <span>729 words</span>
             </span>
           
 
@@ -400,27 +400,108 @@
 <span id="more"></span> 
 
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>先看一段调用undef_method的代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_value</span></span></span><br><span class="line">    <span class="string">&quot;my_value in MyModule&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:my_value</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(value)</span></span></span><br><span class="line">    <span class="variable">@my_value</span> = value</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MySubClass</span> &lt; MyClass</span></span><br><span class="line">  <span class="keyword">include</span> MyModule</span><br><span class="line">  undef_method <span class="symbol">:my_value</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">object = MySubClass.new(<span class="number">20</span>)</span><br><span class="line">puts object.my_value</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">module MyModule
+  def my_value
+    &quot;my_value in MyModule&quot;
+  end
+end
 
+class MyClass
+  attr_accessor :my_value
+
+  def initialize(value)
+    @my_value = value
+  end
+end
+
+class MySubClass &lt; MyClass
+  include MyModule
+  undef_method :my_value
+end
+
+object = MySubClass.new(20)
+puts object.my_value
+</code></pre>
 <p>执行，很明显，会报错，抛出<strong>NoMethodError</strong></p>
-<figure class="highlight oxygene"><table><tr><td class="code"><pre><span class="line">undefined <span class="function"><span class="keyword">method</span> `<span class="title">my_value</span>&#x27; <span class="title">for</span> #&lt;<span class="title">MySubClass</span>:</span><span class="number">0</span>x007fbdc4065818 @my_value=<span class="number">20</span>&gt;</span><br></pre></td></tr></table></figure>
-
+<pre><code>undefined method `my_value&#39; for #&lt;MySubClass:0x007fbdc4065818 @my_value=20&gt;
+</code></pre>
 <p> 没毛病，正常，ruby 2.5中对<a target="_blank" rel="noopener" href="https://ruby-doc.org/core-2.5.0/Module.html#method-i-undef_method">undef_method</a> 的定义就是这样的，prevents the current class from responding to calls to the named methods。</p>
 <p>But，你会发现rails中有一个神奇的地方，以一个简单的user model为例：</p>
 <p>user model含有字段name， 同时include了一个module UserAddon，使用undef_method来禁止调用引入的name方法，按照undef_method的定义， 此时User的对象调用name时，应该会报错，但是进入终端后，发现没有，反而返回了正确的结果。</p>
 <p>代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## app/models/user.rb</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># == Schema Information</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                          :integer          not null, primary key</span></span><br><span class="line"><span class="comment">#  email                       :string(254)</span></span><br><span class="line"><span class="comment">#  name                        :string(254)</span></span><br><span class="line"><span class="comment">#  password_digest             :string(254)</span></span><br><span class="line"><span class="comment">#  created_at                  :datetime         not null</span></span><br><span class="line"><span class="comment">#  updated_at                  :datetime         not null</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ActiveRecord</span></span><br><span class="line">  <span class="keyword">include</span> UserAddon</span><br><span class="line">  undef_method <span class="symbol">:name</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## app/models/users_addon.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">UserAddon</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">name</span></span></span><br><span class="line">    <span class="string">&quot;hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">## app/models/user.rb
 
+# == Schema Information
+#
+# Table name: users
+#
+#  id                          :integer          not null, primary key
+#  email                       :string(254)
+#  name                        :string(254)
+#  password_digest             :string(254)
+#  created_at                  :datetime         not null
+#  updated_at                  :datetime         not null
+
+class User &lt; ActiveRecord
+  include UserAddon
+  undef_method :name
+end
+
+## app/models/users_addon.rb
+module UserAddon
+  def name
+    &quot;hello&quot;
+  end
+end
+</code></pre>
 <p>这时，rails c 进入console：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">user = User.first</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; #&lt;User id: 1, name: &quot;admin&quot;, email: &quot;test<span class="doctag">@gmail</span>.com&quot;, created_at:……&gt;</span></span><br><span class="line"></span><br><span class="line">user.methods.<span class="keyword">include</span>?(<span class="symbol">:name</span>)</span><br><span class="line"><span class="comment"># =&gt; false</span></span><br><span class="line"></span><br><span class="line">user.name</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; &quot;admin&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$ </span>user.name</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; Couldn&#x27;t locate a definition for user.name</span></span><br><span class="line"></span><br><span class="line">user.respond_to?(<span class="symbol">:name</span>)</span><br><span class="line"><span class="comment"># =&gt; true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">user = User.first
 
+# =&gt; #&lt;User id: 1, name: &quot;admin&quot;, email: &quot;test@gmail.com&quot;, created_at:……&gt;
+
+user.methods.include?(:name)
+# =&gt; false
+
+user.name
+
+# =&gt; &quot;admin&quot;
+
+$ user.name
+
+# =&gt; Couldn&#39;t locate a definition for user.name
+
+user.respond_to?(:name)
+# =&gt; true
+</code></pre>
 <p>使用pry的$ ，找不到user.name的定义，但是执行user.name却返回了正确的结果，此时一定调用了method_missing。但是，如何查看rails是如何实现的呢？</p>
 <p>ruby元编程中在有关 rails的属性方法中曾经提到，当第一次访问一个属性时，这个属性是一个幽灵方法，ActiveRecord::Base # method_missing() 会把它转换成一个真实的方法，同时创建出读，写，查询方法，比如上面的name，会创建name, name=, name?，这样下次就可以直接调用。</p>
 <p>但是，这里很显然，user.methods.include?(:name)返回了false，这里并没有创建name这个方法，那么rails是如何让user.name 返回了”admin”的呢？</p>
 <p>这里附上来自<a target="_blank" rel="noopener" href="https://ruby-china.org/IChou">IChou</a> 大神的解答：</p>
 <p>使用undef_method :name后，调用user.name, 它会落入下面的 method_missing 方法中:</p>
-  <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># lib/active_model/attribute_methods.rb:425</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(method, *args, &amp;block)</span></span></span><br><span class="line">  <span class="keyword">if</span> respond_to_without_attributes?(method, <span class="literal">true</span>) <span class="comment"># =&gt;  这里是 false</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    match = matched_attribute_method(method.to_s)</span><br><span class="line">    #&lt;struct ActiveModel::AttributeMethods::ClassMethods::AttributeMethodMatcher::AttributeMethodMatch target=&quot;attribute&quot;, attr_name=&quot;name&quot;, method_name=&quot;name&quot;&gt;</span><br><span class="line">    match ? attribute_missing(match, *args, &amp;block) : <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">attribute_missing</span><span class="params">(match, *args, &amp;block)</span></span></span><br><span class="line">  __send__(match.target, match.attr_name, *args, &amp;block)</span><br><span class="line">  <span class="comment"># match.target =&gt; &quot;attribute&quot;， 这里调用了自身的 attribute 方法</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># lib/active_record/attribute_methods/read.rb:76</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_read_attribute</span><span class="params">(attr_name)</span></span> <span class="comment"># :nodoc:</span></span><br><span class="line">  <span class="variable">@attributes</span>.fetch_value(attr_name.to_s) &#123; <span class="params">|n|</span> <span class="keyword">yield</span> n <span class="keyword">if</span> block_given? &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="keyword">alias</span> <span class="symbol">:attribute</span> <span class="symbol">:_read_attribute</span></span><br><span class="line">private <span class="symbol">:attribute</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby"># lib/active_model/attribute_methods.rb:425
 
+def method_missing(method, *args, &amp;block)
+if respond_to_without_attributes?(method, true) # =&gt;  这里是 false
+  super
+else
+  match = matched_attribute_method(method.to_s)
+  #&lt;struct ActiveModel::AttributeMethods::ClassMethods::AttributeMethodMatcher::AttributeMethodMatch target=&quot;attribute&quot;, attr_name=&quot;name&quot;, method_name=&quot;name&quot;&gt;
+  match ? attribute_missing(match, *args, &amp;block) : super
+end
+end
+
+def attribute_missing(match, *args, &amp;block)
+__send__(match.target, match.attr_name, *args, &amp;block)
+# match.target =&gt; &quot;attribute&quot;， 这里调用了自身的 attribute 方法
+end
+
+# lib/active_record/attribute_methods/read.rb:76
+def _read_attribute(attr_name) # :nodoc:
+@attributes.fetch_value(attr_name.to_s) &#123; |n| yield n if block_given? &#125;
+end
+alias :attribute :_read_attribute
+private :attribute
+</code></pre>
 <p>「也就是最后调用@attributes.fetch_value(attr_name.to_s) ，user.name的返回了正确的结果，而不是如预期所想的那样抛出NoMethodError。」</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/rails/rails/blob/master/activemodel/lib/active_model/attribute_methods.rb">rails attribute methods</a></p>
 <p><a target="_blank" rel="noopener" href="https://apidock.com/ruby/Module/undef_method">undef method</a></p>
@@ -583,7 +664,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -732,7 +813,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

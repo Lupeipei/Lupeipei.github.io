@@ -404,12 +404,42 @@
 <h4 id="代码演示"><a href="#代码演示" class="headerlink" title="代码演示"></a>代码演示</h4><p>根据《the little schemer》chapter 08 中给出的奇偶数例子稍稍加以改编。</p>
 <p>定义函数 <code>number-only*&amp;co</code>，给到一个list， 要求：找出这个list中的所有数字，并求出数字的总和。将总和和新的数字集一并输出。</p>
 <p>比如：</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; 输出结果的格式（sum newlist), list的第一个元素是求和的结果，第二个元素为所取到数字集。</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples <span class="number">2</span> oranges <span class="number">10</span> peaches <span class="number">11</span> pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 2 10 11))</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) cal-number)</span><br><span class="line"><span class="comment">;Value : (32 (9 (2) (10) ((11))))</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">; 输出结果的格式（sum newlist), list的第一个元素是求和的结果，第二个元素为所取到数字集。
+;
+(number-only*&amp;co (quote (9 apples 2 oranges 10 peaches 11 pears)) cal-number)
+;Value : (32 (9 2 10 11))
 
+(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) cal-number)
+;Value : (32 (9 (2) (10) ((11))))
+</code></pre>
 <p>这里<code>cal-number</code> 就是一个collector。</p>
 <p>来看<code>number-only*&amp;co</code> 和 <code>cal-number</code>的定义：</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define number-only*&amp;co</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-only*&amp;co</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l col)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) (<span class="name">col</span> (<span class="name"><span class="builtin-name">quote</span></span> ()) <span class="number">0</span>))</span><br><span class="line">      ((<span class="name">atom?</span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">number?</span></span> (<span class="name"><span class="builtin-name">car</span></span> l))</span><br><span class="line">         (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">            (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))))</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l) col))))</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">car</span></span> l)</span><br><span class="line">                           (<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">                            (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">                              (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">                                (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds))))))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; define cal-number</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> cal-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cons</span></span> s (<span class="name"><span class="builtin-name">cons</span></span> l (<span class="name"><span class="builtin-name">quote</span></span> ())))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="scheme">; define number-only*&amp;co
+;
+(define number-only*&amp;co
+  (lambda (l col)
+    (cond
+      ((null? l) (col (quote ()) 0))
+      ((atom? (car l))
+      (cond
+        ((number? (car l))
+         (number-only*&amp;co (cdr l)
+          (lambda (newlat s)
+            (col (cons (car l) newlat) (+ (car l) s)))))
+        (else (number-only*&amp;co (cdr l) col))))
+      (else (number-only*&amp;co (car l)
+                           (lambda (al as)
+                            (number-only*&amp;co (cdr l)
+                              (lambda (dl ds)
+                                (col (cons al dl) (+ as ds))))))))))
+;
+; define cal-number
+;
+(define cal-number
+  (lambda (l s)
+    (cons s (cons l (quote ())))))
+;
+</code></pre>
 <p>  简单解释下：</p>
 <p>  number-only*&amp;co 接受两个参数，一个是list，一个是collector。</p>
 <p>  collector接受两个参数，一个是newlist,  一个是 s (s is short for sum)， newlist用来存 l 中的数字，s用来存数字求和的结果。</p>
@@ -422,30 +452,51 @@
 <li><p><code>(atom? (car l))</code> 为 #t, 判断第一个元素是不是number：</p>
 <ul>
 <li><p>第一个元素是number，添加到newlist里面，同时s = s + (car l)。此时新的collector长这样:</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (newlat s)</span><br><span class="line">   (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) newlat) (<span class="name"><span class="builtin-name">+</span></span> (<span class="name"><span class="builtin-name">car</span></span> l) s)))</span><br></pre></td></tr></table></figure></li>
+<pre><code class="scheme">(lambda (newlat s)
+   (col (cons (car l) newlat) (+ (car l) s)))
+</code></pre>
+</li>
 <li><p>第一个元素不是number，那就什么也不做，collector不变，仍然为col。</p>
 </li>
 </ul>
 </li>
 <li><p><code>(atom? (car l))</code> 为 #f:</p>
 <p>这里就要定义 <code>(car l) </code> 后的collector了。这个collector需要使用<code>number-only*&amp;co</code> 来遍历 <code>(cdr l)</code>，挑出<code>(cdr l)</code>中的所有数字，并算出这些数字的和。所以，它应该长成这样：</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">     (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">  		......)))</span><br></pre></td></tr></table></figure>
-
+<pre><code class="scheme">(lambda (al as)
+  (number-only*&amp;co (cdr l)
+     (lambda (dl ds)
+          ......)))
+</code></pre>
 <p>「这里al, as 是 <code>number-only*&amp;co</code>  处理<code> (car l)</code> 时得到的结果，而dl, ds 是 <code>number-only*&amp;co</code> 处理 <code>(cdr l)</code> 时得到的结果。」</p>
 <p>有了al, dl, as, ds， 后面只需要将两者得到的结果整合起来即可。</p>
 <p>所以，else语句中，最后的collector长这样：</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (al as)</span><br><span class="line">  (<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (dl ds)</span><br><span class="line">	  (<span class="name">col</span> (<span class="name"><span class="builtin-name">cons</span></span> al dl) (<span class="name"><span class="builtin-name">+</span></span> as ds)))))</span><br></pre></td></tr></table></figure></li>
+<pre><code class="scheme">(lambda (al as)
+  (number-only*&amp;co (cdr l)
+    (lambda (dl ds)
+      (col (cons al dl) (+ as ds)))))
+</code></pre>
+</li>
 </ul>
 </li>
 </ul>
 <p>至此， <code>number-only*&amp;co</code>  的定义完成。</p>
 <p>而<code>cal-number</code> 仅仅是一个collector，返回(sum newlist)， 没什么特别的。</p>
 <p>也可以定义新的collector，比如只返回sum，或者只返回newlist。</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> sum-number</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    s))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> number-list</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l s)</span><br><span class="line">    l))</span><br></pre></td></tr></table></figure>
-
+<pre><code class="scheme">(define sum-number
+  (lambda (l s)
+    s))
+;
+(define number-list
+  (lambda (l s)
+    l))
+</code></pre>
 <p>然后调用的时候，使用新的collector：</p>
-<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) sum-number)</span><br><span class="line"><span class="comment">;Value: 32</span></span><br><span class="line"></span><br><span class="line">(<span class="name">number-only*&amp;co</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">9</span> apples (<span class="name">2</span> oranges) (<span class="name">10</span>) peaches ((<span class="name">11</span>)) pears)) number-list)</span><br><span class="line"><span class="comment">;Value : (9 (2) (10) ((11)))</span></span><br></pre></td></tr></table></figure>
+<pre><code class="scheme">(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) sum-number)
+;Value: 32
 
+(number-only*&amp;co (quote (9 apples (2 oranges) (10) peaches ((11)) pears)) number-list)
+;Value : (9 (2) (10) ((11)))
+</code></pre>
 <p>OK。算是又刷了一遍，可以开启下一章的旅途了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://mitpress.mit.edu/books/little-scheme-fourth-edition">《The little schemer》</a></p>
 
@@ -607,7 +658,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -756,7 +807,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

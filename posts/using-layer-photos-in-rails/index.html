@@ -382,7 +382,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>920 words</span>
+              <span>921 words</span>
             </span>
           
 
@@ -409,34 +409,120 @@
 </ul>
 <p>来看一下每种方式的具体使用。</p>
 <h5 id="直接读取页面图片："><a href="#直接读取页面图片：" class="headerlink" title="直接读取页面图片："></a>直接读取页面图片：</h5><p>官方给到的示例如下：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;layer-photos-demo&quot;</span> <span class="attr">class</span>=<span class="string">&quot;layer-photos-demo&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">&quot;图片id，可以不写&quot;</span> <span class="attr">layer-src</span>=<span class="string">&quot;大图地址&quot;</span> <span class="attr">src</span>=<span class="string">&quot;缩略图&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;图片名&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">img</span> <span class="attr">layer-pid</span>=<span class="string">&quot;图片id，可以不写&quot;</span> <span class="attr">layer-src</span>=<span class="string">&quot;大图地址&quot;</span> <span class="attr">src</span>=<span class="string">&quot;缩略图&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;图片名&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript"><span class="comment">//调用示例</span></span></span><br><span class="line"><span class="javascript">layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">  <span class="attr">photos</span>: <span class="string">&#x27;#layer-photos-demo&#x27;</span></span></span><br><span class="line"><span class="javascript">  ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span></span><br><span class="line"><span class="javascript">&#125;);</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">//HTML示例
+&lt;div id=&quot;layer-photos-demo&quot; class=&quot;layer-photos-demo&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+  &lt;img layer-pid=&quot;图片id，可以不写&quot; layer-src=&quot;大图地址&quot; src=&quot;缩略图&quot; alt=&quot;图片名&quot;&gt;
+&lt;/div&gt;
 
+&lt;script&gt;
+//调用示例
+layer.photos(&#123;
+  photos: &#39;#layer-photos-demo&#39;
+  ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+&#125;);
+&lt;/script&gt;
+</code></pre>
 <p>这里要说一下，如果一个页面里面，你需要多个弹窗时，如何处理？</p>
 <p>假定现在有一系列产品，每个产品对应有多张图片。类似这样：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp1rwiwdzlj30js0azglk.jpg"></p>
 <p>需要的效果是：这时，点击product1的某张图片，弹出的是product1的图片预览层，点击product2，弹出的是product2的图片预览层。</p>
 <p>解决方法也很简单，套上一个动态的ID，需要用上JS，示例的代码如下：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">//HTML示例</span><br><span class="line">&lt;% @products.each do |product| %&gt;</span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;product-&lt;%= product.id %&gt;&quot;</span> <span class="attr">class</span>=<span class="string">&quot;layer-photos-demo&quot;</span>&gt;</span></span><br><span class="line">      &lt;% product.images.each do |image |%&gt;</span><br><span class="line">      <span class="tag">&lt;<span class="name">img</span>  <span class="attr">onclick</span>= <span class="string">&quot;getImage(&#x27;&lt;%= product.id %&gt;&#x27;);&quot;</span> <span class="attr">layer-src</span>=<span class="string">&quot;&lt;%= image.src %&gt;&quot;</span> <span class="attr">src</span>=<span class="string">&quot;&lt;%= image.thumb %&gt;&quot;</span> <span class="attr">alt</span>=<span class="string">&quot;图片名&quot;</span>&gt;</span></span><br><span class="line">       &lt;% end %&gt;   </span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&lt;% end %&gt;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImage</span>(<span class="params">productId</span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">        layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">            <span class="attr">photos</span>: <span class="string">&#x27;#product-&#x27;</span> + productId,</span></span><br><span class="line"><span class="javascript">            <span class="attr">anim</span>:<span class="number">5</span></span></span><br><span class="line"><span class="javascript">        &#125;);</span></span><br><span class="line"><span class="javascript">    &#125;</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Html">//HTML示例
+&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;% product.images.each do |image |%&gt;
+      &lt;img  onclick= &quot;getImage(&#39;&lt;%= product.id %&gt;&#39;);&quot; layer-src=&quot;&lt;%= image.src %&gt;&quot; src=&quot;&lt;%= image.thumb %&gt;&quot; alt=&quot;图片名&quot;&gt;
+       &lt;% end %&gt;   
+    &lt;/div&gt;
+&lt;% end %&gt;
 
+&lt;script&gt;
+    function getImage(productId)&#123;
+        layer.photos(&#123;
+            photos: &#39;#product-&#39; + productId,
+            anim:5
+        &#125;);
+    &#125;
+&lt;/script&gt;
+</code></pre>
 <h5 id="JSON文件传入"><a href="#JSON文件传入" class="headerlink" title="JSON文件传入"></a>JSON文件传入</h5><p>官方文档示例：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">$.getJSON(<span class="string">&#x27;/jquery/layer/test/photos.json&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span><br><span class="line">  layer.photos(&#123;</span><br><span class="line">    <span class="attr">photos</span>: json</span><br><span class="line">    ,<span class="attr">anim</span>: <span class="number">5</span> <span class="comment">//0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Javascript">$.getJSON(&#39;/jquery/layer/test/photos.json&#39;, function(json)&#123;
+  layer.photos(&#123;
+    photos: json
+    ,anim: 5 //0-6的选择，指定弹出图片动画类型，默认随机（请注意，3.0之前的版本用shift参数）
+  &#125;);
+&#125;);
+</code></pre>
 <p>返回的JSON需严格按照如下格式：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;title&quot;</span>: <span class="string">&quot;&quot;</span>, <span class="comment">//相册标题</span></span><br><span class="line">  <span class="attr">&quot;id&quot;</span>: <span class="number">123</span>, <span class="comment">//相册id</span></span><br><span class="line">  <span class="attr">&quot;start&quot;</span>: <span class="number">0</span>, <span class="comment">//初始显示的图片序号，默认0</span></span><br><span class="line">  <span class="attr">&quot;data&quot;</span>: [   <span class="comment">//相册包含的图片，数组格式</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="attr">&quot;alt&quot;</span>: <span class="string">&quot;图片名&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;pid&quot;</span>: <span class="number">666</span>, <span class="comment">//图片id</span></span><br><span class="line">      <span class="attr">&quot;src&quot;</span>: <span class="string">&quot;&quot;</span>, <span class="comment">//原图地址</span></span><br><span class="line">      <span class="attr">&quot;thumb&quot;</span>: <span class="string">&quot;&quot;</span> <span class="comment">//缩略图地址</span></span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="json">&#123;
+  &quot;title&quot;: &quot;&quot;, //相册标题
+  &quot;id&quot;: 123, //相册id
+  &quot;start&quot;: 0, //初始显示的图片序号，默认0
+  &quot;data&quot;: [   //相册包含的图片，数组格式
+    &#123;
+      &quot;alt&quot;: &quot;图片名&quot;,
+      &quot;pid&quot;: 666, //图片id
+      &quot;src&quot;: &quot;&quot;, //原图地址
+      &quot;thumb&quot;: &quot;&quot; //缩略图地址
+    &#125;
+  ]
+&#125;
+</code></pre>
 <p>在使用的时候，你可能会想是不是要生成一个JSON文件才能用这种方式? 其实并不需要。在Rails中可以用一个action的render，指定返回JSON格式的数据即可。</p>
 <p>还是以product为例， 三步走：</p>
 <ul>
 <li><p>给它添加一个preview的action， 在routes中声明</p>
 <p>在<code>routes.rb</code>中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">resources <span class="symbol">:products</span> <span class="keyword">do</span></span><br><span class="line">  member <span class="keyword">do</span></span><br><span class="line">    get <span class="symbol">:preview</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">resources :products do
+  member do
+    get :preview
+  end
+ end
+</code></pre>
+</li>
 <li><p>在<code>products_controller.rb</code>中，定义preview的内容，返回JSON内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">preview</span></span></span><br><span class="line">  <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="variable">@images</span> = <span class="variable">@product</span>.images.all</span><br><span class="line">  <span class="variable">@photo</span> = &#123;</span><br><span class="line">      <span class="symbol">title:</span> <span class="variable">@product</span>.title,</span><br><span class="line">      <span class="symbol">id:</span> <span class="variable">@product</span>.id,</span><br><span class="line">      <span class="symbol">start:</span> <span class="number">0</span>,</span><br><span class="line">      <span class="symbol">data:</span> <span class="variable">@images</span>.map <span class="keyword">do</span> <span class="params">|image|</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="symbol">alt:</span> image.title,</span><br><span class="line">            <span class="symbol">pid:</span> image.id,</span><br><span class="line">            <span class="symbol">src:</span> image.src,</span><br><span class="line">            <span class="symbol">thumb:</span> image.thumb</span><br><span class="line">        &#125;</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">  &#125;</span><br><span class="line">  render <span class="symbol">json:</span> <span class="variable">@photo</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def preview
+  @product = Product.find(params[:id])
+  @images = @product.images.all
+  @photo = &#123;
+      title: @product.title,
+      id: @product.id,
+      start: 0,
+      data: @images.map do |image|
+        &#123;
+            alt: image.title,
+            pid: image.id,
+            src: image.src,
+            thumb: image.thumb
+        &#125;
+      end
+  &#125;
+  render json: @photo
+end
+</code></pre>
 <p>返回的JSON内容，格式需要严格按照指定的格式去写。</p>
 </li>
 <li><p>在对应的html中，比如product的index页面， 添加如下内容：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">&lt;% @products.each do |product| %&gt;</span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;product-&lt;%= product.id %&gt;&quot;</span> <span class="attr">class</span>=<span class="string">&quot;layer-photos-demo&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;javascript:getImageJson(&#x27;&lt;%= product.id %&gt;&#x27;);&quot;</span>&gt;</span></span><br><span class="line">      查看产品图片<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&lt;% end %&gt;</span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript">    <span class="function"><span class="keyword">function</span> <span class="title">getImageJson</span>(<span class="params">productId</span>) </span>&#123;</span></span><br><span class="line"><span class="javascript">        $.getJSON(<span class="string">&#x27;/products/&#x27;</span> + productId + <span class="string">&#x27;/preview&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">json</span>)</span>&#123;</span></span><br><span class="line"><span class="javascript">            layer.photos(&#123;</span></span><br><span class="line"><span class="javascript">                <span class="attr">photos</span>: json,</span></span><br><span class="line"><span class="javascript">                <span class="attr">anim</span>: <span class="number">5</span></span></span><br><span class="line"><span class="javascript">            &#125;);</span></span><br><span class="line"><span class="javascript">        &#125;);</span></span><br><span class="line"><span class="javascript">    &#125;</span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Html">&lt;% @products.each do |product| %&gt;
+    &lt;div id=&quot;product-&lt;%= product.id %&gt;&quot; class=&quot;layer-photos-demo&quot;&gt;
+      &lt;a href=&quot;javascript:getImageJson(&#39;&lt;%= product.id %&gt;&#39;);&quot;&gt;
+      查看产品图片&lt;/a&gt;
+    &lt;/div&gt;
+&lt;% end %&gt;
+
+&lt;script&gt;
+    function getImageJson(productId) &#123;
+        $.getJSON(&#39;/products/&#39; + productId + &#39;/preview&#39;, function(json)&#123;
+            layer.photos(&#123;
+                photos: json,
+                anim: 5
+            &#125;);
+        &#125;);
+    &#125;
+&lt;/script&gt;
+</code></pre>
+</li>
 </ul>
 <p>刷新页面确认是否正常。</p>
 <p>OK， 大功告成。</p>
@@ -602,7 +688,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -751,7 +837,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

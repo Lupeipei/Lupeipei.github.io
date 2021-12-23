@@ -410,8 +410,225 @@
 </li>
 </ul>
 <p>以下为具体实现：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">assume cs:codesg, ds:data, ss:stacksg</span><br><span class="line"></span><br><span class="line">; 所要显示的原始数据</span><br><span class="line"></span><br><span class="line">data segment</span><br><span class="line">db &#x27;1975&#x27;,&#x27;1976&#x27;,&#x27;1977&#x27;,&#x27;1978&#x27;,&#x27;1979&#x27;,&#x27;1980&#x27;,&#x27;1981&#x27;,&#x27;1982&#x27; </span><br><span class="line">db &#x27;1983&#x27;,&#x27;1984&#x27;,&#x27;1985&#x27;,&#x27;1986&#x27;,&#x27;1987&#x27;,&#x27;1988&#x27;,&#x27;1989&#x27;,&#x27;1990&#x27;</span><br><span class="line">db &#x27;1991&#x27;,&#x27;1992&#x27;,&#x27;1993&#x27;,&#x27;1994&#x27;,&#x27;1995&#x27;</span><br><span class="line">;stands for years from 1975 to 1995</span><br><span class="line"></span><br><span class="line">dd 16,22,382,1356,2390,8000,16000,24486,50065,97479,140417,197514</span><br><span class="line">dd 345980,590827,803530,1183000,1843000,2759000,3753000,4649000,5937000</span><br><span class="line">;stands for yearly revenue from 1975 to 1995</span><br><span class="line"></span><br><span class="line">dw 3,7,9,13,28,38,130,220,476,778,1001,1442,2258,2793,4037,5635,8226</span><br><span class="line">dw 11542,14430,15257,17800</span><br><span class="line">;stands for number of employees from 1975 to 1995</span><br><span class="line"></span><br><span class="line">db 10 dup(0)</span><br><span class="line">; 用于暂存十进制数值</span><br><span class="line">data ends</span><br><span class="line"></span><br><span class="line">stacksg segment</span><br><span class="line">  dw 16 dup (0)</span><br><span class="line">stacksg ends</span><br><span class="line"></span><br><span class="line">codesg segment</span><br><span class="line">  start: mov ax, data</span><br><span class="line">         mov ds, ax</span><br><span class="line"></span><br><span class="line">      	 mov ax, stacksg</span><br><span class="line">      	 mov ss, ax</span><br><span class="line">      	 mov sp, 20h</span><br><span class="line"></span><br><span class="line">         mov ax, 0b800h</span><br><span class="line">         mov es, ax</span><br><span class="line"></span><br><span class="line">      	; 初始化用于定位的寄存器, bp 为160，从第一行开始</span><br><span class="line">      	 mov bx, 0</span><br><span class="line">      	 mov bp, 160</span><br><span class="line">      	 mov si, 0</span><br><span class="line"></span><br><span class="line">         ; 默认在屏幕的1行0列开始显示，cx用于循环，故改用dl保存色值，颜色为绿色</span><br><span class="line">      	 mov dh, 0</span><br><span class="line">      	 mov dl, 2</span><br><span class="line"></span><br><span class="line">      	 ; 按行显示，循环21次, cx = 21 </span><br><span class="line">      	 mov cx, 21</span><br><span class="line">      s: push cx </span><br><span class="line">      	 mov di, 0</span><br><span class="line">      	 call display_years</span><br><span class="line">      	 call display_revenue</span><br><span class="line">      	 call display_employees</span><br><span class="line">      	 call display_per_income</span><br><span class="line">      	 add bp, 160</span><br><span class="line">      	 add si, 4 </span><br><span class="line">      	 add bx, 2</span><br><span class="line">      	 pop cx</span><br><span class="line">      	 loop s</span><br><span class="line"></span><br><span class="line">      	 mov ax, 4c00h</span><br><span class="line">      	 int 21h</span><br><span class="line"></span><br><span class="line">; 显示年份</span><br><span class="line">display_years: push dx</span><br><span class="line">               push si</span><br><span class="line">               mov cx, 4</span><br><span class="line">    show_year: mov dh, ds:[si]</span><br><span class="line">      	       mov es:[bp + di], dh</span><br><span class="line">      	       mov es:[bp + di + 1], dl</span><br><span class="line">      	       add di, 2</span><br><span class="line">      	       inc si</span><br><span class="line">      	       loop show_year</span><br><span class="line"></span><br><span class="line">	       ; 在年份后的空白处显示空字符</span><br><span class="line">  show_empty0: mov byte ptr es:[bp+di], &#x27; &#x27;</span><br><span class="line">      	       mov es:[bp + di + 1], dl</span><br><span class="line">      	       add di, 2</span><br><span class="line">          		 cmp di, 40</span><br><span class="line">          		 jna show_empty0</span><br><span class="line"></span><br><span class="line">      	       pop si</span><br><span class="line">      	       pop dx</span><br><span class="line">    end_years: ret</span><br><span class="line"></span><br><span class="line">; 显示年收入</span><br><span class="line">display_revenue: push ax</span><br><span class="line">                 push dx</span><br><span class="line">            		 push cx</span><br><span class="line">            		 mov ax, ds:[21*4+si] ; 年收入是两个字，高位存在dx中，低位存在ax</span><br><span class="line">            		 mov dx, ds:[21*4+si+2]</span><br><span class="line">            		 mov cx, 10</span><br><span class="line">            		 call dtoc  ; 使用实验10的小程序3显示十进制的字符串</span><br><span class="line">            		 pop cx</span><br><span class="line">            		 pop dx</span><br><span class="line">            		 pop ax</span><br><span class="line"></span><br><span class="line">            		 call show_str ; 使用实验10的小程序1显示十进制的字符串</span><br><span class="line"></span><br><span class="line">	        ; 在年收入后的空白处显示空字符</span><br><span class="line">   show_empty1: mov byte ptr es:[bp+di], &#x27; &#x27;</span><br><span class="line">      	        mov es:[bp + di + 1], dl</span><br><span class="line">      	        add di, 2</span><br><span class="line">            		cmp di, 80</span><br><span class="line">            		jna show_empty1</span><br><span class="line">   end_revenue: ret</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">; 显示员工数量</span><br><span class="line">display_employees: push ax</span><br><span class="line">                   push dx</span><br><span class="line">              		 push cx</span><br><span class="line">              		 mov ax, ds:[21*8+bx]</span><br><span class="line">              		 mov dx, 0 </span><br><span class="line">              		 mov cx, 10</span><br><span class="line">              		 call dtoc  ; 使用实验10的小程序3显示十进制的字符串</span><br><span class="line">              		 pop cx</span><br><span class="line">              		 pop dx</span><br><span class="line">              		 pop ax</span><br><span class="line"></span><br><span class="line">              		 call show_str ; 使用实验10的小程序1显示十进制的字符串</span><br><span class="line"></span><br><span class="line">	        ; 在员工数量后的空白处显示空字符</span><br><span class="line">    show_empty2: mov byte ptr es:[bp+di], &#x27; &#x27;</span><br><span class="line">      	        mov es:[bp + di + 1], dl</span><br><span class="line">      	        add di, 2</span><br><span class="line">            		cmp di, 120 </span><br><span class="line">            		jna show_empty2</span><br><span class="line">  end_employees: ret</span><br><span class="line"></span><br><span class="line">; 显示年均人收入</span><br><span class="line">display_per_income: push ax</span><br><span class="line">                    push dx</span><br><span class="line">                		push cx</span><br><span class="line">                		mov ax, ds:[21*4+si]</span><br><span class="line">                		mov dx, ds:[21*4+si + 2]</span><br><span class="line">                		mov cx, ds:[21*8+bx]</span><br><span class="line">                		call divdw ; 使用实验10的小程序2先得出人均年收入，高位存放在dx, 低位存放在ax</span><br><span class="line">                		mov cx, 10</span><br><span class="line">                		call dtoc  ; 使用实验10的小程序3显示十进制的字符串</span><br><span class="line">                		pop cx</span><br><span class="line">                		pop dx</span><br><span class="line">                		pop ax</span><br><span class="line"></span><br><span class="line">                		call show_str ; 使用实验10的小程序1显示十进制的字符串</span><br><span class="line"></span><br><span class="line">	        ; 在年均人收入后的空白处显示空字符</span><br><span class="line">    show_empty3: mov byte ptr es:[bp+di], &#x27; &#x27;</span><br><span class="line">        	       mov es:[bp + di + 1], dl</span><br><span class="line">        	       add di, 2</span><br><span class="line">            		 cmp di, 160 </span><br><span class="line">            		 jna show_empty3</span><br><span class="line">end_per_income: ret</span><br><span class="line"></span><br><span class="line">   dtoc: push si</span><br><span class="line">      	 push di</span><br><span class="line">      	 push bp </span><br><span class="line"></span><br><span class="line">      	 mov si, 0</span><br><span class="line">      	 mov di, 0</span><br><span class="line">      	 mov bp, cx</span><br><span class="line"></span><br><span class="line">     s0: mov cx, bp </span><br><span class="line">         call divdw</span><br><span class="line"></span><br><span class="line">      	 add cx, 30h</span><br><span class="line">      	 push cx</span><br><span class="line">      	 inc si ; si 用来记录总的十进制数的字符串个数, 出栈时用到</span><br><span class="line">      	 mov cx, ax</span><br><span class="line">      	 jcxz s1</span><br><span class="line">      	 jmp short s0</span><br><span class="line"></span><br><span class="line">     s1: pop ax</span><br><span class="line">         mov ds:[21*10 + di], al</span><br><span class="line">      	 dec si</span><br><span class="line">      	 mov cx, si</span><br><span class="line">      	 jcxz ok</span><br><span class="line">      	 inc di</span><br><span class="line">      	 jmp short s1</span><br><span class="line"></span><br><span class="line">     ok: pop bp</span><br><span class="line">         pop di</span><br><span class="line">         pop si</span><br><span class="line">         ret </span><br><span class="line"></span><br><span class="line">   divdw: push bx</span><br><span class="line">          push ax</span><br><span class="line">          mov ax, dx</span><br><span class="line">      	  mov dx, 0</span><br><span class="line">      	  div cx</span><br><span class="line">      	  mov bx, ax</span><br><span class="line"></span><br><span class="line">      	  pop ax</span><br><span class="line">      	  div cx</span><br><span class="line"></span><br><span class="line">      	  mov cx, dx</span><br><span class="line">      	  mov dx, bx</span><br><span class="line">      	  pop bx</span><br><span class="line">          ret</span><br><span class="line"></span><br><span class="line"> show_str: push cx</span><br><span class="line">           push si</span><br><span class="line">      	   mov si, 0</span><br><span class="line">           mov ch, 0</span><br><span class="line"> display: mov cl, ds:[21*10 + si]</span><br><span class="line">      	  jcxz finish</span><br><span class="line">      	  mov es:[bp + di], cl</span><br><span class="line">      	  mov es:[bp + di + 1], dl</span><br><span class="line">       	  mov ds:[21*10+si], ch</span><br><span class="line">      	  inc si</span><br><span class="line">      	  add di, 2</span><br><span class="line">      	  jmp short display</span><br><span class="line">  finish: pop si </span><br><span class="line">          pop cx</span><br><span class="line">          ret</span><br><span class="line"></span><br><span class="line">codesg ends</span><br><span class="line">end start</span><br></pre></td></tr></table></figure>
+<pre><code class="assembly">assume cs:codesg, ds:data, ss:stacksg
 
+; 所要显示的原始数据
+
+data segment
+db &#39;1975&#39;,&#39;1976&#39;,&#39;1977&#39;,&#39;1978&#39;,&#39;1979&#39;,&#39;1980&#39;,&#39;1981&#39;,&#39;1982&#39; 
+db &#39;1983&#39;,&#39;1984&#39;,&#39;1985&#39;,&#39;1986&#39;,&#39;1987&#39;,&#39;1988&#39;,&#39;1989&#39;,&#39;1990&#39;
+db &#39;1991&#39;,&#39;1992&#39;,&#39;1993&#39;,&#39;1994&#39;,&#39;1995&#39;
+;stands for years from 1975 to 1995
+
+dd 16,22,382,1356,2390,8000,16000,24486,50065,97479,140417,197514
+dd 345980,590827,803530,1183000,1843000,2759000,3753000,4649000,5937000
+;stands for yearly revenue from 1975 to 1995
+
+dw 3,7,9,13,28,38,130,220,476,778,1001,1442,2258,2793,4037,5635,8226
+dw 11542,14430,15257,17800
+;stands for number of employees from 1975 to 1995
+
+db 10 dup(0)
+; 用于暂存十进制数值
+data ends
+
+stacksg segment
+  dw 16 dup (0)
+stacksg ends
+
+codesg segment
+  start: mov ax, data
+         mov ds, ax
+
+           mov ax, stacksg
+           mov ss, ax
+           mov sp, 20h
+
+         mov ax, 0b800h
+         mov es, ax
+
+          ; 初始化用于定位的寄存器, bp 为160，从第一行开始
+           mov bx, 0
+           mov bp, 160
+           mov si, 0
+
+         ; 默认在屏幕的1行0列开始显示，cx用于循环，故改用dl保存色值，颜色为绿色
+           mov dh, 0
+           mov dl, 2
+
+           ; 按行显示，循环21次, cx = 21 
+           mov cx, 21
+      s: push cx 
+           mov di, 0
+           call display_years
+           call display_revenue
+           call display_employees
+           call display_per_income
+           add bp, 160
+           add si, 4 
+           add bx, 2
+           pop cx
+           loop s
+
+           mov ax, 4c00h
+           int 21h
+
+; 显示年份
+display_years: push dx
+               push si
+               mov cx, 4
+    show_year: mov dh, ds:[si]
+                 mov es:[bp + di], dh
+                 mov es:[bp + di + 1], dl
+                 add di, 2
+                 inc si
+                 loop show_year
+
+           ; 在年份后的空白处显示空字符
+  show_empty0: mov byte ptr es:[bp+di], &#39; &#39;
+                 mov es:[bp + di + 1], dl
+                 add di, 2
+                   cmp di, 40
+                   jna show_empty0
+
+                 pop si
+                 pop dx
+    end_years: ret
+
+; 显示年收入
+display_revenue: push ax
+                 push dx
+                     push cx
+                     mov ax, ds:[21*4+si] ; 年收入是两个字，高位存在dx中，低位存在ax
+                     mov dx, ds:[21*4+si+2]
+                     mov cx, 10
+                     call dtoc  ; 使用实验10的小程序3显示十进制的字符串
+                     pop cx
+                     pop dx
+                     pop ax
+
+                     call show_str ; 使用实验10的小程序1显示十进制的字符串
+
+            ; 在年收入后的空白处显示空字符
+   show_empty1: mov byte ptr es:[bp+di], &#39; &#39;
+                  mov es:[bp + di + 1], dl
+                  add di, 2
+                    cmp di, 80
+                    jna show_empty1
+   end_revenue: ret
+
+
+; 显示员工数量
+display_employees: push ax
+                   push dx
+                       push cx
+                       mov ax, ds:[21*8+bx]
+                       mov dx, 0 
+                       mov cx, 10
+                       call dtoc  ; 使用实验10的小程序3显示十进制的字符串
+                       pop cx
+                       pop dx
+                       pop ax
+
+                       call show_str ; 使用实验10的小程序1显示十进制的字符串
+
+            ; 在员工数量后的空白处显示空字符
+    show_empty2: mov byte ptr es:[bp+di], &#39; &#39;
+                  mov es:[bp + di + 1], dl
+                  add di, 2
+                    cmp di, 120 
+                    jna show_empty2
+  end_employees: ret
+
+; 显示年均人收入
+display_per_income: push ax
+                    push dx
+                        push cx
+                        mov ax, ds:[21*4+si]
+                        mov dx, ds:[21*4+si + 2]
+                        mov cx, ds:[21*8+bx]
+                        call divdw ; 使用实验10的小程序2先得出人均年收入，高位存放在dx, 低位存放在ax
+                        mov cx, 10
+                        call dtoc  ; 使用实验10的小程序3显示十进制的字符串
+                        pop cx
+                        pop dx
+                        pop ax
+
+                        call show_str ; 使用实验10的小程序1显示十进制的字符串
+
+            ; 在年均人收入后的空白处显示空字符
+    show_empty3: mov byte ptr es:[bp+di], &#39; &#39;
+                   mov es:[bp + di + 1], dl
+                   add di, 2
+                     cmp di, 160 
+                     jna show_empty3
+end_per_income: ret
+
+   dtoc: push si
+           push di
+           push bp 
+
+           mov si, 0
+           mov di, 0
+           mov bp, cx
+
+     s0: mov cx, bp 
+         call divdw
+
+           add cx, 30h
+           push cx
+           inc si ; si 用来记录总的十进制数的字符串个数, 出栈时用到
+           mov cx, ax
+           jcxz s1
+           jmp short s0
+
+     s1: pop ax
+         mov ds:[21*10 + di], al
+           dec si
+           mov cx, si
+           jcxz ok
+           inc di
+           jmp short s1
+
+     ok: pop bp
+         pop di
+         pop si
+         ret 
+
+   divdw: push bx
+          push ax
+          mov ax, dx
+            mov dx, 0
+            div cx
+            mov bx, ax
+
+            pop ax
+            div cx
+
+            mov cx, dx
+            mov dx, bx
+            pop bx
+          ret
+
+ show_str: push cx
+           push si
+             mov si, 0
+           mov ch, 0
+ display: mov cl, ds:[21*10 + si]
+            jcxz finish
+            mov es:[bp + di], cl
+            mov es:[bp + di + 1], dl
+             mov ds:[21*10+si], ch
+            inc si
+            add di, 2
+            jmp short display
+  finish: pop si 
+          pop cx
+          ret
+
+codesg ends
+end start
+</code></pre>
 
       
     </div>
@@ -571,7 +788,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -720,7 +937,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

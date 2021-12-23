@@ -411,9 +411,17 @@
 <p>此处的merge不会修改当前对象，而是将合并后的结果以一个新的hash表格式返回。</p>
 <p>其实这里的merge就等同于ruby中的merge， 对于两个hash，针对共有的key，默认取后一个hash的key对应的value。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="string">&quot;a&quot;</span> =&gt; <span class="number">100</span>, <span class="string">&quot;b&quot;</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">&quot;b&quot;</span> =&gt; <span class="number">254</span>, <span class="string">&quot;c&quot;</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.merge(h2) #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;
+</code></pre>
 <p>你可以通过block来指定merge的规则：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="string">&quot;a&quot;</span> =&gt; <span class="number">100</span>, <span class="string">&quot;b&quot;</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">&quot;b&quot;</span> =&gt; <span class="number">254</span>, <span class="string">&quot;c&quot;</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;</span></span><br><span class="line">h1.merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.merge(h2) &#123;|k,v1,v2| v1+v2&#125; #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;
+h1.merge(h2) &#123;|k,v1,v2| v1&#125; #=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+</code></pre>
+</li>
 <li><p>deep_merge用法</p>
 <p>官方给到的解释和例子是这样的：</p>
 <blockquote>
@@ -422,22 +430,34 @@
 </blockquote>
 <p>返回一个新的hash， 将当前对象和其他的hash进行<strong>递归merge</strong>。</p>
 <p>还是以上面的例子为例：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="string">&quot;a&quot;</span> =&gt; <span class="number">100</span>, <span class="string">&quot;b&quot;</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">&quot;b&quot;</span> =&gt; <span class="number">254</span>, <span class="string">&quot;c&quot;</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.deep_merge(h2) #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;254, &quot;c&quot;=&gt;300&#125;
+</code></pre>
 <p>同样，你也可以通过block来指定deep_merge的规则：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="string">&quot;a&quot;</span> =&gt; <span class="number">100</span>, <span class="string">&quot;b&quot;</span> =&gt; <span class="number">200</span> &#125;</span><br><span class="line">h2 = &#123; <span class="string">&quot;b&quot;</span> =&gt; <span class="number">254</span>, <span class="string">&quot;c&quot;</span> =&gt; <span class="number">300</span> &#125;</span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1+v2&#125; <span class="comment">#=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;</span></span><br><span class="line">h1.deep_merge(h2) &#123;<span class="params">|k,v1,v2|</span> v1&#125; <span class="comment">#=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">h1 = &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+h2 = &#123; &quot;b&quot; =&gt; 254, &quot;c&quot; =&gt; 300 &#125;
+h1.deep_merge(h2) &#123;|k,v1,v2| v1+v2&#125; #=&gt; &#123;&quot;a&quot;=&gt;100, &quot;b&quot;=&gt;454, &quot;c&quot;=&gt;300&#125;
+h1.deep_merge(h2) &#123;|k,v1,v2| v1&#125; #=&gt; &#123; &quot;a&quot; =&gt; 100, &quot;b&quot; =&gt; 200 &#125;
+</code></pre>
+</li>
 <li><p>二者差异</p>
 <p>从上面的例子看，似乎两者没有什么区别。</p>
 <p>在非嵌套的hash表中，merge能做的，deep_merge也能做。</p>
 <p>但是针对nested hash，两者就不一样了。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>], <span class="symbol">x:</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>] &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> [<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>] &#125; &#125;</span><br><span class="line">h1.merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:x=&gt;[3, 4, 5]&#125;&#125;</span></span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]&#125;&#125;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">h1 = &#123; a: true, b: &#123; c: [1, 2, 3], x: [1, 2, 3] &#125; &#125;
+h2 = &#123; a: false, b: &#123; x: [3, 4, 5] &#125; &#125;
+h1.merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:x=&gt;[3, 4, 5]&#125;&#125;
+h1.deep_merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;[3, 4, 5]&#125;&#125;
+</code></pre>
 <p>使用merge时，对于相同的key, 它不会去检查对应的value是不是一个hash，就是简单按照merge的规则返回value。</p>
 <p>使用deep_merge，会检查同样的key，对应的value是不是都是hash，如果是, 则对这两个hash再次进行deep_merge，也就是返回{ c: [1, 2, 3], x: [1, 2, 3]  }.deep_merge{ x: [3,  4,  5] }的结果，也就是概念中提到的递归merge。</p>
 <p>再看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">h1 = &#123; <span class="symbol">a:</span> <span class="literal">true</span>, <span class="symbol">b:</span> &#123; <span class="symbol">c:</span> [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>], <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">1</span> &#125; &#125; &#125;</span><br><span class="line">h2 = &#123; <span class="symbol">a:</span> <span class="literal">false</span>, <span class="symbol">b:</span> &#123; <span class="symbol">x:</span> &#123; <span class="symbol">y:</span> <span class="number">2</span>, <span class="symbol">z:</span> <span class="number">1</span>&#125; &#125; &#125;</span><br><span class="line">h1.deep_merge(h2) <span class="comment">#=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;&#123;:y=&gt;2, :z=&gt;1&#125;&#125;&#125;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">h1 = &#123; a: true, b: &#123; c: [1,2,3], x: &#123; y: 1 &#125; &#125; &#125;
+h2 = &#123; a: false, b: &#123; x: &#123; y: 2, z: 1&#125; &#125; &#125;
+h1.deep_merge(h2) #=&gt; &#123;:a=&gt;false, :b=&gt;&#123;:c=&gt;[1, 2, 3], :x=&gt;&#123;:y=&gt;2, :z=&gt;1&#125;&#125;&#125;
+</code></pre>
 <p>从上面这个例子可以看出，针对共有的key，deep_merge会一直检查对应的value是否都是hash，如果是，则继续对hash进行deep_merge，直到没有hash进行merge为止。</p>
 <h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4></li>
 <li><p>针对非嵌套的hash：merge和deep_merge并没有什么差异。</p>
@@ -605,7 +625,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -754,7 +774,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

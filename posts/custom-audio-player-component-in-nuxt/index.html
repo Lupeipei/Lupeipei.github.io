@@ -414,46 +414,284 @@
 <p>6、使用eventbus进行组件间的通信，在audio play之前，触发beforeplay事件，同时在AuidoPlay组件中监听beforeplay事件。</p>
 <p>分步来：</p>
 <p>先布局出音频播放组件的模子：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;audio-player mr-2&quot;&gt;</span><br><span class="line">      &lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">      &lt;i v-if=&quot;state === &#x27;playing&#x27;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;</span><br><span class="line">      &lt;i v-if=&quot;state != &#x27;playing&#x27;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;div class=&quot;w-100&quot;&gt;</span><br><span class="line">      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; currentTime &#125;&#125; / &#123;&#123; mediaDuration &#125;&#125;&lt;/span&gt;</span><br><span class="line">      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;</span><br><span class="line">      &lt;div class=&quot;progress&quot;&gt;</span><br><span class="line">        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import numbro from &#x27;numbro&#x27;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [ &#x27;src&#x27; ],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      currentTime: 0,</span><br><span class="line">      mediaDuration: 0,</span><br><span class="line">      state: &#x27;stopped&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  computed: &#123;</span><br><span class="line">    currentPercentage() &#123;</span><br><span class="line">      if (this.mediaDuration === 0) &#123;</span><br><span class="line">        return numbro(this.mediaDuration).format(&#123; output: &#x27;percent&#x27;, mantissa: 0 &#125;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        return numbro(this.currentTime / this.mediaDuration ).format(&#123; output: &#x27;percent&#x27;, mantissa: 0 &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
+    &lt;div class=&quot;audio-player mr-2&quot;&gt;
+      &lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; /&gt;
+      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
+      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;w-100&quot;&gt;
+      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; currentTime &#125;&#125; / &#123;&#123; mediaDuration &#125;&#125;&lt;/span&gt;
+      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
+      &lt;div class=&quot;progress&quot;&gt;
+        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
+&lt;script&gt;
+import numbro from &#39;numbro&#39;
+
+export default &#123;
+  props: [ &#39;src&#39; ],
+  data() &#123;
+    return &#123;
+      currentTime: 0,
+      mediaDuration: 0,
+      state: &#39;stopped&#39;
+    &#125;
+  &#125;,
+  computed: &#123;
+    currentPercentage() &#123;
+      if (this.mediaDuration === 0) &#123;
+        return numbro(this.mediaDuration).format(&#123; output: &#39;percent&#39;, mantissa: 0 &#125;)
+      &#125; else &#123;
+        return numbro(this.currentTime / this.mediaDuration ).format(&#123; output: &#39;percent&#39;, mantissa: 0 &#125;)
+      &#125;
+    &#125;
+  &#125;
+&#125;
+&lt;/script&gt;
+</code></pre>
 <p>Step1: 获取duration</p>
 <p>在audio上添加事件监听@canplay，在methods中定义对应的处理函数onCanplay。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; @canplay=&quot;onCanplay&quot; /&gt;</span><br><span class="line"></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line">    onCanplay(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      this.mediaDuration = parseInt(audio.duration)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;audio :src=&quot;src&quot; ref=&quot;audio&quot; @canplay=&quot;onCanplay&quot; /&gt;
 
+.....
+
+    onCanplay(event) &#123;
+      const audio = event.target
+      this.mediaDuration = parseInt(audio.duration)
+    &#125;
+</code></pre>
 <p>Step2: 获取currentTime</p>
 <p>在audio上添加事件监听@timeupdate，在methods中定义对应的处理函数onTimeupdate. 这里调用的stop函数，会在下一步定义。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;audio :src=&quot;src&quot; @canplay=&quot;onCanplay&quot; @timeupdate=&quot;onTimeupdate&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">.......</span><br><span class="line">    onTimeupdate(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      if (audio.currentTime &gt;= this.mediaDuration) &#123;</span><br><span class="line">        this.currentTime = this.mediaDuration</span><br><span class="line">        this.stop()</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        this.currentTime = audio.currentTime</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="vue">&lt;audio :src=&quot;src&quot; @canplay=&quot;onCanplay&quot; @timeupdate=&quot;onTimeupdate&quot; ref=&quot;audio&quot; /&gt;
+.......
+    onTimeupdate(event) &#123;
+      const audio = event.target
+      if (audio.currentTime &gt;= this.mediaDuration) &#123;
+        this.currentTime = this.mediaDuration
+        this.stop()
+      &#125; else &#123;
+        this.currentTime = audio.currentTime
+      &#125;
+    &#125;
+</code></pre>
 <p>Step3: 在methods中，定义play, pause, stop函数，用以处理audio的状态。</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">play</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="built_in">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.state === <span class="string">&#x27;stopped&#x27;</span>) &#123;</span><br><span class="line">    audio.currentTime = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (audio.paused) &#123;</span><br><span class="line">    audio.play()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">this</span>.state = <span class="string">&#x27;playing&#x27;</span></span><br><span class="line">&#125;,</span><br><span class="line"><span class="function"><span class="title">pause</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="built_in">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (!audio.paused) &#123;</span><br><span class="line">    audio.pause()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">this</span>.state = <span class="string">&#x27;paused&#x27;</span></span><br><span class="line">&#125;,</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="title">stop</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="built_in">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (!audio.paused) &#123;</span><br><span class="line">    audio.pause()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">this</span>.state = <span class="string">&#x27;stopped&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">    play() &#123;
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) &#123;
+        audio.currentTime = 0
+      &#125;
+      if (audio.paused) &#123;
+        audio.play()
+      &#125;
+      this.state = &#39;playing&#39;
+    &#125;,
+    pause() &#123;
+      const audio = this.$refs.audio
+      if (!audio.paused) &#123;
+        audio.pause()
+      &#125;
+      this.state = &#39;paused&#39;
+    &#125;,
 
+    stop() &#123;
+      const audio = this.$refs.audio
+      if (!audio.paused) &#123;
+        audio.pause()
+      &#125;
+      this.state = &#39;stopped&#39;
+    &#125;
+</code></pre>
 <p>Step4: 定义numberToStardardMinuteSecond函数，将currentTime，duration转化为时间。</p>
 <p>引入numbro.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yarn add numbro</span><br></pre></td></tr></table></figure>
-
+<pre><code class="shell">yarn add numbro
+</code></pre>
 <p>在methods中定义numberToStardardMinuteSecond：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">numberToStardardMinuteSecond</span>(<span class="params">num</span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> number = <span class="built_in">parseInt</span>(num)</span><br><span class="line">  <span class="keyword">const</span> time = numbro(number).format(&#123; <span class="attr">output</span>: <span class="string">&#x27;time&#x27;</span> &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (time.substr(<span class="number">0</span>, <span class="number">1</span>) === <span class="string">&#x27;0&#x27;</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> time.substr(<span class="number">2</span>, time.length - <span class="number">2</span>)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> time</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">    numberToStardardMinuteSecond(num) &#123;
+      const number = parseInt(num)
+      const time = numbro(number).format(&#123; output: &#39;time&#39; &#125;)
 
+      if (time.substr(0, 1) === &#39;0&#39;) &#123;
+        return time.substr(2, time.length - 2)
+      &#125; else &#123;
+        return time
+      &#125;
+    &#125;
+</code></pre>
 <p>Step5: 在进度条上监听click事件，在methods中定义seek函数来处理click事件。</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;</span><br><span class="line">  &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">&lt;/div&gt;</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">    seek(event) &#123;</span><br><span class="line">      const $this = $(event.target)</span><br><span class="line"></span><br><span class="line">      const widthclicked = event.pageX - $this.offset().left</span><br><span class="line">      const totalWidth = $this.width()</span><br><span class="line"></span><br><span class="line">      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
+  &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
 
+......
+
+    seek(event) &#123;
+      const $this = $(event.target)
+
+      const widthclicked = event.pageX - $this.offset().left
+      const totalWidth = $this.width()
+
+      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
+    &#125;
+</code></pre>
 <p>为了使progress可以点击，需要在style中给progress设置pointer-events。</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-class">.progress</span> &#123;</span><br><span class="line">  <span class="attribute">pointer-events</span>: auto;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="css">.progress &#123;
+  pointer-events: auto;
+&#125;
+</code></pre>
 <p>Step6: 使用eventbus进行组件间的通信，实现一次只播放一个视频。</p>
 <p>在audio play之前，$emit一个事件beforeplay， 同时将audio作为参数传出去。</p>
 <p>修改play函数，添加事件派发：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">play</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> audio = <span class="built_in">this</span>.$refs.audio</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.state === <span class="string">&#x27;stopped&#x27;</span>) &#123;</span><br><span class="line">    audio.currentTime = <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (audio.paused) &#123;</span><br><span class="line">    <span class="built_in">this</span>.$nuxt.$emit(<span class="string">&#x27;beforeplay&#x27;</span>, audio)</span><br><span class="line">    audio.play()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">this</span>.state = <span class="string">&#x27;playing&#x27;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="javascript">    play() &#123;
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) &#123;
+        audio.currentTime = 0
+      &#125;
+      if (audio.paused) &#123;
+        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
+        audio.play()
+      &#125;
+      this.state = &#39;playing&#39;
+    &#125;
+</code></pre>
 <p>任何其他的组件都可以监听这个beforeplay事件，当然也包括AudioPlayer组件。</p>
 <p>在AudioPlayer组件添加对beforeplay的监听：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="title">created</span>(<span class="params"></span>)</span> &#123;</span><br><span class="line">  <span class="built_in">this</span>.$nuxt.$on(<span class="string">&#x27;beforeplay&#x27;</span>, <span class="function">(<span class="params">player</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (player === <span class="built_in">this</span>.$refs.audio) &#123;</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.state === <span class="string">&#x27;playing&#x27;</span>) &#123;</span><br><span class="line">      <span class="built_in">this</span>.pause()</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="javascript">  created() &#123;
+    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; &#123;
+      if (player === this.$refs.audio) &#123;
+        return
+      &#125;
+      if (this.state === &#39;playing&#39;) &#123;
+        this.pause()
+      &#125;
+    &#125;)
+  &#125;
+</code></pre>
 <p>这里判断传过来的参数，如果是自身emit了这个事件，就跳过，如果是其他audio，同时自身还在播放，则自身停止播放。</p>
 <p>OK，大功告成。</p>
 <p>最终的完整代码：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;audio-player mr-2&quot;&gt;</span><br><span class="line">      &lt;audio :src=&quot;src&quot; @timeupdate=&quot;onTimeupdate&quot; @canplay=&quot;onCanplay&quot; ref=&quot;audio&quot; /&gt;</span><br><span class="line">      &lt;i v-if=&quot;state === &#x27;playing&#x27;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;</span><br><span class="line">      &lt;i v-if=&quot;state != &#x27;playing&#x27;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">    &lt;div class=&quot;w-100&quot;&gt;</span><br><span class="line">      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; numberToStardardMinuteSecond(currentTime) &#125;&#125; / &#123;&#123; numberToStardardMinuteSecond(mediaDuration) &#125;&#125;&lt;/span&gt;</span><br><span class="line">      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;</span><br><span class="line">      &lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;</span><br><span class="line">        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;</span><br><span class="line">      &lt;/div&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">&lt;/template&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">import $ from &#x27;jquery&#x27;</span><br><span class="line">import numbro from &#x27;numbro&#x27;</span><br><span class="line"></span><br><span class="line">export default &#123;</span><br><span class="line">  props: [ &#x27;src&#x27; ],</span><br><span class="line">  data() &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      currentTime: 0,</span><br><span class="line">      mediaDuration: 0,</span><br><span class="line">      state: &#x27;stopped&#x27;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  created() &#123;</span><br><span class="line">    this.$nuxt.$on(&#x27;beforeplay&#x27;, (player) =&gt; &#123;</span><br><span class="line">      if (player === this.$refs.audio) &#123;</span><br><span class="line">        return</span><br><span class="line">      &#125;</span><br><span class="line">      if (this.state === &#x27;playing&#x27;) &#123;</span><br><span class="line">        this.pause()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;,</span><br><span class="line">  computed: &#123;</span><br><span class="line">    currentPercentage() &#123;</span><br><span class="line">      if (this.mediaDuration === 0) &#123;</span><br><span class="line">        return numbro(this.mediaDuration).format(&#123; output: &#x27;percent&#x27;, mantissa: 0 &#125;)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        const progress = this.currentTime / this.mediaDuration</span><br><span class="line">        return numbro(progress).format(&#123; output: &#x27;percent&#x27;, mantissa: 0 &#125;)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    play() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (this.state === &#x27;stopped&#x27;) &#123;</span><br><span class="line">        audio.currentTime = 0</span><br><span class="line">      &#125;</span><br><span class="line">      if (audio.paused) &#123;</span><br><span class="line">        this.$nuxt.$emit(&#x27;beforeplay&#x27;, audio)</span><br><span class="line">        audio.play()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &#x27;playing&#x27;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    pause() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (!audio.paused) &#123;</span><br><span class="line">        audio.pause()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &#x27;paused&#x27;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    stop() &#123;</span><br><span class="line">      const audio = this.$refs.audio</span><br><span class="line">      if (!audio.paused) &#123;</span><br><span class="line">        audio.pause()</span><br><span class="line">      &#125;</span><br><span class="line">      this.state = &#x27;stopped&#x27;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    onTimeupdate(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      if (audio.currentTime &gt;= this.mediaDuration) &#123;</span><br><span class="line">        this.currentTime = this.mediaDuration</span><br><span class="line">        this.stop()</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        this.currentTime = audio.currentTime</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    seek(event) &#123;</span><br><span class="line">      const $this = $(event.target)</span><br><span class="line"></span><br><span class="line">      const widthclicked = event.pageX - $this.offset().left</span><br><span class="line">      const totalWidth = $this.width()</span><br><span class="line"></span><br><span class="line">      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    onCanplay(event) &#123;</span><br><span class="line">      const audio = event.target</span><br><span class="line">      this.mediaDuration = parseInt(audio.duration)</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    numberToStardardMinuteSecond(num) &#123;</span><br><span class="line">      const number = parseInt(num)</span><br><span class="line">      const time = numbro(number).format(&#123; output: &#x27;time&#x27; &#125;)</span><br><span class="line"></span><br><span class="line">      if (time.substr(0, 1) === &#x27;0&#x27;) &#123;</span><br><span class="line">        return time.substr(2, time.length - 2)</span><br><span class="line">      &#125; else &#123;</span><br><span class="line">        return time</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div class=&quot;d-flex w-100 align-items-top&quot;&gt;
+    &lt;div class=&quot;audio-player mr-2&quot;&gt;
+      &lt;audio :src=&quot;src&quot; @timeupdate=&quot;onTimeupdate&quot; @canplay=&quot;onCanplay&quot; ref=&quot;audio&quot; /&gt;
+      &lt;i v-if=&quot;state === &#39;playing&#39;&quot; class=&quot;far fa-pause-circle fa-2x&quot; @click=&quot;pause&quot;&gt;&lt;/i&gt;
+      &lt;i v-if=&quot;state != &#39;playing&#39;&quot; class=&quot;far fa-play-circle fa-2x&quot; @click=&quot;play&quot;&gt;&lt;/i&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;w-100&quot;&gt;
+      &lt;span class=&quot;float-right text-muted small&quot;&gt;&#123;&#123; numberToStardardMinuteSecond(currentTime) &#125;&#125; / &#123;&#123; numberToStardardMinuteSecond(mediaDuration) &#125;&#125;&lt;/span&gt;
+      &lt;span class=&quot;small&quot;&gt;点击后开始播放&lt;/span&gt;
+      &lt;div class=&quot;progress&quot; @click=&quot;seek&quot;&gt;
+        &lt;div class=&quot;progress-bar bg-primary&quot; style=&quot;transition-duration: 0.2s; transition-timing-function: linear;&quot; role=&quot;progressbar&quot; :style=&quot;`width: $&#123;currentPercentage&#125;`&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
 
+&lt;script&gt;
+import $ from &#39;jquery&#39;
+import numbro from &#39;numbro&#39;
+
+export default &#123;
+  props: [ &#39;src&#39; ],
+  data() &#123;
+    return &#123;
+      currentTime: 0,
+      mediaDuration: 0,
+      state: &#39;stopped&#39;
+    &#125;
+  &#125;,
+  created() &#123;
+    this.$nuxt.$on(&#39;beforeplay&#39;, (player) =&gt; &#123;
+      if (player === this.$refs.audio) &#123;
+        return
+      &#125;
+      if (this.state === &#39;playing&#39;) &#123;
+        this.pause()
+      &#125;
+    &#125;)
+  &#125;,
+  computed: &#123;
+    currentPercentage() &#123;
+      if (this.mediaDuration === 0) &#123;
+        return numbro(this.mediaDuration).format(&#123; output: &#39;percent&#39;, mantissa: 0 &#125;)
+      &#125; else &#123;
+        const progress = this.currentTime / this.mediaDuration
+        return numbro(progress).format(&#123; output: &#39;percent&#39;, mantissa: 0 &#125;)
+      &#125;
+    &#125;
+  &#125;,
+  methods: &#123;
+    play() &#123;
+      const audio = this.$refs.audio
+      if (this.state === &#39;stopped&#39;) &#123;
+        audio.currentTime = 0
+      &#125;
+      if (audio.paused) &#123;
+        this.$nuxt.$emit(&#39;beforeplay&#39;, audio)
+        audio.play()
+      &#125;
+      this.state = &#39;playing&#39;
+    &#125;,
+
+    pause() &#123;
+      const audio = this.$refs.audio
+      if (!audio.paused) &#123;
+        audio.pause()
+      &#125;
+      this.state = &#39;paused&#39;
+    &#125;,
+
+    stop() &#123;
+      const audio = this.$refs.audio
+      if (!audio.paused) &#123;
+        audio.pause()
+      &#125;
+      this.state = &#39;stopped&#39;
+    &#125;,
+
+    onTimeupdate(event) &#123;
+      const audio = event.target
+      if (audio.currentTime &gt;= this.mediaDuration) &#123;
+        this.currentTime = this.mediaDuration
+        this.stop()
+      &#125; else &#123;
+        this.currentTime = audio.currentTime
+      &#125;
+    &#125;,
+
+    seek(event) &#123;
+      const $this = $(event.target)
+
+      const widthclicked = event.pageX - $this.offset().left
+      const totalWidth = $this.width()
+
+      this.$refs.audio.currentTime = widthclicked / totalWidth * this.mediaDuration
+    &#125;,
+
+    onCanplay(event) &#123;
+      const audio = event.target
+      this.mediaDuration = parseInt(audio.duration)
+    &#125;,
+
+    numberToStardardMinuteSecond(num) &#123;
+      const number = parseInt(num)
+      const time = numbro(number).format(&#123; output: &#39;time&#39; &#125;)
+
+      if (time.substr(0, 1) === &#39;0&#39;) &#123;
+        return time.substr(2, time.length - 2)
+      &#125; else &#123;
+        return time
+      &#125;
+    &#125;
+  &#125;
+&#125;
+&lt;/script&gt;
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Media_events">Media events</a></p>
 <p><a target="_blank" rel="noopener" href="https://medium.com/@Shardik/eventbus-for-nuxt-js-components-46660ae54f2d">EventBus for Nuxt.js components</a></p>
 
@@ -615,7 +853,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -764,7 +1002,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

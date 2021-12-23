@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>704 words</span>
+              <span>716 words</span>
             </span>
           
 
@@ -452,31 +452,34 @@
 <h4 id="jcxz-指令"><a href="#jcxz-指令" class="headerlink" title="jcxz 指令"></a>jcxz 指令</h4><p>概念：</p>
 <p>有条件转移指令，<strong>所有的有条件转移指令都是短转移</strong>。</p>
 <p>指令格式：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">jcxz </span>标号</span><br></pre></td></tr></table></figure>
-
+<pre><code>jcxz 标号
+</code></pre>
 <p>相当于：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">if ((cx)==<span class="number">0</span>) <span class="keyword">jmp </span><span class="keyword">short </span>标号;</span><br></pre></td></tr></table></figure>
-
+<pre><code>if ((cx)==0) jmp short 标号;
+</code></pre>
 <p>另有与cmp 组合使用的条件转移指令：je, jne, jb, jnb, ja, jna等。</p>
 <h4 id="loop-指令"><a href="#loop-指令" class="headerlink" title="loop 指令"></a>loop 指令</h4><p>概念：</p>
 <p>循环指令，<strong>所有的循环转移指令都是短转移</strong>。</p>
 <p>指令格式：</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line"><span class="keyword">loop</span> 标号</span><br></pre></td></tr></table></figure>
-
+<pre><code>loop 标号
+</code></pre>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line">(<span class="built_in">cx</span>)--<span class="comment">;</span></span><br><span class="line">if ((<span class="built_in">cx</span>)!=<span class="number">0</span>) <span class="keyword">jmp</span> short 标号；</span><br></pre></td></tr></table></figure>
-
+<pre><code>(cx)--;
+if ((cx)!=0) jmp short 标号；
+</code></pre>
 <h4 id="ret-指令-amp-retf-指令"><a href="#ret-指令-amp-retf-指令" class="headerlink" title="ret 指令 &amp; retf 指令"></a>ret 指令 &amp; retf 指令</h4><p>概念：</p>
 <p>两者都是转移指令，ret 用栈中的数据修改IP的内容，从而实现近转移。retf 用栈中的数据修改 CS 和 IP的内容，从而实现远转移。</p>
 <p>指令格式：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">ret</span></span><br><span class="line"><span class="keyword">retf</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>ret
+retf
+</code></pre>
 <p>执行 ret 相当于：</p>
-<figure class="highlight armasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pop</span> <span class="built_in">IP</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>pop IP
+</code></pre>
 <p>执行 retf 相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">pop</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">pop</span> <span class="built_in">CS</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>pop IP
+pop CS
+</code></pre>
 <h4 id="call-指令"><a href="#call-指令" class="headerlink" title="call 指令"></a>call 指令</h4><p>概念：</p>
 <p>转移指令，CPU 执行 call 指令时，进行两步操作：先将当前的IP或CS压栈，随后转移。</p>
 <p>指令格式：</p>
@@ -487,7 +490,10 @@
 <li><p>call 16位寄存器/reg</p>
 <blockquote>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">jmp</span> <span class="number">16</span>位reg</span><br></pre></td></tr></table></figure></blockquote>
+<pre><code>push IP
+jmp 16位reg
+</code></pre>
+</blockquote>
 </li>
 <li><p>call 内存单元地址</p>
 </li>
@@ -497,16 +503,19 @@
 <li><p>call 标号</p>
 <blockquote>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">jmp</span> <span class="built_in">near</span> <span class="built_in">ptr</span> 标号</span><br></pre></td></tr></table></figure>
-
+<pre><code>push IP
+jmp near ptr 标号
+</code></pre>
 <p>同ret 正好对应入栈出栈。</p>
 </blockquote>
 </li>
 <li><p>call far ptr 标号</p>
 <blockquote>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">CS</span></span><br><span class="line"><span class="keyword">push</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">jmp</span> <span class="built_in">far</span> <span class="built_in">ptr</span> 标号</span><br></pre></td></tr></table></figure>
-
+<pre><code>push CS
+push IP
+jmp far ptr 标号
+</code></pre>
 <p>同retf 正好对应入栈出栈。</p>
 </blockquote>
 </li>
@@ -517,18 +526,39 @@
 <blockquote>
 <p>段内转移。</p>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">jmp</span> <span class="built_in">word</span> <span class="built_in">ptr</span> 内存单元地址</span><br></pre></td></tr></table></figure></blockquote>
+<pre><code>push IP
+jmp word ptr 内存单元地址
+</code></pre>
+</blockquote>
 </li>
 <li><p>call dword ptr 内存单元地址</p>
 <blockquote>
 <p>段间转移。</p>
 <p>相当于：</p>
-<figure class="highlight x86asm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">push</span> <span class="built_in">CS</span></span><br><span class="line"><span class="keyword">push</span> <span class="built_in">IP</span></span><br><span class="line"><span class="keyword">jmp</span> <span class="built_in">dword</span> <span class="built_in">ptr</span> 内存单元地址</span><br></pre></td></tr></table></figure></blockquote>
+<pre><code>push CS
+push IP
+jmp dword ptr 内存单元地址
+</code></pre>
+</blockquote>
 </li>
 </ul>
 <p>通常 可以使用call 和 ret 来实现子程序机制，比如：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">assume cs:code</span><br><span class="line"></span><br><span class="line">code segment</span><br><span class="line">  start: ......</span><br><span class="line">         ......</span><br><span class="line">         call sub</span><br><span class="line">         ......</span><br><span class="line">         ......</span><br><span class="line">         mov ax, 4c00h</span><br><span class="line">         int 21h</span><br><span class="line">    sub: ......</span><br><span class="line">         ......</span><br><span class="line">         ret</span><br><span class="line">code ends</span><br><span class="line">end start</span><br></pre></td></tr></table></figure>
+<pre><code class="assembly">assume cs:code
 
+code segment
+  start: ......
+         ......
+         call sub
+         ......
+         ......
+         mov ax, 4c00h
+         int 21h
+    sub: ......
+         ......
+         ret
+code ends
+end start
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://book.douban.com/subject/25726019/">汇编语言</a></p>
 
       
@@ -689,7 +719,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -838,7 +868,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

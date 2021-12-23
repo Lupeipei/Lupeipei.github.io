@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>828 words</span>
+              <span>840 words</span>
             </span>
           
 
@@ -412,23 +412,79 @@
 <ul>
 <li><p>stub 单个method无参</p>
 <p>单个method的stub，看官网的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">&quot;allow_any_instance_of&quot;</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;returns a specified value on any instance of a class&quot;</span> <span class="keyword">do</span></span><br><span class="line">    allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).and_return(<span class="symbol">:return_value</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="symbol">:return_value</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+  it &quot;returns a specified value on any instance of a class&quot; do
+    allow_any_instance_of(Object).to receive(:foo).and_return(:return_value)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(:return_value)
+  end
+end
+</code></pre>
 <p>用any_instance.stub 可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">&quot;any_instance.stub&quot;</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;returns a specified value on any instance of a class&quot;</span> <span class="keyword">do</span></span><br><span class="line">    Object.any_instance.stub(<span class="symbol">:foo</span>).and_return(<span class="symbol">:return_value</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="symbol">:return_value</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  it &quot;returns a specified value on any instance of a class&quot; do
+    Object.any_instance.stub(:foo).and_return(:return_value)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(:return_value)
+  end
+end
+</code></pre>
+</li>
 <li><p>stub单个method有参</p>
 <p>带参数的单个method，这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">&quot;allow_any_instance_of&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;with arguments&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">&quot;returns the stub value when arugments match&quot;</span> <span class="keyword">do</span></span><br><span class="line">      allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).with(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>).and_return(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      allow_any_instance_of(Object).to receive(<span class="symbol">:foo</span>).with(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>).and_return(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">      obj = Ojbect.new</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>)).to eq(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>)).to eq(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+  context &quot;with arguments&quot; do
+    it &quot;returns the stub value when arugments match&quot; do
+      allow_any_instance_of(Object).to receive(:foo).with(:param_one, :param_two).and_return(:return_value_one)
+      allow_any_instance_of(Object).to receive(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
+      obj = Ojbect.new
+      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
+      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
+    end
+  end
+end
+</code></pre>
 <p>换成any_instance.stub，可以这么来：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">&quot;any_instance.stub&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;with arguments&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">&quot;returns the stub value when arugments match&quot;</span> <span class="keyword">do</span></span><br><span class="line">      Object.any_instance.stub(<span class="symbol">:foo</span>).with(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>).and_return(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      Object.any_instance.stub(<span class="symbol">:foo</span>).with(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>).and_return(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">      obj = Ojbect.new</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_one</span>, <span class="symbol">:param_two</span>)).to eq(<span class="symbol">:return_value_one</span>)</span><br><span class="line">      expect(obj.foo(<span class="symbol">:param_another_one</span>, <span class="symbol">:param_another_two</span>)).to eq(<span class="symbol">:return_value_another_one</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  context &quot;with arguments&quot; do
+    it &quot;returns the stub value when arugments match&quot; do
+      Object.any_instance.stub(:foo).with(:param_one, :param_two).and_return(:return_value_one)
+      Object.any_instance.stub(:foo).with(:param_another_one, :param_another_two).and_return(:return_value_another_one)
+      obj = Ojbect.new
+      expect(obj.foo(:param_one, :param_two)).to eq(:return_value_one)
+      expect(obj.foo(:param_another_one, :param_another_two)).to eq(:return_value_another_one)
+    end
+  end
+end
+</code></pre>
+</li>
 <li><p>stub 多个method无参</p>
 <p>多个method：</p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### allow_any_instance_of</span></span><br><span class="line">RSpec.describe <span class="string">&quot;allow_any_instance_of&quot;</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;stub multiple methods&quot;</span> <span class="keyword">do</span></span><br><span class="line">    allow_any_instance_of(Object).to receive_messages(<span class="symbol">:foo</span> =&gt; <span class="string">&quot;foo&quot;</span>, <span class="symbol">:bar</span> =&gt; <span class="string">&quot;bar&quot;</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="string">&quot;foo&quot;</span>)</span><br><span class="line">    expect(obj.bar).to eq(<span class="string">&quot;bar&quot;</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">### allow_any_instance_of
+RSpec.describe &quot;allow_any_instance_of&quot; do
+ it &quot;stub multiple methods&quot; do
+   allow_any_instance_of(Object).to receive_messages(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
+   obj = Ojbect.new
+   expect(obj.foo).to eq(&quot;foo&quot;)
+   expect(obj.bar).to eq(&quot;bar&quot;)
+ end
+end
+</code></pre>
 <p>用any_instance.stub：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### any_instance.stub</span></span><br><span class="line">RSpec.describe <span class="string">&quot;any_instance.stub&quot;</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;stub multiple methods&quot;</span> <span class="keyword">do</span></span><br><span class="line">    Object.any_instance.stub(<span class="symbol">:foo</span> =&gt; <span class="string">&quot;foo&quot;</span>, <span class="symbol">:bar</span> =&gt; <span class="string">&quot;bar&quot;</span>)</span><br><span class="line">    obj = Ojbect.new</span><br><span class="line">    expect(obj.foo).to eq(<span class="string">&quot;foo&quot;</span>)</span><br><span class="line">    expect(obj.bar).to eq(<span class="string">&quot;bar&quot;</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">### any_instance.stub
+RSpec.describe &quot;any_instance.stub&quot; do
+  it &quot;stub multiple methods&quot; do
+    Object.any_instance.stub(:foo =&gt; &quot;foo&quot;, :bar =&gt; &quot;bar&quot;)
+    obj = Ojbect.new
+    expect(obj.foo).to eq(&quot;foo&quot;)
+    expect(obj.bar).to eq(&quot;bar&quot;)
+  end
+end
+</code></pre>
 <p>any_instance.stub还有一些兄弟姐妹，比如any_instance.unstub，any_instance.stub_chain， 可以戳<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-mocks/v/2-99/docs/method-stubs/stub-on-any-instance-of-a-class">这里</a>了解更多。</p>
 </li>
 </ul>
@@ -594,7 +650,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -743,7 +799,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

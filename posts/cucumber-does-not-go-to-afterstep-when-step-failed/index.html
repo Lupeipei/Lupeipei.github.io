@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>748 words</span>
+              <span>749 words</span>
             </span>
           
 
@@ -419,8 +419,15 @@
 <p>在Cucumber中，AfterStep被当作是一个step，所以，如果你的step是failed，后续的step就会skipped，也就是说，AfterStep必然会skipped【弄清楚这一点很重要，就不会白白浪费时间在AfterStep上】，这样如果想要在step failed的情况下，继续运行该scenario后续的step，只能弃用AfterStep，改用<a target="_blank" rel="noopener" href="http://www.rubydoc.info/github/cucumber/cucumber-ruby/Cucumber/Events/TestStepFinished">Test Step Finished Event</a>。</p>
 <p><strong>具体步骤：</strong></p>
 <p>在<code>features/support</code>下，新建文件<code>event.rb</code>,  放入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">AfterConfiguration <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.on_event <span class="symbol">:test_step_finished</span> <span class="keyword">do</span> <span class="params">|event|</span></span><br><span class="line">    step = event.test_step.text</span><br><span class="line">    <span class="keyword">if</span> step != <span class="string">&quot;AfterStep hook&quot;</span> &amp;&amp; step != <span class="string">&quot;Before hook&quot;</span> &amp;&amp; step != <span class="string">&quot;After hook&quot;</span></span><br><span class="line">      file = full_page_screenshot</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">AfterConfiguration do |config|
+  config.on_event :test_step_finished do |event|
+    step = event.test_step.text
+    if step != &quot;AfterStep hook&quot; &amp;&amp; step != &quot;Before hook&quot; &amp;&amp; step != &quot;After hook&quot;
+      file = full_page_screenshot
+    end
+  end
+end
+</code></pre>
 <p>这里，每一步是一个event，所以运行的时候，会按照Before hook ,step,  AfterStep hook, After hook来走，鉴于截图只是针对每个step，所以这里筛选掉了其他三类event。</p>
 <p>此处的 step取值是<code>event.test_step.text</code>， 这样获取的就是每一步的name，而<code>event.test_step</code>本身是一个step对象，输出的结果不是step的name。</p>
 <p>详情可以参考它的documentation<a target="_blank" rel="noopener" href="https://app.cucumber.pro/projects/cucumber-ruby/documents/branch/master/features/docs/events/test_step_finished_event.feature">Test Step Finished Event</a>，也可以用类似如下的代码在运行时输出其他信息：</p>
@@ -596,7 +603,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -745,7 +752,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

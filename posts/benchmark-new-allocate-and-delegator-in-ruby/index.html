@@ -382,7 +382,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1.6k words</span>
+              <span>1.7k words</span>
             </span>
           
 
@@ -413,44 +413,149 @@
 <p>bm可以看作是benchmark方法的一个简洁版，省去了参数caption，format的设置，这里，caption用于设置输出的标题内容，而format则用于设置时间的输出样式。通常可采用默认设置CAPTION，FORMAT，不过使用CAPTION，FORMAT常量时，记得加上<code>include Benchmark</code>。</p>
 <p>bmbm其实是执行了两次bm（看它名字就知道了，double bm : P ），这么做是为了获取更为精准的时间统计结果。因为有的时候，由于垃圾回收和内存分配的不同，可能会导致早期代码的执行时间与后期代码的执行时间存在差异，当然执行两次，并不代表结果一定不受到GC或者其他因素的影响，只是说会得到更为精准的结果。【希望我的理解没有偏……】</p>
 <p>看例子感受下三者：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;benchmark&#x27;</span></span><br><span class="line"><span class="keyword">include</span> Benchmark</span><br><span class="line"></span><br><span class="line">n = <span class="number">500000</span></span><br><span class="line"></span><br><span class="line">Benchmark.benchmark(CAPTION, <span class="number">6</span>, FORMAT) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">&quot;for: &quot;</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">&quot;times: &quot;</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">&quot;1&quot;</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">&quot;upto: &quot;</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Benchmark.bm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">&quot;for: &quot;</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">&quot;times: &quot;</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">&quot;1&quot;</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">&quot;upto: &quot;</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Benchmark.bmbm(<span class="number">6</span>) <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">  tf = x.report(<span class="string">&quot;for: &quot;</span>) &#123;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>..n; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line">  tt = x.report(<span class="string">&quot;times: &quot;</span>) &#123; n.times <span class="keyword">do</span>; a = <span class="string">&quot;1&quot;</span>; <span class="keyword">end</span> &#125;</span><br><span class="line">  tu = x.report(<span class="string">&quot;upto: &quot;</span>) &#123;<span class="number">1</span>.upto(n) <span class="keyword">do</span> ; a = <span class="string">&quot;1&quot;</span> ; <span class="keyword">end</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;benchmark&#39;
+include Benchmark
 
+n = 500000
+
+Benchmark.benchmark(CAPTION, 6, FORMAT) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+
+Benchmark.bm(6) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+
+
+Benchmark.bmbm(6) do |x|
+  tf = x.report(&quot;for: &quot;) &#123;for i in 1..n; a = &quot;1&quot; ; end &#125;
+  tt = x.report(&quot;times: &quot;) &#123; n.times do; a = &quot;1&quot;; end &#125;
+  tu = x.report(&quot;upto: &quot;) &#123;1.upto(n) do ; a = &quot;1&quot; ; end &#125;
+end
+</code></pre>
 <p>输出的结果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr438e3d72j30fv09ewg0.jpg"></p>
 <p>这么看，感觉times也没有特别比for快多少……</p>
 <h4 id="new-amp-allocate"><a href="#new-amp-allocate" class="headerlink" title="new &amp; allocate"></a>new &amp; allocate</h4><p>两者都用于实例化类，不同之处在于是否调用了initialize。</p>
 <p>allocate是为类的对象分配空间，创建实例，但是不调用initialize方法，new也用于实例化，但是它调用了initialize，new可以看成是先调用allocate，再调用了initialize。</p>
 <p>new对应的sourcecode如下：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> VALUE</span></span><br><span class="line"><span class="function"><span class="title">rb_class_s_new</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">const</span> VALUE *argv, VALUE klass)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    VALUE obj;</span><br><span class="line"></span><br><span class="line">    obj = rb_class_alloc(klass);</span><br><span class="line">    rb_obj_call_init(obj, argc, argv);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="C">static VALUE
+rb_class_s_new(int argc, const VALUE *argv, VALUE klass)
+&#123;
+    VALUE obj;
 
+    obj = rb_class_alloc(klass);
+    rb_obj_call_init(obj, argc, argv);
+
+    return obj;
+&#125;
+</code></pre>
 <p>new的实现中，先是调用了<code>rb_class_alloc</code>【查看allocate的源码，会发现这正是allocate方法的实现】，然后调用了<code>rb_obj_call_init</code>。</p>
 <p>看个例子感受下两者的差异：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### 根据官方文档稍稍改编了下</span></span><br><span class="line">klass = Class.new <span class="keyword">do</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(*args)</span></span></span><br><span class="line">    <span class="variable">@initialized</span> = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialized?</span></span></span><br><span class="line">    <span class="variable">@initialized</span> <span class="params">||</span> <span class="literal">false</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">klass.allocate <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;</span></span><br><span class="line">klass.allocate.initialized? <span class="comment">#=&gt; false</span></span><br><span class="line">klass.new <span class="comment">#=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 <span class="doctag">@initialized</span>=true&gt;</span></span><br><span class="line">klass.new.initialized? <span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### 根据官方文档稍稍改编了下
+klass = Class.new do
+  def initialize(*args)
+    @initialized = true
+  end
 
+  def initialized?
+    @initialized || false
+  end
+end
+
+klass.allocate #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004978&gt;
+klass.allocate.initialized? #=&gt; false
+klass.new #=&gt; #&lt;#&lt;Class:0x00007fdb1f004a40&gt;:0x00007fdb1f004770 @initialized=true&gt;
+klass.new.initialized? #=&gt; true
+</code></pre>
 <h4 id="Delegator"><a href="#Delegator" class="headerlink" title="Delegator"></a>Delegator</h4><p>Delegator是一个类，提供了三种不同的方法用于代理对象的方法调用，最简单的方法是使用SimpleDelegator。其次是使用DelegateClass，通过类继承来代理，第三种是继承Delegator这个abstract class，然后自己定制代理机制。</p>
 <p>先来看看SimpleDelegator。</p>
 <p>它有两个较为常用的实例方法：<code>__setobj__</code> 用来更改代理对象，<code>__getobj__</code>  用来获取代理对象。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Stats</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span></span></span><br><span class="line">    <span class="variable">@source</span> = SimpleDelegator.new([])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stats</span><span class="params">(records)</span></span></span><br><span class="line">    p <span class="string">&quot;before setobj: <span class="subst">#&#123;<span class="variable">@source</span>.size&#125;</span>&quot;</span></span><br><span class="line">    <span class="variable">@source</span>.__setobj__(records)</span><br><span class="line">    p <span class="string">&quot;after setobj: <span class="subst">#&#123;<span class="variable">@source</span>.size&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">s = Stats.new</span><br><span class="line"></span><br><span class="line">s.stats(<span class="string">%w&#123;Hello ruby world&#125;</span>)</span><br><span class="line"><span class="comment">#=&gt; &quot;before setobj: 0&quot;</span></span><br><span class="line"><span class="comment">#=&gt; &quot;after setobj: 3&quot;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Stats
+  def initialize
+    @source = SimpleDelegator.new([])
+  end
 
+  def stats(records)
+    p &quot;before setobj: #&#123;@source.size&#125;&quot;
+    @source.__setobj__(records)
+    p &quot;after setobj: #&#123;@source.size&#125;&quot;
+  end
+end
+
+s = Stats.new
+
+s.stats(%w&#123;Hello ruby world&#125;)
+#=&gt; &quot;before setobj: 0&quot;
+#=&gt; &quot;after setobj: 3&quot;
+</code></pre>
 <p>稍稍解释一下。这里调用stats方法时，@source最开始是SimpleDelegator的一个实例，它的代理对象是[]，所以输出before setobj 中，执行@source.size 就是在执行[].size， 随后使用<code>__setobj__</code>将代理对象更改成了records，这里传递过去的参数是数组%w{Hello ruby world}，随后执行@source.size，就是在执行[“Hello”, “ruby”,  “world”].size，所以输出结果为0，3.</p>
 <p>第二种，通过继承来代理，跟祖先链很类似，略过，看第三种，定制代理。</p>
 <p>custom delegator这种操作，涉及到module Forwardable和SingleForwardable，Forwardable是针对object level，而SingleForwardable则是object，class，module通吃。</p>
 <p>两者主要的原理其实是一样的，通过在类，对象或者模块中使用<strong>extend</strong>来为其拓展单件方法，调用诸如def_delegate, def_delegates, def_instance_delegator等method来实现定制化代理。</p>
 <p>先看个Forwardable的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;forwardable&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecordCollection</span></span></span><br><span class="line">  <span class="keyword">attr_accessor</span> <span class="symbol">:records</span></span><br><span class="line">  extend Forwardable</span><br><span class="line">  def_delegator <span class="symbol">:</span><span class="variable">@records</span>, <span class="symbol">:[]</span>, <span class="symbol">:record_number</span></span><br><span class="line">  def_delegators <span class="symbol">:</span><span class="variable">@records</span>, <span class="symbol">:size</span>, <span class="symbol">:&lt;&lt;</span>, <span class="symbol">:map</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = RecordCollection.new</span><br><span class="line">obj.records = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">4</span>]</span><br><span class="line">obj.record_number(<span class="number">0</span>) <span class="comment">#=&gt; 1， 相当于执行[1,2,4](0)</span></span><br><span class="line">obj.size <span class="comment">#=&gt; 3 ， 相当于执行[1,2,4].size</span></span><br><span class="line">obj &lt;&lt; <span class="number">5</span> <span class="comment">#=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5</span></span><br><span class="line">obj.map &#123; <span class="params">|x|</span> x + <span class="number">1</span>&#125; <span class="comment">#=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;forwardable&#39;
 
+class RecordCollection
+  attr_accessor :records
+  extend Forwardable
+  def_delegator :@records, :[], :record_number
+  def_delegators :@records, :size, :&lt;&lt;, :map
+end
+
+obj = RecordCollection.new
+obj.records = [1,2,4]
+obj.record_number(0) #=&gt; 1， 相当于执行[1,2,4](0)
+obj.size #=&gt; 3 ， 相当于执行[1,2,4].size
+obj &lt;&lt; 5 #=&gt;[1, 2, 4, 5]， 相当于执行[1,2,4]&lt;&lt; 5
+obj.map &#123; |x| x + 1&#125; #=&gt;[2, 3, 5, 6]， 相当于执行[1,2,4,5].map&#123;|x| x + 1&#125;
+</code></pre>
 <p>这里 <code> def_delegators :@records, :size, :&lt;&lt;, :map</code>相当于:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def_delegator <span class="symbol">:</span><span class="variable">@records</span>, <span class="symbol">:size</span></span><br><span class="line">def_delegator <span class="symbol">:</span><span class="variable">@records</span>, <span class="symbol">:&lt;&lt;</span></span><br><span class="line">def_delegator <span class="symbol">:</span><span class="variable">@records</span>, <span class="symbol">:map</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def_delegator :@records, :size
+def_delegator :@records, :&lt;&lt;
+def_delegator :@records, :map
+</code></pre>
 <p>再来看一个SingleForwardable的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  def <span class="keyword">self</span>.hi</span><br><span class="line">    puts <span class="string">&quot;hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class A
+  def self.hi
+    puts &quot;hello&quot;
+  end
+end
+
+module B
+  extend SingleForwardable
+  def_delegator :A, :hi
+end
+
+B.hi #=&gt; hello
+</code></pre>
 <p>这里的<code>B.hi</code> ，使用代理，执行的其实是<code>A.hi</code> ，故输出为hello.</p>
 <p>看到这里你也许要问，如果当前对象本身有一个方法method A，代理方法里面也有一个同名的method A，会调用哪一个？</p>
 <p><strong>当然是调用自己的，自己没有才会调用代理的</strong>。</p>
 <p>以上面的例子为例：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  def <span class="keyword">self</span>.hi</span><br><span class="line">    puts <span class="string">&quot;hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">B</span></span></span><br><span class="line">  extend SingleForwardable</span><br><span class="line">  def_delegator <span class="symbol">:A</span>, <span class="symbol">:hi</span></span><br><span class="line"></span><br><span class="line">  def <span class="keyword">self</span>.hi</span><br><span class="line">    puts <span class="string">&quot;world&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">B.hi <span class="comment">#=&gt; world</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class A
+  def self.hi
+    puts &quot;hello&quot;
+  end
+end
 
+module B
+  extend SingleForwardable
+  def_delegator :A, :hi
+
+  def self.hi
+    puts &quot;world&quot;
+  end
+
+end
+
+B.hi #=&gt; world
+</code></pre>
 <h4 id="题外"><a href="#题外" class="headerlink" title="题外"></a>题外</h4><p>看Date部分的时候，发现<code>ruby cal.rb -c it 10 1582</code> 时[此处it 指的是Italy] 的输出结果很是诡异，自己在本机执行，同样得到了奇葩的结果:</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fr43phbujxj308e034t8q.jpg"></p>
 <p>莫名其妙少了10天，什么情况？！刚开始还以为是bug，Google下才知道是不同历法的切换导致, wiki上对于<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/1582">1582</a>年，是这么说的：</p>
@@ -620,7 +725,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -769,7 +874,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>859 words</span>
+              <span>867 words</span>
             </span>
           
 
@@ -403,42 +403,82 @@
 
 <h4 id="空指针保护"><a href="#空指针保护" class="headerlink" title="空指针保护"></a>空指针保护</h4><p>这个非常常见。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">a <span class="params">||</span>= []</span><br><span class="line"><span class="comment">## 上面的|| 是逻辑操作符或，相当于 a || (a = [])</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">a ||= []
+## 上面的|| 是逻辑操作符或，相当于 a || (a = [])
+</code></pre>
 <p>上面这个方法的好处在于，它可以保证a不为nil，这种惯用方法称为<strong>空指针保护</strong>。</p>
 <p>空指针保护常常用于初始化实例变量。比如下面的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">data</span></span></span><br><span class="line">    <span class="variable">@data</span> <span class="params">||</span>= &#123;&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">data?</span></span></span><br><span class="line">    <span class="variable">@data</span>.present?</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class C
+  def data
+    @data ||= &#123;&#125;
+  end
 
+  def data?
+    @data.present?
+  end
+end
+</code></pre>
 <h4 id="Tap"><a href="#Tap" class="headerlink" title="Tap"></a>Tap</h4><p>《ruby元编程》里面提到了tap，使用tap，可以在方法链中插入中间操作，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">temp = [<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>].push(<span class="string">&#x27;d&#x27;</span>).shift</span><br><span class="line">puts temp <span class="comment">#=&gt; a</span></span><br><span class="line">x = temp.upcase.<span class="keyword">next</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">temp = [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift
+puts temp #=&gt; a
+x = temp.upcase.next
+</code></pre>
 <p> 上诉的代码显得很不ruby，使用tap改进下，可以这么写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">[<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>].push(<span class="string">&#x27;d&#x27;</span>).shift.tap &#123;<span class="params">|x|</span> puts x&#125;.upcase.<span class="keyword">next</span> <span class="comment">#=&gt; a</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].push(&#39;d&#39;).shift.tap &#123;|x| puts x&#125;.upcase.next #=&gt; a
+</code></pre>
 <p>其实tap在方法定义中也很常见。比如<a target="_blank" rel="noopener" href="https://github.com/glebm/i18n-tasks">i18n-tasks</a>的源代码中，就多次出现了tap的身影：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fpzts3u39sj30mb064wey.jpg"></p>
 <p>举一个简单的例子感受下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># source是一个Array，存放文件路径</span></span><br><span class="line"><span class="comment"># get_all_files 可以获取指定的单个或多个路径下所有的文件</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_all_files</span><span class="params">(source)</span></span></span><br><span class="line">  files = []</span><br><span class="line">  source.map <span class="keyword">do</span> <span class="params">|path|</span></span><br><span class="line">    path = path[-<span class="number">1</span>] == <span class="string">&#x27;/&#x27;</span> ? path : path + <span class="string">&#x27;/&#x27;</span></span><br><span class="line">    group = Dir.glob(<span class="string">&quot;<span class="subst">#&#123;path&#125;</span>**/**&quot;</span>)</span><br><span class="line">    files &lt;&lt; group.reject &#123; <span class="params">|x|</span> File.directory?(x) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby"># source是一个Array，存放文件路径
+# get_all_files 可以获取指定的单个或多个路径下所有的文件
+def get_all_files(source)
+  files = []
+  source.map do |path|
+    path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
+    group = Dir.glob(&quot;#&#123;path&#125;**/**&quot;)
+    files &lt;&lt; group.reject &#123; |x| File.directory?(x) &#125;
+  end
+end
+</code></pre>
 <p>如果换成tap，则可以这样定义：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_all_files</span><span class="params">(source)</span></span></span><br><span class="line">  [].tap <span class="keyword">do</span> <span class="params">|files|</span></span><br><span class="line">    source.map <span class="keyword">do</span> <span class="params">|path|</span></span><br><span class="line">      path = path[-<span class="number">1</span>] == <span class="string">&#x27;/&#x27;</span> ? path : path + <span class="string">&#x27;/&#x27;</span></span><br><span class="line">      group = Dir.glob(<span class="string">&quot;<span class="subst">#&#123;path&#125;</span>**/**&quot;</span>)</span><br><span class="line">      files &lt;&lt; group.reject &#123; <span class="params">|x|</span> File.directory?(x) &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def get_all_files(source)
+  [].tap do |files|
+    source.map do |path|
+      path = path[-1] == &#39;/&#39; ? path : path + &#39;/&#39;
+      group = Dir.glob(&quot;#&#123;path&#125;**/**&quot;)
+      files &lt;&lt; group.reject &#123; |x| File.directory?(x) &#125;
+    end
+  end
+end
+</code></pre>
 <h4 id="Symbol-to-proc"><a href="#Symbol-to-proc" class="headerlink" title="Symbol#to_proc"></a>Symbol#to_proc</h4><p>这个在rubyist高手中算是比较流行的一种技巧了。</p>
 <p>看个常用的数组求和：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line">a.reduce(&amp;<span class="symbol">:+</span>) <span class="comment">#= &gt; 10</span></span><br><span class="line">a.inject(<span class="number">0</span>,&amp;<span class="symbol">:+</span>) <span class="comment">#= &gt; 10</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">a = [1,2,3,4]
+a.reduce(&amp;:+) #= &gt; 10
+a.inject(0,&amp;:+) #= &gt; 10
+</code></pre>
 <p>「reduce 和inject 是alias的关系, 两者可以互用。我依然记得第一次看到数组求和<code>[1,2,3,4].reduce(&amp;:+)</code> 这个例子时，一脸懵逼……」</p>
 <p>这种带有<code>&amp;:+</code>的标记的，就是Symbol#to_proc。</p>
 <p>上面的求和，如果不用Symbol#to_proc， 则可以这样写：</p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">a = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line">a.reduce&#123;<span class="params">|sum, x|</span> sum + x &#125; <span class="comment">#= &gt; 10</span></span><br><span class="line">a.inject(<span class="number">0</span>)&#123;<span class="params">|sum, x|</span> sum + x &#125; <span class="comment">#= &gt; 10</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">a = [1,2,3,4]
+a.reduce&#123;|sum, x| sum + x &#125; #= &gt; 10
+a.inject(0)&#123;|sum, x| sum + x &#125; #= &gt; 10
+</code></pre>
 <p>对于Symbol#to_proc 的方法的使用，要注意一点，那就是<code>&amp;:method</code>中的method，必须是对象可以调用的无参method，比如上面的<code>&amp;:+</code>，+ 是1，2，3，4都可以调用的<strong>无参实例方法</strong>。</p>
 <p>看个例子感觉下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">b = [<span class="string">&#x27;hi&#x27;</span>,<span class="string">&#x27;ruby&#x27;</span>,<span class="string">&#x27;hello&#x27;</span>]</span><br><span class="line">b.map(&amp;<span class="symbol">:capitalize</span>) <span class="comment">#= &gt; [&quot;Hi&quot;, &quot;Ruby&quot;, &quot;Hello&quot;]</span></span><br><span class="line">b.map(&amp;<span class="symbol">:nil?</span>) <span class="comment">#= &gt; [false, false, false]</span></span><br><span class="line">b.map(&amp;<span class="symbol">:concat</span>(<span class="string">&#x27;world&#x27;</span>)) <span class="comment">#= &gt; raise: syntax error</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">b = [&#39;hi&#39;,&#39;ruby&#39;,&#39;hello&#39;]
+b.map(&amp;:capitalize) #= &gt; [&quot;Hi&quot;, &quot;Ruby&quot;, &quot;Hello&quot;]
+b.map(&amp;:nil?) #= &gt; [false, false, false]
+b.map(&amp;:concat(&#39;world&#39;)) #= &gt; raise: syntax error
+</code></pre>
 <p>b中的每一个元素都是String对象，可以成功调用无参的实例方法capitalize，nil?等，但是当调用带有参数的concat方法时就会报错，为什么？</p>
 <p>原来在Symbol类中有一个to_proc方法，用于把符号转化为一个Proc对象：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Symbol</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">to_proc</span></span></span><br><span class="line">    Proc.new &#123;<span class="params">|x|</span> x.send(<span class="keyword">self</span>)&#125; <span class="comment"># 动态派发，调用self这个method的</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Symbol
+  def to_proc
+    Proc.new &#123;|x| x.send(self)&#125; # 动态派发，调用self这个method的
+  end
+end
+</code></pre>
 <p>上面的<code>b.map(&amp;:capitalize)</code> 等价于<code>b.map(&amp;:capitalize.to_proc)</code>, 由于&amp;可以调用对象的to_proc方法把对象转为一个proc，所以可以简写成<code>b.map(&amp;:capitalize)</code> ， 也就是说，<code>b.map(&amp;:capitalize)</code> 等同于<code>b.map&#123;|x|x.send(:capitalize)&#125;</code>。</p>
 <p>注意到Symbol类中定义的to_proc方法是不带参数的。</p>
 <p>当然，如果你想要调用带参数的method，可以自定义一个method或者考虑给to_proc打个猴子补丁。</p>
@@ -604,7 +644,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -753,7 +793,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

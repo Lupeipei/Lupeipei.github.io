@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>456 words</span>
+              <span>459 words</span>
             </span>
           
 
@@ -405,23 +405,26 @@
 <p>这里记录下用 Nginx + passenger 部署时踩的坑。</p>
 <h4 id="背景："><a href="#背景：" class="headerlink" title="背景："></a>背景：</h4><p> Ubuntu 1804， 参考官网给的<a target="_blank" rel="noopener" href="https://www.phusionpassenger.com/library/install/nginx/install/oss/bionic/">Installing Passenger + Nginx on Ubuntu 18.04</a> 安装了 Nginx + passenger。</p>
 <h4 id="Failed-to-parse-PID"><a href="#Failed-to-parse-PID" class="headerlink" title="Failed to parse PID"></a>Failed to parse PID</h4><p>nginx restart 后，执行:</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">sudo service nginx status</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>sudo service nginx status
+</code></pre>
 <p>看到报错，显示：</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">nginx.service: Failed <span class="keyword">to</span> parse PID <span class="keyword">from</span> <span class="built_in">file</span> /<span class="built_in">run</span>/nginx.pid: Invalid argument</span><br></pre></td></tr></table></figure>
-
+<pre><code>nginx.service: Failed to parse PID from file /run/nginx.pid: Invalid argument
+</code></pre>
 <p>参考 <a target="_blank" rel="noopener" href="https://bugs.launchpad.net/ubuntu/+source/nginx/+bug/1581864">nginx.service: Failed to read PID from file /run/nginx.pid: Invalid argument</a>, 貌似是Ubuntu的一个bug。</p>
 <p>commits 部分给到的解决方法：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir /etc/systemd/system/nginx.service.d</span><br><span class="line">printf &quot;[Service]\nExecStartPost=/bin/sleep 0.1\n&quot; &gt; /etc/systemd/system/nginx.service.d/override.conf</span><br><span class="line">systemctl daemon-reload</span><br></pre></td></tr></table></figure>
-
+<pre><code class="shell">mkdir /etc/systemd/system/nginx.service.d
+printf &quot;[Service]\nExecStartPost=/bin/sleep 0.1\n&quot; &gt; /etc/systemd/system/nginx.service.d/override.conf
+systemctl daemon-reload
+</code></pre>
 <p>「执行 最后一步 daemon-reload时需要输入密码，输入服务器登陆密码即可。」</p>
 <p>重启nginx:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo service nginx restart</span><br><span class="line">sudo service nginx status</span><br></pre></td></tr></table></figure>
-
+<pre><code class="shell">sudo service nginx restart
+sudo service nginx status
+</code></pre>
 <p>OK.</p>
 <h4 id="cannot-load-such-file-–-bundler-setup"><a href="#cannot-load-such-file-–-bundler-setup" class="headerlink" title="cannot load such file – bundler/setup"></a>cannot load such file – bundler/setup</h4><p>使用  Capistrano deploy 之后，访问网站，报错 500，查看nginx 日志，看到如下的报错信息：</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">The <span class="built_in">application</span> encountered <span class="keyword">the</span> following <span class="keyword">error</span>: cannot load such <span class="built_in">file</span> <span class="comment">-- bundler/setup (LoadError)</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>The application encountered the following error: cannot load such file -- bundler/setup (LoadError)
+</code></pre>
 <p>但是 bundler 明明已经安装好，Google 半天，找到的解决方法，有些一言难尽。</p>
 <p>后面想了想，安装 passenger 的时候需要设置 passenger_ruby，而我是用 rbenv 安装的ruby，大概是这里出了问题，bingo!</p>
 <ul>
@@ -595,7 +598,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -744,7 +747,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

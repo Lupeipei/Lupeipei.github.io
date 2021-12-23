@@ -392,7 +392,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>778 words</span>
+              <span>780 words</span>
             </span>
           
 
@@ -420,13 +420,30 @@
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fkq88je5s0j30sd04xmyd.jpg"></p>
 <p><strong>怎么破？</strong></p>
 <p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.<span class="keyword">include</span> FactoryBot::Syntax::Methods</span><br><span class="line">  .....</span><br><span class="line">+  config.before <span class="keyword">do</span></span><br><span class="line">+    FactoryBot.find_definitions</span><br><span class="line">+  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  .....
++  config.before do
++    FactoryBot.find_definitions
++  end
+end
+</code></pre>
+</li>
 <li><p><strong>FactoryBot::DuplicateDefinitionError: Factory already registered: event</strong></p>
 <p>运行测试文件时，终端报出这样的错误：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fkq8u4t8xfj30qg07wdh6.jpg"></p>
 <p><strong>怎么破？</strong></p>
 <p>在<code>spec/spec_helper.rb</code>文件中，加入如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.<span class="keyword">include</span> FactoryBot::Syntax::Methods</span><br><span class="line">  .....</span><br><span class="line">  config.before <span class="keyword">do</span></span><br><span class="line">+   FactoryBot.factories.clear</span><br><span class="line">    FactoryBot.find_definitions</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">RSpec.configure do |config|
+  config.include FactoryBot::Syntax::Methods
+  .....
+  config.before do
++   FactoryBot.factories.clear
+    FactoryBot.find_definitions
+  end
+end
+</code></pre>
+</li>
 <li><p><strong>Please set Qiniu’s access_key and secret_key before authorize any tokens</strong></p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fkqrce6o1ij30pc052wfp.jpg"></p>
 <p>终端运行<code>rspec spec/controllers/events_controller_spec.rb</code>, 为了测试events controller部分，用FactoryBot创建了event，这里有必要说一下，我的event model中有logo部分，而用户上传的logo图片我是用七牛来存储的。抛出异常，查看七牛官方<a target="_blank" rel="noopener" href="https://github.com/qiniu/ruby-sdk/blob/master/spec/qiniu/auth_spec.rb">GitHub spec部分</a>，找到了这个：</p>
@@ -441,8 +458,12 @@
 <p><strong>怎么破？</strong></p>
 <p>google后，在stack overflow上找到了解答。</p>
 <p>修改<code>spec/support/rails_helper.rb</code>文件，在<code>RSpec.configure do |config| </code>部分添加<code>config.include Devise::TestHelpers, type: :controller</code> :</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  ......</span><br><span class="line">+ config.<span class="keyword">include</span> Devise::TestHelpers, <span class="symbol">type:</span> <span class="symbol">:controller</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">RSpec.configure do |config|
+  ......
++ config.include Devise::TestHelpers, type: :controller
+  ......
+end
+</code></pre>
 <p>再次测试, pass!  </p>
 </li>
 <li><p>如果你的model中有图片部分，比如event model中有个event logo，而你用factoryBot生成数据时，是这样的：</p>
@@ -625,7 +646,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -774,7 +795,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

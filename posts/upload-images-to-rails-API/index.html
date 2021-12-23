@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>827 words</span>
+              <span>835 words</span>
             </span>
           
 
@@ -404,49 +404,130 @@
 <h4 id="解答"><a href="#解答" class="headerlink" title="解答"></a>解答</h4><p>先说一个简单的。</p>
 <p>以一个model picture为例，看一下具体步骤：</p>
 <p>model picture的信息：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Table name pictures</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">file_name    <span class="symbol">:string</span></span><br><span class="line">image       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Table name pictures
 
+id          :integer
+file_name    :string
+image       :string
+</code></pre>
 <p>这里，设置routes, 建model，建controller的过程省略，可参见：<a target="_blank" rel="noopener" href="http://luciaca.cn/2017/12/31/web-api-practice/">Rails：Web API接口实作</a>。</p>
 <p>分三步走：</p>
 <ul>
 <li><p>装<a target="_blank" rel="noopener" href="https://github.com/carrierwaveuploader/carrierwave">carrierwave</a></p>
 <p>编辑 Gemfile</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">gem <span class="string">&#x27;carrierwave&#x27;</span></span><br><span class="line">gem <span class="string">&#x27;mini_magick&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">gem &#39;carrierwave&#39;
+gem &#39;mini_magick&#39;
+</code></pre>
 <p>终端执行<code>bundle</code>，重启服务器。</p>
 </li>
 <li><p>新增uploader</p>
 <p>执行：<code>rails g uploader PicImage</code></p>
 <p>编辑<code>app/uploaders/pic_image_uploader.rb</code></p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PicImageUploader</span> &lt; CarrierWave::Uploader::<span class="title">Base</span></span></span><br><span class="line">  + <span class="keyword">include</span> CarrierWave::MiniMagick</span><br><span class="line">  ......  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class PicImageUploader &lt; CarrierWave::Uploader::Base
+ + include CarrierWave::MiniMagick
+ ......  
+end
+</code></pre>
 <p>编辑 <code>app/models/picture.rb</code>，把 carrierwave 的 Uploader 挂上去。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Picture</span> &lt; ApplicationRecord</span></span><br><span class="line">  + mount_uploader <span class="symbol">:image</span>, PicImageUploader</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class Picture &lt; ApplicationRecord
+  + mount_uploader :image, PicImageUploader
+  ......
+end
+</code></pre>
+</li>
 <li><p> 设定create</p>
 </li>
 </ul>
 <p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-  <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># upload image through api</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@picture</span> = Picture.new(picture_params)  </span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@picture</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">file_name:</span> <span class="variable">@picture</span>.file_name, <span class="symbol">image:</span> <span class="variable">@picture</span>.image &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">error:</span> <span class="variable">@picture</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  .......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">picture_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:file_name</span>, <span class="symbol">:image</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># upload image through api
+class Api::V1::PicturesController &lt; ApiController
+  before_action :authenticate_user!, only: %i[create]
 
+  def create
+    @picture = Picture.new(picture_params)  
+    if @picture.save
+      render json: &#123; file_name: @picture.file_name, image: @picture.image &#125;
+    else
+      render json: &#123; message: &#39;failed&#39;, error: @picture.errors &#125;, status: 400
+    end
+  end
+  .......
+  private
 
+  def picture_params
+    params.permit(:file_name, :image)
+  end
 
-
+end
+</code></pre>
 <p>再来个复杂的。👇</p>
 <h4 id="如何通过JSON文件来上传？"><a href="#如何通过JSON文件来上传？" class="headerlink" title="如何通过JSON文件来上传？"></a>如何通过JSON文件来上传？</h4><p>在搜索解答的过程中，发现了另一种方式，假定你需要通过JSON文件的方式去上传图片，如何实现？<br>即接口调用是这样的：<code>/api/v1/pictures.json</code>，由于JSON不支持嵌入式文件，所以会有些波折。</p>
 <p>具体的实现方式是先将需要上传的图片file经base64编译后，调用接口创建一个实例， 然后在picture controller的create中，对传递过来的参数file_base64进行解析， 将解析后的文件写入temfile，并通过<code>ActionDispatch::Http::UploadedFile</code>来新建一个uploader file，如此，一个image从encoding到decoding的过程结束，再使用Picture.new创建即可。</p>
 <p>具体来说，前面的步骤都一样，只是create部分会有些不同。</p>
 <p>先给picture新增一个字段，file_base64, 它是图片经base64编译后得到的字符串。</p>
 <p>执行：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails</span> g migration add_file_base<span class="number">64</span>_to_pictures file_base<span class="number">64</span>:string</span><br><span class="line"><span class="attribute">rake</span> db:migrate</span><br></pre></td></tr></table></figure>
+<pre><code>rails g migration add_file_base64_to_pictures file_base64:string
+rake db:migrate
+</code></pre>
 <p>picture.json文件长这样：</p>
-<figure class="highlight arcade"><table><tr><td class="code"><pre><span class="line">picture &#123;:<span class="function"><span class="params">file_base64</span> =&gt;</span> <span class="string">&quot;file_base64&quot;</span>, :<span class="function"><span class="params">file_name</span> =&gt;</span> <span class="string">&quot;file_name&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code>picture &#123;:file_base64 =&gt; &quot;file_base64&quot;, :file_name =&gt; &quot;file_name&quot;&#125;
+</code></pre>
 <p>  编辑<code>app/controllers/api/v1/pictures_controller.rb</code> 中，create部分：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      <span class="comment"># create a new tempfile named file</span></span><br><span class="line">      tempfile = Tempfile.new(<span class="string">&#x27;file&#x27;</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      <span class="comment"># get the file ,decode it with base64, write it to the tempfile</span></span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      <span class="comment"># create a new uploaded file</span></span><br><span class="line">      <span class="variable">@uploaded_file</span> = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      <span class="variable">@picture</span> = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      <span class="variable">@picture</span>.image = <span class="variable">@uploaded_file</span></span><br><span class="line">      <span class="comment"># delete the tempfile</span></span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@picture</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> <span class="variable">@picture</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">error:</span> <span class="variable">@picture</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
+  before_action :authenticate_user!, only: %i[create]
 
+  def create
+    if params[:picture][:file_base64]
+      # create a new tempfile named file
+      tempfile = Tempfile.new(&#39;file&#39;)
+      tempfile.binmode
+      # get the file ,decode it with base64, write it to the tempfile
+      tempfile.write(Base64.decode64(params[:picture][:file_base64]))
+      # create a new uploaded file
+      @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
+      @picture = Picture.new(params[:picture])
+      @picture.image = @uploaded_file
+      # delete the tempfile
+      tempfile.delete
+    end
+    if @picture.save
+      render json: @picture
+    else
+      render json: &#123; message: &#39;failed&#39;, error: @picture.errors &#125;, status: 400
+    end
+  end
+
+end
+</code></pre>
 <p> 这里，create部分显得很臃肿，我们skinny一下，改成这样：</p>
-  <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::PicturesController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line">  before_action <span class="symbol">:process_file</span>, <span class="symbol">only:</span> %i[create]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@picture</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> <span class="variable">@picture</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">error:</span> <span class="variable">@picture</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">process_file</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]</span><br><span class="line">      tempfile = Tempfile.new(<span class="string">&#x27;file&#x27;</span>)</span><br><span class="line">      tempfile.binmode</span><br><span class="line">      tempfile.write(Base64.decode64(params[<span class="symbol">:picture</span>][<span class="symbol">:file_base64</span>]))</span><br><span class="line">      <span class="variable">@uploaded_file</span> = ActionDispatch::Http::UploadedFile.new(<span class="symbol">tempfile:</span> tempfile, <span class="symbol">filename:</span> params[<span class="symbol">:picture</span>][<span class="symbol">:file_name</span>])</span><br><span class="line">      <span class="variable">@picture</span> = Picture.new(params[<span class="symbol">:picture</span>])</span><br><span class="line">      <span class="variable">@picture</span>.image = <span class="variable">@uploaded_file</span></span><br><span class="line">      tempfile.delete</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::PicturesController &lt; ApiController
+before_action :authenticate_user!, only: %i[create]
+before_action :process_file, only: %i[create]
 
+def create
+  if @picture.save
+    render json: @picture
+  else
+    render json: &#123; message: &#39;failed&#39;, error: @picture.errors &#125;, status: 400
+  end
+end
+
+private
+
+def process_file
+  if params[:picture][:file_base64]
+    tempfile = Tempfile.new(&#39;file&#39;)
+    tempfile.binmode
+    tempfile.write(Base64.decode64(params[:picture][:file_base64]))
+    @uploaded_file = ActionDispatch::Http::UploadedFile.new(tempfile: tempfile, filename: params[:picture][:file_name])
+    @picture = Picture.new(params[:picture])
+    @picture.image = @uploaded_file
+    tempfile.delete
+  end
+end
+
+end
+</code></pre>
 <p>  呃，貌似process_file还是有点臃肿， 可以继续拆，这里就不实作了。</p>
 <p>  OK. 用postman测试一下，确认正常。</p>
 <p>  这里，你可能会问，编译后的文件在哪呢？在public/uploaders/picture/image下。</p>
@@ -615,7 +696,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -764,7 +845,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>

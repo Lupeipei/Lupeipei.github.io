@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>548 words</span>
+              <span>553 words</span>
             </span>
           
 
@@ -403,25 +403,62 @@
 <p>项目里文件上传部分使用了activestorage，写Rspec时，一直报错ActiveSupport::MessageVerifier::InvalidSignature，看文档查<a target="_blank" rel="noopener" href="http://api.rubyonrails.org/v5.2/classes/ActiveSupport/MessageVerifier.html">ActiveSupport::MessageVerifier::InvalidSignature</a>， 懵逼，小坑，最后依靠强大的stack overflow解决了，记录下。</p>
 <h4 id="场景："><a href="#场景：" class="headerlink" title="场景："></a>场景：</h4><p>现有model attachment，含有字段file，title，另有一个model issue，issue与attachment是一对多的关系。</p>
 <p> 在<code>app/models/attachment.rb</code>中，添加了：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Attachment</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:issue</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line">  has_one_attached <span class="symbol">:file</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Attachment &lt; ApplicationRecord
+  belongs_to :issue, optional: true
+  has_one_attached :file
+end
+</code></pre>
 <p>在<code>app/models/issue.rb</code>中，添加了：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:attachments</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:attachments</span>, <span class="symbol">allow_destroy:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  has_many :attachments, dependent: :destroy
+  accepts_nested_attributes_for :attachments, allow_destroy: true
+end
+</code></pre>
 <p>使用Rspec做测试时，用factorybot给Attachment建立测试数据，把测试使用的图片存放在<code>spec/resources</code>下，其中<code>spec/factories/attachments.rb</code>中的内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    file &#123; Rack::Test::UploadedFile.new(Rails.root.join(<span class="string">&quot;spec&quot;</span>, <span class="string">&quot;resources&quot;</span>, <span class="string">&quot;image.jpg&quot;</span>) &#125;</span><br><span class="line">    title <span class="string">&quot;this is a title&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">FactoryBot.define do
+  factory :attachment do
+    file &#123; Rack::Test::UploadedFile.new(Rails.root.join(&quot;spec&quot;, &quot;resources&quot;, &quot;image.jpg&quot;) &#125;
+    title &quot;this is a title&quot;
+  end
+end
+</code></pre>
 <p>这里通过<a target="_blank" rel="noopener" href="https://www.rubydoc.info/github/brynary/rack-test/Rack/Test/UploadedFile">Rack ::Test::UploadedFile</a>构建了file，这样在controller的spec中，传递给params的file就会被视为一个上传的文件。</p>
 <p>现在需要测试issue中添加了attachment的场景。<br>在<code>spec/controllers/issues_controller_spec.rb</code>中，有这样一段：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.describe IssuesController, <span class="symbol">type:</span> <span class="symbol">:controller</span> <span class="keyword">do</span></span><br><span class="line">  let!(<span class="symbol">:issue</span>) &#123; create <span class="symbol">:issue</span> &#125;</span><br><span class="line">  let(<span class="symbol">:issue_attributes</span>) &#123; &#123;&#125; &#125;</span><br><span class="line">  .....  </span><br><span class="line">    describe <span class="string">&quot;PUT update issue&quot;</span> <span class="keyword">do</span></span><br><span class="line">      action &#123; put <span class="symbol">:update</span>, <span class="symbol">params:</span> &#123; <span class="symbol">id:</span> issue, <span class="symbol">issue:</span> issue_attributes &#125; &#125;</span><br><span class="line"></span><br><span class="line">      context <span class="string">&quot;with attachment&quot;</span> <span class="keyword">do</span></span><br><span class="line">       let!(<span class="symbol">:attachment</span>) &#123; create <span class="symbol">:attachment</span>, <span class="symbol">issue:</span> issue &#125;</span><br><span class="line">       it expect(issue.attachments.count).to eq <span class="number">1</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">      ......</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">RSpec.describe IssuesController, type: :controller do
+  let!(:issue) &#123; create :issue &#125;
+  let(:issue_attributes) &#123; &#123;&#125; &#125;
+  .....  
+    describe &quot;PUT update issue&quot; do
+      action &#123; put :update, params: &#123; id: issue, issue: issue_attributes &#125; &#125;
 
+      context &quot;with attachment&quot; do
+       let!(:attachment) &#123; create :attachment, issue: issue &#125;
+       it expect(issue.attachments.count).to eq 1
+      end
+      ......
+    end
+end
+</code></pre>
 <p>此时运行，会报错，显示：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">Failures:</span></span><br><span class="line"></span><br><span class="line">  <span class="number">1</span>) IssuesController PUT update issue with attachment should <span class="keyword">not</span> be <span class="literal">nil</span></span><br><span class="line">     Failure/<span class="symbol">Error:</span> <span class="variable">@issue</span>.update(issue_params)</span><br><span class="line"></span><br><span class="line">     ActiveSupport::MessageVerifier::<span class="symbol">InvalidSignature:</span></span><br><span class="line">       ActiveSupport::MessageVerifier::InvalidSignature</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Failures:
 
+  1) IssuesController PUT update issue with attachment should not be nil
+     Failure/Error: @issue.update(issue_params)
+
+     ActiveSupport::MessageVerifier::InvalidSignature:
+       ActiveSupport::MessageVerifier::InvalidSignature
+</code></pre>
 <p>如果你在<code>issues_controller.rb</code>的issue_params中设置断点，会发现attachment虽然创建成功，但是attachment的file为空，也就是active storage并没有创建对应的blob， file并没有成功attached，可以通过<code>attachment.file.attached?</code>来判断file是否已经attached。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>最后找到的解决的方法其实很简单，来自stack overflow上<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails">How to properly do model testing with ActiveStorage in rails?</a>， 只要修改一下attachment测试数据的生成方式即可，修改<code>spec/factories/attachments.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:attachment</span> <span class="keyword">do</span></span><br><span class="line">    title <span class="string">&quot;this is a title&quot;</span></span><br><span class="line">    after(<span class="symbol">:build</span>) <span class="keyword">do</span> <span class="params">|attachment|</span></span><br><span class="line">      attachment.file.attach(<span class="symbol">io:</span> File.open(Rails.root.join(<span class="string">&quot;spec&quot;</span>, <span class="string">&quot;resources&quot;</span>, <span class="string">&quot;image.jpg&quot;</span>)), <span class="symbol">filename:</span> <span class="string">&#x27;image.jpg&#x27;</span>, <span class="symbol">content_type:</span> <span class="string">&quot;image/jpg&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">FactoryBot.define do
+  factory :attachment do
+    title &quot;this is a title&quot;
+    after(:build) do |attachment|
+      attachment.file.attach(io: File.open(Rails.root.join(&quot;spec&quot;, &quot;resources&quot;, &quot;image.jpg&quot;)), filename: &#39;image.jpg&#39;, content_type: &quot;image/jpg&quot;)
+    end
+  end
+end
+</code></pre>
 <p>再次跑测试，会发现通过了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/48162667/active-storage-raises-activesupportmessageverifierinvalidsignature">Active Storage raises ActiveSupport::MessageVerifier::InvalidSignature</a></p>
 <p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/47583883/how-to-properly-do-model-testing-with-activestorage-in-rails">How to properly do model testing with ActiveStorage in rails?</a></p>
@@ -587,7 +624,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">309</span>
+                <span class="site-state-item-count">310</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -736,7 +773,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    373.5k
+    375.5k
   </span>
 
 </div>
