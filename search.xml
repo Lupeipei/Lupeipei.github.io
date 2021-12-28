@@ -25489,4 +25489,38 @@ Block complete! Back in the method.
         <tag>Music</tag>
       </tags>
   </entry>
+  <entry>
+    <title>hexo 主题魔改记录</title>
+    <url>/posts/custom-hexo-next-theme/</url>
+    <content><![CDATA[<p>自己折腾了下 Hexo 的 next 主题. 给 post 添加了字段 type. 为了避免下次崩了的时候, 我会对着自己写的代码一脸懵逼, 简单记录下……</p>
+<span id="more"></span>
+
+<p>本文基于 hexo-theme-next version 5.</p>
+<h4 id="首页分页"><a href="#首页分页" class="headerlink" title="首页分页"></a>首页分页</h4><p>预期效果: 在首页不显示 post 中 type 为 book 的文章</p>
+<p>思路: 修改首页的分页, 过滤掉 type 为 book 的文章.</p>
+<p>具体实现:</p>
+<p>参考 <a href="https://github.com/hexojs/hexo-generator-index">hexo-generator-index</a> ,  在 next 的 scripts 下, 添加文件 customIndexPagination.js, 内容如下:</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> pagination = <span class="built_in">require</span>(<span class="string">&#x27;hexo-pagination&#x27;</span>);</span><br><span class="line"></span><br><span class="line">hexo.extend.generator.register(<span class="string">&#x27;customIndexPagination&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">locals</span>)</span>&#123;</span><br><span class="line">  locals.posts.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">post</span>) </span>&#123;</span><br><span class="line">    <span class="comment">//  set post default type as post, 设置默认值</span></span><br><span class="line">    <span class="keyword">if</span> (post.type == <span class="literal">undefined</span>) &#123;</span><br><span class="line">      post.type = <span class="string">&quot;post&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> config = <span class="built_in">this</span>.config;</span><br><span class="line">  <span class="keyword">const</span> posts = locals.posts.sort(config.index_generator.order_by);</span><br><span class="line">  <span class="comment">// filter posts with type == &quot;post&quot;, 过滤</span></span><br><span class="line">  <span class="keyword">const</span> postsWithoutbook = posts.find(&#123; <span class="string">&quot;type&quot;</span>: <span class="string">&quot;post&quot;</span> &#125;)</span><br><span class="line"></span><br><span class="line">  posts.data.sort(<span class="function">(<span class="params">a, b</span>) =&gt;</span> (b.sticky || <span class="number">0</span>) - (a.sticky || <span class="number">0</span>));</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> paginationDir = config.pagination_dir || <span class="string">&#x27;page&#x27;</span>;</span><br><span class="line">  <span class="keyword">const</span> path = config.index_generator.path || <span class="string">&#x27;&#x27;</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> pagination(path, postsWithoutbook, &#123;</span><br><span class="line">    <span class="attr">perPage</span>: config.index_generator.per_page,</span><br><span class="line">    <span class="attr">layout</span>: [<span class="string">&#x27;index&#x27;</span>, <span class="string">&#x27;archive&#x27;</span>],</span><br><span class="line">    <span class="attr">format</span>: paginationDir + <span class="string">&#x27;/%d/&#x27;</span>,</span><br><span class="line">    <span class="attr">data</span>: &#123;</span><br><span class="line">      <span class="attr">__index</span>: <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="分类排序"><a href="#分类排序" class="headerlink" title="分类排序"></a>分类排序</h4><p>预期效果: 同一个 category 中, 所有 type 为 book 的 post 按照指定字段排序后再分页.这里按照 ranked 字段来排序 posts.</p>
+<p>思路: 找到 page下对应的category, 按照 ranked 字段排序后, 调用 slice 实现分页.</p>
+<p>具体实现:</p>
+<p>next version 5 的模板用的是swig 语法, <a href="https://github.com/paularmstrong/swig">swig</a>已经多年不维护, 这个用起来还是折腾的.很多ES6语法不支持. 等后续有时间再折腾, 目前凑合用用swig….</p>
+<p>修改 layout/category.swig, 在 Section部分, 添加如下代码:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;section id=&quot;posts&quot; class=&quot;posts-collapse&quot;&gt;</span><br><span class="line">  &lt;div class=&quot;collection-title&quot;&gt;</span><br><span class="line">    &lt;h2 &gt;&#123;&#123; page.category &#125;&#125;&lt;/h2&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">...........</span><br><span class="line"></span><br><span class="line">  &#123;% set current = page.current %&#125;</span><br><span class="line">  &#123;% set pre = current - 1 %&#125;</span><br><span class="line">  &#123;% set perPage = config.per_page %&#125;</span><br><span class="line">  &#123;% set category = site.categories.findOne(&#123; &quot;name&quot;: page.category &#125;) %&#125;</span><br><span class="line">  &#123;% set posts = category.posts.sort(&#x27;ranked&#x27;) %&#125;</span><br><span class="line">  &#123;% set bookPost = posts.find(&#123; type: &#x27;book&#x27; &#125;) %&#125;</span><br><span class="line">  &#123;% set hasBookPost = bookPost.length &gt; 0 %&#125;</span><br><span class="line">  &#123;% if hasBookPost %&#125;</span><br><span class="line">    &#123;% set posts = posts.slice(perPage * pre, perPage * current) %&#125;</span><br><span class="line">  &#123;% else %&#125;</span><br><span class="line">    &#123;% set posts = page.posts %&#125;</span><br><span class="line">  &#123;% endif %&#125;</span><br><span class="line"></span><br><span class="line">  &#123;% for post in posts %&#125;</span><br><span class="line">    &#123;&#123; post_template.render(post) &#125;&#125;</span><br><span class="line">  &#123;% endfor %&#125;</span><br><span class="line"></span><br><span class="line">  ..........</span><br></pre></td></tr></table></figure>
+
+<p>逻辑很简单, 主要调用 slice 来得到当前分页中的posts.</p>
+<p>其中 site.categories 调用了findOne来查找当前页面的category, 参考的是 <a href="https://hexojs.github.io/warehouse/index.html">warehouse</a>.</p>
+<p>OK.</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/hexojs/hexo-pagination">hexo-pagination</a></p>
+<p><a href="https://github.com/hexojs/hexo-generator-index">hexo-generator-index</a></p>
+<p><a href="https://hexojs.github.io/warehouse/index.html">warehouse</a></p>
+]]></content>
+      <categories>
+        <category>CS</category>
+      </categories>
+      <tags>
+        <tag>Hexo</tag>
+      </tags>
+  </entry>
 </search>
