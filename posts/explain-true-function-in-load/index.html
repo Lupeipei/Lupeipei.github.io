@@ -296,7 +296,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/explain-true-function-in-load/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>967 words</span>
+              <span>946 words</span>
             </span>
           
 
@@ -403,118 +403,40 @@
 <p>《Ruby元编程》中提到，使用load时，可能会出现<strong>常量</strong>污染当前程序的命名空间的问题，添加了true这个参数后，Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的<strong>所有常量</strong>，从而避免污染的问题，但是书中并没有给出例子来详细说明。</p>
 <p>来看两个例子感受下：</p>
 <p>同一个目录下，存在两个文件，a.rb, b.rb，a中加载了b.rb文件。</p>
-<pre><code class="ruby"># b.rb
-## 只定义了一个普通的常量Y
-Y = &quot;hello&quot;
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="comment">## 只定义了一个普通的常量Y</span></span><br><span class="line">Y = <span class="string">&quot;hello&quot;</span></span><br></pre></td></tr></table></figure>
 <p>a.rb中加载b.rb</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">&quot;hi&quot;</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; warning: already initialized constant Y</span></span><br></pre></td></tr></table></figure>
 
-Y = &quot;hi&quot;
-
-p Y
-#=&gt; warning: already initialized constant Y
-</code></pre>
 <p>此时，执行a.rb，会报错，显示：warning: already initialized constant Y</p>
 <p>也就是加载进来的常量Y与a.rb中的常量Y重了，系统报错显示已经初始化了Y。</p>
 <p>如果添加了true，则输出”hi”。</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;, true
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">&quot;hi&quot;</span></span><br><span class="line"></span><br><span class="line">p Y</span><br><span class="line"><span class="comment">#=&gt; hi</span></span><br></pre></td></tr></table></figure>
 
-Y = &quot;hi&quot;
-
-p Y
-#=&gt; hi
-</code></pre>
 <p>这里Y是一个常规的常量，ruby中类名，模块名也是常量，如果加载同名的类／模块会出现什么情况？</p>
 <p>修改下b.rb文件：</p>
-<pre><code class="Ruby"># b.rb
-module Mymodule
-    def hi
-        p &quot;method hi in b.rb&quot;
-    end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hi</span></span></span><br><span class="line">		p <span class="string">&quot;method hi in b.rb&quot;</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>修改下a.rb文件：</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">&quot;hello&quot;</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; Mymodule is not a class</span></span><br></pre></td></tr></table></figure>
 
-class Mymodule
-    def hello
-        p &quot;hello&quot;
-    end
-end
-
-Mymodule.new.hello
-
-#=&gt; Mymodule is not a class
-</code></pre>
 <p>可以看到，加载后，执行a.rb时，报错，显示Mymodule is not a class，因为此时加载进来了一个同名的Mymodule，它是一个module，而a.rb文件中，定义了一个同名的Mymodule类，这个类其实并没有创建成功，这里稍微提一下，执行a.rb时，报错不是发生在执行Mymodule.new.hello时，而是在定义Mymodule这个类的地方报错。</p>
 <p>如果添加上true，就正常了。</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;, true
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Mymodule</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">		p <span class="string">&quot;hello&quot;</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Mymodule.new.hello</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; hello</span></span><br></pre></td></tr></table></figure>
 
-class Mymodule
-    def hello
-        p &quot;hello&quot;
-    end
-end
-
-Mymodule.new.hello
-
-#=&gt; hello
-</code></pre>
 <p>这里，你可能会疑惑，添加了true之后，原本来自b.rb中那个Y，module Mymodule去了哪里？书中提到，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>，也就是等同于他们根本就没有加载进来了？怎么知道它们真的没有加载进来？</p>
 <p>可以通过<strong>Module的类方法constants</strong>来判断，该方法返回当前顶层程序中的所有常量。</p>
 <p>修改下b.rb ，改回原来的样子：</p>
-<pre><code class="Ruby"># b.rb
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># b.rb</span></span><br><span class="line"></span><br><span class="line">Y = <span class="string">&quot;hello&quot;</span></span><br></pre></td></tr></table></figure>
 
-Y = &quot;hello&quot;
-</code></pre>
 <p>修改下 a.rb:</p>
-<pre><code class="Ruby"># a.rb
-# 未加载b.rb
-
-p Module.constants
-
-#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
-
-p Module.constants.count
-#=&gt; 117
-
-p Module.constants.include? :Y
-#=&gt; false
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line"><span class="comment"># 未加载b.rb</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
 <p>加载b.rb，无true：</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 118</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; true</span></span><br></pre></td></tr></table></figure>
 
-p Module.constants
-
-#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :Y, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
-
-p Module.constants.count
-#=&gt; 118
-
-p Module.constants.include? :Y
-#=&gt; true
-</code></pre>
 <p>此时<strong>Y</strong>加载进来了，常量总数加1。</p>
 <p>加载b.rb，有true：</p>
-<pre><code class="Ruby"># a.rb
-load &#39;./b.rb&#39;, true
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># a.rb</span></span><br><span class="line">load <span class="string">&#x27;./b.rb&#x27;</span>, <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">p Module.constants</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]</span></span><br><span class="line"></span><br><span class="line">p Module.constants.count</span><br><span class="line"><span class="comment">#=&gt; 117</span></span><br><span class="line"></span><br><span class="line">p Module.constants.<span class="keyword">include</span>? <span class="symbol">:Y</span></span><br><span class="line"><span class="comment">#=&gt; false</span></span><br></pre></td></tr></table></figure>
 
-p Module.constants
-
-#=&gt; [:Integer, :Float, :String, :Array, :Hash, :NilClass, :STDERR, :STDIN, :NIL, :Delegator, :STDOUT, :ARGF, :SimpleDelegator, :UncaughtThrowError, :FileTest, :File, :GC, :Fiber, :FiberError, :Rational, :ObjectSpace, :Gem, :DidYouMean, :Complex.......]
-
-p Module.constants.count
-#=&gt; 117
-
-p Module.constants.include? :Y
-#=&gt; false
-</code></pre>
 <p>输出结果与未加载b.rb完全一致。</p>
 <p>也就是书中说的那样，添加true后，<strong>Ruby会创建一个匿名模块，用它作为命名空间来容纳加载文件中定义的所有常量， 加载完成后，该模块会被销毁</strong>。</p>
 <p>等同于<strong>load添加true后，所有的常量都没有加载进来</strong>。当然这里的常量，包括类名，模块名。</p>
@@ -827,7 +749,7 @@ p Module.constants.include? :Y
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

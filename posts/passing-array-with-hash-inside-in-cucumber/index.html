@@ -296,7 +296,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/passing-array-with-hash-inside-in-cucumber/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>505 words</span>
+              <span>504 words</span>
             </span>
           
 
@@ -400,49 +400,21 @@
 <span id="more"></span> 
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在Cucumber中，当你需要在Examples中传递Array的时候，只需要用逗号分隔即可，比如下面这种：</p>
-<pre><code class="Ruby">Scenario Outline: check cart
-    When I am &quot;&lt;username&gt;&quot;， I check my cart
-    Then I will see the product lists is &quot;&lt;products&gt;&quot;
-    Examples:
-    | username | products |
-    |  Tom | Apple, Banana, Blackberry, Orange |
-    |  Lucy | Apple, Blackberry, Orange, Lemon |
-    |  Jim | Blueberry, Orange, Lemon |
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span> check cart</span><br><span class="line">    When I am <span class="string">&quot;&lt;username&gt;&quot;</span>， I check my cart</span><br><span class="line">    Then I will see the product lists is <span class="string">&quot;&lt;products&gt;&quot;</span></span><br><span class="line">    <span class="symbol">Examples:</span></span><br><span class="line">    <span class="params">| username |</span> products <span class="params">|</span></span><br><span class="line"><span class="params">    |</span>  Tom <span class="params">| Apple, Banana, Blackberry, Orange |</span></span><br><span class="line">    <span class="params">|  Lucy |</span> Apple, Blackberry, Orange, Lemon <span class="params">|</span></span><br><span class="line"><span class="params">    |</span>  Jim <span class="params">| Blueberry, Orange, Lemon |</span></span><br></pre></td></tr></table></figure>
+
 <p>然后在对应的step_defination中，只需要用<code>split(&#39;, &#39;)</code>就可以把字符串转化为Array了。</p>
 <p>但是，如果你需要传递类似如下的数据呢？Array的元素是一个个hash。</p>
-<pre><code class="Ruby">Scenario Outline: invite friends
-    When I am &quot;&lt;username&gt;&quot;， I invite friends &quot;&lt;friends&gt;&quot; to join in the game
-    Then My friends list has been updated
-    Examples:
-    | username | friends |
-    |  Tom | [&#123;:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20&#125;, &#123;:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30&#125;] |
-    |  Lucy | [&#123;:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston&quot;, :age =&gt; 19&#125;]|
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span> invite friends</span><br><span class="line">    When I am <span class="string">&quot;&lt;username&gt;&quot;</span>， I invite friends <span class="string">&quot;&lt;friends&gt;&quot;</span> to join <span class="keyword">in</span> the game</span><br><span class="line">    Then My friends list has been updated</span><br><span class="line">    <span class="symbol">Examples:</span></span><br><span class="line">    <span class="params">| username |</span> friends <span class="params">|</span></span><br><span class="line"><span class="params">    |</span>  Tom <span class="params">| [&#123;:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20&#125;, &#123;:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30&#125;] |</span></span><br><span class="line">    <span class="params">|  Lucy |</span> [&#123;<span class="symbol">:firstname=&gt;<span class="string">&quot;Tom&quot;</span></span>, <span class="symbol">:lastname=&gt;<span class="string">&quot;Preston&quot;</span></span>, <span class="symbol">:age</span> =&gt; <span class="number">19</span>&#125;]<span class="params">|</span></span><br></pre></td></tr></table></figure>
+
 <p>这时，example中需要传递类似<code>[&#123;:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20&#125;, &#123;:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30&#125;]</code>的Array对象。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>鉴于Examples中只能传String，所以这里我们还是传String，同时借用下ruby中的Struct，最后将传递过来的string，转化成目标格式。</p>
 <p>还是以上面的case为例，feature改成这样：</p>
-<pre><code class="Ruby">Scenario Outline: invite friends
-    When I am &quot;&lt;username&gt;&quot;， I invite friends &quot;&lt;friends&gt;&quot; to join in the game
-    Then My friends list has been updated
-    Examples:
-    | username | friends |
-    |  Tom | Tom, Preston-Werner, 20, Kenneth, Reitz, 30 |
-    |  Lucy | Tom, Preston, 19|
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span> invite friends</span><br><span class="line">    When I am <span class="string">&quot;&lt;username&gt;&quot;</span>， I invite friends <span class="string">&quot;&lt;friends&gt;&quot;</span> to join <span class="keyword">in</span> the game</span><br><span class="line">    Then My friends list has been updated</span><br><span class="line">    <span class="symbol">Examples:</span></span><br><span class="line">    <span class="params">| username |</span> friends <span class="params">|</span></span><br><span class="line"><span class="params">    |</span>  Tom <span class="params">| Tom, Preston-Werner, 20, Kenneth, Reitz, 30 |</span></span><br><span class="line">    <span class="params">|  Lucy |</span> Tom, Preston, <span class="number">19</span><span class="params">|</span></span><br></pre></td></tr></table></figure>
+
 <p>这样问题就转化成，在对应的step_defination中，如何将字符串“Tom, Preston-Werner, 20, Kenneth, Reitz, 30” 转化成<code>[&#123;:firstname=&gt;&quot;Tom&quot;, :lastname=&gt;&quot;Preston-Werner&quot;, :age =&gt; 20&#125;, &#123;:firstname=&gt;&quot;Kenneth&quot;, :lastname=&gt;&quot;Reitz&quot;, :age =&gt; 30&#125;]</code>。</p>
 <p>用一个method来处理：</p>
-<pre><code class="Ruby">def transform_to_array(origin_arg)
-  raise ArgumentError unless origin_arg.include?(&#39;,&#39;) ## 检查下参数
-  friend = Struct.new(:firstname, :lastname, :age)
-  [].tap do |result|
-    origin_arg.split(&#39;, &#39;).each_slice(3).to_a.each do |a|
-      new_friend = friend.new(a.first,a[1], a.last )
-      result &lt;&lt; Hash[new_friend.each_pair.to_a]
-    end
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">transform_to_array</span><span class="params">(origin_arg)</span></span></span><br><span class="line">  raise ArgumentError <span class="keyword">unless</span> origin_arg.<span class="keyword">include</span>?(<span class="string">&#x27;,&#x27;</span>) <span class="comment">## 检查下参数</span></span><br><span class="line">  friend = Struct.new(<span class="symbol">:firstname</span>, <span class="symbol">:lastname</span>, <span class="symbol">:age</span>)</span><br><span class="line">  [].tap <span class="keyword">do</span> <span class="params">|result|</span></span><br><span class="line">    origin_arg.split(<span class="string">&#x27;, &#x27;</span>).each_slice(<span class="number">3</span>).to_a.each <span class="keyword">do</span> <span class="params">|a|</span></span><br><span class="line">      new_friend = friend.new(a.first,a[<span class="number">1</span>], a.last )</span><br><span class="line">      result &lt;&lt; Hash[new_friend.each_pair.to_a]</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>OK！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://ruby-doc.org/core-2.2.1/Struct.html">Struct</a></p>
 <p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/8082423/returning-struct-data-as-a-hash-in-ruby">returning struct data as a hash in ruby</a></p>
@@ -754,7 +726,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

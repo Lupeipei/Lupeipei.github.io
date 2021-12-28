@@ -298,7 +298,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/encode-uuid-as-base58/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>448 words</span>
+              <span>444 words</span>
             </span>
           
 
@@ -409,64 +409,22 @@
 <p>在Rails中，通常会给model加上uuid作为唯一标示，生成的uuid通常比较长，而且带有’-‘符号，使用base58进行编码会显得更好一些。下面实作一下，如何在Rails中将uuid编码成base58格式。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>以一个project的model为例，该model含有字段：uuid，title，description</p>
 <p><code>project.rb</code>的文件内容如下：</p>
-<pre><code class="Ruby">class Project &lt; ApplicationRecord
-  validates :title, presence: true
-  before_validation :generate_uuid, :on =&gt; :create
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:title</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  before_validation <span class="symbol">:generate_uuid</span>, <span class="symbol">:on</span> =&gt; <span class="symbol">:create</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">to_param</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= SecureRandom.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def to_param
-    self.uuid
-  end
-
-  protected
-  def generate_uuid
-    self.uuid ||= SecureRandom.uuid
-  end
-
-end
-</code></pre>
 <p>这里，uuid是由SecureRandom.uuid来生成的。</p>
 <p>我们定义一下用base58压缩uuid的method，为了能在所有model中都使用这个method，我们用module来包起这个method。具体如下：</p>
 <ul>
 <li><p>在lib目录下新建<code>my_base.rb</code>文件：</p>
 </li>
 <li><p>在<code>my_base.rb</code>中添加如下内容：</p>
-<pre><code class="Ruby">module MyBase
-  module Base
-    ALPHABET = &quot;123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ&quot;.chars
-    BASE = ALPHABET.size
-    def uuid_as_base58(uuid)
-      int_val = uuid.gsub(&#39;-&#39;,&#39;&#39;).to_i(16)
-      &#39;&#39;.tap do |base58_val|
-        while int_val &gt; 0
-          int_val, mod = int_val.divmod(BASE)
-          base58_val.prepend ALPHABET[mod]
-        end
-      end
-    end
-  end
-end
-
-class Object
-  include MyBase::Base
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyBase</span></span></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">Base</span></span></span><br><span class="line">    ALPHABET = <span class="string">&quot;123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ&quot;</span>.chars</span><br><span class="line">    BASE = ALPHABET.size</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">uuid_as_base58</span><span class="params">(uuid)</span></span></span><br><span class="line">      int_val = uuid.gsub(<span class="string">&#x27;-&#x27;</span>,<span class="string">&#x27;&#x27;</span>).to_i(<span class="number">16</span>)</span><br><span class="line">      <span class="string">&#x27;&#x27;</span>.tap <span class="keyword">do</span> <span class="params">|base58_val|</span></span><br><span class="line">        <span class="keyword">while</span> int_val &gt; <span class="number">0</span></span><br><span class="line">          int_val, mod = int_val.divmod(BASE)</span><br><span class="line">          base58_val.prepend ALPHABET[mod]</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Object</span></span></span><br><span class="line">  <span class="keyword">include</span> MyBase::Base</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>config/application.rb</code>文件中，加入如下内容：</p>
-<pre><code>config.autoload_paths += Dir[&quot;#&#123;config.root&#125;/lib/**&quot;]
-</code></pre>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">config<span class="selector-class">.autoload_paths</span> += Dir<span class="selector-attr">[<span class="string">&quot;#&#123;config.root&#125;/lib/**&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
 <p>运行时，会自动加载lib下的文件。</p>
 </li>
 <li><p>修改<code>project.rb</code>的文件中有关uuid的赋值：</p>
-<pre><code class="Ruby">require &#39;my_base&#39;
-class Project &lt; ApplicationRecord
-......
-  def generate_uuid
-    self.uuid ||= uuid_as_base58(SecureRandom.uuid)
-  end
-......
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;my_base&#x27;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid <span class="params">||</span>= uuid_as_base58(SecureRandom.uuid)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p>新建一个project看看，会发现已经变成了base58的编码格式</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fn5xh10wkvj30hz01f0sr.jpg"></p>
 </li>
@@ -782,7 +740,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

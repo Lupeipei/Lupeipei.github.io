@@ -97,7 +97,7 @@
 <meta property="og:description" content="Google到了相似的问题解决方法，但是尝试后，依然无效，这里记录下自己找到的解决方法。">
 <meta property="og:locale">
 <meta property="article:published_time" content="2020-02-20T11:41:40.000Z">
-<meta property="article:modified_time" content="2020-02-20T11:53:55.000Z">
+<meta property="article:modified_time" content="2021-12-28T07:26:06.618Z">
 <meta property="article:author" content="Lucia">
 <meta property="article:tag" content="Yarn">
 <meta name="twitter:card" content="summary">
@@ -296,7 +296,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/yarn-global-packages-with-asdf-error/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>295 words</span>
+              <span>294 words</span>
             </span>
           
 
@@ -401,43 +401,37 @@
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用 <code>yarn global install @vue/cli</code> 后，输入</p>
 <p><code>vue create hello-world</code>，报错:</p>
-<pre><code>zsh: command not found: vue
-</code></pre>
+<figure class="highlight avrasm"><table><tr><td class="code"><pre><span class="line"><span class="symbol">zsh:</span> command not found: vue</span><br></pre></td></tr></table></figure>
+
 <p>Yarn 版本1.21.1。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>参考 <a target="_blank" rel="noopener" href="https://github.com/yarnpkg/yarn/issues/5353">yarn doesn’t add global packages bin/ to $PATH</a> ，在.zshrc中添加了一行：</p>
-<pre><code>export PATH=&quot;$(yarn global bin):$PATH&quot;
-</code></pre>
-<p>打开新的Tab，加载后，出现：</p>
-<pre><code>/Users/lucia/.zshrc: xxx: command not found: yarn
-</code></pre>
-<p>终端输入：</p>
-<pre><code class="shell">yarn global bin
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line"><span class="builtin-name">export</span> <span class="attribute">PATH</span>=<span class="string">&quot;<span class="variable">$(yarn global bin)</span>:<span class="variable">$PATH</span>&quot;</span></span><br></pre></td></tr></table></figure>
 
-# /Users/lucia/.asdf/installs/nodejs/12.14.0/.npm/bin
-</code></pre>
+<p>打开新的Tab，加载后，出现：</p>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line"><span class="regexp">/Users/</span>lucia/.zshrc: xxx: command not found: yarn</span><br></pre></td></tr></table></figure>
+
+<p>终端输入：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yarn global bin</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> /Users/lucia/.asdf/installs/nodejs/12.14.0/.npm/bin</span></span><br></pre></td></tr></table></figure>
+
 <p>想到本地nodejs通过asdf安装的, 于是参考<a target="_blank" rel="noopener" href="https://dev.to/jennapederson/using-yarn-global-packages-with-asdf-1d3d">Using Yarn Global Packages with asdf</a>，</p>
 <p>终端执行：</p>
-<pre><code>yarn config set prefix ~/.yarn
-</code></pre>
-<p>打开 <code>.yarnrc</code>文件，发现文件被追加了一行：</p>
-<pre><code>prefex &quot;/Users/lucia/.yarn&quot;
-</code></pre>
-<p>重新终端找vue：</p>
-<pre><code>which vue
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">yarn<span class="built_in"> config </span><span class="builtin-name">set</span><span class="built_in"> prefix </span>~/.yarn</span><br></pre></td></tr></table></figure>
 
-vue not found
-</code></pre>
+<p>打开 <code>.yarnrc</code>文件，发现文件被追加了一行：</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">prefex </span><span class="string">&quot;/Users/lucia/.yarn&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>重新终端找vue：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">which</span> vue</span><br><span class="line"></span><br><span class="line">vue not found</span><br></pre></td></tr></table></figure>
+
 <p>看来PATH还是没有配对。</p>
 <p>最后在<a target="_blank" rel="noopener" href="https://github.com/asdf-vm/asdf-nodejs/issues/42">yarn global installs don’t get shimmed</a> 找到了答案。</p>
 <p>方法并不优雅，不过倒是有效。</p>
 <p>终端：</p>
-<pre><code class="shell">yarn global dir
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yarn global dir</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> /Users/lucia/.config/yarn/global</span></span><br></pre></td></tr></table></figure>
 
-# /Users/lucia/.config/yarn/global
-</code></pre>
 <p>找到 node_module的地方，然后把这个PATH 追加到<code>.zshrc</code>文件中:</p>
-<pre><code>export path=&quot;$HOME/.config/yarn/global/node_modules/.bin:$PATH&quot;
-</code></pre>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line"><span class="builtin-name">export</span> <span class="attribute">path</span>=<span class="string">&quot;<span class="variable">$HOME</span>/.config/yarn/global/node_modules/.bin:<span class="variable">$PATH</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
 <p>OK，Bravo!</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/yarnpkg/yarn/issues/5353">yarn doesn’t add global packages bin/ to $PATH</a></p>
 <p><a target="_blank" rel="noopener" href="https://dev.to/jennapederson/using-yarn-global-packages-with-asdf-1d3d">Using Yarn Global Packages with asdf</a></p>
@@ -750,7 +744,7 @@ vue not found
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

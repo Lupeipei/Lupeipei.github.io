@@ -296,7 +296,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/compare-the-difference-between-y-bang-and-y/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -407,296 +407,73 @@
 <p>既是如此，自己便试着推导了下，算是初步理清了两者的不同。</p>
 <p>开始之前，建议在桌前备上一瓶肥仔水，你会需要它的😆。</p>
 <h4 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h4><p>先看两者的定义：</p>
-<pre><code class="scheme">; define Y-bang
-;
-(define Y-bang
-  (lambda (f)
-    (letrec
-      ((h (f (lambda (arg) (h arg)))))
-      h)))
-;
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define Y-bang</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y-bang</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">    (<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">      ((<span class="name">h</span> (<span class="name">f</span> (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))))</span><br><span class="line">      h)))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">; Y combinator from chapter 09, old friend.</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (le)</span><br><span class="line">    ((<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">      (<span class="name">f</span> f))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">        (<span class="name">le</span> (<span class="name"><span class="builtin-name">lambda</span></span> (x)</span><br><span class="line">              ((<span class="name">f</span> f) x)))))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
 
-; Y combinator from chapter 09, old friend.
-;
-(define Y
-  (lambda (le)
-    ((lambda (f)
-      (f f))
-      (lambda (f)
-        (le (lambda (x)
-              ((f f) x)))))))
-;
-</code></pre>
 <h4 id="推导过程"><a href="#推导过程" class="headerlink" title="推导过程"></a>推导过程</h4><p>Y-bang的推导较简单，可以参看<a target="_blank" rel="noopener" href="https://mitpress.mit.edu/books/seasoned-schemer-second-edition">《the seasoned schemer》</a>chapter 16 ，这里不妨再过一遍：</p>
 <p>故事依然从length开始：</p>
-<pre><code class="scheme">; define length
-;
-(define length
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l)))))))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define length</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> length</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <p>使用let 和 set! 来重新定义length:</p>
-<pre><code class="scheme">; using let and set! to get another version of length
-;
-(define length
-  (let ((h (lambda (l) 0)))
-    (set! h
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 (h (cdr l)))))))
-    h))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; using let and set! to get another version of length</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> length</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">h</span> (<span class="name"><span class="builtin-name">lambda</span></span> (l) <span class="number">0</span>)))</span><br><span class="line">    (<span class="name"><span class="builtin-name">set!</span></span> h</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">h</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">    h))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <p>这里我们来定义一个函数L，用来简化这个新版本length的定义:</p>
-<pre><code class="scheme">; define L
-;
-(define L
-  (lambda (length)
-    (lambda (l)
-      (cond
-        ((null? l) 0)
-        (else (add1 (length (cdr l))))))))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define L</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> L</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <p>这个 L 函数，接受一个函数length做为参数，返回结果是一个lambda函数。</p>
 <p>利用 L，来简化 length：</p>
-<pre><code class="scheme">(define length
-  (let ((h (lambda (l) 0)))
-    (set! h
-      (L (lambda (arg) (h arg))))
-    h))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> length</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">h</span> (<span class="name"><span class="builtin-name">lambda</span></span> (l) <span class="number">0</span>)))</span><br><span class="line">    (<span class="name"><span class="builtin-name">set!</span></span> h</span><br><span class="line">      (<span class="name">L</span> (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg))))</span><br><span class="line">    h))</span><br></pre></td></tr></table></figure>
+
 <p>如果你看懂了这步，可跳过下面的推导细节。</p>
 <hr>
 <p>为什么可以这样简化？ 我们将 L 换成 定义的lambda函数：</p>
-<pre><code class="scheme">; replace L with its definition
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; replace L with its definition</span></span><br><span class="line"></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (length)</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name"><span class="builtin-name">length</span></span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))) (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; replace length with (lambda (arg) (h arg)), we can get those below:</span></span><br><span class="line"></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> ((<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)) (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">; the result of ((lambda (arg) (h arg)) (cdr l)) is (h (cdr l))</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">    (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">      ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">      (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">h</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br></pre></td></tr></table></figure>
 
-((lambda (length)
-  (lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (length (cdr l))))))) (lambda (arg) (h arg)))
-;
-; replace length with (lambda (arg) (h arg)), we can get those below:
-
-(lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 ((lambda (arg) (h arg)) (cdr l))))))
-;
-
-; the result of ((lambda (arg) (h arg)) (cdr l)) is (h (cdr l))
-;
-(lambda (l)
-    (cond
-      ((null? l) 0)
-      (else (add1 (h (cdr l))))))
-</code></pre>
 <p>最后得到的<code>(L (lambda (arg) (h arg)))</code> 的结果就是：</p>
-<pre><code class="scheme">(lambda (l)
-  (cond
-   ((null? l) 0)
-   (else (add1 (h (cdr l))))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">  (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">   ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">   (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">h</span> (<span class="name"><span class="builtin-name">cdr</span></span> l))))))</span><br></pre></td></tr></table></figure>
+
 <p>这时，替换<code>(L (lambda (arg) (h arg)))</code> ，得到的length如下：</p>
-<pre><code class="scheme">(define length
-  (let ((h (lambda (l) 0)))
-    (set! h
-      (lambda (l)
-        (cond
-          ((null? l) 0)
-          (else (add1 (h (cdr l)))))))
-    h))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> length</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">h</span> (<span class="name"><span class="builtin-name">lambda</span></span> (l) <span class="number">0</span>)))</span><br><span class="line">    (<span class="name"><span class="builtin-name">set!</span></span> h</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (l)</span><br><span class="line">        (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">          ((<span class="name"><span class="builtin-name">null?</span></span> l) <span class="number">0</span>)</span><br><span class="line">          (<span class="name"><span class="builtin-name">else</span></span> (<span class="name">add1</span> (<span class="name">h</span> (<span class="name"><span class="builtin-name">cdr</span></span> l)))))))</span><br><span class="line">    h))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <hr>
 <p>利用新定义的length，可以推导出Y-bang.</p>
-<pre><code class="scheme">; we get Y-bang
-;
-(define Y-bang
-  (lambda (f)
-    (letrec
-      ((h (f (lambda (arg) (h arg)))))
-      h)))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; we get Y-bang</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y-bang</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">    (<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">      ((<span class="name">h</span> (<span class="name">f</span> (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))))</span><br><span class="line">      h)))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <p>Y 稍微复杂了些 ，如果你看<a target="_blank" rel="noopener" href="https://mitpress.mit.edu/books/seasoned-schemer-second-edition">《the little schemer》</a>chapter 09 时仍是懵逼状，可参考之前这篇<a target="_blank" rel="noopener" href="https://luciaca.cn/2019/04/13/deriving-the-Y-combinator-in-scheme/">scheme中有关Y combinator 的推导</a>。</p>
 <h4 id="两者对比"><a href="#两者对比" class="headerlink" title="两者对比"></a>两者对比</h4><p>当调用的函数符合一定的”模式”时，两者没什么大的区别。</p>
 <p>看一个depth* 的例子：</p>
-<pre><code class="scheme">; define D
-;
-(define D
-  (lambda (depth*)
-    (lambda (s)
-      (cond
-        ((null? s) 1)
-        ((atom? (car s)) (depth* (cdr s)))
-        (else
-          (max
-            (add1 (depth* (car s)))
-            (depth* (cdr s))))))))
-;
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define D</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> D</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (depth*)</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (s)</span><br><span class="line">      (<span class="name"><span class="builtin-name">cond</span></span></span><br><span class="line">        ((<span class="name"><span class="builtin-name">null?</span></span> s) <span class="number">1</span>)</span><br><span class="line">        ((<span class="name">atom?</span> (<span class="name"><span class="builtin-name">car</span></span> s)) (<span class="name">depth*</span> (<span class="name"><span class="builtin-name">cdr</span></span> s)))</span><br><span class="line">        (<span class="name"><span class="builtin-name">else</span></span></span><br><span class="line">          (<span class="name"><span class="builtin-name">max</span></span></span><br><span class="line">            (<span class="name">add1</span> (<span class="name">depth*</span> (<span class="name"><span class="builtin-name">car</span></span> s)))</span><br><span class="line">            (<span class="name">depth*</span> (<span class="name"><span class="builtin-name">cdr</span></span> s))))))))</span><br><span class="line"><span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
 <p>使用Y-bang 和 Y 来定义 depth*:</p>
-<pre><code class="scheme">(define depth* (Y-bang D))
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">define</span></span> depth* (<span class="name">Y-bang</span> D))</span><br><span class="line"></span><br><span class="line">(<span class="name">depth*</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">c</span> (<span class="name">b</span> (<span class="name">a</span> b) a) a)))</span><br><span class="line"><span class="comment">;Value: 3</span></span><br><span class="line"></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> depth* (<span class="name">Y</span> D))</span><br><span class="line"></span><br><span class="line">(<span class="name">depth*</span> (<span class="name"><span class="builtin-name">quote</span></span> (<span class="name">c</span> (<span class="name">b</span> (<span class="name">a</span> b) a) a)))</span><br><span class="line"><span class="comment">;Value: 3</span></span><br></pre></td></tr></table></figure>
 
-(depth* (quote (c (b (a b) a) a)))
-;Value: 3
-
-(define depth* (Y D))
-
-(depth* (quote (c (b (a b) a) a)))
-;Value: 3
-</code></pre>
 <p>使用<code>(Y-bang D)</code> 和 <code>(Y D)</code> 来定义 depth*，得到的结果相同。</p>
 <p>来看个不一样的例子：</p>
-<pre><code class="scheme">; define biz
-;
-(define biz
-  (let ((x 0))
-    (lambda (f)
-      (set! x (add1 x))
-      (lambda (a)
-        (if (= a x)
-            0
-            (f a))))))
-</code></pre>
-<p>调用biz:</p>
-<pre><code class="scheme">((Y biz) 5)
-; Value: 0
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define biz</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> biz</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">      (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">        (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">            <span class="number">0</span></span><br><span class="line">            (<span class="name">f</span> a))))))</span><br></pre></td></tr></table></figure>
 
-((Y-bang biz) 5)
-; no answer
-</code></pre>
+<p>调用biz:</p>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name">Y</span> biz) <span class="number">5</span>)</span><br><span class="line"><span class="comment">; Value: 0</span></span><br><span class="line"></span><br><span class="line">((<span class="name">Y-bang</span> biz) <span class="number">5</span>)</span><br><span class="line"><span class="comment">; no answer</span></span><br></pre></td></tr></table></figure>
+
 <p>此时<code>((Y-bang biz) 5)</code>没有结果，因为调用<code>((Y-bang biz) 5)</code>时，只执行了一次<code>(set! x (add1 x))</code> ，x 一直是1，进入了一个无限的死循环。</p>
 <p>为什么会是这样的？</p>
 <p>来看一下<code>(Y-bang biz)</code> 是什么：</p>
-<pre><code class="scheme">; define Y-bang
-;
-(define Y-bang
-  (lambda (f)
-    (letrec
-      ((h (f (lambda (arg) (h arg)))))
-      h)))
-; define biz
-;
-(define biz
-  (let ((x 0))
-    (lambda (f)
-      (set! x (add1 x))
-      (lambda (a)
-        (if (= a x)
-            0
-            (f a))))))
-;
-; now, we want know what (Y-bang biz) is.
-;
-; first, replace Y-bang, biz with their definition.
-;
-((lambda (f)
-    (letrec
-      ((h (f (lambda (arg) (h arg)))))
-      h)) (let ((x 0))
-        (lambda (f)
-          (set! x (add1 x))
-          (lambda (a)
-            (if (= a x)
-                0
-                (f a))))))
-;
-; then, replace f with biz&#39;s definition
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; define Y-bang</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> Y-bang</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">    (<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">      ((<span class="name">h</span> (<span class="name">f</span> (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))))</span><br><span class="line">      h)))</span><br><span class="line"><span class="comment">; define biz</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> biz</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">    (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">      (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">        (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">            <span class="number">0</span></span><br><span class="line">            (<span class="name">f</span> a))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; now, we want know what (Y-bang biz) is.</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; first, replace Y-bang, biz with their definition.</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">    (<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">      ((<span class="name">h</span> (<span class="name">f</span> (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))))</span><br><span class="line">      h)) (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">          (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">            (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">                <span class="number">0</span></span><br><span class="line">                (<span class="name">f</span> a))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; then, replace f with biz&#x27;s definition</span></span><br><span class="line"></span><br><span class="line">(<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">  ((<span class="name">h</span> ((<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">            (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">            (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">              (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">                  <span class="number">0</span></span><br><span class="line">                  (<span class="name">f</span> a))))) (<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)))))</span><br><span class="line">  h)</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; and, replace f in biz with (lambda (arg) (h arg))</span></span><br><span class="line"></span><br><span class="line">(<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">  ((<span class="name">h</span> ((<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">          (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">            (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">            (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">              (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">                  <span class="number">0</span></span><br><span class="line">                  ((<span class="name"><span class="builtin-name">lambda</span></span> (arg) (<span class="name">h</span> arg)) a))))))))</span><br><span class="line">  h)</span><br><span class="line"><span class="comment">;</span></span><br><span class="line"><span class="comment">; the result of ((lambda (arg) (h arg)) a) is (h a)</span></span><br><span class="line"><span class="comment">; finally, we get it.</span></span><br><span class="line">(<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">  ((<span class="name">h</span> ((<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">         (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">         (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">           (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">               <span class="number">0</span></span><br><span class="line">               (<span class="name">h</span> a)))))))</span><br><span class="line">  h)</span><br></pre></td></tr></table></figure>
 
-(letrec
-  ((h ((let ((x 0))
-          (lambda (f)
-            (set! x (add1 x))
-            (lambda (a)
-              (if (= a x)
-                  0
-                  (f a))))) (lambda (arg) (h arg)))))
-  h)
-;
-; and, replace f in biz with (lambda (arg) (h arg))
-
-(letrec
-  ((h ((let ((x 0))
-          (lambda (f)
-            (set! x (add1 x))
-            (lambda (a)
-              (if (= a x)
-                  0
-                  ((lambda (arg) (h arg)) a))))))))
-  h)
-;
-; the result of ((lambda (arg) (h arg)) a) is (h a)
-; finally, we get it.
-(letrec
-  ((h ((let ((x 0))
-         (set! x (add1 x))
-         (lambda (a)
-           (if (= a x)
-               0
-               (h a)))))))
-  h)
-</code></pre>
 <p>最后得到的结果中，可以看出，第一次调用递归函数 h 时，x 初始化为零，然后执行 add1, x 为1，此后递归时，不再执行 <code>(lambda (a) ....)</code> 外的表达式，x的值一直没变化，保持为1，<code>((Y-bang biz) 5)</code> 自然是无结果的。</p>
 <p>我们可以测试一下，既然 x 的值一直是1，那么<code>((Y-bang biz) 1)</code> 应该有结果, 且为0:</p>
-<pre><code class="scheme">((Y-bang biz) 1)
-; Value: 0
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">((<span class="name">Y-bang</span> biz) <span class="number">1</span>)</span><br><span class="line"><span class="comment">; Value: 0</span></span><br></pre></td></tr></table></figure>
+
 <p>我们可以修改一下biz函数，让<code>((Y-bang biz) 5)</code> 得到结果0。</p>
-<pre><code class="scheme">; redefine biz
-;
-(define biz
-  (lambda (f)
-    (let ((x 0))
-      (lambda (a)
-        (set! x (add1 x))
-        (if (= a x)
-            0
-            (f a))))))
-;
-((Y-bang biz) 5)
-; Value: 0
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line"><span class="comment">; redefine biz</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">define</span></span> biz</span><br><span class="line">  (<span class="name"><span class="builtin-name">lambda</span></span> (f)</span><br><span class="line">    (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">      (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">        (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">        (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">            <span class="number">0</span></span><br><span class="line">            (<span class="name">f</span> a))))))</span><br><span class="line"><span class="comment">;</span></span><br><span class="line">((<span class="name">Y-bang</span> biz) <span class="number">5</span>)</span><br><span class="line"><span class="comment">; Value: 0</span></span><br></pre></td></tr></table></figure>
+
 <p>   至此，<code>（Y-bang biz)</code> 部分结束。</p>
 <p>惭愧的是，一直无法推导出<code>(Y biz)</code> 的最终样子，将biz 的定义带入Y 中时，卡在<code>(f f)</code>这里，简直就是一个无限死循环。</p>
 <p>算是一个未填的坑，留待猴年马月再填。</p>
 <p>初步猜测<code>(Y biz)</code>最终的结果类似这样：</p>
-<pre><code class="scheme">(lambda (a)
-  (let ((x 0))
-    (letrec
-      ((h
-        (lambda (a)
-          (set! x (add1 x))
-          (if (= a x)
-              0
-              (h a)))))
-      (h a))))
-</code></pre>
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">  (<span class="name"><span class="builtin-name">let</span></span> ((<span class="name">x</span> <span class="number">0</span>))</span><br><span class="line">    (<span class="name"><span class="builtin-name">letrec</span></span></span><br><span class="line">      ((<span class="name">h</span></span><br><span class="line">        (<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">          (<span class="name"><span class="builtin-name">set!</span></span> x (<span class="name">add1</span> x))</span><br><span class="line">          (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">              <span class="number">0</span></span><br><span class="line">              (<span class="name">h</span> a)))))</span><br><span class="line">      (<span class="name">h</span> a))))</span><br></pre></td></tr></table></figure>
+
 <p>另，这里不推荐使用<a target="_blank" rel="noopener" href="http://www.gnu.org/software/mit-scheme/documentation/mit-scheme-user/Debugging-Aids.html">pp</a> 来输出<code>(Y biz)</code>  和 <code>(Y-bang biz)</code>的结果，因为输出的结果中，两者相同：</p>
-<pre><code class="scheme">(pp (Y biz))
+<figure class="highlight scheme"><table><tr><td class="code"><pre><span class="line">(<span class="name">pp</span> (<span class="name">Y</span> biz))</span><br><span class="line"></span><br><span class="line"><span class="comment">; result</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">  (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">      <span class="number">0</span></span><br><span class="line">      (<span class="name">f</span> a)))</span><br><span class="line"></span><br><span class="line">(<span class="name">pp</span> (<span class="name">Y-bang</span> biz))</span><br><span class="line"></span><br><span class="line"><span class="comment">;result</span></span><br><span class="line"><span class="comment">;</span></span><br><span class="line">(<span class="name"><span class="builtin-name">lambda</span></span> (a)</span><br><span class="line">  (<span class="name"><span class="builtin-name">if</span></span> (<span class="name"><span class="builtin-name">=</span></span> a x)</span><br><span class="line">      <span class="number">0</span></span><br><span class="line">      (<span class="name">f</span> a)))</span><br></pre></td></tr></table></figure>
 
-; result
-;
-(lambda (a)
-  (if (= a x)
-      0
-      (f a)))
-
-(pp (Y-bang biz))
-
-;result
-;
-(lambda (a)
-  (if (= a x)
-      0
-      (f a)))
-</code></pre>
 <p>可以看到，输出的结果中已经弃掉了<code>(set! x (add1 x))</code>， 使得两者看着好像是一样的，但其实并不相同，这样的结果容易误人子弟啊。</p>
 <p>OK，Time for 🍰.</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://mitpress.mit.edu/books/seasoned-schemer-second-edition">《the seasoned schemer》</a></p>
@@ -1008,7 +785,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

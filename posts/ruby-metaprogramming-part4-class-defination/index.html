@@ -299,7 +299,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/ruby-metaprogramming-part4-class-defination/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -382,7 +382,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2.8k words</span>
+              <span>2.7k words</span>
             </span>
           
 
@@ -415,15 +415,8 @@
 <p>用class_eval method。</p>
 <h4 id="class-eval"><a href="#class-eval" class="headerlink" title="class_eval"></a>class_eval</h4><p>类似牛逼的instance_eval可以打破类的封装一样，class_eval可以打开类，给类定义实例方法。</p>
 <p>看这段代码：</p>
-<pre><code class="Ruby">def add_method_to(a_class)
-  a_class.class_eval do
-    def m; puts &#39;hi&#39;; end
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_method_to</span><span class="params">(a_class)</span></span></span><br><span class="line">  a_class.class_eval <span class="keyword">do</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">m</span>;</span> puts <span class="string">&#x27;hi&#x27;</span>; <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">add_method_to String</span><br><span class="line"><span class="string">&#x27;abc&#x27;</span>.m  <span class="comment">#=&gt; hi</span></span><br></pre></td></tr></table></figure>
 
-add_method_to String
-&#39;abc&#39;.m  #=&gt; hi
-</code></pre>
 <p> 这里你一定也会想到这种打开类的方法，容易引起猴子补丁的问题，当然你可以用细化的方式来处理，不过还是要慎重使用class_eval。</p>
 <p>类似instance_eval还有一个instance_exec的双胞胎兄弟一样，class_eval也有一个class_exec，它可以接受额外的代码块作为参数。</p>
 <h4 id="class-eval与instance-eval"><a href="#class-eval与instance-eval" class="headerlink" title="class_eval与instance_eval"></a>class_eval与instance_eval</h4><p>其实instance_eval也可以修改类，修改的是当前对象的单件类。后面说到单件类时，可以看到。书中也有相应的例子。不要忘了，类也是对象。</p>
@@ -441,33 +434,12 @@ add_method_to String
 <p>对象也有实例变量，而且跟类实例变量看着还挺像，那么两者有什么区别？</p>
 <p>当当前类充当self时，访问的变量是类实例变量，当类的实例充当self时，通常是调用了某个实例方法，然后拥有了该实例变量。</p>
 <p>看例子加深理解：</p>
-<pre><code class="Ruby">class C
-  @var = 1
-  def self.read; @var; end
-  def read; @var; end
-  def write; @var = 2; end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="variable">@var</span> = <span class="number">1</span></span><br><span class="line">  def <span class="keyword">self</span>.read; <span class="variable">@var</span>; <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">read</span>;</span> <span class="variable">@var</span>; <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">write</span>;</span> <span class="variable">@var</span> = <span class="number">2</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = C.new</span><br><span class="line">obj.read</span><br><span class="line">obj.write</span><br><span class="line">obj.read <span class="comment">#=&gt; 2</span></span><br><span class="line">C.read <span class="comment">#=&gt; 1</span></span><br></pre></td></tr></table></figure>
 
-obj = C.new
-obj.read
-obj.write
-obj.read #=&gt; 2
-C.read #=&gt; 1
-</code></pre>
 <p>这里C和C的对象obj都拥有一个实例变量@var，但是两者是不同的。C访问的是类实例变量，obj访问的是类的对象的实例变量，也就是它调用了read后获得到实例变量。</p>
 <h4 id="单件方法"><a href="#单件方法" class="headerlink" title="单件方法"></a>单件方法</h4><p>Ruby允许给单个对象增加一个方法。看个例子：</p>
-<pre><code class="Ruby">my_array = [1,2,3,4]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_array = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">def my_array.add_one</span><br><span class="line">  <span class="keyword">self</span>.map&#123;<span class="params">|x|</span> x + <span class="number">1</span>&#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_array.add_one <span class="comment">#=&gt; [2,3,4,5]</span></span><br><span class="line">my_array.methods.grep(<span class="regexp">/add_one/</span>) <span class="comment">#=&gt; [:add_one]</span></span><br><span class="line">my_array.singleton_methods <span class="comment">#=&gt; [:add_one]</span></span><br><span class="line"></span><br><span class="line">[<span class="number">1</span>,<span class="number">2</span>].singleton_methods <span class="comment">#=&gt; []</span></span><br></pre></td></tr></table></figure>
 
-def my_array.add_one
-  self.map&#123;|x| x + 1&#125;
-end
-
-my_array.add_one #=&gt; [2,3,4,5]
-my_array.methods.grep(/add_one/) #=&gt; [:add_one]
-my_array.singleton_methods #=&gt; [:add_one]
-
-[1,2].singleton_methods #=&gt; []
-</code></pre>
 <p>这里my_array拥有了add_one这个method，而其他对象没有。</p>
 <p><strong>这种只对单个对象生效的方法，称为单件方法。</strong></p>
 <p>通过调用singleton_methods可以查看某个对象的单件方法。</p>
@@ -476,188 +448,56 @@ my_array.singleton_methods #=&gt; [:add_one]
 <h4 id="类方法"><a href="#类方法" class="headerlink" title="类方法"></a>类方法</h4><p>类也是对象，而类名只是常量，所以在类上调用方法，就和对象调用方法一样。</p>
 <p><strong>类方法的实质就是：它是一个类的单件方法</strong>。单件方法存放在哪里？存放在该类的单件类里。</p>
 <p>类方法的定义有三种：</p>
-<pre><code class="ruby">def MyClass.a_class_method; end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def MyClass.a_class_method; <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">MyClass</span></span></span><br><span class="line">  def <span class="keyword">self</span>.a_class_method; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 打开了该类的单件类，在单件类定义了类方法</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> &lt;&lt; self</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">yet_another_class_method</span>;</span> <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-def MyClass
-  def self.a_class_method; end
-end
-
-# 打开了该类的单件类，在单件类定义了类方法
-def MyClass
-  class &lt;&lt; self
-    def yet_another_class_method; end
-end
-</code></pre>
 <p>这里，class &lt;&lt; 打开了该类的单件类。</p>
 <h4 id="类宏"><a href="#类宏" class="headerlink" title="类宏"></a>类宏</h4><p>像<strong>attr_accessor</strong>, <strong>attr_read</strong>, <strong>attr_writer</strong>这样的方法称之为类宏。</p>
 <p>他们看起来像是关键字，其实只是普通的方法。估计你看到这里也就知道了，这些其实是类方法。</p>
 <h4 id="单件类"><a href="#单件类" class="headerlink" title="单件类"></a>单件类</h4><p>单件类是一个对象的单件方法的存活之所，每个单件类都只有一个实例。</p>
 <p>通过Object#singleton_class或者class &lt;&lt; 可以获得单件类。</p>
 <p>看个例子来更好地了解下单件类：</p>
-<pre><code class="Ruby">class C
-  def a_method
-    puts &#39;C#a_method()&#39;
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_method</span></span></span><br><span class="line">    puts <span class="string">&#x27;C#a_method()&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  def <span class="keyword">self</span>.a_class_method</span><br><span class="line">    puts <span class="string">&#x27;C.a_class_method()&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span> &lt; C;</span><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = D.new</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> &lt;&lt; obj</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_singleton_method</span></span></span><br><span class="line">    puts <span class="string">&quot;obj#a_singleton_method()&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj.singleton_class <span class="comment">#= &gt; #&lt;Class:#&lt;D:0x007f9e23909f70&gt;&gt;</span></span><br><span class="line">obj.singleton_class.superclass <span class="comment">#= &gt; D</span></span><br><span class="line"></span><br><span class="line">D.singleton_class <span class="comment">#= &gt; #&lt;Class:D&gt;</span></span><br><span class="line">D.singleton_class.superclass <span class="comment">#= &gt; #&lt;Class:C&gt;</span></span><br><span class="line"></span><br><span class="line">C.singleton_class <span class="comment">#= &gt; #&lt;Class:C&gt;</span></span><br><span class="line">C.singleton_class.superclass <span class="comment">#= &gt; #&lt;Class:Object&gt;</span></span><br></pre></td></tr></table></figure>
 
-  def self.a_class_method
-    puts &#39;C.a_class_method()&#39;
-  end
-end
-
-class D &lt; C;end
-
-obj = D.new
-
-class &lt;&lt; obj
-  def a_singleton_method
-    puts &quot;obj#a_singleton_method()&quot;
-  end
-end
-
-obj.singleton_class #= &gt; #&lt;Class:#&lt;D:0x007f9e23909f70&gt;&gt;
-obj.singleton_class.superclass #= &gt; D
-
-D.singleton_class #= &gt; #&lt;Class:D&gt;
-D.singleton_class.superclass #= &gt; #&lt;Class:C&gt;
-
-C.singleton_class #= &gt; #&lt;Class:C&gt;
-C.singleton_class.superclass #= &gt; #&lt;Class:Object&gt;
-</code></pre>
 <p>查看obj单件类，D单件类的祖先链，会得到：</p>
-<pre><code class="Ruby">obj.singleton_class.ancestors #=&gt; [#&lt;Class:#&lt;D:0x007fc2ee041790&gt;&gt;,D,C,Object, Kernel, BasicObject]
-D.singleton_class.ancestors #=&gt; [#&lt;Class:D&gt;, #&lt;Class:C&gt;, #&lt;Class:Object&gt;, #&lt;Class:BasicObject&gt;, Class, Module, Object, Kernel,BasicObject]
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">obj.singleton_class.ancestors <span class="comment">#=&gt; [#&lt;Class:#&lt;D:0x007fc2ee041790&gt;&gt;,D,C,Object, Kernel, BasicObject]</span></span><br><span class="line">D.singleton_class.ancestors <span class="comment">#=&gt; [#&lt;Class:D&gt;, #&lt;Class:C&gt;, #&lt;Class:Object&gt;, #&lt;Class:BasicObject&gt;, Class, Module, Object, Kernel,BasicObject]</span></span><br></pre></td></tr></table></figure>
+
 <p>我们来做出obj的祖先链图：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fpjld2vuu5j30u0140go6.jpg"></p>
 <p>【跟书中稍稍不同，我把kernel加进来了，请无视这小学级别的英文书写】</p>
 <p>可以发现：<strong>一个对象的单件类的超类是这个对象的类</strong>。</p>
 <p>书中还列出了七条规则，但是我觉得理解了这个例子，能做出祖先链图，对单件类基本算是掌握了。</p>
 <p>还记得instance_eval可以修改类？它修改的其实是对象的单件类，也就是给对象添加了单件方法，比如先前那个例子，还能这么做：</p>
-<pre><code class="Ruby">my_array = [1,2,3,4]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_array = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">my_array.instance_eval <span class="keyword">do</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add_one</span></span></span><br><span class="line">    <span class="keyword">self</span>.map&#123;<span class="params">|x|</span> x + <span class="number">1</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_array.add_one <span class="comment">#=&gt; [2,3,4,5]</span></span><br><span class="line">my_array.methods.grep(<span class="regexp">/add_one/</span>) <span class="comment">#=&gt; [:add_one]</span></span><br><span class="line">my_array.singleton_methods <span class="comment">#=&gt; [:add_one]</span></span><br></pre></td></tr></table></figure>
 
-my_array.instance_eval do
-  def add_one
-    self.map&#123;|x| x + 1&#125;
-  end
-end
-
-my_array.add_one #=&gt; [2,3,4,5]
-my_array.methods.grep(/add_one/) #=&gt; [:add_one]
-my_array.singleton_methods #=&gt; [:add_one]
-</code></pre>
 <p>这里你可能会想，如果单件方法与类或者对象继承的方法同名，如何调用？<strong>先调用单件方法</strong>，也就是单件方法覆写了祖先链上游的同名方法，这种猴子补丁也有风险。</p>
 <p>看个例子：</p>
-<pre><code class="ruby">module MyModule
-  def size; &quot;size&quot;; end
-  def ancestors; &quot;ancestors&quot;; end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">size</span>;</span> <span class="string">&quot;size&quot;</span>; <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">ancestors</span>;</span> <span class="string">&quot;ancestors&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  extend MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = []</span><br><span class="line">obj.extend MyModule</span><br><span class="line"></span><br><span class="line">obj.size <span class="comment">#= &gt; 调用的是单件类中的方法, 输出&quot;size&quot;</span></span><br><span class="line">C.ancestors <span class="comment">#= &gt; 调用的是单件类中的方法, 输出&quot;ancestors&quot;</span></span><br></pre></td></tr></table></figure>
 
-class C
-  extend MyModule
-end
-
-obj = []
-obj.extend MyModule
-
-obj.size #= &gt; 调用的是单件类中的方法, 输出&quot;size&quot;
-C.ancestors #= &gt; 调用的是单件类中的方法, 输出&quot;ancestors&quot;
-</code></pre>
 <p>如果类或者对象本身有这个方法，与扩展后的单件方法同名，调用的是自身的方法，而不是单件方法。</p>
-<pre><code class="Ruby">module MyModule
-  def size; &quot;size&quot;; end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">size</span>;</span> <span class="string">&quot;size&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  def <span class="keyword">self</span>.size</span><br><span class="line">     <span class="string">&quot;it is C#size&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  extend MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.size <span class="comment">#= &gt; 从祖先链开始找，调用的是自己的类方法, 输出&quot;it is C#size&quot;</span></span><br></pre></td></tr></table></figure>
 
-class C
-  def self.size
-     &quot;it is C#size&quot;
-  end
-  extend MyModule
-end
-
-C.size #= &gt; 从祖先链开始找，调用的是自己的类方法, 输出&quot;it is C#size&quot;
-</code></pre>
 <h4 id="类属性"><a href="#类属性" class="headerlink" title="类属性"></a>类属性</h4><p>像attr_accessor, attr_read,attr_writer这样的方法可以给对象添加属性，那么如何给类添加属性?</p>
 <p>属性实际上是一对方法，而且还是单件方法，所以针对指定类，添加类属性，则需要在它的单件类定义这个属性即可。</p>
 <p>比如这段代码：</p>
-<pre><code class="Ruby">class C
-  class &lt;&lt; self
-    attr_accessor :h
-  end
-end
-C.h = &#39;hi&#39;
-C.h #= &gt; hi
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> &lt;&lt; self</span></span><br><span class="line">    <span class="keyword">attr_accessor</span> <span class="symbol">:h</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.h = <span class="string">&#x27;hi&#x27;</span></span><br><span class="line">C.h <span class="comment">#= &gt; hi</span></span><br></pre></td></tr></table></figure>
 <h4 id="类扩展与对象扩展"><a href="#类扩展与对象扩展" class="headerlink" title="类扩展与对象扩展"></a>类扩展与对象扩展</h4><p>通过向类的单件类中添加模块来定义类方法，这种技巧称之为类扩展，类是对象，相应地，这种技巧也能用在对象上，故也有对象扩展。</p>
 <p>看段代码理解下：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_method</span>;</span> puts <span class="string">&quot;hello&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> &lt;&lt; self</span></span><br><span class="line">    <span class="keyword">include</span> MyModule</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = []</span><br><span class="line"><span class="class"><span class="keyword">class</span> &lt;&lt; obj</span></span><br><span class="line">  <span class="keyword">include</span> MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">C.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br><span class="line"></span><br><span class="line">obj.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">obj.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br></pre></td></tr></table></figure>
 
-class C
-  class &lt;&lt; self
-    include MyModule
-  end
-end
-
-obj = []
-class &lt;&lt; obj
-  include MyModule
-end
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
 <p>类C和对象obj【这里是个空数组】，都在其对应的单件类中包含了MyModule，把MyModule的普通方法a_method变成了其单件方法。</p>
 <p>由于类扩展和对象扩展的普遍性，Ruby中专门提供了一个方法：Object#extend,所以上面的代码还可以这么写：</p>
-<pre><code class="Ruby">module MyModule
-  def a_method; puts &quot;hello&quot;; end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_method</span>;</span> puts <span class="string">&quot;hello&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  extend MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = []</span><br><span class="line">obj.extend MyModule</span><br><span class="line"></span><br><span class="line">C.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">C.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br><span class="line"></span><br><span class="line">obj.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">obj.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br></pre></td></tr></table></figure>
 
-class C
-  extend MyModule
-end
-
-obj = []
-obj.extend MyModule
-
-C.a_method #= &gt; hello
-C.singleton_methods #= &gt; [:a_method]
-
-obj.a_method #= &gt; hello
-obj.singleton_methods #= &gt; [:a_method]
-</code></pre>
 <h4 id="方法包装器"><a href="#方法包装器" class="headerlink" title="方法包装器"></a>方法包装器</h4><p>方法包装器，即用一个方法包装另一个方法。怎么会有这样的需求？假定目前你有一个不能直接修改的方法，比如它在一个封装的库里，你希望为这个方法包装额外的特性。比如添加异常处理什么的。</p>
 <p>有三种方式：环绕别名，细化封装器，下包含包装器。</p>
 <ul>
 <li><p>环绕别名</p>
 <p>先来看看alias关键字，可以给方法起一个别名。</p>
-<pre><code class="Ruby">class C
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-  alias_method :m, :my_method
-end
-C.new.my_method #= &gt; C#my_method()
-C.new.m #= &gt; C#my_method()
-</code></pre>
-<p>如果给方法起了别名，然后又重新定义了它，会如何？继续这个例子：</p>
-<pre><code class="Ruby">class C
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-  alias_method :m, :my_method
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&#x27;C#my_method()&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  alias_method <span class="symbol">:m</span>, <span class="symbol">:my_method</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.new.my_method <span class="comment">#= &gt; C#my_method()</span></span><br><span class="line">C.new.m <span class="comment">#= &gt; C#my_method()</span></span><br></pre></td></tr></table></figure>
 
-  def my_method
-    puts &quot;redefine my_method&quot;
-    m # 调用了m, 也就是原来的my_method
-  end
-end
-C.new.my_method #= &gt; redefine my_method\n C#my_method()
-C.new.m #= &gt; C#my_method()
-</code></pre>
+<p>如果给方法起了别名，然后又重新定义了它，会如何？继续这个例子：</p>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&#x27;C#my_method()&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  alias_method <span class="symbol">:m</span>, <span class="symbol">:my_method</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&quot;redefine my_method&quot;</span></span><br><span class="line">    m <span class="comment"># 调用了m, 也就是原来的my_method</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.new.my_method <span class="comment">#= &gt; redefine my_method\n C#my_method()</span></span><br><span class="line">C.new.m <span class="comment">#= &gt; C#my_method()</span></span><br></pre></td></tr></table></figure>
+
 <p>这里重新定义了my_method，但是别名引用的仍然是原始的那个方法。</p>
 <p>这里其实做了这样的事：</p>
 <ul>
@@ -675,21 +515,8 @@ C.new.m #= &gt; C#my_method()
 </li>
 <li><p>下包含包装器</p>
 <p>是环绕别名的一种替代方式。使用Module#prepend方法，可以覆写类的同名方法，同时可以通过super来调用旧方法。比如上面的例子，用pretend可以这么写：</p>
-<pre><code class="Ruby">module D
-  def my_method
-    puts &quot;redefine my_method&quot;
-    super
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">D</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&quot;redefine my_method&quot;</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  prepend D</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&#x27;C#my_method()&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.new.my_method <span class="comment">#= &gt; redefine my_method\n C#my_method()</span></span><br></pre></td></tr></table></figure>
 
-class C
-  prepend D
-  def my_method
-    puts &#39;C#my_method()&#39;
-  end
-end
-C.new.my_method #= &gt; redefine my_method\n C#my_method()
-</code></pre>
 <p>module D 中的my_method覆盖了class C中的实例方法my_method。</p>
 </li>
 </ul>
@@ -1004,7 +831,7 @@ C.new.my_method #= &gt; redefine my_method\n C#my_method()
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

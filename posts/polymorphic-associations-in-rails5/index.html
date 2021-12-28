@@ -303,7 +303,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/polymorphic-associations-in-rails5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -386,7 +386,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>923 words</span>
+              <span>913 words</span>
             </span>
           
 
@@ -414,25 +414,16 @@
 <p>这么说好像没啥感觉，通过一个小例子来实战一下。</p>
 <h4 id="怎么玩？"><a href="#怎么玩？" class="headerlink" title="怎么玩？"></a>怎么玩？</h4><ul>
 <li><p>新建一个rails项目 poly, 有article，event和comment，用户可以对article或者event进行评论，单个article，event可以拥有多个comments。</p>
-<pre><code>rails new poly
-cd poly
-rails g model article title:string content:text
-rails g model event title:string start_at:datetime end_at:datetime description:text
-rake db:migrate
-</code></pre>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">rails <span class="keyword">new</span> poly</span><br><span class="line"><span class="keyword">cd</span> poly</span><br><span class="line">rails g model article title:<span class="built_in">string</span> conten<span class="variable">t:text</span></span><br><span class="line">rails g model event title:<span class="built_in">string</span> start_a<span class="variable">t:datetime</span> end_a<span class="variable">t:datetime</span> description:text</span><br><span class="line">rake d<span class="variable">b:migrate</span></span><br></pre></td></tr></table></figure>
+
 <p>记得重启服务器：<code>rails s</code>。</p>
 <p>建controller：</p>
-<pre><code>rails g controller articles
-rails g controller events
-</code></pre>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g controller articles</span></span><br><span class="line"><span class="attribute">rails g controller events</span></span><br></pre></td></tr></table></figure>
+
 <p>完成ArticlesController，EventsController中的7个action，这里就不一一列出了。</p>
 <p>修改<code>routes.rb</code>：</p>
-<pre><code class="ruby">Rails.application.routes.draw do
-  resources :events
-  resources :articles
-  root &quot;articles#index&quot;
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  resources <span class="symbol">:events</span></span><br><span class="line">  resources <span class="symbol">:articles</span></span><br><span class="line">  root <span class="string">&quot;articles#index&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>使用seeds或者task，生成一些测试数据，这里我用了seeds。</p>
 <p>添加articles和events的index，show页面。</p>
 <p>浏览器打开<code>localhost:3000</code>，类似这样：</p>
@@ -443,140 +434,53 @@ end
 <ul>
 <li><p>建model comment</p>
 <p>运行：</p>
-<pre><code>rails g model comment
-</code></pre>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g model comment</span></span><br></pre></td></tr></table></figure>
+
 <p>修改生成的migrate文件如下：</p>
-<pre><code class="ruby">class CreateComments &lt; ActiveRecord::Migration[5.1]
-  def change
-    create_table :comments do |t|
-      t.text :content
-      t.belongs_to :commentable, polymorphic: true
-      t.timestamps
-    end
-    add_index :comments, [:commentable_id, :commentable_type]
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CreateComments</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:comments</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.text <span class="symbol">:content</span></span><br><span class="line">      t.belongs_to <span class="symbol">:commentable</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span></span><br><span class="line">      t.timestamps</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    add_index <span class="symbol">:comments</span>, [<span class="symbol">:commentable_id</span>, <span class="symbol">:commentable_type</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这里<code>t.belongs_to :commentable, polymorphic: true</code>等同与</p>
-<pre><code class="Ruby">      t.integer :commentable_id
-      t.string :commentable_type
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">t.integer <span class="symbol">:commentable_id</span></span><br><span class="line">t.string <span class="symbol">:commentable_type</span></span><br></pre></td></tr></table></figure>
+
 <p>运行<code>rake db:migrate</code>， 重启服务器。</p>
 </li>
 </ul>
 <ul>
 <li><p>给article，event，comment建立联系：</p>
 <p>修改<code>app/models/article.rb</code>, <code>app/models/event.rb</code>，添加上：</p>
-<pre><code class="Ruby">has_many :comments, as: :commentable
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:comments</span>, <span class="symbol">as:</span> <span class="symbol">:commentable</span></span><br></pre></td></tr></table></figure>
+
 <p>好，我们去rails console 看看是不是可以给article和event添加comments。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fqjdhgv3ukj30qo0b0wgt.jpg"></p>
 <p>可以看到成功为article创建了comment。</p>
 <p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
-<pre><code class="Ruby">  def show
-    @article = Article.find(params[:id])
-    @comments = @article.comments
-  end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="variable">@article</span> = Article.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="variable">@comments</span> = <span class="variable">@article</span>.comments</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>修改<code>app/views/articles/show.html.erb</code></p>
-<pre><code class="Html">&lt;div class=&quot;container-fluid&quot;&gt;
-  &lt;h1&gt;&lt;%= @article.title %&gt;&lt;/h1&gt;
-  &lt;p&gt;&lt;%= @article.content %&gt;&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;% if @comments %&gt;
-        &lt;% @comments.each do |comment| %&gt;
-            &lt;li&gt;&lt;%= comment.content %&gt;&lt;/li&gt;
-        &lt;% end %&gt;
-    &lt;% end %&gt;
-  &lt;/ul&gt;
-&lt;/div&gt;
-</code></pre>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;container-fluid&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h1</span>&gt;</span>&lt;%= @article.title %&gt;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>&lt;%= @article.content %&gt;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ul</span>&gt;</span></span><br><span class="line">    &lt;% if @comments %&gt;</span><br><span class="line">        &lt;% @comments.each do |comment| %&gt;</span><br><span class="line">            <span class="tag">&lt;<span class="name">li</span>&gt;</span>&lt;%= comment.content %&gt;<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">        &lt;% end %&gt;</span><br><span class="line">    &lt;% end %&gt;</span><br><span class="line">  <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>打开<code>http://localhost:3000/articles/0</code>,可以看到刚刚添加的那个comment：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fqje66qmksj30mf05tmxj.jpg"></p>
 </li>
 <li><p>DRY comment view</p>
 <p>新建comments controller：</p>
-<pre><code>rails g controller comments
-</code></pre>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g controller comments</span></span><br></pre></td></tr></table></figure>
+
 <p>修改<code>app/controllers/comments_controller.rb</code>, 内容如下：</p>
-<pre><code class="Ruby">class CommentsController &lt; ApplicationController
-  before_action :load_commentable
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CommentsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:load_commentable</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@comments</span> = <span class="variable">@commentable</span>.comments</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">new</span></span></span><br><span class="line">    <span class="variable">@comment</span> = <span class="variable">@commentable</span>.comments.new</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@comment</span> = <span class="variable">@commentable</span>.comments.new(comment_params)</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@comment</span>.save</span><br><span class="line">      redirect_to <span class="variable">@commentable</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:new</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">load_commentable</span></span></span><br><span class="line">    resource, id = request.path.split(<span class="string">&#x27;/&#x27;</span>)[<span class="number">1</span>,<span class="number">2</span>]</span><br><span class="line">    <span class="variable">@commetable</span> = resource.singularize.classify.constantize.find(id)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">comment_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:comment</span>).permit(<span class="symbol">:content</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def index
-    @comments = @commentable.comments
-  end
-
-  def new
-    @comment = @commentable.comments.new
-  end
-
-  def create
-    @comment = @commentable.comments.new(comment_params)
-    if @comment.save
-      redirect_to @commentable
-    else
-      render :new
-    end
-  end
-
-  private
-
-  def load_commentable
-    resource, id = request.path.split(&#39;/&#39;)[1,2]
-    @commetable = resource.singularize.classify.constantize.find(id)
-  end
-
-  def comment_params
-    params.require(:comment).permit(:content)
-  end
-end
-</code></pre>
 <p>修改<code>routes.rb</code>：</p>
-<pre><code class="Ruby">Rails.application.routes.draw do
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  <span class="comment"># For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html</span></span><br><span class="line"></span><br><span class="line">  resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">    resources <span class="symbol">:comments</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  resources <span class="symbol">:articles</span> <span class="keyword">do</span></span><br><span class="line">    resources <span class="symbol">:comments</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  root <span class="string">&quot;articles#index&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  resources :events do
-    resources :comments
-  end
-  resources :articles do
-    resources :comments
-  end
-  root &quot;articles#index&quot;
-end
-</code></pre>
 <p>新建 <code>app/views/comments/_form.html.erb</code>:</p>
 <p>内容如下：</p>
-<pre><code class="html">&lt;%= form_for [@commentable, @comment] do |f| %&gt;
-    &lt;div class=&quot;field&quot;&gt;
-      &lt;%= f.text_area :content %&gt;
-    &lt;/div&gt;
-    &lt;div class=&quot;action&quot;&gt;
-      &lt;%= f.submit &quot;sumbit&quot; %&gt;
-    &lt;/div&gt;
-&lt;% end %&gt;
-</code></pre>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">&lt;%= form_for [@commentable, @comment] do |f| %&gt;</span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;field&quot;</span>&gt;</span></span><br><span class="line">      &lt;%= f.text_area :content %&gt;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;action&quot;</span>&gt;</span></span><br><span class="line">      &lt;%= f.submit &quot;sumbit&quot; %&gt;</span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">&lt;% end %&gt;</span><br></pre></td></tr></table></figure>
 <p>修改<code>app/controllers/articles_controller.rb</code>的show部分：</p>
-<pre><code class="ruby">  def show
-    @commentable = Article.find(params[:id])
-    @comments = @commentable.comments
-    @comment =  @commentable.comments.new
-  end
-</code></pre>
-<p>修改<code>app/views/articles/show.html.erb</code>:</p>
-<pre><code class="Html">&lt;div class=&quot;container-fluid&quot;&gt;
-  &lt;h1&gt;&lt;%= @article.title %&gt;&lt;/h1&gt;
-  &lt;p&gt;&lt;%= @article.content %&gt;&lt;/p&gt;
-  &lt;ul&gt;
-    &lt;% if @comments %&gt;
-        &lt;% @comments.each do |comment| %&gt;
-            &lt;li&gt;&lt;%= comment.content %&gt;&lt;/li&gt;
-        &lt;% end %&gt;
-    &lt;% end %&gt;
-  &lt;/ul&gt;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="variable">@commentable</span> = Article.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="variable">@comments</span> = <span class="variable">@commentable</span>.comments</span><br><span class="line">  <span class="variable">@comment</span> =  <span class="variable">@commentable</span>.comments.new</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  &lt;%= render &quot;comments/form&quot; %&gt;
-&lt;/div&gt;
-</code></pre>
+<p>修改<code>app/views/articles/show.html.erb</code>:</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;container-fluid&quot;</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">h1</span>&gt;</span>&lt;%= @article.title %&gt;<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">p</span>&gt;</span>&lt;%= @article.content %&gt;<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">ul</span>&gt;</span></span><br><span class="line">    &lt;% if @comments %&gt;</span><br><span class="line">        &lt;% @comments.each do |comment| %&gt;</span><br><span class="line">            <span class="tag">&lt;<span class="name">li</span>&gt;</span>&lt;%= comment.content %&gt;<span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">        &lt;% end %&gt;</span><br><span class="line">    &lt;% end %&gt;</span><br><span class="line">  <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  &lt;%= render &quot;comments/form&quot; %&gt;</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>针对event做同样的处理，这样create comment就可以重复使用了。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fqjfdf6zfsj30kl072gm6.jpg"></p>
 <p>看看events：</p>
@@ -894,7 +798,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

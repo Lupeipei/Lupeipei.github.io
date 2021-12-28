@@ -297,7 +297,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/error-recording-can-not-find-migration-rb-file/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>630 words</span>
+              <span>627 words</span>
             </span>
           
 
@@ -401,43 +401,26 @@
 <span id="more"></span>
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>在运行<code>rails g migration xxxx</code>时弹出如下的报错：</p>
-<pre><code>Running via Spring preloader in process 16933
-      invoke  active_record
-Could not find &quot;migration.rb&quot; in any of your source paths. Your current source paths are:
-/Users/username/path/to/project/lib/templates/active_record/migration
-/Users/username/.rvm/gems/ruby-2.4.0/gems/activerecord-5.2.0/lib/rails/generators/active_record/migration/templates
-</code></pre>
+<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">Running via Spring preloader in process <span class="number">16933</span></span><br><span class="line">      invoke  active_record</span><br><span class="line">Could not <span class="keyword">find</span> <span class="string">&quot;migration.rb&quot;</span> in <span class="keyword">any</span> of your <span class="keyword">source</span> paths. Your current <span class="keyword">source</span> paths are:</span><br><span class="line"><span class="regexp">/Users/u</span>sername<span class="regexp">/path/</span>to<span class="regexp">/project/</span>lib<span class="regexp">/templates/</span>active_record/migration</span><br><span class="line"><span class="regexp">/Users/u</span>sername<span class="regexp">/.rvm/g</span>ems<span class="regexp">/ruby-2.4.0/g</span>ems<span class="regexp">/activerecord-5.2.0/</span>lib<span class="regexp">/rails/g</span>enerators<span class="regexp">/active_record/mig</span>ration/templates</span><br></pre></td></tr></table></figure>
+
 <p>其中：</p>
 <p>ruby v2.4.0</p>
 <p>rails v5.2.0</p>
 <p>同样，运行<code>rails g controller xxx</code> , <code>rails g model xxx</code>时，同样显示无法找到controller.rb， model.rb文件。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>google了下，一直没有看到类似的问题，于是按照提示，去终端提示的：Your current source paths中去搜索，查看目录下的文件，发现有一个migration.rb.tt的文件，直接复制了一份，命名为migration.rb， 终端再次执行：</p>
-<pre><code>rails g migration xxxx
-</code></pre>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g migration xxxx</span></span><br></pre></td></tr></table></figure>
+
 <p>OK!</p>
 <p>对于controller以及model部分做同样的处理即可。</p>
 <p>不过疑惑的是，为什么会有这些文件，它们是什么，应该存放的文件放在了哪里呢？</p>
 <p>Google后，在<a target="_blank" rel="noopener" href="https://github.com/bundler/bundler/blob/master/lib/bundler/cli/gem.rb">gem bundle</a>里面可以发现，这些带有tt后缀的文件应该是临时文件。</p>
-<pre><code class="Ruby">
-      templates = &#123;
-        &quot;Gemfile.tt&quot; =&gt; &quot;Gemfile&quot;,
-        &quot;lib/newgem.rb.tt&quot; =&gt; &quot;lib/#&#123;namespaced_path&#125;.rb&quot;,
-        &quot;lib/newgem/version.rb.tt&quot; =&gt; &quot;lib/#&#123;namespaced_path&#125;/version.rb&quot;,
-        &quot;newgem.gemspec.tt&quot; =&gt; &quot;#&#123;name&#125;.gemspec&quot;,
-        &quot;Rakefile.tt&quot; =&gt; &quot;Rakefile&quot;,
-        &quot;README.md.tt&quot; =&gt; &quot;README.md&quot;,
-        &quot;bin/console.tt&quot; =&gt; &quot;bin/console&quot;,
-        &quot;bin/setup.tt&quot; =&gt; &quot;bin/setup&quot;
-      &#125;
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">templates = &#123;</span><br><span class="line">  <span class="string">&quot;Gemfile.tt&quot;</span> =&gt; <span class="string">&quot;Gemfile&quot;</span>,</span><br><span class="line">  <span class="string">&quot;lib/newgem.rb.tt&quot;</span> =&gt; <span class="string">&quot;lib/<span class="subst">#&#123;namespaced_path&#125;</span>.rb&quot;</span>,</span><br><span class="line">  <span class="string">&quot;lib/newgem/version.rb.tt&quot;</span> =&gt; <span class="string">&quot;lib/<span class="subst">#&#123;namespaced_path&#125;</span>/version.rb&quot;</span>,</span><br><span class="line">  <span class="string">&quot;newgem.gemspec.tt&quot;</span> =&gt; <span class="string">&quot;<span class="subst">#&#123;name&#125;</span>.gemspec&quot;</span>,</span><br><span class="line">  <span class="string">&quot;Rakefile.tt&quot;</span> =&gt; <span class="string">&quot;Rakefile&quot;</span>,</span><br><span class="line">  <span class="string">&quot;README.md.tt&quot;</span> =&gt; <span class="string">&quot;README.md&quot;</span>,</span><br><span class="line">  <span class="string">&quot;bin/console.tt&quot;</span> =&gt; <span class="string">&quot;bin/console&quot;</span>,</span><br><span class="line">  <span class="string">&quot;bin/setup.tt&quot;</span> =&gt; <span class="string">&quot;bin/setup&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>顺藤摸瓜，发现本机上ruby-2.4.0下的那些ruby文件，很多都是带有了tt扩展名的，比如：</p>
-<pre><code>model.rb.tt
-module.rb.tt
-application_record.rb.tt
-</code></pre>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">model<span class="selector-class">.rb</span><span class="selector-class">.tt</span></span><br><span class="line">module<span class="selector-class">.rb</span><span class="selector-class">.tt</span></span><br><span class="line">application_record<span class="selector-class">.rb</span>.tt</span><br></pre></td></tr></table></figure>
+
 <p>至于为什么会出现这种情况，Google了也没找到，我回顾自己的操作，因为之前用的ruby是2.3.6，rails5.2， 后面将ruby升级了到2.4.0，随即重新在ruby2.4.0下裝rails，2.4.0 ruby on 5.2.0 rails，安装的过程中出现报错:</p>
-<pre><code>ruby-2.4.0/lib/ruby/site_ruby/2.4.0/rubygems/core_ext/kernel_require.rb:55:in `require&#39;: cannot load such file -- bundler (LoadError)
-</code></pre>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ruby</span>-<span class="number">2</span>.<span class="number">4</span>.<span class="number">0</span>/lib/ruby/site_ruby/<span class="number">2</span>.<span class="number">4</span>.<span class="number">0</span>/rubygems/core_ext/kernel_require.rb:<span class="number">55</span>:in `require&#x27;: cannot load such file -- bundler (LoadError)</span><br></pre></td></tr></table></figure>
+
 <p>于是按照指示，执行了<code>gem install bundler</code>。看了下，这些带有tt扩展名的文件生成时间差不多也是这个指令执行的时间，也许是在这一步导致的。至于到底为什么会这样，我也是很疑惑，也许是bundle很强大，连这些rails的源文件也能备份？</p>
 <p>先记录下，在脑子里留个印象，下次再遇到，也许可以解惑。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/23401612/what-is-tt-file-in-ruby?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa">what is .tt file in ruby</a></p>
@@ -751,7 +734,7 @@ application_record.rb.tt
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

@@ -297,7 +297,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/skinny-controller-with-jbuilder/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -405,65 +405,8 @@
 <p>试试<a target="_blank" rel="noopener" href="https://github.com/rails/jbuilder">Jbuilder</a>。</p>
 <p>下面用个简单的例子来说明下怎么给controller瘦身。</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>假定你完成了一个products的API接口，对应的<code>app/controllers/api/v1/products_controller.rb</code>文件内容如下：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@products</span> = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">data:</span> <span class="variable">@products</span>.map <span class="keyword">do</span> <span class="params">|product|</span></span><br><span class="line">          &#123;</span><br><span class="line">              <span class="symbol">id:</span> product.id,</span><br><span class="line">              <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">              <span class="symbol">name:</span> product.name,</span><br><span class="line">              <span class="symbol">description:</span> product.description,</span><br><span class="line">              <span class="symbol">price:</span> product.price</span><br><span class="line">          &#125;</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.new(</span><br><span class="line">        <span class="symbol">name:</span> params[<span class="symbol">:name</span>],</span><br><span class="line">        <span class="symbol">description:</span> params[<span class="symbol">:description</span>],</span><br><span class="line">        <span class="symbol">price:</span> params[<span class="symbol">:price</span>]</span><br><span class="line">    )</span><br><span class="line">    <span class="variable">@product</span>.user = current_user</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@product</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> <span class="variable">@product</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">errors:</span> <span class="variable">@product</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">id:</span> product.id,</span><br><span class="line">        <span class="symbol">creator:</span> product.user.user_name,</span><br><span class="line">        <span class="symbol">name:</span> product.name,</span><br><span class="line">        <span class="symbol">description:</span> product.description,</span><br><span class="line">        <span class="symbol">price:</span> product.price</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@product</span>.update(<span class="symbol">name:</span> params[<span class="symbol">:name</span>], <span class="symbol">description:</span> params[<span class="symbol">:description</span>],<span class="symbol">price:</span> params[<span class="symbol">:price</span>])</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">&#x27;update product successfully&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@product</span>.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">&#x27;product deleted&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
 
-  def index
-    @products = Product.all
-    render json: &#123;
-        data: @products.map do |product|
-          &#123;
-              id: product.id,
-              creator: product.user.user_name,
-              name: product.name,
-              description: product.description,
-              price: product.price
-          &#125;
-        end
-    &#125;
-  end
-  def create
-    @product = Product.new(
-        name: params[:name],
-        description: params[:description],
-        price: params[:price]
-    )
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: &#123; message: &#39;failed&#39;, errors: @product.errors &#125;, status: 400
-    end
-  end
-
-  def show
-    @product = Product.find(params[:id])
-    render json: &#123;
-        id: product.id,
-        creator: product.user.user_name,
-        name: product.name,
-        description: product.description,
-        price: product.price
-    &#125;
-  end
-
-  def update
-    @product = Product.find(params[:id])
-    @product.update(name: params[:name], description: params[:description],price: params[:price])
-    render json: &#123;
-        message: &#39;update product successfully&#39;
-    &#125;
-  end
-
-  def destroy
-    @product = Product.find(params[:id])
-    @product.destroy
-    render json: &#123;
-        message: &#39;product deleted&#39;
-    &#125;
-  end
-end  
-</code></pre>
 <p>看着很冗长啊，怎么瘦？</p>
 <p>分三步走：</p>
 <ul>
@@ -477,73 +420,22 @@ end
 <li><p>新建文件：<br><code>app/views/api/v1/products/_item.json.jbuilder</code>, <code>app/views/api/v1/products/show.json.jbuilder</code>,<br><code>app/views/api/v1/products/index.json.jbuilder</code>,</p>
 </li>
 <li><p>在<code>app/views/api/v1/products/_item.json.jbuilder</code>，添加如下内容：</p>
-<pre><code class="json">json.id  product.id
-json.creator product.user.user_name
-json.name product.name
-json.description product.description
-json.price product.price
-</code></pre>
-</li>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">json.id  product.id</span><br><span class="line">json.creator product.user.user_name</span><br><span class="line">json.name product.name</span><br><span class="line">json.description product.description</span><br><span class="line">json.price product.price</span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>app/views/api/v1/products/show.json.jbuilder</code>，添加如下内容：</p>
-<pre><code>json.partial! &#39;item&#39;, product: @product
-</code></pre>
-</li>
+<figure class="highlight autoit"><table><tr><td class="code"><pre><span class="line">json.partial! <span class="string">&#x27;item&#x27;</span>, product: <span class="symbol">@product</span></span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>app/views/api/v1/products/index.json.jbuilder</code>， 添加如下内容：</p>
-<pre><code>json.array! @products, partial: &#39;item&#39;, as: :product
-</code></pre>
-</li>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">json<span class="selector-class">.array</span>! <span class="keyword">@products</span>, <span class="attribute">partial</span>: <span class="string">&#x27;item&#x27;</span>, <span class="attribute">as</span>: :product</span><br></pre></td></tr></table></figure></li>
 <li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的index和show部分, 删除render：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@products</span> = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line"><span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
 
-  def index
-    @products = Product.all
-  end
- .......
-
-  def show
-    @product = Product.find(params[:id])
-  end
-
-.......
-end  
-</code></pre>
 <p>可以用postman测试一下，确保接口仍正常。</p>
 </li>
 </ul>
 <p>第二步：简化create，update， 用params.require</p>
 <ul>
 <li><p>修改<code>app/controllers/api/v1/products_controller.rb</code>的create和update部分，如下：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  .....
-  def create
-    @product = Product.new(product_params)
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: &#123; message: &#39;failed&#39;, errors: @product.errors &#125;, status: 400
-    end
-  end
- .......
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  .....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.new(product_params)</span><br><span class="line">    <span class="variable">@product</span>.user = current_user</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@product</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> <span class="variable">@product</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">errors:</span> <span class="variable">@product</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> .......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@product</span>.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">&#x27;update product successfully&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    params.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span>         </span><br><span class="line"><span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
 
-  def update
-    @product = Product.find(params[:id])
-    @product.update(product_params)
-    render json: &#123;
-        message: &#39;update product successfully&#39;
-    &#125;
-  end
-
-.......
-  private
-
-  def product_params
-    params.permit(:name, :description, :price)
-  end         
-end  
-</code></pre>
 <p>注意，这里**不能使用params.requrie(:product).permit(:name, :description, :price)**，因为你是调用接口来新建或者修改的。</p>
 <p>可参见这个：<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/38701746/when-json-data-posted-in-rails-throws-param-is-missing-or-the-value-is-empty-st">When JSON data posted in rails throws param is missing or the value is empty: stall</a></p>
 </li>
@@ -551,111 +443,18 @@ end
 <p>第三步：简化show，update， destroy</p>
 <ul>
 <li><p>把show，update， destroy相同的部分： <code>@product = Product.find(params[:id])</code>抽出来：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  before_action :find_product, only: %i[show update destroy]
-.....
-  def show; end
-
-  def update
-    @product.update(product_params)
-    render json: &#123;
-        message: &#39;update product successfully&#39;
-    &#125;
-  end
-
-  def destroy
-    @product.destroy
-    render json: &#123;
-        message: &#39;product deleted&#39;
-    &#125;
-  end
-
-  private
-.......
-
-  def find_product
-    @product = Product.find(params[:id])
-  end
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line">.....</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@product</span>.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">&#x27;update product successfully&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@product</span>.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123;</span><br><span class="line">        <span class="symbol">message:</span> <span class="string">&#x27;product deleted&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line">.......</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>最后瘦身的controller长这样：</p>
-<pre><code class="Ruby">class Api::V1::ProductsController &lt; ApiController
-  before_action :authenticate_user!, only: %i[index show create update destroy]
-  before_action :find_product, only: %i[show update destroy]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ProductsController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> %i[index show create update destroy]</span><br><span class="line">  before_action <span class="symbol">:find_product</span>, <span class="symbol">only:</span> %i[show update destroy]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@products</span> = Product.all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.new(product_params)</span><br><span class="line">    <span class="variable">@product</span>.user = current_user</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@product</span>.save</span><br><span class="line">      render <span class="symbol">json:</span> <span class="variable">@product</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;failed&#x27;</span>, <span class="symbol">errors:</span> <span class="variable">@product</span>.errors &#125;, <span class="symbol">status:</span> <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@product</span>.update(product_params)</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;update product successfully&#x27;</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@product</span>.destroy</span><br><span class="line">    render <span class="symbol">json:</span> &#123; <span class="symbol">message:</span> <span class="string">&#x27;product deleted&#x27;</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">    param.permit(<span class="symbol">:name</span>, <span class="symbol">:description</span>, <span class="symbol">:price</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">find_product</span></span></span><br><span class="line">    <span class="variable">@product</span> = Product.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def index
-    @products = Product.all
-  end
-  def create
-    @product = Product.new(product_params)
-    @product.user = current_user
-    if @product.save
-      render json: @product
-    else
-      render json: &#123; message: &#39;failed&#39;, errors: @product.errors &#125;, status: 400
-    end
-  end
-
-  def show; end
-
-  def update
-    @product.update(product_params)
-    render json: &#123; message: &#39;update product successfully&#39;&#125;
-  end
-
-  def destroy
-    @product.destroy
-    render json: &#123; message: &#39;product deleted&#39;&#125;
-  end
-
-  private
-
-  def product_params
-    param.permit(:name, :description, :price)
-  end
-
-  def find_product
-    @product = Product.find(params[:id])
-  end
-end
-</code></pre>
 <p>是不是清爽了很多？看着舒服多了，大功告成！</p>
 <p>这里多一句，如果你的某个method部分代码较多，也可以使用拆分的方式， 比如下面这个show：</p>
-<pre><code class="Ruby">def show
-  @category = Category.find(params[:id])
-  @categories = Category.all
-  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
-  @products = @search.result.page(params[:page]).per(50)
-  rate
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="variable">@category</span> = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line">  <span class="variable">@categories</span> = Category.all</span><br><span class="line">  <span class="variable">@search</span> = <span class="variable">@category</span>.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  <span class="variable">@products</span> = <span class="variable">@search</span>.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>可以换成：</p>
-<pre><code class="ruby">before_action :fetch_current_category, only: [:show]
-before_action :fetch_categories, only: [:show]
-before_action :fetch_search_results, only: [:show]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">before_action <span class="symbol">:fetch_current_category</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_categories</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line">before_action <span class="symbol">:fetch_search_results</span>, <span class="symbol">only:</span> [<span class="symbol">:show</span>]</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  rate</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_current_category</span></span></span><br><span class="line">  <span class="variable">@category</span> = Category.find(params[<span class="symbol">:id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_categories</span></span></span><br><span class="line">  <span class="variable">@categories</span> = Category.all</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fetch_search_results</span></span></span><br><span class="line">  <span class="variable">@search</span> = <span class="variable">@category</span>.products.approved.order(<span class="symbol">updated_at:</span> <span class="symbol">:desc</span>).ransack(params[<span class="symbol">:q</span>])</span><br><span class="line">  <span class="variable">@products</span> = <span class="variable">@search</span>.result.page(params[<span class="symbol">:page</span>]).per(<span class="number">50</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-def show
-  rate
-end
-
-private
-
-def fetch_current_category
-  @category = Category.find(params[:id])
-end
-
-def fetch_categories
-  @categories = Category.all
-end
-
-def fetch_search_results
-  @search = @category.products.approved.order(updated_at: :desc).ransack(params[:q])
-  @products = @search.result.page(params[:page]).per(50)
-end
-</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/30932732/what-is-meant-by-assignment-branch-condition-size-too-high-and-how-to-fix-it">What is meant by ‘Assignment Branch Condition Size too high’ and how to fix it?</a></p>
 <p>对于”<strong>fat model, skinny controller</strong>“这个原则，也有人反对，提出**”skinny everything”**， 戳链接了解：</p>
 <p><a target="_blank" rel="noopener" href="http://blog.joncairns.com/2013/04/fat-model-skinny-controller-is-a-load-of-rubbish/">“Fat model, skinny controller” is a load of rubbish</a></p>
@@ -969,7 +768,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

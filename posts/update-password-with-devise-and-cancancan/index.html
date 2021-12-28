@@ -298,7 +298,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/update-password-with-devise-and-cancancan/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>960 words</span>
+              <span>957 words</span>
             </span>
           
 
@@ -410,115 +410,46 @@
 <h4 id="实现步骤"><a href="#实现步骤" class="headerlink" title="实现步骤"></a>实现步骤</h4><p>在修改代码前，需要知道这两点：</p>
 <ul>
 <li><p>使用devise作用户管理时，如果你的 <code>app/models/user.rb</code>中，devise添加了validatable:</p>
-<pre><code>devise :xxxx, :..., :validatable
-</code></pre>
-</li>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">devise <span class="symbol">:xxxx</span>, <span class="symbol">:</span>..., <span class="symbol">:validatable</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>那么相当于给user添加了如下的validates：</p>
-<pre><code class="Ruby">validates_uniqueness_of :email, allow_blank: true, if: :email_changed?
-validates_format_of     :email, with: email_regexp, allow_blank: true, if: :email_changed?
-validates_presence_of     :password, if: :password_required?
-validates_confirmation_of :password, if: :password_required?
-validates_length_of       :password, within: password_length, allow_blank: true
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">validates_uniqueness_of <span class="symbol">:email</span>, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_format_of     <span class="symbol">:email</span>, <span class="symbol">with:</span> email_regexp, <span class="symbol">allow_blank:</span> <span class="literal">true</span>, <span class="symbol">if:</span> <span class="symbol">:email_changed?</span></span><br><span class="line">validates_presence_of     <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_confirmation_of <span class="symbol">:password</span>, <span class="symbol">if:</span> <span class="symbol">:password_required?</span></span><br><span class="line">validates_length_of       <span class="symbol">:password</span>, <span class="symbol">within:</span> password_length, <span class="symbol">allow_blank:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
 <p>这里注意到<code>validates_presence_of     :password, if: :password_required?</code>,当password_required?为true时，password必填。password_required?这个method的源代码如下：</p>
-<pre><code class="Ruby">def password_required?
-  !persisted? || !password.nil? || !password_confirmation.nil?
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  !persisted? <span class="params">||</span> !password.<span class="literal">nil</span>? <span class="params">||</span> !password_confirmation.<span class="literal">nil</span>?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>如果更新的时候，我们不更新密码部分，只更新姓名或者头像，就会报错，因为此时表单送出的password是“”，即空值，但不是nil，这样 !password.nil? 就会为true，导致password_required?为true，所以我们需要重写这个method，当password为空时，也可以更新用户信息。</p>
 <p>在<code>app/models/user.rb</code>中，添加如下代码：</p>
-<pre><code class="Ruby">def password_required?
-  new_record? || password.present? || password_confirmation.present?
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">password_required?</span></span></span><br><span class="line">  new_record? <span class="params">||</span> password.present? <span class="params">||</span> password_confirmation.present?</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这样添加后，当你修改用户信息时，如果password那一栏没有填写，不会出现如下报错：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1frux8wfmmaj30sd04zjs4.jpg"></p>
 <ul>
 <li><p>修改密码时，因为需要输入当前的密码，也就是current_password这个字段，而原先user中是没有添加这个字段的，所以需要在<code>app/models/user.rb</code>中，添加如下代码，保证current_password可读写。</p>
-<pre><code class="Ruby">attr_writer :current_password
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">attr_writer</span> <span class="symbol">:current_password</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>好了，准备工作完成，算是解决了大半了，我们的重头戏来了。</p>
 <p>新增一个controller account::user 来让让用户完成修改密码的操作：</p>
-<pre><code>rails g controller account::user
-</code></pre>
+<figure class="highlight arduino"><table><tr><td class="code"><pre><span class="line">rails g controller account::user</span><br></pre></td></tr></table></figure>
+
 <p>在<code>routes.rb</code>中添加路径：【因为修改密码是用户单个个体的行为，所以我们使用resource】</p>
-<pre><code class="Ruby">namespace :account do
-  resource :user
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">namespace <span class="symbol">:account</span> <span class="keyword">do</span></span><br><span class="line">  resource <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>我们添加上view，让用户可以修改个人信息：</p>
-<pre><code>touch app/views/account/users/show.html.erb
-</code></pre>
+<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">touch app<span class="regexp">/views/</span>account<span class="regexp">/users/</span>show.html.erb</span><br></pre></td></tr></table></figure>
+
 <p>在 <code>app/views/account/users/show.html.erb</code> 中添加如下内容：</p>
-<pre><code class="Ruby">&lt;%= simple_form_for @user, url: &#123; action: :update &#125; do |f| %&gt;
-  &lt;%= f.input :name %&gt;
-  &lt;%= f.file_field :avatar %&gt;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;%= simple_form_for <span class="variable">@user</span>, <span class="symbol">url:</span> &#123; <span class="symbol">action:</span> <span class="symbol">:update</span> &#125; <span class="keyword">do</span> <span class="params">|f|</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:name</span> %&gt;</span><br><span class="line">  &lt;%= f.file_field <span class="symbol">:avatar</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.input <span class="symbol">:current_password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password</span> %&gt;</span><br><span class="line">  &lt;%= f.input <span class="symbol">:password_confirmation</span> %&gt;</span><br><span class="line"></span><br><span class="line">  &lt;%= f.submit <span class="string">&quot;更新&quot;</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>&quot;%&gt;    </span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
 
-  &lt;%= f.input :current_password %&gt;
-  &lt;%= f.input :password %&gt;
-  &lt;%= f.input :password_confirmation %&gt;
-
-  &lt;%= f.submit &quot;更新&quot;, class: &quot;btn btn-success&quot;%&gt;    
-&lt;% end %&gt;
-</code></pre>
 <p>同时需要在其他页面，比如navbar中提供入口，让用户可以进入该页面更新个人信息，这里略去。</p>
 <p>在<code>app/controllers/account/users_controller.rb</code>中，添加如下内容：</p>
-<pre><code class="Ruby">class Account::UsersController &lt; ApplicationController
-  authorize_resource :user, parent: false
-  def show
-    @user = User.find(current_user.id)
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@user</span> = User.find(current_user.id)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@user</span> = User.find(current_user.id)</span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      <span class="variable">@user</span>.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      <span class="variable">@user</span>.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, <span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>)</span><br><span class="line">  <span class="keyword">end</span>    </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def update
-    @user = User.find(current_user.id)
-    if user_params.values_at(:current_password, :password, :password_confirmation).any?(&amp;:present?)
-      @user.update_with_password(user_params)
-    else
-      @user.update(user_params)
-    end
-    redirect_to profile_path
-  end
-
-  protected
-
-  def user_params
-    params.require(:user).permit(:name, :avatar, :current_password, :password, :password_confirmation)
-  end    
-end
-</code></pre>
 <p>其中，因为使用cancancan做权限管理，所以这里我们用<code>authorize_resource :user, parent: false</code>来给user授权authorize，让user可以有读写的权利， update action部分中，我们使用了devise的instance method <a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise/blob/715192a7709a4c02127afb067e66230061b82cf2/lib/devise/models/database_authenticatable.rb#L67">update_with_password</a>来修改密码，它会检查用户的:current_password, :password, :password_confirmation这三者的有效性。</p>
 <p>上面的代码看着有些不够简洁，我们稍稍重构下：</p>
 <p>把@user = User.find(current_user.id)拎出来，放在before action里面，把[:current_password, :password, :password_confirmation]这三个密码相关的变量用一个method包起来。</p>
-<pre><code class="ruby">class Account::UsersController &lt; ApplicationController
-  before_action -&gt; &#123; @user = User.find(current_user.id) &#125;
-  authorize_resource :user, parent: false
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; <span class="variable">@user</span> = User.find(current_user.id) &#125;</span><br><span class="line">  authorize_resource <span class="symbol">:user</span>, <span class="symbol">parent:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="keyword">if</span> user_params.values_at(*password_param_lists).any?(&amp;<span class="symbol">:present?</span>)</span><br><span class="line">      <span class="variable">@user</span>.update_with_password(user_params)</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      <span class="variable">@user</span>.update(user_params)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to profile_path</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:name</span>, <span class="symbol">:avatar</span>, *password_param_lists)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">password_param_lists</span></span></span><br><span class="line">    [<span class="symbol">:current_password</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def show
-  end
-
-  def update
-    if user_params.values_at(*password_param_lists).any?(&amp;:present?)
-      @user.update_with_password(user_params)
-    else
-      @user.update(user_params)
-    end
-    redirect_to profile_path
-  end
-
-protected
-
-  def user_params
-    params.require(:user).permit(:name, :avatar, *password_param_lists)
-  end
-
-  def password_param_lists
-    [:current_password, :password, :password_confirmation]
-  end
-end
-</code></pre>
 <p>OK!  基本功能实现。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise">devise</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/CanCanCommunity/cancancan">cancancan</a></p>
@@ -830,7 +761,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

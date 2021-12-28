@@ -301,7 +301,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/how-to-get-step-name-in-cucumber/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -384,7 +384,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>805 words</span>
+              <span>800 words</span>
             </span>
           
 
@@ -406,28 +406,18 @@
 
 <p>Google了不少，也试过几个前人提供的方法， 屡屡败北，在坑里挣扎了两天， 发现这方面的资料其实还是挺少的，特别是ruby这块，记录下这趟比较揪心的求解过程，给需要的提供个参考。「我揪心就好了，大伙就别再揪心了。」</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p><a target="_blank" rel="noopener" href="https://github.com/cucumber/cucumber/wiki/Hooks">cucumber hooks</a> 中提到了多个hook，包括before，after，但是对于step hooks，只有一个AfterStep， 看AfterStep 的用法：</p>
-<pre><code class="Ruby">AfterStep do |scenario|
-  # Do something after each step.
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>官方文档是这么写的，可是你会发现根本不是那么回事。「吐槽下：文档没有及时更新让人很是心塞啊」</p>
 <p>在你的<code>feature/support</code>目录下，新建一个文件<code>hooks.rb</code>,  添加如下内容：</p>
-<pre><code class="Ruby">Before do |scenario|
-  # do something before scenario
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="comment"># do something before scenario</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">	puts scenario.methods</span><br><span class="line">	puts scenario.<span class="keyword">class</span></span><br><span class="line">  <span class="comment"># Do something after each step.</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-AfterStep do |scenario|
-    puts scenario.methods
-    puts scenario.class
-  # Do something after each step.
-end
-</code></pre>
 <p>终端运行<code>cucumber</code>的时候，你会发现AfterStep中根本不是scenario，得到的是这样的结果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fn4lejzw3uj30pt06un03.jpg"></p>
 <p>这里可以看到它的class是<code>Cucumber::Core::Test::Result::Passed</code>， method里面也没有任何name,text之类。那么，每次afterstep后，返回的<code>Cucumber::Core::Test::Result::Passed</code>是个什么鬼？是个step？</p>
 <p>看源码：<a target="_blank" rel="noopener" href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Result/Passed">Class: Cucumber::Core::Test::Result::Passed</a>,  cucumber中每个step运行后，其实有7种情况：</p>
-<pre><code>[:failed, :flaky, :skipped, :undefined, :pending, :passed, :unknown]
-</code></pre>
+<figure class="highlight clojure"><table><tr><td class="code"><pre><span class="line">[<span class="symbol">:failed</span>, <span class="symbol">:flaky</span>, <span class="symbol">:skipped</span>, <span class="symbol">:undefined</span>, <span class="symbol">:pending</span>, <span class="symbol">:passed</span>, <span class="symbol">:unknown</span>]</span><br></pre></td></tr></table></figure>
+
 <p>而passed只是其中的一个type，它不是一个step。看cucumber的doc，可以找到<a target="_blank" rel="noopener" href="http://www.rubydoc.info/github/cucumber/cucumber-ruby-core/Cucumber/Core/Test/Step">step</a>， 里面的text字段，这正是我们想要的：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fn4lu77docj30qx0hzack.jpg"></p>
 <p>可是如何获取到step呢？</p>
@@ -447,22 +437,11 @@ end
 </ul>
 <p>OK，不废话了，直接上解答：</p>
 <p>在新建好的<code>features/support/hooks.rb</code> 中，添加如下内容：</p>
-<pre><code class="Ruby">Before do |scenario|
-  $step_index = 0
-  $stop_count = scenario.test_steps.count
-  @scenario = scenario
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Before <span class="keyword">do</span> <span class="params">|scenario|</span></span><br><span class="line">  <span class="variable">$step_index</span> = <span class="number">0</span></span><br><span class="line">  <span class="variable">$stop_count</span> = scenario.test_steps.count</span><br><span class="line">  <span class="variable">@scenario</span> = scenario</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">AfterStep <span class="keyword">do</span> <span class="params">|step|</span></span><br><span class="line">  <span class="keyword">if</span> <span class="variable">$step_index</span> &lt; <span class="variable">$stop_count</span></span><br><span class="line">    puts <span class="string">&quot;steps: <span class="subst">#&#123;<span class="variable">@scenario</span>.test_steps[<span class="variable">$step_index</span>].text&#125;</span>\n&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="variable">$step_index</span> += <span class="number">2</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-AfterStep do |step|
-  if $step_index &lt; $stop_count
-    puts &quot;steps: #&#123;@scenario.test_steps[$step_index].text&#125;\n&quot;
-  end
-  $step_index += 2
-end
-</code></pre>
 <p>运行一个feature试试：</p>
-<pre><code>cucumber features/xxxx.feature
-</code></pre>
+<figure class="highlight maxima"><table><tr><td class="code"><pre><span class="line">cucumber <span class="built_in">features</span>/xxxx.<span class="built_in">feature</span></span><br></pre></td></tr></table></figure>
+
 <p>每个step之后，都会输出了AfterStep中定义的<code>&quot;steps: #&#123;@scenario.test_steps[$step_index].text&#125;\n&quot;</code></p>
 <p>类似这样：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fn4n9a82sbj30ey044aaj.jpg"></p>
@@ -782,7 +761,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>

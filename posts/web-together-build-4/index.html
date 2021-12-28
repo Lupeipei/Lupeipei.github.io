@@ -299,7 +299,7 @@
   
   
 
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
     <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/web-together-build-4/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -418,73 +418,37 @@
 <p><strong>Step1、安装相应的gem及配件</strong></p>
 <ul>
 <li><p>在gemfile中添加：</p>
-<pre><code>gem &#39;china_city&#39;
-</code></pre>
-</li>
+<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gem</span> <span class="string">&#x27;china_city&#x27;</span></span><br></pre></td></tr></table></figure></li>
 <li><p>终端运行：<code>bundle install</code></p>
 </li>
 <li><p>在<code>app/assets/javascripts/application.js</code>中，添加：</p>
-<pre><code class="javascript">//= require jquery
-//= require &#39;china_city/jquery.china_city&#39;
-</code></pre>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="comment">//= require jquery</span></span><br><span class="line"><span class="comment">//= require &#x27;china_city/jquery.china_city&#x27;</span></span><br></pre></td></tr></table></figure>
+
 <p>注意：如果文件中已经添加了jquery， 则无需再添加</p>
 </li>
 <li><p>在<code>config/routes.rb</code>中添加：</p>
-<pre><code class="Ruby">mount ChinaCity::Engine =&gt; &#39;/china_city&#39;
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">mount ChinaCity::Engine =&gt; <span class="string">&#x27;/china_city&#x27;</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p><strong>Step2、使用</strong></p>
 <p>代码以together网站为例</p>
 <ul>
 <li><p>给event添加省区、城市栏位，终端运行：</p>
-<pre><code>rails g migration add_province_and_city_to_events
-</code></pre>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g migration add_province_and_city_to_events</span></span><br></pre></td></tr></table></figure>
+
 <p>修改<code>db/migration/xxx_add_province_and_city_to_events</code>:</p>
-<pre><code class="Ruby">class AddProvinceAndCityToEvents &lt; ActiveRecord::Migration[5.0]
-  def change
-    add_column :events, :province, :string
-    add_column :events, :city, :string
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddProvinceAndCityToEvents</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_column <span class="symbol">:events</span>, <span class="symbol">:province</span>, <span class="symbol">:string</span></span><br><span class="line">    add_column <span class="symbol">:events</span>, <span class="symbol">:city</span>, <span class="symbol">:string</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>终端运行：<code>rake db:migrate</code></p>
 </li>
 <li><p>将新增的province，city添加到<code>app/controllers/events_controller.rb</code>的params中。</p>
-<pre><code class="Ruby">  def event_params
-  -  params.require(:event).permit(:title, :logo,.....)
-  +  params.require(:event).permit(:province, :city, :title, :logo,.....)
-  end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">event_params</span></span></span><br><span class="line">-  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:title</span>, <span class="symbol">:logo</span>,.....)</span><br><span class="line">+  params.<span class="keyword">require</span>(<span class="symbol">:event</span>).permit(<span class="symbol">:province</span>, <span class="symbol">:city</span>, <span class="symbol">:title</span>, <span class="symbol">:logo</span>,.....)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p>在events的<code>new.html.erb</code> 及<code>edit.html.erb</code>中添加如下代码, 让用户新建活动时选择省市区：【这里是用simple_form格式】</p>
-<pre><code class="Ruby"> ......
- &lt;div class=&quot;form-group&quot;&gt;
-    &lt;div class=&quot;city-group&quot;&gt;
-      &lt;%= f.select :province, ChinaCity.list.unshift([&quot;--省份--&quot;, 230000]), &#123;&#125;, class: &quot;city-select&quot;%&gt;
-      &lt;%= f.select :city, ChinaCity.list(f.object.province).presence || [[&quot;--城市--&quot;, 230900]], &#123;&#125;, class: &quot;city-select&quot;%&gt;
-    &lt;/div&gt;
-  &lt;/div&gt;
-  ......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">form</span>-<span class="title">group</span>&quot;&gt;</span></span><br><span class="line">   &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">city</span>-<span class="title">group</span>&quot;&gt;</span></span><br><span class="line">     &lt;%= f.select <span class="symbol">:province</span>, ChinaCity.list.unshift([<span class="string">&quot;--省份--&quot;</span>, <span class="number">230000</span>]), &#123;&#125;, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">city</span>-<span class="title">select</span>&quot;%&gt;</span></span><br><span class="line">     &lt;%= f.select <span class="symbol">:city</span>, ChinaCity.list(f.object.province).presence <span class="params">||</span> [[<span class="string">&quot;--城市--&quot;</span>, <span class="number">230900</span>]], &#123;&#125;, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">city</span>-<span class="title">select</span>&quot;%&gt;</span></span><br><span class="line">   &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp"> &lt;/div</span>&gt;</span><br><span class="line"> ......</span><br></pre></td></tr></table></figure></li>
 <li><p>回显省份及城市，这里，在需要回显的地方, 如index页面，添加如下代码：</p>
-<pre><code class="Ruby">&lt;% @events.each do |event| %&gt;
-......
-    &lt;div class=&quot;city&quot;&gt;
-      &lt;%= ChinaCity.get(event.province) %&gt; - &lt;%= ChinaCity.get(event.city)%&gt;
-    &lt;/div&gt;
-.....
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="variable">@events</span>.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">......</span><br><span class="line">	&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">city</span>&quot;&gt;</span></span><br><span class="line">      &lt;%= ChinaCity.get(event.province) %&gt; - &lt;%= ChinaCity.get(event.city)%&gt;</span><br><span class="line">	&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">.....</span></span><br></pre></td></tr></table></figure>
+
 <p>这里，显示的都是XX省XX市， 如果只希望显示城市， 且没有”市”这个后缀，可以改成：</p>
-<pre><code class="Ruby">&lt;% @events.each do |event| %&gt;
-......
-    &lt;div class=&quot;city&quot;&gt;
-      &lt;%= ChinaCity.get(event.city).split(&quot;市&quot;).first %&gt;
-    &lt;/div&gt;
-.....
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="variable">@events</span>.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">......</span><br><span class="line">	&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">city</span>&quot;&gt;</span></span><br><span class="line">      &lt;%= ChinaCity.get(event.city).split(<span class="string">&quot;市&quot;</span>).first %&gt;</span><br><span class="line">	&lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">.....</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>OK！</p>
 <p>接下来，看看如何实现热门城市筛选功能。</p>
@@ -493,75 +457,30 @@ end
 <p><strong>Step1、建model</strong></p>
 <ul>
 <li><p>建立city model，终端运行:</p>
-<pre><code>rails g model city city:string
-rake db:migrate
-</code></pre>
-</li>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">rails g model city city:<span class="built_in">string</span></span><br><span class="line">rake d<span class="variable">b:migrate</span></span><br></pre></td></tr></table></figure></li>
 <li><p>这里，为了跟ChinaCity中城市的<a target="_blank" rel="noopener" href="http://www.stats.gov.cn/tjsj/tjbz/xzqhdm/201504/t20150415_712722.html">行政区划代码</a>保持一致，在<code>app/models/city.rb</code>中，添加了北上广深杭州，成都的行政区划代码：</p>
-<pre><code class="Ruby">class City &lt; ApplicationRecord
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">City</span> &lt; ApplicationRecord</span></span><br><span class="line"></span><br><span class="line"> + CITY = [<span class="string">&quot;110000&quot;</span>,<span class="string">&quot;310000&quot;</span>,<span class="string">&quot;440100&quot;</span>,<span class="string">&quot;440300&quot;</span>,<span class="string">&quot;330100&quot;</span>,<span class="string">&quot;510100&quot;</span>]</span><br><span class="line"> + validates_inclusion_of <span class="symbol">:city</span>, <span class="symbol">:in</span> =&gt; CITY</span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
- + CITY = [&quot;110000&quot;,&quot;310000&quot;,&quot;440100&quot;,&quot;440300&quot;,&quot;330100&quot;,&quot;510100&quot;]
- + validates_inclusion_of :city, :in =&gt; CITY
-
-end
-</code></pre>
 <p>BTW，最开始的时候，我想着如果根据活动添加的情况，将所有出现的city都罗列出来，那这个筛选项就是动态的，可能存在并发的情况，固定城市反而更好。</p>
 </li>
 <li><p>在seeds文档中，添加如下代码：</p>
-<pre><code class="Ruby"># City部分
-City.delete_all
-
-City.create!(city: &quot;110000&quot;)
-City.create!(city: &quot;310000&quot;)
-City.create!(city: &quot;440100&quot;)
-City.create!(city: &quot;440300&quot;)
-City.create!(city: &quot;330100&quot;)
-City.create!(city: &quot;510100&quot;)
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># City部分</span></span><br><span class="line">City.delete_all</span><br><span class="line"></span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;110000&quot;</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;310000&quot;</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;440100&quot;</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;440300&quot;</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;330100&quot;</span>)</span><br><span class="line">City.create!(<span class="symbol">city:</span> <span class="string">&quot;510100&quot;</span>)</span><br></pre></td></tr></table></figure></li>
 </ul>
 <p><strong>Step2、添加城市列表筛选</strong></p>
 <ul>
 <li><p>显示筛选项，在events的 <code>index.html.erb</code>中，添加如下代码：</p>
-<pre><code class="Ruby">&lt;div class=&quot;submenu&quot; style=&quot;margin-bottom: 3px;&quot;&gt;
-  &lt;span&gt;&lt;i class=&quot;fa fa-paper-plane fa-lg&quot;&gt;&lt;/i&gt; 城市: &lt;/span&gt;
-  &lt;div class=&quot;btn-group&quot; style=&quot;margin-left: 20px;&quot;&gt;
-    &lt;%= link_to &quot;全部&quot;, events_path, :class =&gt; &quot;btn btn-default btn-group #&#123;(params[:city].blank?)? &quot;active&quot; : &quot;&quot;&#125;&quot;%&gt;
-    &lt;% City.all.each do |c| %&gt;
-      &lt;%= link_to ChinaCity.get(c.city).split(&quot;市&quot;).first, events_path(city: c.city), :class =&gt; &quot;btn btn-default btn-group #&#123;(params[:city] == c.city)? &quot;active&quot; : &quot;&quot; &#125;&quot;%&gt;
-    &lt;% end %&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">submenu</span>&quot; <span class="title">style</span>=&quot;<span class="title">margin</span>-<span class="title">bottom</span>: 3<span class="title">px</span>;</span><span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">  &lt;span&gt;&lt;i class=&quot;</span>fa fa-paper-plane fa-lg<span class="string">&quot;&gt;&lt;/i&gt; 城市: &lt;/span&gt;</span></span><br><span class="line"><span class="string">  &lt;div class=&quot;</span>btn-group<span class="string">&quot; style=&quot;</span>margin-<span class="symbol">left:</span> 20px;<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">    &lt;%= link_to &quot;</span>全部<span class="string">&quot;, events_path, :class =&gt; &quot;</span>btn btn-default btn-group <span class="comment">#&#123;(params[:city].blank?)? &quot;active&quot; : &quot;&quot;&#125;&quot;%&gt;</span></span><br><span class="line">    &lt;% City.all.each <span class="keyword">do</span> <span class="params">|c|</span> %&gt;</span><br><span class="line">      &lt;%= link_to ChinaCity.get(c.city).split(<span class="string">&quot;市&quot;</span>).first, events_path(<span class="symbol">city:</span> c.city), <span class="symbol">:class</span> =&gt; <span class="string">&quot;btn btn-default btn-group <span class="subst">#&#123;(params[<span class="symbol">:city</span>] == c.city)? <span class="string">&quot;active&quot;</span> : <span class="string">&quot;&quot;</span> &#125;</span>&quot;</span>%&gt;</span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;/div</span>&gt;</span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>event.rb</code>中加入以下代码：</p>
-<pre><code class="Ruby">scope :by_city, -&gt;(c)&#123;where( :city =&gt; c )&#125;
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">scope <span class="symbol">:by_city</span>, -&gt;(c)&#123;where( <span class="symbol">:city</span> =&gt; c )&#125;</span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>events_controller.rb</code>，添加如下代码：</p>
-<pre><code class="Ruby">  def index
-    @events = Event.order(&quot;created_at DESC&quot;)
-    ......
-  + if params[:city].present?
-  +  @events = @events.by_city(params[:city]).order(&quot;created_at DESC&quot;)
-  + end
-  end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">   <span class="variable">@events</span> = Event.order(<span class="string">&quot;created_at DESC&quot;</span>)</span><br><span class="line">......</span><br><span class="line"> + <span class="keyword">if</span> params[<span class="symbol">:city</span>].present?</span><br><span class="line"> +  <span class="variable">@events</span> = <span class="variable">@events</span>.by_city(params[<span class="symbol">:city</span>]).order(<span class="string">&quot;created_at DESC&quot;</span>)</span><br><span class="line"> + <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>做到这里，试一试筛选功能，你会发现一个bug，直辖市是筛选不出来的，比如北京，上海这种，怎么回事？</p>
 <p>因为这些市，保存在了province这个栏位里面，而它们对应的city则保存了“市辖区”，“县”对应的区划代码。我们来修改一下：</p>
 <ul>
 <li><p>在<code>events_controller.rb</code>，对于create部分，做如下修改：</p>
-<pre><code class="Ruby">  def create
-    @event = Event.new(event_params)
-    @event.user = current_user
-  +  if ChinaCity.get(@event.city) ==  &quot;市辖区&quot; || ChinaCity.get(event.city) == &quot;县&quot;
-  +   @event.city = @event.province
-  + end
-    ......
-  end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  <span class="variable">@event</span> = Event.new(event_params)</span><br><span class="line">  <span class="variable">@event</span>.user = current_user</span><br><span class="line">+  <span class="keyword">if</span> ChinaCity.get(<span class="variable">@event</span>.city) ==  <span class="string">&quot;市辖区&quot;</span> <span class="params">||</span> ChinaCity.get(event.city) == <span class="string">&quot;县&quot;</span></span><br><span class="line">+   <span class="variable">@event</span>.city = <span class="variable">@event</span>.province</span><br><span class="line">+ <span class="keyword">end</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>现在试试，可以筛选啦！</p>
 </li>
 </ul>
@@ -877,7 +796,7 @@ City.create!(city: &quot;510100&quot;)
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    376k
+    374.7k
   </span>
 
 </div>
