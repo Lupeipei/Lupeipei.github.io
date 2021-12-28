@@ -36311,4 +36311,64 @@ echo $x
         <tag>Vim</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Buffer-Local</title>
+    <url>/posts/vimscript-learning-on-buffer-local/</url>
+    <content><![CDATA[<p>这一章的内容结合了前面学到的知识.</p>
+<p>Buffer-Local, 顾名思义, 基于 Buffer,  只针对当前 Buffer 有效.</p>
+<p>前面遇到的 mappings, options , abbreviations, 当需要只对当前 Buffer 生效时, 命令分别是什么呢?</p>
+<p>来逐个说明下.</p>
+<ul>
+<li><p>mappings</p>
+<p>打开任意文件, 在命令行模式下, 输入:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nnoremap</span> <span class="symbol">&lt;buffer&gt;</span> <span class="symbol">&lt;Leader&gt;</span><span class="keyword">x</span> dd</span><br></pre></td></tr></table></figure>
+
+<p>normal 模式下, 按<code>&lt;Leader&gt;x</code>, 等同于dd, 删除当前行.</p>
+<p>此时, 另开一个文件, 执行同样的操作, 按<code>&lt;Leader&gt;x</code> , 没有变化.</p>
+<p>Buffer-Local mappings 跟通用的 mappings 不一样的地方, 就是多了一个<code>&lt;buffer&gt;</code>, 也很好记.</p>
+<p>需要稍稍注意的是, 当 buffer 与<code>&lt;Leader&gt;</code> 结合时, 建议使用 <code>&lt;LocalLeader&gt;</code> 来代替 <code>&lt;Leader&gt;</code>, 这样避免覆盖了他人的 <code>&lt;leader&gt;</code> mapping.</p>
+<p>上面的例子建议改成:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nnoremap</span> <span class="symbol">&lt;buffer&gt;</span> <span class="symbol">&lt;LocalLeader&gt;</span><span class="keyword">x</span> dd</span><br></pre></td></tr></table></figure>
+
+<p>再看个例子:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nnoremap</span> <span class="symbol">&lt;buffer&gt;</span> Q <span class="keyword">x</span></span><br><span class="line">:<span class="keyword">nnoremap</span>          Q dd</span><br></pre></td></tr></table></figure>
+
+<p>normal 模式下, 按 Q, 发现执行的操作等同 x. 第二个 mapping 配置无效.</p>
+<p>Buffer-Local mappings 会覆盖对应的通用的 mappings 配置.这点同 set options 不大一样, 待会会提到.</p>
+</li>
+<li><p>set options</p>
+<p>基于 buffer-local 的设置, 用命令 <code>setlocal</code>.</p>
+<p> 打开任意文件, 在命令行模式下, 输入:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> <span class="keyword">number</span></span><br><span class="line">:<span class="keyword">setlocal</span> nonumber</span><br></pre></td></tr></table></figure>
+
+<p>会发现行号已经消失.</p>
+<p>需要注意的是, 如果 setlocal option 后, 又 set 了同一个 option, 则 setlocal 所做的改变会被覆盖.</p>
+<p>比如:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">setlocal</span> nonumber</span><br><span class="line">:<span class="keyword">set</span> <span class="keyword">number</span></span><br><span class="line">:<span class="keyword">setlocal</span> <span class="keyword">number</span>?</span><br></pre></td></tr></table></figure>
+
+<p>此时输出的结果是 number.</p>
+</li>
+<li><p>abbreviations</p>
+<p>同 mappings, Buffer-Local abbreviations 也只需要在<code>abbrev</code> 后, 添加一个<code>&lt;buffer&gt;</code>, 看个例子:</p>
+<p>在当前打开的文件下, 命令行模式输入:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">iabbrev</span> <span class="symbol">&lt;buffer&gt;</span> <span class="built_in">log</span> logger.<span class="keyword">debug</span></span><br></pre></td></tr></table></figure>
+
+<p>切换到 insert 模式, 输入log, 会替换成 logger.debug.</p>
+<p>此时, 更换另一个文件, 再次在 insert 模式下, 输入log, 发现没有变化.</p>
+<p>同 mappings 一样, Buffer-local abbreviations 会覆盖通用的 abbreviations.</p>
+<p>刚刚设置的文件中, 命令行模式输入:</p>
+<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">:iabbrev <span class="keyword">log</span> logger.<span class="keyword">info</span></span><br></pre></td></tr></table></figure>
+
+<p>切换到 insert 模式, 输入log, 替换的仍然是 Buffer-local 设置的 logger.debug.</p>
+</li>
+</ul>
+<p>OK. buffer-local 基本缕完, 下一章来点不一样的.</p>
+]]></content>
+      <categories>
+        <category>VimScript 学习笔记</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
 </search>
