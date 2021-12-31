@@ -25523,4 +25523,47 @@ Block complete! Back in the method.
         <tag>Hexo</tag>
       </tags>
   </entry>
+  <entry>
+    <title>autocmd</title>
+    <url>/posts/vimscript-learning-on-autocmd/</url>
+    <content><![CDATA[<p>autocmd 用于配置当某个确定事件发生时, 要执行的命令.</p>
+<p>借用书中的例子, 看一下 autocmd 的基本结构:</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:autocmd BufWritePre,BufRead *.html :normal</span> gg=G</span><br><span class="line"><span class="code">         ^                   ^      ^</span></span><br><span class="line"><span class="code">         |                   |      |</span></span><br><span class="line"><span class="code">         |                   |      需要执行的命令</span></span><br><span class="line"><span class="code">         |                   |</span></span><br><span class="line"><span class="code">         |                   模式, 用来过滤事件</span></span><br><span class="line"><span class="code">         |</span></span><br><span class="line"><span class="code">         监听的事件</span></span><br></pre></td></tr></table></figure>
+
+<p>这里 BufWritePre, BufRead 都是需要监听的事件, *.html 是需要过滤的模式, 整个命令的含义就是, 当开始写入 html 类型文件或者编辑 html 类型文件之前, 自动执行<code>:normal gg=G</code>, 也就是缩进代码.</p>
+<p>[此处, BufWritePre 指的是开始将整个 Buffer 写入文件 , BufRead 指的是读文件后, 开始编辑. ]</p>
+<p>通过<code>:h autocmd-events</code> 可以查看所有可以绑定 Autocommands 的事件列表.</p>
+<p>其中, 最常用的 Event 是 FileType.</p>
+<p>比如:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">autocmd</span> FileType javascript <span class="keyword">nnoremap</span> <span class="symbol">&lt;buffer&gt;</span> <span class="symbol">&lt;LocalLeader&gt;</span><span class="keyword">c</span> I//<span class="symbol">&lt;esc&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>当打开一个javascript (.js)文件时, 执行<code>nnoremap &lt;buffer&gt; &lt;LocalLeader&gt;c I//&lt;esc&gt;</code>, 也就是按 <code>&lt;LocalLeader&gt;c</code>  会添加注释.</p>
+<p>这里提一个简单的应用.</p>
+<p>Vim中编辑 json 文件的时候, 默认是没有格式化的, 如何实现打开JSON文件时, 自动格式化内容, 方便阅读?</p>
+<p>这里说一下我的做法.</p>
+<p>安装 jq, 附上链接<a href="https://stedolan.github.io/jq/download/">download</a></p>
+<p>修改 <code>.vimrc </code>, 添加:</p>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">autocmd <span class="keyword">BufRead </span>*.<span class="keyword">json </span>%!<span class="keyword">jq </span><span class="string">&#x27;.&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>source 后, 打开 json 格式文件时, 可以看到已经格式化了.</p>
+<p>autocmd 有一个兄弟 augroup. 可以把相近的 autocmd 放在一个group 中:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">augroup</span> testgroup</span><br><span class="line">  autocmd!</span><br><span class="line">  <span class="keyword">autocmd</span> BufWrite * :<span class="keyword">echom</span> <span class="string">&quot;Cats&quot;</span></span><br><span class="line"><span class="keyword">augroup</span> END</span><br></pre></td></tr></table></figure>
+
+<p>这里使用<code>autocmd!</code>  来清理之前的 autocmd 设置.</p>
+<p>augroup 的作用, 是用来避免重复定义 autocmd. 官网文档给到的解释是:</p>
+<blockquote>
+<p>This prevents having the autocommands defined twice (e.g., after sourcing the .vimrc file again).</p>
+</blockquote>
+<p>书中使用了一个 BufWrite + echom 的例子来说明使用 augroup 可以避免的问题, 同文档提到的一致, 这里就不细说了.</p>
+<p>附上一个小小的tips. 如果你有执行 augroup 的例子, 会发现 messages 有些多,  想要清理的话, 可以使用<code>:messages clear</code></p>
+<p>OK, 本章结束.</p>
+<p>Bye 2021.</p>
+]]></content>
+      <categories>
+        <category>VimScript 学习笔记</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
 </search>

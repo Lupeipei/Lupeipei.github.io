@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2021-12-28T13:39:12.493Z</updated>
+  <updated>2021-12-31T09:39:16.904Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,33 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>autocmd</title>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-autocmd/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-autocmd/</id>
+    <published>2021-12-31T09:31:55.000Z</published>
+    <updated>2021-12-31T09:39:16.904Z</updated>
+    
+    <content type="html"><![CDATA[<p>autocmd 用于配置当某个确定事件发生时, 要执行的命令.</p><p>借用书中的例子, 看一下 autocmd 的基本结构:</p><figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:autocmd BufWritePre,BufRead *.html :normal</span> gg=G</span><br><span class="line"><span class="code">         ^                   ^      ^</span></span><br><span class="line"><span class="code">         |                   |      |</span></span><br><span class="line"><span class="code">         |                   |      需要执行的命令</span></span><br><span class="line"><span class="code">         |                   |</span></span><br><span class="line"><span class="code">         |                   模式, 用来过滤事件</span></span><br><span class="line"><span class="code">         |</span></span><br><span class="line"><span class="code">         监听的事件</span></span><br></pre></td></tr></table></figure><p>这里 BufWritePre, BufRead 都是需要监听的事件, *.html 是需要过滤的模式, 整个命令的含义就是, 当开始写入 html 类型文件或者编辑 html 类型文件之前, 自动执行<code>:normal gg=G</code>, 也就是缩进代码.</p><p>[此处, BufWritePre 指的是开始将整个 Buffer 写入文件 , BufRead 指的是读文件后, 开始编辑. ]</p><p>通过<code>:h autocmd-events</code> 可以查看所有可以绑定 Autocommands 的事件列表.</p><p>其中, 最常用的 Event 是 FileType.</p><p>比如:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">autocmd</span> FileType javascript <span class="keyword">nnoremap</span> <span class="symbol">&lt;buffer&gt;</span> <span class="symbol">&lt;LocalLeader&gt;</span><span class="keyword">c</span> I//<span class="symbol">&lt;esc&gt;</span></span><br></pre></td></tr></table></figure><p>当打开一个javascript (.js)文件时, 执行<code>nnoremap &lt;buffer&gt; &lt;LocalLeader&gt;c I//&lt;esc&gt;</code>, 也就是按 <code>&lt;LocalLeader&gt;c</code>  会添加注释.</p><p>这里提一个简单的应用.</p><p>Vim中编辑 json 文件的时候, 默认是没有格式化的, 如何实现打开JSON文件时, 自动格式化内容, 方便阅读?</p><p>这里说一下我的做法.</p><p>安装 jq, 附上链接<a href="https://stedolan.github.io/jq/download/">download</a></p><p>修改 <code>.vimrc </code>, 添加:</p><figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">autocmd <span class="keyword">BufRead </span>*.<span class="keyword">json </span>%!<span class="keyword">jq </span><span class="string">&#x27;.&#x27;</span></span><br></pre></td></tr></table></figure><p>source 后, 打开 json 格式文件时, 可以看到已经格式化了.</p><p>autocmd 有一个兄弟 augroup. 可以把相近的 autocmd 放在一个group 中:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">augroup</span> testgroup</span><br><span class="line">  autocmd!</span><br><span class="line">  <span class="keyword">autocmd</span> BufWrite * :<span class="keyword">echom</span> <span class="string">&quot;Cats&quot;</span></span><br><span class="line"><span class="keyword">augroup</span> END</span><br></pre></td></tr></table></figure><p>这里使用<code>autocmd!</code>  来清理之前的 autocmd 设置.</p><p>augroup 的作用, 是用来避免重复定义 autocmd. 官网文档给到的解释是:</p><blockquote><p>This prevents having the autocommands defined twice (e.g., after sourcing the .vimrc file again).</p></blockquote><p>书中使用了一个 BufWrite + echom 的例子来说明使用 augroup 可以避免的问题, 同文档提到的一致, 这里就不细说了.</p><p>附上一个小小的tips. 如果你有执行 augroup 的例子, 会发现 messages 有些多,  想要清理的话, 可以使用<code>:messages clear</code></p><p>OK, 本章结束.</p><p>Bye 2021.</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;autocmd 用于配置当某个确定事件发生时, 要执行的命令.&lt;/p&gt;
+&lt;p&gt;借用书中的例子, 看一下 autocmd 的基本结构:&lt;/p&gt;
+&lt;figure class=&quot;highlight asciidoc&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pr
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>hexo 主题魔改记录</title>
@@ -471,28 +498,6 @@
     
     
       <category term="Mac" scheme="http://lupeipei.github.io/tags/Mac/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>月河与乌镇</title>
-    <link href="http://lupeipei.github.io/posts/travels-of-jiaxing/"/>
-    <id>http://lupeipei.github.io/posts/travels-of-jiaxing/</id>
-    <published>2021-08-28T04:20:38.000Z</published>
-    <updated>2021-08-28T04:22:29.810Z</updated>
-    
-    <content type="html"><![CDATA[<p>上周末跑去嘉兴, 逛了下月河街和乌镇, 简单记录下沿途.</p><span id="more"></span><h4 id="月河街"><a href="#月河街" class="headerlink" title="月河街"></a>月河街</h4><p>月河在南湖, 离车站很近,  跑去逛了下, 很安静的街, 游人很少.</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1423.jpg"></p><p>街道和苏州的建筑风格很像</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1424.jpg"></p><p>拉小轮车的人:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1434.jpg"></p><p>清冷的酒吧街</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1437.jpg"></p><p>酒吧对面是家西式餐厅, 沿着湖边摆放了餐桌, 可以坐着喝茶+吹风+放空.</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1441.jpg"></p><p>离开前的一瞥, 酒吧街的绿植:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1440.jpg"></p><h4 id="乌镇"><a href="#乌镇" class="headerlink" title="乌镇"></a>乌镇</h4><p>乌镇距离月河还是挺远的, 打车到乌镇已是傍晚, 简单收拾, 晚上8点多到西塘.</p><p>去西塘路过的长廊.</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1455.jpg"></p><p>坐船到对岸:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1460.jpg"></p><p>夜景:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1469.jpg"></p><p>半路上船的一对恋人, 坐在了船头. [船身在晃, 偷拍的镜头也跟着慌了慌 : P]</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1463.jpg"></p><p>明月挂枝头:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1471.jpg"></p><p>夜色中的木心美术馆. [错过了开放时间]</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1474.jpg"></p><p>第二天上午去了南栅老街, 游人更少. 老街曾一时繁华但终归没落.</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1481.jpg"></p><p>偷拍拎包小哥:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1482.jpg"></p><p>打道回府.</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesIMG_1483.jpg"></p><p>再见, 乌镇.</p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;上周末跑去嘉兴, 逛了下月河街和乌镇, 简单记录下沿途.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Life" scheme="http://lupeipei.github.io/categories/Life/"/>
-    
-    
-      <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
     
   </entry>
   
