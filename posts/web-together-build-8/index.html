@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>521 words</span>
+              <span>525 words</span>
             </span>
           
 
@@ -420,13 +420,83 @@
 <li><p>终端运行：<code>rails g controller account::users</code></p>
 </li>
 <li><p>在<code>app/controllers/account/users_controller.eb</code>中，仅有头像和用户名的update：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::UsersController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@user</span> = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@user</span> = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">edit</span></span></span><br><span class="line">    <span class="variable">@user</span> = current_user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@user</span> = current_user</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@user</span>.update(user_params)</span><br><span class="line">      redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">&quot;信息更新成功&quot;</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:edit</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class Account::UsersController &lt; ApplicationController
+  before_action :authenticate_user!
+
+  def index
+    @user = current_user
+  end
+
+  def show
+    @user = current_user
+  end
+
+  def edit
+    @user = current_user
+  end
+
+  def update
+    @user = current_user
+    if @user.update(user_params)
+      redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+    else
+      render :edit
+    end
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:username, :avatar)
+  end
+end
+</code></pre>
+</li>
 </ul>
 <ul>
 <li><p>在<code>app/views/account/users/show.html.erb</code>中，添加密码修改部分：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">........</span><br><span class="line">&lt;%= simple_form_for [<span class="symbol">:account</span>, <span class="variable">@user</span>] <span class="keyword">do</span> <span class="params">|f|</span> %&gt;</span><br><span class="line"> ......</span><br><span class="line">  &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">my_password</span>&quot;&gt;</span></span><br><span class="line">    &lt;h4&gt;修改密码： &lt;<span class="regexp">/h4&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :current_password, label: &quot;旧密码：&quot;, hint: false, error_html: &#123; id: &#x27;password_error&#x27;&#125; %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :password, label: &quot;新密码：&quot;, hint: false, error_html: &#123; id: &#x27;password_error&#x27;&#125; %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;%= f.input :password_confirmation, label: &quot;密码确认：&quot;%&gt;</span></span><br><span class="line"><span class="regexp">  &lt;/div</span>&gt;</span><br><span class="line">  &lt;br&gt;</span><br><span class="line">  .......</span><br><span class="line">  &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">form</span>-<span class="title">group</span>&quot;&gt;</span></span><br><span class="line">    &lt;%= f.submit <span class="string">&quot;更新&quot;</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>&quot;%&gt;</span></span><br><span class="line">  &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">&lt;% end %&gt;</span></span><br><span class="line"><span class="regexp">.......</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">........
+&lt;%= simple_form_for [:account, @user] do |f| %&gt;
+ ......
+  &lt;div class=&quot;my_password&quot;&gt;
+    &lt;h4&gt;修改密码： &lt;/h4&gt;
+    &lt;%= f.input :current_password, label: &quot;旧密码：&quot;, hint: false, error_html: &#123; id: &#39;password_error&#39;&#125; %&gt;
+    &lt;%= f.input :password, label: &quot;新密码：&quot;, hint: false, error_html: &#123; id: &#39;password_error&#39;&#125; %&gt;
+    &lt;%= f.input :password_confirmation, label: &quot;密码确认：&quot;%&gt;
+  &lt;/div&gt;
+  &lt;br&gt;
+  .......
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;%= f.submit &quot;更新&quot;, class: &quot;btn btn-success&quot;%&gt;
+  &lt;/div&gt;
+&lt;% end %&gt;
+.......
+</code></pre>
+</li>
 <li><p>在<code>app/controllers/account/users_controller.eb</code>中，做如下修改：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">  <span class="variable">@user</span> = current_user</span><br><span class="line">- <span class="keyword">if</span> <span class="variable">@user</span>.update(user_params)</span><br><span class="line">-   redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">&quot;信息更新成功&quot;</span></span><br><span class="line">+  <span class="keyword">if</span> <span class="variable">@user</span>.update_with_password(user_params)</span><br><span class="line">+     bypass_sign_in(<span class="variable">@user</span>)</span><br><span class="line">+     redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">&quot;密码更新成功&quot;</span></span><br><span class="line">+  <span class="keyword">elsif</span> <span class="variable">@user</span>.update(user_params)</span><br><span class="line">+     redirect_to account_user_path, <span class="symbol">notice:</span> <span class="string">&quot;信息更新成功&quot;</span></span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:edit</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">user_params</span></span></span><br><span class="line">-	params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>)</span><br><span class="line">+ params.<span class="keyword">require</span>(<span class="symbol">:user</span>).permit(<span class="symbol">:username</span>, <span class="symbol">:avatar</span>, <span class="symbol">:password</span>, <span class="symbol">:password_confirmation</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">  ......
+  def update
+    @user = current_user
+  - if @user.update(user_params)
+  -   redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+  +  if @user.update_with_password(user_params)
+  +     bypass_sign_in(@user)
+  +     redirect_to account_user_path, notice: &quot;密码更新成功&quot;
+  +  elsif @user.update(user_params)
+  +     redirect_to account_user_path, notice: &quot;信息更新成功&quot;
+    else
+        render :edit
+    end
+  end
+
+  private
+
+  def user_params
+  -    params.require(:user).permit(:username, :avatar)
+  + params.require(:user).permit(:username, :avatar, :password, :password_confirmation)
+  end
+</code></pre>
+</li>
 </ul>
 <p>这样就OK啦，可以在个人中心页面修改密码，保存后退出，重新登陆，会发现密码已经修改了。</p>
 <p><strong>参考：</strong></p>
@@ -590,7 +660,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -697,7 +767,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -739,7 +809,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

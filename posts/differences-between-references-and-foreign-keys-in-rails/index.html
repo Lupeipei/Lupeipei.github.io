@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>711 words</span>
+              <span>714 words</span>
             </span>
           
 
@@ -403,23 +403,54 @@
 <h4 id="add-reference-VS-add-foreign-key"><a href="#add-reference-VS-add-foreign-key" class="headerlink" title="add_reference VS add_foreign_key"></a>add_reference VS add_foreign_key</h4><ul>
 <li><p><strong>add_reference</strong>(table_name, ref_name, **options)</p>
 <p>用来给表添加一个参考列，使用时，options可以有如下的设置：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:type</span></span><br><span class="line">参考列的类型. 默认是 <span class="symbol">:bigint</span>.</span><br><span class="line"></span><br><span class="line"><span class="symbol">:index</span></span><br><span class="line">添加一个键. 默认是 <span class="literal">true</span>.</span><br><span class="line"></span><br><span class="line"><span class="symbol">:foreign_key</span></span><br><span class="line">添加一个合适的外键约束. 默认是 <span class="literal">false</span>.</span><br><span class="line"></span><br><span class="line"><span class="symbol">:polymorphic</span></span><br><span class="line">多态关联，也就是是否需要添加额外的_type. 默认是 <span class="literal">false</span>， 即不添加， 设置为<span class="literal">true</span>时，则添加上_type</span><br><span class="line"></span><br><span class="line"><span class="symbol">:null</span></span><br><span class="line">该列是否允许为 nulls. 默认是 <span class="literal">true</span>.</span><br></pre></td></tr></table></figure>
+<pre><code>:type
+参考列的类型. 默认是 :bigint.
 
+:index
+添加一个键. 默认是 true.
+
+:foreign_key
+添加一个合适的外键约束. 默认是 false.
+
+:polymorphic
+多态关联，也就是是否需要添加额外的_type. 默认是 false， 即不添加， 设置为true时，则添加上_type
+
+:null
+该列是否允许为 nulls. 默认是 true.
+</code></pre>
 <p>以articles，authors为例，这里我们主要看添加外键：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">add_reference <span class="symbol">:articles</span>, <span class="symbol">:author</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">add_reference :articles, :author, foreign_key: true
+</code></pre>
 <p>上面的这种用法，使用add_foreign_key可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">add_foreign_key :articles, :authors
+</code></pre>
 <p>默认添加的列名为author_id。</p>
 <p>或者指定列名：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">add_foreign_key <span class="symbol">:articles</span>, <span class="symbol">:authors</span>, <span class="symbol">column:</span> <span class="symbol">:custom_author_id</span>, <span class="symbol">primary_key:</span> <span class="string">&#x27;id&#x27;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">add_foreign_key :articles, :authors, column: :custom_author_id, primary_key: &#39;id&#39;
+</code></pre>
+</li>
 </ul>
 <ul>
 <li><p><strong>add_foreign_key</strong>(from_table, to_table, options = {})</p>
 <p>用来给表添加一个外键，使用时，options可以有如下的设置：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">column</span></span><br><span class="line">外键列的名字. 默认是to_table的单数形式 + &quot;_id&quot;</span><br><span class="line"></span><br><span class="line">:primary_key</span><br><span class="line">to_table的主键. 默认是 id.</span><br><span class="line"></span><br><span class="line">:<span class="type">name</span></span><br><span class="line">约束名或者说是外键的名称 默认是 fk_rails_&lt;identifier&gt; 样式，identifier是一个根据from_table和<span class="keyword">column</span>来生成的总长为<span class="number">10</span>的字符串，比如fk_rails_e74ce85cbc.</span><br><span class="line"></span><br><span class="line">:on_delete</span><br><span class="line">发生删除时的行为，可设置为nullify，<span class="keyword">cascade</span>， <span class="keyword">restrict</span></span><br><span class="line"></span><br><span class="line">:on_update</span><br><span class="line">发生更新时的行为，同<span class="keyword">delete</span></span><br><span class="line"></span><br><span class="line">:<span class="keyword">validate</span></span><br><span class="line">只用于Postgres， 指定是否应该验证约束. 默认是 <span class="keyword">true</span>.</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre><code>:column
+外键列的名字. 默认是to_table的单数形式 + &quot;_id&quot;
 
+:primary_key
+to_table的主键. 默认是 id.
+
+:name
+约束名或者说是外键的名称 默认是 fk_rails_&lt;identifier&gt; 样式，identifier是一个根据from_table和column来生成的总长为10的字符串，比如fk_rails_e74ce85cbc.
+
+:on_delete
+发生删除时的行为，可设置为nullify，cascade， restrict
+
+:on_update
+发生更新时的行为，同delete
+
+:validate
+只用于Postgres， 指定是否应该验证约束. 默认是 true.
+</code></pre>
 <p>add_foreign_key还可以指定to_table主表delete或者update时，from_table从表的行为约束。</p>
 <p>nullify：删除／更新主表时，自动更新从表值为NULL。删除／更新从表，主表不变</p>
 <p>cascade：删除／更新主表时，自动删除／更新从表。删除／更新从表，主表不变</p>
@@ -433,24 +464,35 @@
 <li><p><strong>remove_reference</strong>(table_name, ref_name, foreign_key: false, polymorphic: false, **options)</p>
 <p>顾名思义，移除reference。</p>
 <p>移除单个reference，同时移除index：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">remove_reference(:products, :user, index: true)
+</code></pre>
 <p>移除设置为多态关联的reference：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:supplier</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">remove_reference(:products, :supplier, polymorphic: true)
+</code></pre>
 <p>移除外键：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_reference(<span class="symbol">:products</span>, <span class="symbol">:user</span>, <span class="symbol">index:</span> <span class="literal">true</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span>)</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">remove_reference(:products, :user, index: true, foreign_key: true)
+</code></pre>
+</li>
 <li><p><strong>remove_foreign_key</strong>(from_table, options_or_to_table = {})</p>
 <p>移除外键约束。</p>
 <p>移除一个外键， 这里移除了accounts的branch_id 这个外键：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">:branches</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">remove_foreign_key :accounts, :branches
+</code></pre>
 <p>指定移除的外键列：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">column:</span> <span class="symbol">:owner_id</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">remove_foreign_key :accounts, column: :owner_id
+</code></pre>
 <p>指定移除的外键名称，这里移除了accounts表中名为special_fk_name的外键。「前面add_foreign_key中，可以通过name来设定添加的外键名称。」</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_foreign_key <span class="symbol">:accounts</span>, <span class="symbol">name:</span> <span class="symbol">:special_fk_name</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">remove_foreign_key :accounts, name: :special_fk_name
+</code></pre>
+</li>
 <li><p><strong>两者的区别</strong></p>
 <p>基本同添加外键一样，remove_reference当指定了<code>foreign_key: true</code> 时，等同与remove_foreign_key。比如下面这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">remove_reference <span class="symbol">:groups</span>, <span class="symbol">:order</span>, <span class="symbol">foreign_key:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment">## 等同于下面这两种写法</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:orders</span></span><br><span class="line">remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">column:</span> <span class="symbol">:order_id</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">remove_reference :groups, :order, foreign_key: true
+## 等同于下面这两种写法
+remove_foreign_key :groups, :orders
+remove_foreign_key :groups, column: :order_id
+</code></pre>
+</li>
 </ul>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://edgeapi.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-add_reference">add_reference</a></p>
 <p><a target="_blank" rel="noopener" href="http://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/SchemaStatements.html#method-i-add_foreign_key">add foreign key</a></p>
@@ -615,7 +657,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -722,7 +764,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -764,7 +806,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

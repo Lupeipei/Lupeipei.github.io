@@ -409,14 +409,38 @@
 <h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><ul>
 <li><p>生成表active_storage_blobs和active_storage_attachments</p>
 <p>rails5.2自带ActiveStorage，终端直接执行：</p>
-<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">rails active_storage:<span class="keyword">install</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rails active_storage:install
+</code></pre>
 <p>随后会生成一个migration文件，文件内容长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CreateActiveStorageTables</span> &lt; ActiveRecord::Migration[5.2]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    create_table <span class="symbol">:active_storage_blobs</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string   <span class="symbol">:key</span>,        <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.string   <span class="symbol">:filename</span>,   <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.string   <span class="symbol">:content_type</span></span><br><span class="line">      t.text     <span class="symbol">:metadata</span></span><br><span class="line">      t.bigint   <span class="symbol">:byte_size</span>,  <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.string   <span class="symbol">:checksum</span>,   <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.datetime <span class="symbol">:created_at</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">      t.index [ <span class="symbol">:key</span> ], <span class="symbol">unique:</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    create_table <span class="symbol">:active_storage_attachments</span> <span class="keyword">do</span> <span class="params">|t|</span></span><br><span class="line">      t.string     <span class="symbol">:name</span>,     <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">      t.references <span class="symbol">:record</span>,   <span class="symbol">null:</span> <span class="literal">false</span>, <span class="symbol">polymorphic:</span> <span class="literal">true</span>, <span class="symbol">index:</span> <span class="literal">false</span></span><br><span class="line">      t.references <span class="symbol">:blob</span>,     <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">      t.datetime <span class="symbol">:created_at</span>, <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">      t.index [ <span class="symbol">:record_type</span>, <span class="symbol">:record_id</span>, <span class="symbol">:name</span>, <span class="symbol">:blob_id</span> ], <span class="symbol">name:</span> <span class="string">&quot;index_active_storage_attachments_uniqueness&quot;</span>, <span class="symbol">unique:</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class CreateActiveStorageTables &lt; ActiveRecord::Migration[5.2]
+  def change
+    create_table :active_storage_blobs do |t|
+      t.string   :key,        null: false
+      t.string   :filename,   null: false
+      t.string   :content_type
+      t.text     :metadata
+      t.bigint   :byte_size,  null: false
+      t.string   :checksum,   null: false
+      t.datetime :created_at, null: false
 
+      t.index [ :key ], unique: true
+    end
+
+    create_table :active_storage_attachments do |t|
+      t.string     :name,     null: false
+      t.references :record,   null: false, polymorphic: true, index: false
+      t.references :blob,     null: false
+
+      t.datetime :created_at, null: false
+
+      t.index [ :record_type, :record_id, :name, :blob_id ], name: &quot;index_active_storage_attachments_uniqueness&quot;, unique: true
+    end
+  end
+end
+</code></pre>
 <p>终端执行：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rake</span> db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:migrate
+</code></pre>
 <p>这会生成两张表，active_storage_blobs 和active_storage_attachments。这两张表很关键，后面会说到文件的存储与提取。</p>
 </li>
 <li><p>设置存储路径</p>
@@ -428,27 +452,55 @@
 <li>生产：service有三个云存储可选，Amazon S3, Google Cloud Storage, 或 Microsoft Azure Storage， 自己设置bucket即可。</li>
 </ul>
 <p>在config/environments下，可以看到三种环境对应的Rails active_storage的默认存储路径。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## 开发</span></span><br><span class="line">config.active_storage.service = <span class="symbol">:local</span></span><br><span class="line"><span class="comment">## 生产</span></span><br><span class="line">config.active_storage.service = <span class="symbol">:local</span></span><br><span class="line"><span class="comment">## 测试</span></span><br><span class="line">config.active_storage.service = <span class="symbol">:test</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">## 开发
+config.active_storage.service = :local
+## 生产
+config.active_storage.service = :local
+## 测试
+config.active_storage.service = :test
+</code></pre>
+</li>
 <li><p>单文件上传</p>
 <p>假定现在有一个user model，每一个user有一个avatar，用户上传avatar。</p>
 <p>传统做法是安装gem carrierwave， 然后<code>rails g uploader Avatar</code>，生成继承自CarrierWave::Uploader::Base的AvatarUploader，然后在<code>user.rb</code>中，添加<code>mount_uploader :avatar, AvatarUploader</code>即可。</p>
 <p>而使用ActiveStorage，只需要在<code>user.rb</code>中，添加如下语句即可：</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">has_one_attached <span class="symbol">:avatar</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>has_one_attached :avatar
+</code></pre>
 <p>显示的使用，文件的URL通过<code>url_for(avatar)</code>来获取.</p>
 </li>
 <li><p>多文件上传</p>
 <p>比如一个商品有多张图片pictures，在<code>product.rb</code>中，添加：</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">has_many_attached <span class="symbol">:pictures</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>has_many_attached :pictures
+</code></pre>
 <p>在对应的controller中，对于params部分，声明pictures是[]：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">product_params</span></span></span><br><span class="line">  params.<span class="keyword">require</span>(<span class="symbol">:product</span>).permit(<span class="symbol">:title</span>, <span class="symbol">:xxxx</span>, <span class="symbol">:xxxx</span>, <span class="symbol">pictures:</span> [])</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code>def product_params
+  params.require(:product).permit(:title, :xxxx, :xxxx, pictures: [])
+end
+</code></pre>
+</li>
 <li><p>数据的存储与文件的提取</p>
 <p>以一个user的头像avatar为例，看avatar是如何存入的。</p>
 <p>上面提到会生成两张表，active_storage_blobs 和active_storage_attachments。其中上传的文件信息会先存储在active_storage_blobs中，随后在 active_storage_blobs中写入新的记录，active_storage_blobs主要用于将上传的文件与对应的model ID建立关联。而通过<code>:record_type, :record_id, :name, :blob_id</code>可以定位到唯一的上传文件。</p>
 <p>可以进入rails console，通过ActiveStorage::Blob，ActiveStorage::Attachment来进行数据的增删改查等。</p>
 <p>以model User为例，看两条record感受一下：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="comment">### ActiveStorage::Blob.first</span></span><br><span class="line"><span class="attribute">id</span>: <span class="number">1</span>,</span><br><span class="line"><span class="attribute">key</span>: <span class="string">&quot;imaQysUeeTaW1xTEVzWHyEFP&quot;</span>,</span><br><span class="line"><span class="attribute">filename</span>: <span class="string">&quot;avatar.jpg&quot;</span>,</span><br><span class="line"><span class="attribute">content_type</span>: <span class="string">&quot;image/jpeg&quot;</span>,</span><br><span class="line"><span class="attribute">metadata</span>: &#123;<span class="string">&quot;identified&quot;</span>=&gt;true, <span class="string">&quot;analyzed&quot;</span>=&gt;true&#125;,</span><br><span class="line"><span class="attribute">byte_size</span>: <span class="number">92925</span>,</span><br><span class="line"><span class="attribute">checksum</span>: <span class="string">&quot;05OgljCf9r8a47QxgDIoRQ==&quot;</span>,</span><br><span class="line"><span class="attribute">created_at</span>: Fri, <span class="number">18</span> May <span class="number">2018</span> <span class="number">11</span>:<span class="number">52</span>:<span class="number">42</span> UTC +<span class="number">00</span>:<span class="number">00</span>&gt;s</span><br><span class="line"></span><br><span class="line"> <span class="comment">### ActiveStorage::Attachment.first</span></span><br><span class="line"><span class="attribute">id</span>: <span class="number">1</span>,</span><br><span class="line"><span class="attribute">name</span>: <span class="string">&quot;file&quot;</span>,</span><br><span class="line"><span class="attribute">record_type</span>: <span class="string">&quot;User&quot;</span>,</span><br><span class="line"><span class="attribute">record_id</span>: <span class="number">3</span>,</span><br><span class="line"><span class="attribute">blob_id</span>: <span class="number">1</span>,</span><br><span class="line"><span class="attribute">created_at</span>: Fri, <span class="number">18</span> May <span class="number">2018</span> <span class="number">11</span>:<span class="number">52</span>:<span class="number">42</span> UTC +<span class="number">00</span>:<span class="number">00</span>&gt;</span><br></pre></td></tr></table></figure>
+<pre><code> ### ActiveStorage::Blob.first
+ id: 1,
+ key: &quot;imaQysUeeTaW1xTEVzWHyEFP&quot;,
+ filename: &quot;avatar.jpg&quot;,
+ content_type: &quot;image/jpeg&quot;,
+ metadata: &#123;&quot;identified&quot;=&gt;true, &quot;analyzed&quot;=&gt;true&#125;,
+ byte_size: 92925,
+ checksum: &quot;05OgljCf9r8a47QxgDIoRQ==&quot;,
+ created_at: Fri, 18 May 2018 11:52:42 UTC +00:00&gt;s
+
+  ### ActiveStorage::Attachment.first
+ id: 1,
+ name: &quot;file&quot;,
+ record_type: &quot;User&quot;,
+ record_id: 3,
+ blob_id: 1,
+ created_at: Fri, 18 May 2018 11:52:42 UTC +00:00&gt;
+</code></pre>
 <p>那么需要显示的时候，如何读取文件呢？</p>
 <p>storage中，文件的读取及删除，都是通过key，你会发现在storage下有一堆文件。具体的文件实现可以在ActiveStorage源代码的lib/service目录下查看。大致的思路是通过make_path_for(key)，生成与key值相关的文件夹及文件，然后调用IO.copy_stream(io, make_path_for(key))，将文件的信息写入这些文件中，读取时，只需要读storage下的文件即可。</p>
 </li>
@@ -459,8 +511,18 @@
 <p>遍历User，对于每一个user，先检查active_storage_attachments中是否存在record_id = user.id &amp;&amp; record_type: “User”的纪录，如果存在，则pass，如果不存在，则将该条user纪录添加到表active_storage_blobs 和active_storage_attachments中。</p>
 <p>具体的添加方式有两种：</p>
 <p>一种是直接对数据库进行操作，得到每一个属性的值，然后create即可。但是这里有一个问题，就是active_storage_blobs中的多个字段不那么容易获取，key, checksum,content_type, byte_size 。 我们知道之前上传图片的路径，进而可以读取到图片，通过图片来获取到byte_size，至于content_type则可以通过Mime::Type中的lookup_by_extension来获取，而对于key, checksum, 一番搜索，查看ActiveStorage的源代码，在<code>activestorage/app/models/active_storage/blob.rb</code>中可以知道key值和checksum是如何计算的：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">##  key</span></span><br><span class="line">key = ActiveStorage::Blob.generate_unique_secure_token</span><br><span class="line"><span class="comment">## checksum</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_checksum_in_chunks</span><span class="params">(io)</span></span></span><br><span class="line">      Digest::MD5.new.tap <span class="keyword">do</span> <span class="params">|checksum|</span></span><br><span class="line">        <span class="keyword">while</span> chunk = io.read(<span class="number">5</span>.megabytes)</span><br><span class="line">          checksum &lt;&lt; chunk</span><br><span class="line">        <span class="keyword">end</span></span><br><span class="line">        io.rewind</span><br><span class="line">      <span class="keyword">end</span>.base64digest</span><br><span class="line">    <span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">##  key
+key = ActiveStorage::Blob.generate_unique_secure_token
+## checksum
+def compute_checksum_in_chunks(io)
+      Digest::MD5.new.tap do |checksum|
+        while chunk = io.read(5.megabytes)
+          checksum &lt;&lt; chunk
+        end
+        io.rewind
+      end.base64digest
+    end  
+</code></pre>
 <p>这样大费周章得到这些属性的值后，可以将纪录放入active_storage_blobs中了，随后在active_storage_attachments中也写入对应的纪录就好了。</p>
 <p>如你所见，这样的方法繁琐，而且还有一个致命的缺点，那就是没有了文件转换的步骤。通过直接操作数据库，记录确实补全了，但是你会发现，对于先前上传的文件，在storage下，你是看不到它们对应的文件的，也就是说，用url(avatar)来显示头像时，图片无法显示，读不出来，这就得再增一个步骤，把文件再进行一次处理，处理方式可以在<code>activestorage/lib/active_storage/service/</code>下找到【根据service的不同，有对应的文件，每个文件中都相应的处理方法】。</p>
 <p>第二种方式，则是通过调用接口，也就是ActiveStorage::Blob的类方法，create_after_upload!来实现。这一步不仅建立了新的纪录，而且也在storage下生成了对应的文件用于读取，此外，文件部分，使用Rack::Test::UploadedFile的方法生成临时文件来进行操作。生成新的blob后，再通过ActiveStorageAttachment来创建对应的attachment即可。相比第一种【也就是我之前的思路】，这一种【老大的思路】才是迁移打开的正确方式。</p>
@@ -632,7 +694,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -739,7 +801,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -781,7 +843,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

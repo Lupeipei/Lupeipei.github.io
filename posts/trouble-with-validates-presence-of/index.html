@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>517 words</span>
+              <span>526 words</span>
             </span>
           
 
@@ -402,23 +402,72 @@
 <p>类A与类B存在一对多关系，需要校验在创建b时，a存在，分别使用validates_presence_of :a 与 validates_presence_of :a_id，会发现当a尚未保存时，前者会成功创建b，后者则不行。</p>
 <p>看个简单的例子：</p>
 <p>group 与post 之间是一对多关系， post含字段group_id。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/post.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Post</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:group</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment">## 为了方便找出两者的差异，这里使用optional: true，post创建时，group_id可为nil</span></span><br><span class="line"></span><br><span class="line">  validates <span class="symbol">:content</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### app/models/group.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Group</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  has_many <span class="symbol">:posts</span></span><br><span class="line"></span><br><span class="line">  validates <span class="symbol">:title</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">### app/models/post.rb
+class Post &lt; ApplicationRecord
+  belongs_to :group, optional: true
+  ## 为了方便找出两者的差异，这里使用optional: true，post创建时，group_id可为nil
 
+  validates :content, presence: true
+end
+
+#### app/models/group.rb
+class Group &lt; ApplicationRecord
+  belongs_to :user
+  has_many :posts
+
+  validates :title, presence: true
+end
+</code></pre>
 <p>此时，在终端执行：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">post = Post.new(<span class="symbol">content:</span> <span class="string">&quot;this is a post&quot;</span>)</span><br><span class="line">post.save</span><br><span class="line"></span><br><span class="line"><span class="comment"># =&gt; true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">post = Post.new(content: &quot;this is a post&quot;)
+post.save
 
+# =&gt; true
+</code></pre>
 <p>接下来分别<code> validates_presence_of :group_id</code>和<code>validates_presence_of :group </code>来给post添加有效性校验，要求group必须存在。</p>
 <ul>
 <li><p>在post.rb中添加<code>validates_presence_of :group_id </code></p>
 <p>进入console，执行如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">post = Post.new(<span class="symbol">content:</span> <span class="string">&quot;my post&quot;</span>)</span><br><span class="line"></span><br><span class="line">post.save</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; rollback, 返回false, Validation failed: Group can&#x27;t be blank</span></span><br><span class="line"></span><br><span class="line">group = Group.new(<span class="symbol">title:</span> <span class="string">&quot;hello&quot;</span>, <span class="symbol">user_id:</span> User.first.id)</span><br><span class="line"></span><br><span class="line">post = Post.new(<span class="symbol">content:</span> <span class="string">&quot;my post&quot;</span>)</span><br><span class="line"></span><br><span class="line">post.group = group</span><br><span class="line"></span><br><span class="line">post.save</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; rollback, 返回false</span></span><br><span class="line"></span><br><span class="line">post.save!</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; rollback, 显示 Validation failed: Group can&#x27;t be blank</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
 
+post.save
+
+#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
+
+group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
+
+post = Post.new(content: &quot;my post&quot;)
+
+post.group = group
+
+post.save
+
+#=&gt; rollback, 返回false
+
+post.save!
+
+#=&gt; rollback, 显示 Validation failed: Group can&#39;t be blank
+</code></pre>
 <p>第一次创建post，没有给到group，无法新建，正常。</p>
 <p>第二次创建post，使用post.group = group  给post的group赋值， 但是，你会发现虽然post.group有记录，不为nil， 但是post.group_id 依然为nil，保存时，校验group_id，为nil, 报错。</p>
 </li>
 <li><p>在post.rb中添加<code>validates_presence_of :group </code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">post = Post.new(<span class="symbol">content:</span> <span class="string">&quot;my post&quot;</span>)</span><br><span class="line"></span><br><span class="line">post.save</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; rollback, 返回false, Validation failed: Group can&#x27;t be blank</span></span><br><span class="line"></span><br><span class="line">group = Group.new(<span class="symbol">title:</span> <span class="string">&quot;hello&quot;</span>, <span class="symbol">user_id:</span> User.first.id)</span><br><span class="line"></span><br><span class="line">post = Post.new(<span class="symbol">content:</span> <span class="string">&quot;my post&quot;</span>)</span><br><span class="line"></span><br><span class="line">post.group = group</span><br><span class="line"></span><br><span class="line">post.save</span><br><span class="line"></span><br><span class="line"><span class="comment">#=&gt; 返回true, 依次在Group，Post中插入了一条新的记录</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">post = Post.new(content: &quot;my post&quot;)
 
+post.save
+
+#=&gt; rollback, 返回false, Validation failed: Group can&#39;t be blank
+
+group = Group.new(title: &quot;hello&quot;, user_id: User.first.id)
+
+post = Post.new(content: &quot;my post&quot;)
+
+post.group = group
+
+post.save
+
+#=&gt; 返回true, 依次在Group，Post中插入了一条新的记录
+</code></pre>
 <p>第一次创建post，没有给到group，无法新建，正常，同<code>validates_presence_of :group_id</code> 的效果一样。</p>
 <p>第二次创建post，使用post.group = group  给post的group赋值，此时，虽然post.group_id 依然为nil，但是由于post.group不为nil，检验通过，group存在，成功创建。</p>
 <p>很显然，当我们创建post时，需要检验group必须存在，并不要求此时group已经创建，后者才是我们需要的校验方式。</p>
@@ -574,7 +623,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -665,7 +714,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -707,7 +756,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

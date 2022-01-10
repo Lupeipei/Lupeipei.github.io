@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>600 words</span>
+              <span>615 words</span>
             </span>
           
 
@@ -402,30 +402,74 @@
 <h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>在工作中遇到的一个问题：</p>
 <p>navbar的item根据是否存在项目来决定是否显示，也就是写一个类似current_user的helper method <strong>current_project</strong>，要求当<strong>current_project</strong>存在时，navbar中的dropdown组件【以project为item】显示<strong>current_project</strong>的name，navbar的item则显示该project下的plans，issues等等，当current_project为nil时，则不显示project的任何信息。</p>
 <p>其中，project与plan，issue存在一对多的关系：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#project.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:plans</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  has_many <span class="symbol">:issues</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#plan.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Plan</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#issue.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">#project.rb
+class Project &lt; ApplicationRecord
+  has_many :plans, dependent: :destroy
+  has_many :issues, dependent: :destroy
+end
 
+#plan.rb
+class Plan &lt; ApplicationRecord
+  belongs_to :project
+end
+
+#issue.rb
+class Issue &lt; ApplicationRecord
+  belongs_to :project
+end
+</code></pre>
 <p>我最初在module ApplicationHelper中定义了一个helper method，算是勉强实现了功能，但是写的极为难看，是通过request.original_fullpath()来判断请求中是否存在project， 如果存在，则找到current_project。而且这个helper method因为定义在ApplicationHelper中，便只能在views中使用。后面老大教了个好方法，真心觉得很赞，记录下大致的解决方法。</p>
 <h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>devise的current_user的定义，较为复杂，在它的源代码<a target="_blank" rel="noopener" href="https://github.com/plataformatec/devise/blob/3722aa62961720eafa5bb5ee6c99b76c26b6be3e/lib/devise/controllers/helpers.rb#L112">define_helpers</a>中可以看到：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def current_<span class="comment">#&#123;mapping&#125;</span></span><br><span class="line">  <span class="variable">@current_</span><span class="comment">#&#123;mapping&#125; ||= warden.authenticate(scope: :#&#123;mapping&#125;)</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def current_#&#123;mapping&#125;
+  @current_#&#123;mapping&#125; ||= warden.authenticate(scope: :#&#123;mapping&#125;)
+end
+</code></pre>
 <p>以我目前的水平，真心看的不是很明白，在stack overflow看到了一个比较简单的定义：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_user</span></span></span><br><span class="line">  <span class="variable">@current_user</span> <span class="params">||</span>= User.find_by_id!(session[<span class="symbol">:user_id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_user</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">#application_controller.rb
+def current_user
+  @current_user ||= User.find_by_id!(session[:user_id])
+end
+helper_method :current_user
+</code></pre>
 <p>参考这个，我们可以定义一下current_project:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">  <span class="variable">@current_project</span> <span class="params">||</span>= Project.find(params[<span class="symbol">:project_id</span>])</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_project</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">#application_controller.rb
+def current_project
+  @current_project ||= Project.find(params[:project_id])
+end
+helper_method :current_project
+</code></pre>
 <p>这样看着，貌似很简单就解决了，但是有一个问题，那就是所有的request中，project_id并不一定存在，这样使用<code>Project.find(params[:project_id])</code>就有可能报错，显示params中找不到project_id。</p>
 <p>老大教的方法是这样的，重新定义了一个controller，然后通过继承，覆写current_project。具体如下：</p>
 <p>Step1、在<code>application_controller.rb</code>定义current_project：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#application_controller.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">  <span class="literal">nil</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">helper_method <span class="symbol">:current_project</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">#application_controller.rb
+def current_project
+  nil
+end
+helper_method :current_project
+</code></pre>
 <p>注意，这里的current_project返回的是nil值，这样所有继承自ApplicationController的Controller，其current_project默认为nil。</p>
 <p>Step2、新建一个BaseProjectController, 继承自ApplicationController，重新定义current_project，覆盖掉父类的method：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#base_project_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseProjectController</span> &lt; ApplicationController</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_project</span></span></span><br><span class="line">    <span class="variable">@current_project</span> <span class="params">||</span>= Project.find(params[<span class="symbol">:project_id</span>])</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">#base_project_controller.rb
+class BaseProjectController &lt; ApplicationController
+  def current_project
+    @current_project ||= Project.find(params[:project_id])
+  end
+end
+</code></pre>
 <p>Step3、修改IssuesController和PlansController，让它们继承自BaseProjectController，拥有current_project方法：【以IssuesController为例，PlansController以此类推】</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## 修改前：</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IssuesController</span> &lt; BaseProjectController</span></span><br><span class="line">  load_and_authorize_resource <span class="symbol">:project</span></span><br><span class="line">  .....</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 修改后：</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IssuesController</span> &lt; BaseProjectController</span></span><br><span class="line">  before_action -&gt; &#123; <span class="variable">@project</span> = current_project &#125;</span><br><span class="line">  authorize_resource <span class="symbol">:project</span></span><br><span class="line">  .....</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">## 修改前：
+class IssuesController &lt; BaseProjectController
+  load_and_authorize_resource :project
+  .....
+end
 
+## 修改后：
+class IssuesController &lt; BaseProjectController
+  before_action -&gt; &#123; @project = current_project &#125;
+  authorize_resource :project
+  .....
+end
+</code></pre>
 <p>这里删除了cancancan的load_authorize，改用before_action的方式，将current_project赋给了@project。</p>
 <p>对于没有继承自BaseProjectController的Controller，其current_project则为nil，不得不说，这样方式真的是漂亮。</p>
 <p> OK！</p>
@@ -590,7 +634,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -697,7 +741,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -739,7 +783,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

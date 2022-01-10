@@ -416,49 +416,146 @@
 </ul>
 <p>好，一步步来。</p>
 <p>目前的group表结构如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">groups：</span><br><span class="line">  string   <span class="string">&quot;title&quot;</span></span><br><span class="line">  text     <span class="string">&quot;description&quot;</span></span><br><span class="line">  datetime <span class="string">&quot;created_at&quot;</span>,  <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">  datetime <span class="string">&quot;updated_at&quot;</span>,  <span class="symbol">null:</span> <span class="literal">false</span></span><br><span class="line">  bigint  <span class="string">&quot;user_id&quot;</span></span><br><span class="line">  index [<span class="string">&quot;user_id&quot;</span>], <span class="symbol">name:</span> <span class="string">&quot;index_groups_on_user_id&quot;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">groups：
+  string   &quot;title&quot;
+  text     &quot;description&quot;
+  datetime &quot;created_at&quot;,  null: false
+  datetime &quot;updated_at&quot;,  null: false
+  bigint  &quot;user_id&quot;
+  index [&quot;user_id&quot;], name: &quot;index_groups_on_user_id&quot;
+</code></pre>
 <p>用户部分使用devise生成了user model。</p>
 <p><strong>第一步：给group添加字段，重新生成一对多关联</strong></p>
 <p>终端执行：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g migration add_creator_and_admin_to_group</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g migration add_creator_and_admin_to_group
+</code></pre>
 <p>在新生成的migration表中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddCreatorAndAdminToGroup</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    add_reference <span class="symbol">:groups</span>, <span class="symbol">:creator</span></span><br><span class="line">    add_reference <span class="symbol">:groups</span>, <span class="symbol">:admin</span></span><br><span class="line">    add_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:users</span>, <span class="symbol">column:</span> <span class="symbol">:creator_id</span>, <span class="symbol">primary_key:</span> <span class="symbol">:id</span></span><br><span class="line">    add_foreign_key <span class="symbol">:groups</span>, <span class="symbol">:users</span>, <span class="symbol">column:</span> <span class="symbol">:admin_id</span>, <span class="symbol">primary_key:</span> <span class="symbol">:id</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class AddCreatorAndAdminToGroup &lt; ActiveRecord::Migration[5.0]
+  def change
+    add_reference :groups, :creator
+    add_reference :groups, :admin
+    add_foreign_key :groups, :users, column: :creator_id, primary_key: :id
+    add_foreign_key :groups, :users, column: :admin_id, primary_key: :id
+  end
+end
+</code></pre>
 <p>终端执行：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rake</span> db:mgirate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:mgirate
+</code></pre>
 <p>这里为group添加了两个reference, creator_id, admin_id，同时通过add_foreign_key，将creator_id，admin_id指定成外键。</p>
 <p>在<code>app/models/group.rb</code>中，添加:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Group</span> &lt; ApplicationRecord</span></span><br><span class="line">  ......</span><br><span class="line">  belongs_to <span class="symbol">:creator</span>, <span class="symbol">class_name:</span> <span class="string">&#x27;User&#x27;</span></span><br><span class="line">  belongs_to <span class="symbol">:admin</span>, <span class="symbol">class_name:</span> <span class="string">&#x27;User&#x27;</span>, <span class="symbol">optional:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Group &lt; ApplicationRecord
+  ......
+  belongs_to :creator, class_name: &#39;User&#39;
+  belongs_to :admin, class_name: &#39;User&#39;, optional: true
+end
+</code></pre>
 <p>这里对于admin添加了<code>optional: true</code>，这样创建group的时候，不必指定admin。</p>
 <p>在<code>app/models/user.rb</code>中，添加:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ApplicationRecord</span></span><br><span class="line">  ......</span><br><span class="line">  has_many <span class="symbol">:created_groups</span>, <span class="symbol">class_name:</span> <span class="string">&#x27;Group&#x27;</span>, <span class="symbol">foreign_key:</span> <span class="string">&#x27;creator_id&#x27;</span></span><br><span class="line">  has_many <span class="symbol">:admined_groups</span>, <span class="symbol">class_name:</span> <span class="string">&#x27;Group&#x27;</span>, <span class="symbol">foreign_key:</span> <span class="string">&#x27;admin_id&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class User &lt; ApplicationRecord
+  ......
+  has_many :created_groups, class_name: &#39;Group&#39;, foreign_key: &#39;creator_id&#39;
+  has_many :admined_groups, class_name: &#39;Group&#39;, foreign_key: &#39;admin_id&#39;
+end
+</code></pre>
 <p>此时<code>rails c</code> 进入rails控制台， 可以检查下刚刚创建的关系是否成功。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">User.create(<span class="symbol">email:</span> <span class="string">&quot;admin@mail.com&quot;</span>, <span class="symbol">password:</span> <span class="string">&quot;123456&quot;</span>, <span class="symbol">password_confirmation:</span> <span class="string">&quot;123456&quot;</span>)</span><br><span class="line">=&gt;  #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;</span><br><span class="line"></span><br><span class="line">User.create(<span class="symbol">email:</span> <span class="string">&quot;creator@mail.com&quot;</span>, <span class="symbol">password:</span> <span class="string">&quot;123456&quot;</span>, <span class="symbol">password_confirmation:</span> <span class="string">&quot;123456&quot;</span>)</span><br><span class="line"></span><br><span class="line">=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;</span><br><span class="line"></span><br><span class="line">a = Group.new(<span class="symbol">title:</span> <span class="string">&quot;rubyist&quot;</span>, <span class="symbol">description:</span> <span class="string">&quot;for search&quot;</span>)</span><br><span class="line">=&gt; #&lt;Group:0x007ff3d0a04030</span><br><span class="line"> id: nil,</span><br><span class="line"> title: &quot;rubyist&quot;,</span><br><span class="line"> description: &quot;for search&quot;,</span><br><span class="line"> created_at: nil,</span><br><span class="line"> updated_at: nil,</span><br><span class="line"> user_id: nil,</span><br><span class="line"> creator_id: nil,</span><br><span class="line"> admin_id: nil&gt;</span><br><span class="line"></span><br><span class="line"> a.user = User.last</span><br><span class="line">=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;</span><br><span class="line"></span><br><span class="line"> a.creator = User.last</span><br><span class="line">=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;</span><br><span class="line"></span><br><span class="line">a.admin = User.find(<span class="number">2</span>)</span><br><span class="line">=&gt; #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;</span><br><span class="line"></span><br><span class="line">a.save</span><br><span class="line">=&gt; true</span><br><span class="line"></span><br><span class="line">User.last.created_groups</span><br><span class="line">=&gt; [#&lt;Group:0x007ff3ce0a3ee8</span><br><span class="line">  id: 5,</span><br><span class="line">  title: &quot;rubyist&quot;,</span><br><span class="line">  description: &quot;for search&quot;,</span><br><span class="line">  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  user_id: 3,</span><br><span class="line">  creator_id: 3,</span><br><span class="line">  admin_id: 2&gt;]</span><br><span class="line"></span><br><span class="line">User.second.admined_groups</span><br><span class="line">=&gt; [#&lt;Group:0x007ff3cd61ff80</span><br><span class="line">  id: 5,</span><br><span class="line">  title: &quot;rubyist&quot;,</span><br><span class="line">  description: &quot;for search&quot;,</span><br><span class="line">  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,</span><br><span class="line">  user_id: 3,</span><br><span class="line">  creator_id: 3,</span><br><span class="line">  admin_id: 2&gt;]</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">User.create(email: &quot;admin@mail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;)
+=&gt;  #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;
 
+User.create(email: &quot;creator@mail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;)
+
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+a = Group.new(title: &quot;rubyist&quot;, description: &quot;for search&quot;)
+=&gt; #&lt;Group:0x007ff3d0a04030
+ id: nil,
+ title: &quot;rubyist&quot;,
+ description: &quot;for search&quot;,
+ created_at: nil,
+ updated_at: nil,
+ user_id: nil,
+ creator_id: nil,
+ admin_id: nil&gt;
+
+ a.user = User.last
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+ a.creator = User.last
+=&gt; #&lt;User id: 3, email: &quot;creator@mail.com&quot;, created_at: &quot;2018-06-09 05:44:17&quot;, updated_at: &quot;2018-06-09 05:44:17&quot;&gt;
+
+a.admin = User.find(2)
+=&gt; #&lt;User id: 2, email: &quot;admin@mail.com&quot;, created_at: &quot;2018-06-09 05:43:58&quot;, updated_at: &quot;2018-06-09 05:43:58&quot;&gt;
+
+a.save
+=&gt; true
+
+User.last.created_groups
+=&gt; [#&lt;Group:0x007ff3ce0a3ee8
+  id: 5,
+  title: &quot;rubyist&quot;,
+  description: &quot;for search&quot;,
+  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  user_id: 3,
+  creator_id: 3,
+  admin_id: 2&gt;]
+
+User.second.admined_groups
+=&gt; [#&lt;Group:0x007ff3cd61ff80
+  id: 5,
+  title: &quot;rubyist&quot;,
+  description: &quot;for search&quot;,
+  created_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  updated_at: Sat, 09 Jun 2018 05:47:49 UTC +00:00,
+  user_id: 3,
+  creator_id: 3,
+  admin_id: 2&gt;]
+</code></pre>
 <p>OK! 基本功能实现。下面我们将user_id的数据赋给creator_id，同时删除掉user_id这个外键。</p>
 <p><strong>第二步：数据迁移</strong></p>
 <p>没有迁移前，进<code>rails c</code> ， 查看Group的第一个record：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Group.first</span><br><span class="line">&gt; #&lt;Group:0x007ff3d093d9d0</span><br><span class="line"> id: 3,</span><br><span class="line"> title: &quot;group1&quot;,</span><br><span class="line"> description: &quot;groups&quot;,</span><br><span class="line"> created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> updated_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> user_id: 1,</span><br><span class="line"> creator_id: nil,</span><br><span class="line"> admin_id: nil&gt;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Group.first
+&gt; #&lt;Group:0x007ff3d093d9d0
+ id: 3,
+ title: &quot;group1&quot;,
+ description: &quot;groups&quot;,
+ created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ updated_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ user_id: 1,
+ creator_id: nil,
+ admin_id: nil&gt;
+</code></pre>
 <p>可以看到creator_id此时为nil， user_id 为1。我们需要把user_id给到creator_id。</p>
 <p>终端执行：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g migration remove_user_id_on_group</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g migration remove_user_id_on_group
+</code></pre>
 <p>在新生成的migration表中，添加如下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RemoveUserIdOnGroup</span> &lt; ActiveRecord::Migration[5.0]</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Group</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    Group.where.<span class="keyword">not</span>(<span class="symbol">user_id:</span> <span class="literal">nil</span>).find_each <span class="keyword">do</span> <span class="params">|g|</span></span><br><span class="line">      g.update(<span class="symbol">creator_id:</span> g.user_id)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    remove_foreign_key <span class="symbol">:groups</span>, <span class="symbol">column:</span> <span class="symbol">:user_id</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class RemoveUserIdOnGroup &lt; ActiveRecord::Migration[5.0]
+  class Group &lt; ActiveRecord::Base
+  end
+  def change
+    Group.where.not(user_id: nil).find_each do |g|
+      g.update(creator_id: g.user_id)
+    end
+    remove_foreign_key :groups, column: :user_id
+  end
+end
+</code></pre>
 <p>终端执行：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rake</span> db:mgirate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:mgirate
+</code></pre>
 <p>这样数据就迁移过来了，同时group的外键user_id也被删除了。</p>
 <p>进<code>rails console</code> 看看：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Group.first</span><br><span class="line">&gt; #&lt;Group:0x007ff3d093d9d0</span><br><span class="line"> id: 3,</span><br><span class="line"> title: &quot;group1&quot;,</span><br><span class="line"> description: &quot;groups&quot;,</span><br><span class="line"> created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,</span><br><span class="line"> updated_at: Sat, 09 Jun 2018 06:05:24 UTC +00:00,</span><br><span class="line"> creator_id: 1,</span><br><span class="line"> admin_id: nil&gt;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Group.first
+&gt; #&lt;Group:0x007ff3d093d9d0
+ id: 3,
+ title: &quot;group1&quot;,
+ description: &quot;groups&quot;,
+ created_at: Sat, 09 Jun 2018 05:46:29 UTC +00:00,
+ updated_at: Sat, 09 Jun 2018 06:05:24 UTC +00:00,
+ creator_id: 1,
+ admin_id: nil&gt;
+</code></pre>
 <p>可以看到数据已经成功迁移了。</p>
 <p>但是，还没有完，需要清理下代码。</p>
 <p>在<code>app/models/group.rb</code>中，删除<code>belongs_to :user</code></p>
@@ -626,7 +723,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -733,7 +830,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -775,7 +872,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

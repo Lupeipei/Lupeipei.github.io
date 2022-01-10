@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>293 words</span>
+              <span>294 words</span>
             </span>
           
 
@@ -401,38 +401,45 @@
 <span id="more"></span>
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>执行<code>rake db: migrate</code>时，中断，再次执行<code>rake db: migrate</code>时，报错：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">psql: could <span class="keyword">not</span> <span class="keyword">connect</span> <span class="keyword">to</span> <span class="keyword">server</span>: <span class="keyword">Connection</span> refused</span><br><span class="line">	<span class="keyword">Is</span> the <span class="keyword">server</span> running <span class="keyword">on</span> host &quot;localhost&quot; (::<span class="number">1</span>) <span class="keyword">and</span> accepting</span><br><span class="line">	TCP/IP connections <span class="keyword">on</span> port <span class="number">5432</span>?</span><br></pre></td></tr></table></figure>
-
+<pre><code>psql: could not connect to server: Connection refused
+    Is the server running on host &quot;localhost&quot; (::1) and accepting
+    TCP/IP connections on port 5432?
+</code></pre>
 <h4 id="解决过程"><a href="#解决过程" class="headerlink" title="解决过程"></a>解决过程</h4><p>重启posgresql：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">brew services restart postgresql</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>brew services restart postgresql
+</code></pre>
 <p>显示：</p>
-<figure class="highlight haml"><table><tr><td class="code"><pre><span class="line">Stopping `postgresql`... (might take a while)</span><br><span class="line">=<span class="ruby">=&gt; Successfully stopped <span class="string">`postgresql`</span> (<span class="symbol">label:</span> homebrew.mxcl.postgresql)</span></span><br><span class="line"><span class="ruby"></span>=<span class="ruby">=&gt; Successfully started <span class="string">`postgresql`</span> (<span class="symbol">label:</span> homebrew.mxcl.postgresql)</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>Stopping `postgresql`... (might take a while)
+==&gt; Successfully stopped `postgresql` (label: homebrew.mxcl.postgresql)
+==&gt; Successfully started `postgresql` (label: homebrew.mxcl.postgresql)
+</code></pre>
 <p>再次运行：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rake</span> db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:migrate
+</code></pre>
 <p>报错：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">psql: could <span class="keyword">not</span> <span class="keyword">connect</span> <span class="keyword">to</span> <span class="keyword">server</span>: <span class="keyword">Connection</span> refused</span><br><span class="line">	<span class="keyword">Is</span> the <span class="keyword">server</span> running <span class="keyword">on</span> host &quot;localhost&quot; (::<span class="number">1</span>) <span class="keyword">and</span> accepting</span><br><span class="line">	TCP/IP connections <span class="keyword">on</span> port <span class="number">5432</span>?</span><br></pre></td></tr></table></figure>
-
+<pre><code>psql: could not connect to server: Connection refused
+    Is the server running on host &quot;localhost&quot; (::1) and accepting
+    TCP/IP connections on port 5432?
+</code></pre>
 <p>改成手动启动：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">postges -D <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres/</span><br></pre></td></tr></table></figure>
-
+<pre><code>postges -D /usr/local/var/postgres/
+</code></pre>
 <p>报错：</p>
-<figure class="highlight vbnet"><table><tr><td class="code"><pre><span class="line"><span class="symbol">FATAL:</span>  pre-existing <span class="keyword">shared</span> memory block (<span class="keyword">key</span> <span class="number">5432001</span>, ID <span class="number">65536</span>) <span class="built_in">is</span> still <span class="keyword">in</span> use</span><br><span class="line"><span class="symbol">HINT:</span>  <span class="keyword">If</span> you<span class="comment">&#x27;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>FATAL:  pre-existing shared memory block (key 5432001, ID 65536) is still in use
+HINT:  If you&#39;re sure there are no old server processes still running, remove the shared memory block or just delete the file &quot;postmaster.pid&quot;.
+</code></pre>
 <p>切换到/usr/local/var/postgres 下，删除postmaster.pid 文件，然后重启：</p>
-<figure class="highlight postgresql"><table><tr><td class="code"><pre><span class="line">postgres -D /usr/<span class="keyword">local</span>/var/postgres/</span><br></pre></td></tr></table></figure>
-
+<pre><code class="postgresql">postgres -D /usr/local/var/postgres/
+</code></pre>
 <p>重启后，再次运行：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code class="rail">rake db:migrate
+</code></pre>
 <p>报错：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the <span class="keyword">database</span> <span class="keyword">system</span> <span class="keyword">is</span> starting up</span><br></pre></td></tr></table></figure>
-
+<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
+</code></pre>
 <p>Google后，尝试修改了postgresql.conf文件，将hot_standby 设置为on，重启Postgresql，继续执行<code>rake db:migrate</code>, 依然报错：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">PG::ConnectionBad: FATAL:  the <span class="keyword">database</span> <span class="keyword">system</span> <span class="keyword">is</span> starting up</span><br></pre></td></tr></table></figure>
-
+<pre><code>PG::ConnectionBad: FATAL:  the database system is starting up
+</code></pre>
 <p><strong>最后的解决方法：</strong></p>
 <p>简单粗暴：删除文件夹 /usr/local/var/postgres，卸载并重装PostgreSQL，重新导入数据。</p>
 
@@ -596,7 +603,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -703,7 +710,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -745,7 +752,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

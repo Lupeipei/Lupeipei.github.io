@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>330 words</span>
+              <span>340 words</span>
             </span>
           
 
@@ -401,17 +401,39 @@
 <span id="more"></span> 
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model product，category,  schema中信息如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Table name products</span><br><span class="line"></span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br><span class="line">description <span class="symbol">:string</span></span><br><span class="line">price       <span class="symbol">:float</span></span><br><span class="line">category_id <span class="symbol">:integer</span></span><br><span class="line"></span><br><span class="line">Table name  categories</span><br><span class="line">id          <span class="symbol">:integer</span></span><br><span class="line">title       <span class="symbol">:string</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">Table name products
 
+id          :integer
+title       :string
+description :string
+price       :float
+category_id :integer
+
+Table name  categories
+id          :integer
+title       :string
+</code></pre>
 <p><code>app/models/product.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+  ......
+end
+</code></pre>
 <p><code>app/models/category.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Category</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  has_many <span class="symbol">:products</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Category &lt; ActiveRecord::Base
+  has_many :products
+  ......
+end
+</code></pre>
 <p><code>app/controllers/api/v1/products_controller.rb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@products</span> = Product.all</span><br><span class="line">    render <span class="symbol">json:</span> <span class="variable">@products</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+# GET /api/v1/products
+  def index
+    @products = Product.all
+    render json: @products
+  end
+end
+</code></pre>
 <p>现在需要得到指定category的products，类似这样：<code>/api/v1/products?category=1</code>，得到category是1的所有products。以及给定价格区间的products，类似这样：<code>/api/v1/products?price[from]=100&amp;price[to]=999</code></p>
 <p>如何实现？</p>
 <p>试试<a target="_blank" rel="noopener" href="https://github.com/plataformatec/has_scope">has_scope</a></p>
@@ -419,17 +441,37 @@
 <ul>
 <li><p>安装<a target="_blank" rel="noopener" href="https://github.com/plataformatec/has_scope">has_scope</a> gem</p>
 <p>gemfile中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">gem <span class="string">&#x27;has_scope&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">gem &#39;has_scope&#39;
+</code></pre>
 <p>终端bundle，服务器重启。</p>
 </li>
 <li><p>在model中添加scope</p>
 <p>修改<code>app/models/product.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Product</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:category</span></span><br><span class="line"></span><br><span class="line"> + scope <span class="symbol">:category</span>, -&gt; (category_id) &#123; where(<span class="symbol">category_id:</span> category_id) &#125;</span><br><span class="line"> + scope <span class="symbol">:price</span>, -&gt; (from, to) &#123; where(<span class="string">&quot;price &gt;= ? AND price &lt;= ?&quot;</span>, from, to) &#125;</span><br><span class="line">  ......</span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class Product &lt; ActiveRecord::Base
+  belongs_to :category
+
+ + scope :category, -&gt; (category_id) &#123; where(category_id: category_id) &#125;
+ + scope :price, -&gt; (from, to) &#123; where(&quot;price &gt;= ? AND price &lt;= ?&quot;, from, to) &#125;
+  ......
+
+end
+</code></pre>
+</li>
 <li><p>在controller中添加has_scope</p>
 <p>修改<code>app/controllers/api/v1/products_controller.rb</code>：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::ExperiencesController</span> &lt; Api::V1::<span class="title">BaseController</span></span></span><br><span class="line">  + has_scope <span class="symbol">:category</span>, <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line">  + has_scope <span class="symbol">:price</span>, <span class="symbol">using:</span> [<span class="symbol">:from</span>, <span class="symbol">:to</span>], <span class="symbol">only:</span> <span class="symbol">:index</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># GET /api/v1/products</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">  -  <span class="variable">@products</span> = Product.all</span><br><span class="line">  +  <span class="variable">@products</span> = apply_scopes(Product).includes(<span class="symbol">:category</span>).all</span><br><span class="line">      <span class="comment"># using includes(:category), fix N+1 query problem</span></span><br><span class="line">    render <span class="symbol">json:</span> <span class="variable">@products</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Api::V1::ExperiencesController &lt; Api::V1::BaseController
+  + has_scope :category, only: :index
+  + has_scope :price, using: [:from, :to], only: :index
 
+# GET /api/v1/products
+  def index
+  -  @products = Product.all
+  +  @products = apply_scopes(Product).includes(:category).all
+      # using includes(:category), fix N+1 query problem
+    render json: @products
+  end
+end
+</code></pre>
 <p>好，大功告成，用postman测试下，确认正常，cool！</p>
 </li>
 </ul>
@@ -596,7 +638,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -703,7 +745,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -745,7 +787,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

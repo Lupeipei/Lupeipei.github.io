@@ -410,22 +410,46 @@
 <h4 id="几个重要的概念"><a href="#几个重要的概念" class="headerlink" title="几个重要的概念"></a>几个重要的概念</h4><ul>
 <li><p>Entry</p>
 <p>entry用于告诉webpack从哪个文件开始创建内部的依赖关系图，默认情况下是<code>./src/index.js</code>。 我们也可以在配置文件<code>webpack.config.js</code>中自定义，比如：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  <span class="attr">entry</span>: <span class="string">&#x27;./path/file.js&#x27;</span>  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">module.exports = &#123;
+  entry: &#39;./path/file.js&#39;  
+&#125;;
+</code></pre>
 <p>entry可以有多个，比如：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    <span class="attr">entry</span>: &#123;</span><br><span class="line">        <span class="attr">pageOne</span>: <span class="string">&#x27;./src/pageOne/index.js&#x27;</span>,</span><br><span class="line">        <span class="attr">pageTwo</span>: <span class="string">&#x27;./src/pageTwo/index.js&#x27;</span>,</span><br><span class="line">        <span class="attr">pageThree</span>: <span class="string">&#x27;./src/pageThree/index.js&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">const config = &#123;
+    entry: &#123;
+        pageOne: &#39;./src/pageOne/index.js&#39;,
+        pageTwo: &#39;./src/pageTwo/index.js&#39;,
+        pageThree: &#39;./src/pageThree/index.js&#39;
+    &#125;
+&#125;;
+module.exports = config;
+</code></pre>
 <p>这里设置了三个entries，告诉webpack要生成三个独立的内部依赖图。</p>
 </li>
 <li><p>Output</p>
 <p>output用于告诉webpack，打包编译后的文件放在哪里。主要通过给filename和path赋值的方式来指定。</p>
 <p>看个例子：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    <span class="attr">output</span>: &#123;</span><br><span class="line">        <span class="attr">filename</span>: <span class="string">&#x27;bundle.js&#x27;</span>,</span><br><span class="line">        <span class="attr">path</span>: <span class="string">&#x27;/home/project/public/assets&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module</span>.exports = config;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">const config = &#123;
+    output: &#123;
+        filename: &#39;bundle.js&#39;,
+        path: &#39;/home/project/public/assets&#39;
+    &#125;
+&#125;;
+module.exports = config;
+</code></pre>
 <p>这里告诉webpack，最后的输出文件是bundle.js， 存放在<code>&#39;/home/project/public/assets&#39;</code>下。</p>
 <p>上面提到了entry可以有多个，但是output只能有一个，不能配置多个。那么如何让每一个entry都有一个output文件而不是混合在一起呢？官方给到了一个这样的例子做参考：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">entry</span>: &#123;</span><br><span class="line">        <span class="attr">app</span>: <span class="string">&#x27;./src/app.js&#x27;</span>,</span><br><span class="line">        <span class="attr">search</span>: <span class="string">&#x27;./src/search.js&#x27;</span>,</span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">output</span>: &#123;</span><br><span class="line">        <span class="attr">filename</span>: <span class="string">&#x27;[name].js&#x27;</span>,</span><br><span class="line">        <span class="attr">path</span>: __dirname + <span class="string">&#x27;/dist</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">&#125;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">&#123;
+    entry: &#123;
+        app: &#39;./src/app.js&#39;,
+        search: &#39;./src/search.js&#39;,
+    &#125;,
+    output: &#123;
+        filename: &#39;[name].js&#39;,
+        path: __dirname + &#39;/dist
+    &#125;
+&#125;
+</code></pre>
 <p>这样会在<code>/dist</code>下面输出两个打包后的文件，<code>./dist/app.js</code>, <code>./dist/search.js</code>.</p>
 </li>
 <li><p>Loaders</p>
@@ -435,23 +459,31 @@
 <li><p>在配置文件中设定</p>
 <p>比如需要加载css,转换ts文件，可以这么用：</p>
 <p>先在本地安装对应的loaders：</p>
-<figure class="highlight q"><table><tr><td class="code"><pre><span class="line">npm install --<span class="built_in">save</span>-<span class="built_in">dev</span> css-loader</span><br><span class="line">npm install --<span class="built_in">save</span>-<span class="built_in">dev</span> ts-loader</span><br></pre></td></tr></table></figure>
-
+<pre><code>npm install --save-dev css-loader
+npm install --save-dev ts-loader
+</code></pre>
 <p>然后在配置文件中指定用哪个loader处理哪些文件：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">  <span class="attr">module</span>: &#123;</span><br><span class="line">      <span class="attr">rules</span>: [</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.css$/</span>, use: <span class="string">&#x27;css-loader&#x27;</span> &#125;,</span><br><span class="line">        &#123; <span class="attr">test</span>: <span class="regexp">/\.ts$/</span>, use: <span class="string">&#x27;ts-loader&#x27;</span> &#125;</span><br><span class="line">      ]</span><br><span class="line">  &#125;  </span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">module.exports = &#123;
+  module: &#123;
+      rules: [
+        &#123; test: /\.css$/, use: &#39;css-loader&#39; &#125;,
+        &#123; test: /\.ts$/, use: &#39;ts-loader&#39; &#125;
+      ]
+  &#125;  
+&#125;;
+</code></pre>
 <p>这里告诉webpack，用css-loader处理<code>.css</code>文件，用ts-loader处理<code>.ts</code>文件。</p>
 </li>
 <li><p>在<code>import</code>中声明</p>
 <p>比如：</p>
-<figure class="highlight clean"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> Styles <span class="keyword">from</span> <span class="string">&#x27;style-loader!css-loader?modules!./styles.css&#x27;</span>;</span><br></pre></td></tr></table></figure>
-
+<pre><code>import Styles from &#39;style-loader!css-loader?modules!./styles.css&#39;;
+</code></pre>
 <p>这里用style-loader和css-loader来处理modules和<code>./styles.css</code>。</p>
 </li>
 <li><p>使用命令行</p>
 <p>看官方给出的例子：</p>
-<figure class="highlight fortran"><table><tr><td class="code"><pre><span class="line">webpack --<span class="keyword">module</span>-<span class="keyword">bind</span> jade-loader --<span class="keyword">module</span>-<span class="keyword">bind</span> <span class="string">&#x27;css=style-loader!css-loader&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>webpack --module-bind jade-loader --module-bind &#39;css=style-loader!css-loader&#39;
+</code></pre>
 <p>这里告诉webpack，用jade-loader处理<code>.jade</code> 文件, 用style-loader和css-loader处理<code>.css</code>文件。</p>
 <p>官方还给到了loader <a target="_blank" rel="noopener" href="https://webpack.js.org/loaders/">列表</a>以及如何<a target="_blank" rel="noopener" href="https://webpack.js.org/api/loaders/">write your own loader</a>。</p>
 </li>
@@ -462,8 +494,20 @@
 <p><a target="_blank" rel="noopener" href="https://webpack.js.org/api/plugins/">Tapable</a>可以提供简单的plugin接口，官方还给出了如何自己写一个plugin的教程<a target="_blank" rel="noopener" href="https://webpack.js.org/contribute/writing-a-plugin/">write a plugin</a>.</p>
 <p>在使用某个plugin之前，需要用<code>require()</code>来将它先添加到plugins 数组中。调用时，则需要使用<code>new</code>来创建一个plugin的实例。</p>
 <p>看个官方给到的例子：</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> HtmlWebpackPlugin = <span class="built_in">require</span>(<span class="string">&#x27;html-webpack-plugin&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> webpack = <span class="built_in">require</span>(<span class="string">&#x27;webpack&#x27;</span>);</span><br><span class="line"><span class="keyword">const</span> config = &#123;</span><br><span class="line">    <span class="attr">module</span>: &#123;</span><br><span class="line">        <span class="attr">rules</span>: [</span><br><span class="line">            &#123;<span class="attr">test</span>: <span class="regexp">/\.txt$\/, use: &#x27;raw-loader&#x27;&#125;</span></span><br><span class="line"><span class="regexp">        ]</span></span><br><span class="line"><span class="regexp">    &#125;,</span></span><br><span class="line"><span class="regexp">    plugins: [</span></span><br><span class="line"><span class="regexp">      new  HtmlWebpackPlugin(&#123;template: &#x27;./src/index.html&#x27;&#125;);     </span></span><br><span class="line"><span class="regexp">    ]</span></span><br><span class="line"><span class="regexp">&#125;;</span></span><br><span class="line"><span class="regexp">module.exports = config;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Js">const HtmlWebpackPlugin = require(&#39;html-webpack-plugin&#39;);
+const webpack = require(&#39;webpack&#39;);
+const config = &#123;
+    module: &#123;
+        rules: [
+            &#123;test: /\.txt$\/, use: &#39;raw-loader&#39;&#125;
+        ]
+    &#125;,
+    plugins: [
+      new  HtmlWebpackPlugin(&#123;template: &#39;./src/index.html&#39;&#125;);     
+    ]
+&#125;;
+module.exports = config;
+</code></pre>
 <p>这里使用html-webpack-plugin这个plugin，将会自动生成一个index.html文件。</p>
 <p><a target="_blank" rel="noopener" href="https://webpack.js.org/plugins/">戳这里</a>查看目前的plugin list。</p>
 </li>
@@ -473,34 +517,42 @@
 <p>可以通过命令行或者config文件来设置mode：</p>
 <ul>
 <li><p>配置文件</p>
-<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = &#123;</span><br><span class="line">    <span class="attr">mode</span>: <span class="string">&#x27;development&#x27;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Js">module.exports = &#123;
+    mode: &#39;development&#39;
+&#125;;
+</code></pre>
+</li>
 <li><p>命令行</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">webpack <span class="attribute">--mode</span>=development</span><br></pre></td></tr></table></figure></li>
+<pre><code>webpack --mode=development
+</code></pre>
+</li>
 </ul>
 </li>
 </ul>
 <h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>分本地安装和全局安装：</p>
 <ul>
 <li><p>global installation</p>
-<figure class="highlight coffeescript"><table><tr><td class="code"><pre><span class="line"><span class="built_in">npm</span> install --<span class="built_in">global</span> webpack</span><br></pre></td></tr></table></figure>
-
+<pre><code>npm install --global webpack
+</code></pre>
 <p>全局安装会让你固定在特定版本的webpack，对于使用不同版本webpack的项目而言，不是件好事。</p>
 </li>
 <li><p>local installation</p>
-<figure class="highlight q"><table><tr><td class="code"><pre><span class="line">npm install --<span class="built_in">save</span>-<span class="built_in">dev</span> webpack</span><br></pre></td></tr></table></figure>
-
+<pre><code>npm install --save-dev webpack
+</code></pre>
 <p>这会在本地安装最新版的webpack，如果需要安装指定版本，可以执行：</p>
-<figure class="highlight jboss-cli"><table><tr><td class="code"><pre><span class="line">npm install <span class="params">--save-dev</span> webpack@&lt;<span class="keyword">version</span>&gt; <span class="comment">## version是版本号</span></span><br></pre></td></tr></table></figure></li>
+<pre><code>npm install --save-dev webpack@&lt;version&gt; ## version是版本号
+</code></pre>
+</li>
 </ul>
 <h4 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h4><p>启动：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">webpack</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>webpack
+</code></pre>
 <p>让webpack 时时编译：</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">webpack <span class="comment">--build</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>webpack --build
+</code></pre>
 <p>自定义配置文件：</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">webpack <span class="comment">--config yourconfig.js</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>webpack --config yourconfig.js
+</code></pre>
 <h4 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h4><p>如果你也是和我一样的JS新手，在了解Webpack前，有必要对模块及模块化打包进行更为清晰的了解。推荐阅读<a target="_blank" rel="noopener" href="https://medium.freecodecamp.org/@preethikasireddy?source=post_header_lockup">Preethi Kasireddy</a>的这两篇<a target="_blank" rel="noopener" href="https://medium.freecodecamp.org/javascript-modules-a-beginner-s-guide-783f7d7a5fcc">JavaScript Modules: A Beginner’s Guide</a>，<a target="_blank" rel="noopener" href="https://medium.freecodecamp.org/javascript-modules-part-2-module-bundling-5020383cf306">JavaScript Modules Part 2: Module Bundling</a>， 对于理解JS中的module 以及为何要bundle module有很大帮助，文中还对比了下webpack与Browserify, RequireJS等其他module bundle的差异，很有启发性。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://webpack.js.org/">webpack 官网</a></p>
 <p><a target="_blank" rel="noopener" href="https://medium.com/webpack/webpack-4-released-today-6cdb994702d4">webpack 4: released today!!</a></p>
@@ -666,7 +718,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -773,7 +825,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -815,7 +867,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

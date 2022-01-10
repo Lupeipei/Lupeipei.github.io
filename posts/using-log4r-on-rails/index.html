@@ -385,7 +385,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>640 words</span>
+              <span>643 words</span>
             </span>
           
 
@@ -414,22 +414,68 @@
 <p>四步走。</p>
 <ul>
 <li><p>在gemfile中添加</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">gemfile <span class="string">&#x27;log4r&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">gemfile &#39;log4r&#39;
+</code></pre>
 <p>终端bundle, 重启服务器。</p>
 </li>
 <li><p>修改<code>config/application.rb</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails/all&#x27;</span></span><br><span class="line"><span class="comment"># add these line for log4r</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;log4r&#x27;</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;log4r/yamlconfigurator&#x27;</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;log4r/outputter/datefileoutputter&#x27;</span></span><br><span class="line"></span><br><span class="line">Bundler.<span class="keyword">require</span>(<span class="symbol">:default</span>, Rails.env) <span class="keyword">if</span> <span class="keyword">defined</span>?(Bundler)</span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">my_app</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">Application</span> &lt; Rails::Application</span></span><br><span class="line">    <span class="comment">#...</span></span><br><span class="line">    <span class="comment"># assign log4r&#x27;s logger as rails&#x27; logger.</span></span><br><span class="line">    <span class="keyword">include</span> Log4r</span><br><span class="line">    log4r_config= YAML.load_file(File.join(File.dirname(<span class="keyword">__FILE__</span>),<span class="string">&quot;log4r.yml&quot;</span>))</span><br><span class="line">    YamlConfigurator.decode_yaml( log4r_config[<span class="string">&#x27;log4r_config&#x27;</span>] )</span><br><span class="line">    config.logger = Log4r::Logger[Rails.env]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">require &#39;rails/all&#39;
+# add these line for log4r
+require &#39;log4r&#39;
+require &#39;log4r/yamlconfigurator&#39;
+require &#39;log4r/outputter/datefileoutputter&#39;
+
+Bundler.require(:default, Rails.env) if defined?(Bundler)
+module my_app
+  class Application &lt; Rails::Application
+    #...
+    # assign log4r&#39;s logger as rails&#39; logger.
+    include Log4r
+    log4r_config= YAML.load_file(File.join(File.dirname(__FILE__),&quot;log4r.yml&quot;))
+    YamlConfigurator.decode_yaml( log4r_config[&#39;log4r_config&#39;] )
+    config.logger = Log4r::Logger[Rails.env]
+  end
+end
+</code></pre>
+</li>
 <li><p>新增配置文件<code>config/log4r.yml</code>：</p>
-<figure class="highlight yml"><table><tr><td class="code"><pre><span class="line"><span class="attr">log4r_config:</span></span><br><span class="line">  <span class="comment"># define all loggers ...</span></span><br><span class="line">  <span class="attr">loggers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name      :</span> <span class="string">production</span></span><br><span class="line">      <span class="attr">level     :</span> <span class="string">WARN</span></span><br><span class="line">      <span class="attr">trace     :</span> <span class="string">&#x27;false&#x27;</span></span><br><span class="line">      <span class="attr">outputters :</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">datefile</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name      :</span> <span class="string">development</span></span><br><span class="line">      <span class="attr">level     :</span> <span class="string">DEBUG</span></span><br><span class="line">      <span class="attr">trace     :</span> <span class="string">&#x27;true&#x27;</span></span><br><span class="line">      <span class="attr">outputters :</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">datefile</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># define all outputters (incl. formatters)</span></span><br><span class="line">  <span class="attr">outputters:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">type:</span> <span class="string">DateFileOutputte</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">datefile</span></span><br><span class="line">    <span class="attr">dirname:</span> <span class="string">&quot;log&quot;</span></span><br><span class="line">    <span class="attr">filename:</span> <span class="string">&quot;my_app.log&quot;</span> <span class="comment"># notice the file extension is needed!</span></span><br><span class="line">    <span class="attr">formatter:</span></span><br><span class="line">      <span class="attr">date_pattern:</span> <span class="string">&#x27;%H:%M:%S&#x27;</span></span><br><span class="line">      <span class="attr">pattern     :</span> <span class="string">&#x27;%d %l: %m &#x27;</span></span><br><span class="line">      <span class="attr">type        :</span> <span class="string">PatternFormatter</span></span><br></pre></td></tr></table></figure>
+<pre><code class="YMl">log4r_config:
+  # define all loggers ...
+  loggers:
+    - name      : production
+      level     : WARN
+      trace     : &#39;false&#39;
+      outputters :
+      - datefile
+    - name      : development
+      level     : DEBUG
+      trace     : &#39;true&#39;
+      outputters :
+      - datefile
 
+  # define all outputters (incl. formatters)
+  outputters:
+  - type: DateFileOutputte
+    name: datefile
+    dirname: &quot;log&quot;
+    filename: &quot;my_app.log&quot; # notice the file extension is needed!
+    formatter:
+      date_pattern: &#39;%H:%M:%S&#39;
+      pattern     : &#39;%d %l: %m &#39;
+      type        : PatternFormatter
+</code></pre>
 <p>这时，如果重启rails，会发现报错:</p>
-<figure class="highlight oxygene"><table><tr><td class="code"><pre><span class="line">undefined <span class="function"><span class="keyword">method</span> `<span class="title">formatter</span>&#x27; <span class="title">for</span> #&lt;<span class="title">Log4r</span>:</span>:Logger:<span class="number">0</span>x007fd97a78e780&gt; (NoMethodError)</span><br></pre></td></tr></table></figure>
-
+<pre><code>undefined method `formatter&#39; for #&lt;Log4r::Logger:0x007fd97a78e780&gt; (NoMethodError)
+</code></pre>
 <p>我当时也是懵逼，不知道怎么解决，后来Google到了解决方法。<strong>对于Rail4.0+ ，需要添加文件，声明formatter这个method</strong>。</p>
 </li>
 <li><p>新增文件<code>config/initializers/log4r_patch_for_rails4.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Log4r::Logger</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">formatter</span><span class="params">()</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class Log4r::Logger
+  def formatter()
+  end
+end
+</code></pre>
+</li>
 </ul>
 <p>配置完成！重启下服务器，然后你会发现不管做了什么操作，terminal终端什么也没有输出，一直保持如下内容：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp5nyadi35j30ig065aaz.jpg"></p>
@@ -604,7 +650,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -711,7 +757,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -753,7 +799,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

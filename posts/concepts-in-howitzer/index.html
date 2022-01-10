@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1.4k words</span>
+              <span>1.5k words</span>
             </span>
           
 
@@ -424,56 +424,229 @@
 <p>Page Object Model是一个自动化测试模版，创建用于测试的用户界面的抽象实体。可以将网站的每个page看作是一个类，然后通过调用这些类的实例来进行测试，而每个页面的元素可以看作是一个page的method，通过调用这些method来对该页面的元素进行调用。</p>
 <p>这样，page就很好理解了。</p>
 <p>Page是用于描述真实页面的类，比如在<code>web/pages</code>目录下，建立主页的文件，可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Homepage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">path <span class="string">&#x27;/&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">HomePage.open <span class="comment">#打开主页</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Homepage &lt; Howitzer::Web::Page
+path &#39;/&#39;
+end
+HomePage.open #打开主页
+</code></pre>
 <p>当然，这里的前提是你在<code>config/default.yml </code>中已经设置好了app_host</p>
 <p>再比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProductPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">&#x27;/products&#123;/id&#125;&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">ProductPage.open(<span class="symbol">id:</span> <span class="number">1</span>) <span class="comment">#=&gt; 访问 /products/1</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class ProductPage &lt; Howitzer::Web::Page
+  path &#39;/products&#123;/id&#125;&#39;
+end
+ProductPage.open(id: 1) #=&gt; 访问 /products/1
+</code></pre>
 <p>如果要指定特定的host，可以这样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AuthPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">	site <span class="string">&#x27;https://example.com&#x27;</span></span><br><span class="line">	path <span class="string">&#x27;/auth&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class AuthPage &lt; Howitzer::Web::Page
+    site &#39;https://example.com&#39;
+    path &#39;/auth&#39;
+end
+</code></pre>
 <p><strong>Pages的验证：</strong></p>
 <p>其实就是用于区分每个page的anchor，有三种不同的类型：</p>
 <p><strong>URL，title，element</strong></p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">&#x27;/&#x27;</span></span><br><span class="line">  validate <span class="symbol">:url</span>, <span class="regexp">/\A(?:.*?:\/\/)?[^\/]*\/?\z/</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
+  path &#39;/&#39;
+  validate :url, /\A(?:.*?:\/\/)?[^\/]*\/?\z/
+end
+</code></pre>
 <p>使用<code>.displayed?</code>可以去判断一个页面的所有验证是否都通过。</p>
 <p>用这个可以检查特定的页面成功打开，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AccountPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  path <span class="string">&#x27;/accounts/&#123;id&#125;&#x27;</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> AccountPage.open(<span class="symbol">id:</span> <span class="number">22</span>)</span><br><span class="line"> expect(AccountPage).to be_displayed</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class AccountPage &lt; Howitzer::Web::Page
+  path &#39;/accounts/&#123;id&#125;&#39;
+ end
+ AccountPage.open(id: 22)
+ expect(AccountPage).to be_displayed
+</code></pre>
+</li>
 <li><p>Elements</p>
 <p>页面的元素，可以是单个元素，比如搜索栏，也可以是元素集合，比如菜单中的选项集。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:test_name1</span>, <span class="string">&#x27;.foo&#x27;</span>                         <span class="comment">#css locator, default</span></span><br><span class="line">  element <span class="symbol">:test_name2</span>, <span class="symbol">:css</span>, <span class="string">&#x27;.foo&#x27;</span>                   <span class="comment">#css locator</span></span><br><span class="line">  element <span class="symbol">:test_name3</span>, <span class="symbol">:xpath</span>, <span class="string">&#x27;//div[@value=&quot;bar&quot;]&#x27;</span>  <span class="comment">#xpath locator</span></span><br><span class="line"></span><br><span class="line">  element <span class="symbol">:test_link1</span>, <span class="symbol">:link</span>, <span class="string">&#x27;Foo&#x27;</span>                   <span class="comment">#link locator by &#x27;Foo&#x27; text</span></span><br><span class="line">  element <span class="symbol">:test_link2</span>, <span class="symbol">:link</span>, <span class="string">&#x27;bar&#x27;</span>                   <span class="comment">#link locator by &#x27;bar&#x27; id</span></span><br><span class="line"></span><br><span class="line">  element <span class="symbol">:test_field1</span>, <span class="symbol">:fillable_field</span>, <span class="string">&#x27;Foo&#x27;</span>        <span class="comment">#field locator by &#x27;Foo&#x27; text</span></span><br><span class="line">  element <span class="symbol">:test_field2</span>, <span class="symbol">:fillable_field</span>, <span class="string">&#x27;bar&#x27;</span>        <span class="comment">#field locator by &#x27;bar&#x27; id</span></span><br><span class="line">  element <span class="symbol">:test_field3</span>, <span class="symbol">:fillable_field</span>, <span class="string">&#x27;baz&#x27;</span>        <span class="comment">#field locator by &#x27;baz&#x27; name</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
+  element :test_name1, &#39;.foo&#39;                         #css locator, default
+  element :test_name2, :css, &#39;.foo&#39;                   #css locator
+  element :test_name3, :xpath, &#39;//div[@value=&quot;bar&quot;]&#39;  #xpath locator
 
+  element :test_link1, :link, &#39;Foo&#39;                   #link locator by &#39;Foo&#39; text
+  element :test_link2, :link, &#39;bar&#39;                   #link locator by &#39;bar&#39; id
+
+  element :test_field1, :fillable_field, &#39;Foo&#39;        #field locator by &#39;Foo&#39; text
+  element :test_field2, :fillable_field, &#39;bar&#39;        #field locator by &#39;bar&#39; id
+  element :test_field3, :fillable_field, &#39;baz&#39;        #field locator by &#39;baz&#39; name
+end
+</code></pre>
 <p>这里要注意，不能通过page类直接调用element，需要在page类中定义一个method来调用element。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:new_button</span>, <span class="symbol">:xpath</span>, <span class="string">&quot;.//*[@name=&#x27;New&#x27;]&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">start_new_project</span></span></span><br><span class="line">    new_button_element.click</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; new_button_element.click &#125; <span class="comment"># 不正确的用法</span></span><br><span class="line">HomePage.on &#123; start_new_project &#125; <span class="comment"># 正确的打开方式</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class HomePage &lt; Howitzer::Web::Page
+  element :new_button, :xpath, &quot;.//*[@name=&#39;New&#39;]&quot;
+
+  def start_new_project
+    new_button_element.click
+  end
+end
+
+HomePage.on &#123; new_button_element.click &#125; # 不正确的用法
+HomePage.on &#123; start_new_project &#125; # 正确的打开方式
+</code></pre>
+</li>
 <li><p>Sections</p>
 <p>在howitzer中，有一个Howitzer::Web::Section类。</p>
 <p>section的使用场景：当多个页面中出现相同的部分时，或者某部分在一个页面中频繁出现，类似rails中的公用表单。</p>
 <p>使用<code>&lt;section_name&gt;_section</code>来生成一个section的实例,  这里使用一个特别的me方法，通过参数指定section，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&quot;#gbx3&quot;</span> <span class="comment">#section的父元素</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
+  me &quot;#gbx3&quot; #section的父元素
+end
+</code></pre>
 <p>使用的时候，这么用：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 定义section:</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&quot;#gbx3&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 包含menusection的页面:</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 页面调用section:</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; menu_section &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># 定义section:
 
+class MenuSection &lt; Howitzer::Web::Section
+  me &quot;#gbx3&quot;
+end
+
+# 包含menusection的页面:
+
+class HomePage &lt; Howitzer::Web::Page
+  section :menu
+end
+
+# 页面调用section:
+
+HomePage.on &#123; menu_section &#125;
+</code></pre>
 <p>当两个页面有相同的section，但是跟节点不同时，可以这么用：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 定义section</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&#x27;#gbx3&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义两个page类，都包含有menu这个section</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span> <span class="comment"># 使用默认的selector</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SearchResultsPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span>, <span class="string">&quot;#gbx48&quot;</span> <span class="comment"># 覆盖了默认的selector</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"># 定义section
 
+class MenuSection &lt; Howitzer::Web::Section
+  me &#39;#gbx3&#39;
+end
+
+# 定义两个page类，都包含有menu这个section
+
+class HomePage &lt; Howitzer::Web::Page
+  section :menu # 使用默认的selector
+end
+
+class SearchResultsPage &lt; Howitzer::Web::Page
+  section :menu, &quot;#gbx48&quot; # 覆盖了默认的selector
+end
+</code></pre>
 <p>测试section是否存在某个页面：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MenuSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&#x27;#gbx3&#x27;</span></span><br><span class="line">  element <span class="symbol">:search</span>, <span class="string">&quot;a.search&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:menu</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">HomePage.on &#123; has_menu_section? &#125; <span class="comment">#=&gt; returns true or false</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class MenuSection &lt; Howitzer::Web::Section
+  me &#39;#gbx3&#39;
+  element :search, &quot;a.search&quot;
+end
 
+class HomePage &lt; Howitzer::Web::Page
+  section :menu
+end
+
+HomePage.on &#123; has_menu_section? &#125; #=&gt; returns true or false
+</code></pre>
 <p>多层级section的使用，看一个登陆的例子，结合了cucumber 的step定义：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># define a page that contains an area that contains a section for both logging in and registration, then modeling each of the sub sections separately</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&quot;div.login-area&quot;</span></span><br><span class="line">  element <span class="symbol">:username</span>, <span class="string">&quot;#username&quot;</span></span><br><span class="line">  element <span class="symbol">:password</span>, <span class="string">&quot;#password&quot;</span></span><br><span class="line">  element <span class="symbol">:sign_in</span>, <span class="string">&quot;button&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">login</span><span class="params">(username, password)</span></span></span><br><span class="line">    username_element.set username</span><br><span class="line">    password_element.set password</span><br><span class="line">    sign_in_element.click</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RegistrationSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&quot;div.reg-area&quot;</span></span><br><span class="line">  element <span class="symbol">:first_name</span>, <span class="string">&quot;#first_name&quot;</span></span><br><span class="line">  element <span class="symbol">:last_name</span>, <span class="string">&quot;#last_name&quot;</span></span><br><span class="line">  element <span class="symbol">:next_step</span>, <span class="string">&quot;button.next-reg-step&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">sign_up</span><span class="params">(first_name, last_name)</span></span></span><br><span class="line">    first_name_element.set first_name</span><br><span class="line">    first_name_element.set last_name</span><br><span class="line">    next_step_element.click</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginRegistrationFormSection</span> &lt; Howitzer::Web::<span class="title">Section</span></span></span><br><span class="line">  me <span class="string">&quot;div.login-registration&quot;</span></span><br><span class="line">  section <span class="symbol">:login</span></span><br><span class="line">  section <span class="symbol">:registration</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  section <span class="symbol">:login_and_registration</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how to login (fatuous, but demonstrates the point):</span></span><br><span class="line">Then /^I sign <span class="keyword">in</span><span class="variable">$/</span> <span class="keyword">do</span></span><br><span class="line">  HomePage.open</span><br><span class="line">  HomePage.on <span class="keyword">do</span></span><br><span class="line">    is_expected.to have_login_and_registration_section</span><br><span class="line">    login_and_registration_section.login_section.login(<span class="string">&#x27;bob&#x27;</span>, <span class="string">&#x27;p4ssw0rd&#x27;</span>)</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># how to sign up:</span></span><br><span class="line"></span><br><span class="line">When /^I enter my name into the home page<span class="string">&#x27;s registration form$/ do</span></span><br><span class="line"><span class="string">  HomePage.open</span></span><br><span class="line"><span class="string">  HomePage.on do</span></span><br><span class="line"><span class="string">    expect(login_and_registration_section.registration_section).to have_first_name</span></span><br><span class="line"><span class="string">    expect(login_and_registration_section.registration_section).to have_last_name</span></span><br><span class="line"><span class="string">    login_and_registration_section.registration_section.signup(&#x27;</span>Bob<span class="string">&#x27;, &#x27;</span>Arum<span class="string">&#x27;)</span></span><br><span class="line"><span class="string">  end  </span></span><br><span class="line"><span class="string">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby"># define a page that contains an area that contains a section for both logging in and registration, then modeling each of the sub sections separately
+
+class LoginSection &lt; Howitzer::Web::Section
+  me &quot;div.login-area&quot;
+  element :username, &quot;#username&quot;
+  element :password, &quot;#password&quot;
+  element :sign_in, &quot;button&quot;
+
+  def login(username, password)
+    username_element.set username
+    password_element.set password
+    sign_in_element.click
+  end  
+end
+
+class RegistrationSection &lt; Howitzer::Web::Section
+  me &quot;div.reg-area&quot;
+  element :first_name, &quot;#first_name&quot;
+  element :last_name, &quot;#last_name&quot;
+  element :next_step, &quot;button.next-reg-step&quot;
+
+  def sign_up(first_name, last_name)
+    first_name_element.set first_name
+    first_name_element.set last_name
+    next_step_element.click
+  end
+end
+
+class LoginRegistrationFormSection &lt; Howitzer::Web::Section
+  me &quot;div.login-registration&quot;
+  section :login
+  section :registration  
+end
+
+class HomePage &lt; Howitzer::Web::Page
+  section :login_and_registration
+end
+
+# how to login (fatuous, but demonstrates the point):
+Then /^I sign in$/ do
+  HomePage.open
+  HomePage.on do
+    is_expected.to have_login_and_registration_section
+    login_and_registration_section.login_section.login(&#39;bob&#39;, &#39;p4ssw0rd&#39;)
+  end  
+end
+
+# how to sign up:
+
+When /^I enter my name into the home page&#39;s registration form$/ do
+  HomePage.open
+  HomePage.on do
+    expect(login_and_registration_section.registration_section).to have_first_name
+    expect(login_and_registration_section.registration_section).to have_last_name
+    login_and_registration_section.registration_section.signup(&#39;Bob&#39;, &#39;Arum&#39;)
+  end  
+end
+</code></pre>
+</li>
 <li><p>IFrames</p>
 <p>IFrames 在howitzer中被声明为一个 <code>Howitzer::Web::Page</code>类，通过包含该frame 的section或者page来引用，比如：</p>
 <p>创建一个frame实例，在DashboardPage中引用它，测试该frame是否在DashboardPage中存在。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FbPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:some_text_field</span>, <span class="string">&quot;input.username&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DashboardPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  iframe <span class="symbol">:fb</span>, <span class="string">&quot;#fb&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">DashboardPage.open</span><br><span class="line">DashboardPage.on &#123; is_expected.to have_fb_iframe &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class FbPage &lt; Howitzer::Web::Page
+  element :some_text_field, &quot;input.username&quot;
+end
 
+class DashboardPage &lt; Howitzer::Web::Page
+  iframe :fb, &quot;#fb&quot;
+end
+
+DashboardPage.open
+DashboardPage.on &#123; is_expected.to have_fb_iframe &#125;
+</code></pre>
 <p>与iframe中的元素进行交互, 这里用了cucumber login的step definition来说明：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Howitzer::Web::Page representing the iframe</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">LoginPage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  element <span class="symbol">:username</span>, <span class="string">&quot;input.username&quot;</span></span><br><span class="line">  element <span class="symbol">:password</span>, <span class="string">&quot;input.password&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">login</span><span class="params">(username, password)</span></span></span><br><span class="line">    username_element.set username</span><br><span class="line">    password_element.set password</span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Howitzer::Web::Page representing the page that contains the iframe</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">HomePage</span> &lt; Howitzer::Web::<span class="title">Page</span></span></span><br><span class="line">  iframe <span class="symbol">:login</span>, <span class="string">&quot;#login_and_registration&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># cucumber step that performs login</span></span><br><span class="line">When /^I log <span class="keyword">in</span><span class="variable">$/</span> <span class="keyword">do</span></span><br><span class="line">  HomePage.open</span><br><span class="line">  HomePage.on <span class="keyword">do</span></span><br><span class="line">    login_iframe <span class="keyword">do</span> <span class="params">|frame|</span></span><br><span class="line">      <span class="comment">#`frame` is an instance of the `LoginPage` class</span></span><br><span class="line">      frame.login(<span class="string">&#x27;admin&#x27;</span>, <span class="string">&#x27;p4ssword&#x27;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span>  </span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby"># Howitzer::Web::Page representing the iframe
+class LoginPage &lt; Howitzer::Web::Page
+  element :username, &quot;input.username&quot;
+  element :password, &quot;input.password&quot;
+
+  def login(username, password)
+    username_element.set username
+    password_element.set password
+  end  
+end
+
+# Howitzer::Web::Page representing the page that contains the iframe
+class HomePage &lt; Howitzer::Web::Page
+  iframe :login, &quot;#login_and_registration&quot;
+end
+
+# cucumber step that performs login
+When /^I log in$/ do
+  HomePage.open
+  HomePage.on do
+    login_iframe do |frame|
+      #`frame` is an instance of the `LoginPage` class
+      frame.login(&#39;admin&#39;, &#39;p4ssword&#39;)
+    end
+  end  
+end
+</code></pre>
+</li>
 </ul>
 <h4 id="The-End"><a href="#The-End" class="headerlink" title="The End"></a>The End</h4><p>参考：</p>
 <p><a target="_blank" rel="noopener" href="http://docs.howitzer-framework.io/">howitzer doc</a></p>
@@ -636,7 +809,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -743,7 +916,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -785,7 +958,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

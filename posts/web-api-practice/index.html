@@ -431,34 +431,115 @@
 </blockquote>
 <p>P.S：其实可以加个 rspec测试，不过这里我用postman直接测了，省去rspec部分，以免篇幅过长「主要还是因为，呃，你懂的，懒……」</p>
 <p>好，开搞吧。</p>
-<h5 id="一、新建一个project-event-api"><a href="#一、新建一个project-event-api" class="headerlink" title="一、新建一个project event_api"></a>一、新建一个project event_api</h5><figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">rails <span class="keyword">new</span> event_api</span><br><span class="line">cd event_api</span><br><span class="line">git <span class="keyword">init</span></span><br></pre></td></tr></table></figure>
-
+<h5 id="一、新建一个project-event-api"><a href="#一、新建一个project-event-api" class="headerlink" title="一、新建一个project event_api"></a>一、新建一个project event_api</h5><pre><code>rails new event_api
+cd event_api
+git init
+</code></pre>
 <p>生成如下文件：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz03kpvxxj30970ba74o.jpg"></p>
 <h5 id="二、建event-model，实作CRUD接口"><a href="#二、建event-model，实作CRUD接口" class="headerlink" title="二、建event model，实作CRUD接口"></a>二、建event model，实作CRUD接口</h5><ul>
 <li><p>建event model,  终端输入：</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line">git checkout -b <span class="keyword">event</span> <span class="meta"># 切换分支，做烂了可以再开个</span></span><br><span class="line">rails g model <span class="keyword">event</span> title:<span class="built_in">string</span> description:text uuid:<span class="built_in">string</span></span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code>git checkout -b event # 切换分支，做烂了可以再开个
+rails g model event title:string description:text uuid:string
+rake db:migrate
+</code></pre>
 <p>「为了安全性，给event加上一个uuid的字段」</p>
 <p>在<code>app/models/event.rb</code>中，给title加上有效性验证，并在创建时自动生成uuid：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Event</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates_presence_of <span class="symbol">:title</span></span><br><span class="line">  before_validation <span class="symbol">:generate_uuid</span>, <span class="symbol">:only</span> =&gt; <span class="symbol">:create</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">to_param</span></span></span><br><span class="line">  	<span class="keyword">self</span>.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  protected</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_uuid</span></span></span><br><span class="line">    <span class="keyword">self</span>.uuid = SecureRandom.uuid</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class Event &lt; ApplicationRecord
+  validates_presence_of :title
+  before_validation :generate_uuid, :only =&gt; :create
+  def to_param
+      self.uuid
+  end
+
+  protected
+
+  def generate_uuid
+    self.uuid = SecureRandom.uuid
+  end
+end
+</code></pre>
+</li>
 <li><p>设置路由，在<code>config/routes.rb</code>中添加如下路由：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">namespace <span class="symbol">:api</span>, <span class="symbol">:defaults</span> =&gt; &#123;<span class="symbol">:format</span> =&gt; <span class="symbol">:json</span> &#125; <span class="keyword">do</span></span><br><span class="line">  namespace <span class="symbol">:v1</span> <span class="keyword">do</span></span><br><span class="line">    resources <span class="symbol">:events</span>, <span class="symbol">:only</span> =&gt; [<span class="symbol">:index</span>, <span class="symbol">:show</span>, <span class="symbol">:create</span>, <span class="symbol">:update</span>, <span class="symbol">:destroy</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">  namespace :api, :defaults =&gt; &#123;:format =&gt; :json &#125; do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+    end
+  end
+</code></pre>
+</li>
 <li><p>产生API controller，终端输入：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails</span> g controller api --<span class="literal">no</span>-assets</span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g controller api --no-assets
+</code></pre>
 <p>修改<code>app/controllers/api_controller.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">- <span class="class"><span class="keyword">class</span> <span class="title">ApiController</span> &lt; ApplicationController</span></span><br><span class="line">+ <span class="class"><span class="keyword">class</span> <span class="title">ApiController</span> &lt; ActionController::Base</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">- class ApiController &lt; ApplicationController
++ class ApiController &lt; ActionController::Base
+end
+</code></pre>
 <p>改成继承自ActionController::Base，因为API 不需要 <code>protect_from_forgery with: :exception</code> 这一行的 CSRF 浏览器安全检查。</p>
 </li>
 <li><p>实作event的get, post, patch, delete</p>
 <p>终端执行：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">rails g controller api::v1::events --no-assets</span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g controller api::v1::events --no-assets
+</code></pre>
 <p>在<code>app/controllers/api/v1/events_controller.rb</code>中，填入以下内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::EventsController</span> &lt; ApiController</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@events</span> = Event.all</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">        <span class="symbol">:data</span> =&gt; <span class="variable">@events</span>.map &#123;<span class="params">|event|</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="symbol">:id</span> =&gt; event.id,</span><br><span class="line">            <span class="symbol">:uuid</span> =&gt; event.uuid,</span><br><span class="line">            <span class="symbol">:title</span> =&gt; event.title,</span><br><span class="line">            <span class="symbol">:event_url</span> =&gt; api_v1_event_url(event.id)</span><br><span class="line">        &#125;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.new(</span><br><span class="line">                        <span class="symbol">:title</span> =&gt; params[<span class="symbol">:title</span>],</span><br><span class="line">                        <span class="symbol">:description</span> =&gt; params[<span class="symbol">:description</span>])</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@event</span>.save</span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">          <span class="symbol">:id</span> =&gt; <span class="variable">@event</span>.id,</span><br><span class="line">          <span class="symbol">:uuid</span> =&gt; <span class="variable">@event</span>.uuid,</span><br><span class="line">          <span class="symbol">:title</span> =&gt; <span class="variable">@event</span>.title,</span><br><span class="line">          <span class="symbol">:description</span> =&gt; <span class="variable">@event</span>.description</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">          <span class="symbol">:message</span> =&gt; <span class="string">&quot;创建event失败&quot;</span>, <span class="symbol">:errors</span> =&gt; <span class="variable">@event</span>.errors</span><br><span class="line">      &#125;, <span class="symbol">:status</span> =&gt; <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find_by_uuid!(params[<span class="symbol">:id</span>])</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">        <span class="symbol">:id</span> =&gt; <span class="variable">@event</span>.id,</span><br><span class="line">        <span class="symbol">:uuid</span> =&gt; <span class="variable">@event</span>.uuid,</span><br><span class="line">        <span class="symbol">:title</span> =&gt; <span class="variable">@event</span>.title,</span><br><span class="line">        <span class="symbol">:description</span> =&gt; <span class="variable">@event</span>.description</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find_by_uuid!(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@event</span>.update(<span class="symbol">:title</span> =&gt; params[<span class="symbol">:title</span>],</span><br><span class="line">                  <span class="symbol">:description</span> =&gt; params[<span class="symbol">:description</span>])</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:message</span> =&gt; <span class="string">&quot;更新event成功&quot;</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find_by_uuid!(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@event</span>.destroy</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:message</span> =&gt; <span class="string">&quot;删除event成功&quot;</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::EventsController &lt; ApiController
 
+  def index
+    @events = Event.all
+    render :json =&gt; &#123;
+        :data =&gt; @events.map &#123;|event|
+        &#123;
+            :id =&gt; event.id,
+            :uuid =&gt; event.uuid,
+            :title =&gt; event.title,
+            :event_url =&gt; api_v1_event_url(event.id)
+        &#125;&#125;
+    &#125;
+  end
+
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    if @event.save
+      render :json =&gt; &#123;
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      &#125;
+    else
+      render :json =&gt; &#123;
+          :message =&gt; &quot;创建event失败&quot;, :errors =&gt; @event.errors
+      &#125;, :status =&gt; 400
+    end
+  end
+
+  def show
+    @event = Event.find_by_uuid!(params[:id])
+    render :json =&gt; &#123;
+        :id =&gt; @event.id,
+        :uuid =&gt; @event.uuid,
+        :title =&gt; @event.title,
+        :description =&gt; @event.description
+    &#125;
+  end
+
+  def update
+    @event = Event.find_by_uuid!(params[:id])
+    @event.update(:title =&gt; params[:title],
+                  :description =&gt; params[:description])
+    render :json =&gt; &#123;:message =&gt; &quot;更新event成功&quot;&#125;
+  end
+
+  def destroy
+    @event = Event.find_by_uuid!(params[:id])
+    @event.destroy
+    render :json =&gt; &#123;:message =&gt; &quot;删除event成功&quot;&#125;
+  end
+end
+</code></pre>
 <p>注意，将EventsController 修改为继承自ApiController</p>
 <p>启服务器，<code>rails s</code>, 用postman测试看看：</p>
 <p>create</p>
@@ -483,47 +564,141 @@
 <li><p>装上devise</p>
 <p>编辑 <code>Gemfile</code> 加上 <code>gem &quot;devise&quot;</code></p>
 <p>终端运行：<code>bundle</code>, 重启服务器，终端执行：</p>
-<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">rails g devise:install</span><br><span class="line">rails g devise <span class="keyword">user</span></span><br><span class="line"><span class="title">rake</span> db:migrate</span><br></pre></td></tr></table></figure></li>
+<pre><code>rails g devise:install
+rails g devise user
+rake db:migrate
+</code></pre>
+</li>
 <li><p>给event和user挂上关系</p>
 <p>在<code>app/models/user.rb</code>加上：</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:events</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>has_many :events
+</code></pre>
 <p>在<code>app/models/event.rb</code> 加上：</p>
-<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line">belongs_to :<span class="keyword">user</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>belongs_to :user
+</code></pre>
 <p> 将user_id添加到event中，终端执行：</p>
-<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">rails g migration add_user_id_to_events user_id:<span class="built_in">int</span>eger</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g migration add_user_id_to_events user_id:integer
+rake db:migrate
+</code></pre>
 <p>修改<code>app/controllers/api/v1/events_controller.rb</code>， 在create部分填上@event.user = current_user</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.new(</span><br><span class="line">                        <span class="symbol">:title</span> =&gt; params[<span class="symbol">:title</span>],</span><br><span class="line">                        <span class="symbol">:description</span> =&gt; params[<span class="symbol">:description</span>])</span><br><span class="line">    <span class="variable">@event</span>.user = current_user</span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@event</span>.save</span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">          <span class="symbol">:id</span> =&gt; <span class="variable">@event</span>.id,</span><br><span class="line">          <span class="symbol">:uuid</span> =&gt; <span class="variable">@event</span>.uuid,</span><br><span class="line">          <span class="symbol">:title</span> =&gt; <span class="variable">@event</span>.title,</span><br><span class="line">          <span class="symbol">:description</span> =&gt; <span class="variable">@event</span>.description</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">          <span class="symbol">:message</span> =&gt; <span class="string">&quot;活动创建失败&quot;</span>, <span class="symbol">:errors</span> =&gt; <span class="variable">@event</span>.errors</span><br><span class="line">      &#125;, <span class="symbol">:status</span> =&gt; <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">......
+  def create
+    @event = Event.new(
+                        :title =&gt; params[:title],
+                        :description =&gt; params[:description])
+    @event.user = current_user
+    if @event.save
+      render :json =&gt; &#123;
+          :id =&gt; @event.id,
+          :uuid =&gt; @event.uuid,
+          :title =&gt; @event.title,
+          :description =&gt; @event.description
+      &#125;
+    else
+      render :json =&gt; &#123;
+          :message =&gt; &quot;活动创建失败&quot;, :errors =&gt; @event.errors
+      &#125;, :status =&gt; 400
+    end
+  end
+  ......
+</code></pre>
 <p>这里也可以设置一下show，index部分，添加上creator的字段，显示是谁创建这个event的。「此处略去，不是重点」</p>
 </li>
 <li><p>给user加上token字段</p>
 <p>终端运行：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g migration add_auth_token_to_users</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g migration add_auth_token_to_users
+</code></pre>
 <p>编辑文件<code>XXXX_add_auth_token_to_users.rb</code>文件:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AddAuthTokenToUsers</span> &lt; ActiveRecord::Migration[5.1]</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">change</span></span></span><br><span class="line">    + add_column <span class="symbol">:users</span>, <span class="symbol">:auth_token</span>, <span class="symbol">:string</span></span><br><span class="line">    + add_index <span class="symbol">:users</span>, <span class="symbol">:auth_token</span>, <span class="symbol">:unique</span> =&gt; <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class AddAuthTokenToUsers &lt; ActiveRecord::Migration[5.1]
+  def change
+    + add_column :users, :auth_token, :string
+    + add_index :users, :auth_token, :unique =&gt; true
+  end
+end
+</code></pre>
 <p>终端运行：</p>
-<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rake</span> db:migrate</span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:migrate
+</code></pre>
 <p>编辑<code>app/models/user.rb</code>， 给user加上token:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ApplicationRecord</span></span><br><span class="line">  <span class="comment"># Include default devise modules. Others available are:</span></span><br><span class="line">  <span class="comment"># :confirmable, :lockable, :timeoutable and :omniauthable</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:registerable</span>,</span><br><span class="line">         <span class="symbol">:recoverable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:trackable</span>, <span class="symbol">:validatable</span></span><br><span class="line"></span><br><span class="line">  has_many <span class="symbol">:events</span></span><br><span class="line"></span><br><span class="line">  before_create <span class="symbol">:generate_authentication_token</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">generate_authentication_token</span></span></span><br><span class="line">    <span class="keyword">self</span>.auth_token = Devise.friendly_token</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class User &lt; ApplicationRecord
+  # Include default devise modules. Others available are:
+  # :confirmable, :lockable, :timeoutable and :omniauthable
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :trackable, :validatable
+
+  has_many :events
+
+  before_create :generate_authentication_token
+
+  def generate_authentication_token
+    self.auth_token = Devise.friendly_token
+  end
+
+end
+</code></pre>
+</li>
 <li><p>实作注册，登录，登出的API</p>
 <p>在 <code>config/routes.rb</code> 加上路由：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">  namespace <span class="symbol">:api</span>, <span class="symbol">:defaults</span> =&gt; &#123;<span class="symbol">:format</span> =&gt; <span class="symbol">:json</span> &#125; <span class="keyword">do</span></span><br><span class="line">    namespace <span class="symbol">:v1</span> <span class="keyword">do</span></span><br><span class="line">      resources <span class="symbol">:events</span>, <span class="symbol">:only</span> =&gt; [<span class="symbol">:index</span>, <span class="symbol">:show</span>, <span class="symbol">:create</span>, <span class="symbol">:update</span>, <span class="symbol">:destroy</span>]</span><br><span class="line">     + post <span class="string">&quot;/signup&quot;</span> =&gt; <span class="string">&quot;auth#signup&quot;</span></span><br><span class="line">     + post <span class="string">&quot;/login&quot;</span> =&gt; <span class="string">&quot;auth#login&quot;</span></span><br><span class="line">     + post <span class="string">&quot;/logout&quot;</span> =&gt; <span class="string">&quot;auth#logout&quot;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">......  </span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">......
+  namespace :api, :defaults =&gt; &#123;:format =&gt; :json &#125; do
+    namespace :v1 do
+      resources :events, :only =&gt; [:index, :show, :create, :update, :destroy]
+     + post &quot;/signup&quot; =&gt; &quot;auth#signup&quot;
+     + post &quot;/login&quot; =&gt; &quot;auth#login&quot;
+     + post &quot;/logout&quot; =&gt; &quot;auth#logout&quot;
+    end
+  end
+......  
+</code></pre>
 <p>生成auth的controller：</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">rails g controller api::v1::auth --no-assets</span><br></pre></td></tr></table></figure>
-
+<pre><code>rails g controller api::v1::auth --no-assets
+</code></pre>
 <p>编辑它：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Api::V1::AuthController</span> &lt; ApiController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">:only</span> =&gt; [<span class="symbol">:logout</span>]</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">signup</span></span></span><br><span class="line">    user = User.new(<span class="symbol">:email</span> =&gt; params[<span class="symbol">:email</span>], <span class="symbol">:password</span> =&gt; params[<span class="symbol">:password</span>])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> user.save</span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:user_id</span> =&gt; user.id &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:message</span> =&gt; <span class="string">&quot;Failed&quot;</span>, <span class="symbol">:errors</span> =&gt; user.errors&#125;, <span class="symbol">:status</span> =&gt; <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">login</span></span></span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:email</span>] &amp;&amp; params[<span class="symbol">:password</span>]</span><br><span class="line">      user = User.find_by_email(params[<span class="symbol">:email</span>])</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> user &amp;&amp; user.valid_password?(params[<span class="symbol">:password</span>])</span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;</span><br><span class="line">          <span class="symbol">:message</span> =&gt; <span class="string">&quot;ok&quot;</span>,</span><br><span class="line">          <span class="symbol">:auth_token</span> =&gt; user.auth_token,</span><br><span class="line">          <span class="symbol">:user_id</span> =&gt; user.id</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:message</span> =&gt; <span class="string">&quot;Email or Password is wrong&quot;</span>&#125;, <span class="symbol">:status</span> =&gt; <span class="number">400</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">logout</span></span></span><br><span class="line">    current_user.generate_authentication_token</span><br><span class="line">    current_user.save!</span><br><span class="line">    render <span class="symbol">:json</span> =&gt; &#123;<span class="symbol">:message</span> =&gt; <span class="string">&quot;logout successful&quot;</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Api::V1::AuthController &lt; ApiController
+  before_action :authenticate_user!, :only =&gt; [:logout]
 
+  def signup
+    user = User.new(:email =&gt; params[:email], :password =&gt; params[:password])
+
+    if user.save
+      render :json =&gt; &#123;:user_id =&gt; user.id &#125;
+    else
+      render :json =&gt; &#123;:message =&gt; &quot;Failed&quot;, :errors =&gt; user.errors&#125;, :status =&gt; 400
+    end
+  end
+
+  def login
+    if params[:email] &amp;&amp; params[:password]
+      user = User.find_by_email(params[:email])
+    end
+    if user &amp;&amp; user.valid_password?(params[:password])
+      render :json =&gt; &#123;
+          :message =&gt; &quot;ok&quot;,
+          :auth_token =&gt; user.auth_token,
+          :user_id =&gt; user.id
+      &#125;
+    else
+      render :json =&gt; &#123;:message =&gt; &quot;Email or Password is wrong&quot;&#125;, :status =&gt; 400
+    end
+  end
+
+  def logout
+    current_user.generate_authentication_token
+    current_user.save!
+    render :json =&gt; &#123;:message =&gt; &quot;logout successful&quot;&#125;
+  end
+end
+</code></pre>
 <p>编辑<code>app/controllers/api_controller.rb</code>， 添加如下验证：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">before_action <span class="symbol">:authenticate_user_from_token!</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">authenticate_user_from_token!</span></span></span><br><span class="line">  <span class="keyword">if</span> params[<span class="symbol">:auth_token</span>]</span><br><span class="line">    user = User.find_by_auth_token(params[<span class="symbol">:auth_token</span>])</span><br><span class="line">    sign_in(user, <span class="symbol">store:</span> <span class="literal">false</span>) <span class="keyword">if</span> user</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">  before_action :authenticate_user_from_token!
 
+  def authenticate_user_from_token!
+    if params[:auth_token]
+      user = User.find_by_auth_token(params[:auth_token])
+      sign_in(user, store: false) if user
+    end
+  end
+</code></pre>
 <p>这里可以改成将auth_token放在了header中传递，看这篇<a href="https://lupeipei.github.io/2017/12/29/pass-auth-token-through-header-rails-api/">如何将auth token放入headers进行传递？</a></p>
 <p>重启服务器，用postman测试看看：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz38xhtclj30mq0b3t9m.jpg"></p>
@@ -535,8 +710,10 @@
 </ul>
 <ul>
 <li><p>最后，给event添加上认证，修改<code>app/controllers/api/v1/events_controller.rb</code>中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">:only</span> =&gt; [<span class="symbol">:create</span>, <span class="symbol">:update</span>, <span class="symbol">:destroy</span>]</span><br><span class="line">....</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">......
+before_action :authenticate_user!, :only =&gt; [:create, :update, :destroy]
+....
+</code></pre>
 <p>用postman测试看看，现在新建event需要传递一个auth_token才行：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fmz45zlkyej30mn0bydgy.jpg"></p>
 <p> 添加上auth_token， 创建成功：</p>
@@ -708,7 +885,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -815,7 +992,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -857,7 +1034,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

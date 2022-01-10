@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>690 words</span>
+              <span>706 words</span>
             </span>
           
 
@@ -400,61 +400,157 @@
 <span id="more"></span> 
 
 <h4 id="正文："><a href="#正文：" class="headerlink" title="正文："></a>正文：</h4><p>最基本的用法:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于 <span class="doctag">@task</span> = Task.find(params[:id]), <span class="doctag">@task</span> = Task.new, <span class="doctag">@tasks</span> = Task.all</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource
+end
 
+#### 等同于 @task = Task.find(params[:id]), @task = Task.new, @tasks = Task.all
+</code></pre>
 <p>options 众多，来一一捋捋。【借鉴cancancan的wiki，以下代码多以 task，project 为例。】</p>
 <ul>
 <li><p>only  / except</p>
 <p>同before_action中的only  / except，指明load_resource在哪些action前调用。</p>
 <p>only:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">only:</span> [<span class="symbol">:index</span>, <span class="symbol">:show</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 仅在 index，show action 前调用load_resource</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource only: [:index, :show]
+end
 
+### 仅在 index，show action 前调用load_resource
+</code></pre>
 <p>except:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">except:</span> [<span class="symbol">:sent</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 在除 sent action 外的其他actions前调用load_resource</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource except: [:sent]
+end
+
+### 在除 sent action 外的其他actions前调用load_resource
+</code></pre>
+</li>
 <li><p>through</p>
 <p>通过A，B之间的关联来load某一方。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_many <span class="symbol">:tasks</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span> <span class="comment">## 这里也可以省略 :task</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@project</span> = Project.find(params[:project_id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.tasks.find(params[:id])</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class Project &lt; ActiveRecord
+  has_many :tasks
+end
 
+class TasksController &lt; ApplicationController
+  load_resource :project
+  load_resource :task, through: :project ## 这里也可以省略 :task
+end
+
+#### 等同于： @project = Project.find(params[:project_id])
+#### @task = @project.tasks.find(params[:id])
+</code></pre>
 <p>也可以通过method，比如：current_user，也就是wiki中所说的nested through method：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">through:</span> <span class="symbol">:current_user</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@task</span> = current_user.tasks.find(params[:id])</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource through: :current_user
+end
+
+#### 等同于： @task = current_user.tasks.find(params[:id])
+</code></pre>
+</li>
 <li><p>through_association</p>
 <p>与through的不同在于，project中，如果给tasks起了“别名”，不是，<code>has_many tasks</code>, 而是长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_many <span class="symbol">:events</span>, <span class="symbol">class_name:</span> <span class="string">&#x27;Task&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Project &lt; ActiveRecord
+  has_many :events, class_name: &#39;Task&#39;
+end
+</code></pre>
 <p>则在taskController中需要通过through_association来指明：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">through_association:</span> <span class="symbol">:events</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：<span class="doctag">@project</span> = Project.find(params[:project_id]),</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.events.find(params[:id])</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource :project
+  load_resource :task, through: :project, through_association: :events
+end
+
+#### 等同于：@project = Project.find(params[:project_id]),
+#### @task = @project.events.find(params[:id])
+</code></pre>
+</li>
 <li><p>shallow</p>
 <p>shallow是跟着through的，设置为true则允许parent resource为 nil，设置为false则不允许nil，默认为false。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">shallow:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@project</span>存在，则<span class="doctag">@task</span> = <span class="doctag">@project</span>.events.find(params[:id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@project</span>不存在，则<span class="doctag">@task</span> = Task.find(params[:id])</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource :project
+  load_resource :task, through: :project, shallow: true
+end
+
+#### 等同于：
+#### @project存在，则@task = @project.events.find(params[:id])
+#### @project不存在，则@task = Task.find(params[:id])
+</code></pre>
+</li>
 <li><p>singleton</p>
 <p>当project与task存在一对一关系：</p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ActiveRecord</span></span><br><span class="line">  has_one <span class="symbol">:task</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span>, <span class="symbol">singleton:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@project</span> = Project.find(params[:project_id])</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@task</span> = <span class="doctag">@project</span>.task</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class Project &lt; ActiveRecord
+ has_one :task
+end
+
+class TasksController &lt; ApplicationController
+ load_resource :project
+ load_resource :task, through: :project, singleton: true
+end
+
+#### 等同于： @project = Project.find(params[:project_id])
+#### @task = @project.task
+</code></pre>
+</li>
 <li><p>parent</p>
 <p>根据这个resource是不是一个parent resource来决定，当resource的name与controller无法匹配时，则默认为是parent resource。比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:project</span></span><br><span class="line">  load_resource <span class="symbol">:task</span>, <span class="symbol">through:</span> <span class="symbol">:project</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource :project
+  load_resource :task, through: :project
+end
+</code></pre>
 <p>这里，project在task的controller中，就是一个parent resource。</p>
 </li>
 <li><p>class</p>
 <p>指定类名。多用于当controller与model无法匹配时。</p>
 <p>常见的是个人中心这样的ProfilesController，对应的类名是User：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProfilesController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">:profile</span>, <span class="class"><span class="keyword">class</span>: <span class="title">User</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@profile</span> = User.find(params[:id])</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class ProfilesController &lt; ApplicationController
+  load_resource :profile, class: User
+end
+
+#### 等同于： @profile = User.find(params[:id])
+</code></pre>
+</li>
 <li><p>find_by</p>
 <p>指定find_by_[attribute]。比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PersonationsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">find_by:</span> <span class="symbol">:token</span>, <span class="class"><span class="keyword">class</span>: <span class="title">User</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@personation</span> = User.find_by_token(params[:id])</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class PersonationsController &lt; ApplicationController
+  load_resource find_by: :token, class: User
+end
 
+#### 等同于： @personation = User.find_by_token(params[:id])
+</code></pre>
 <p>注意，此处是params[:id]， 不是params[:token]，如果需要设置params fetch的attribute，可以用id_params.</p>
 </li>
 <li><p>Id_params</p>
 <p>默认是id，可以改为其他的param key，比如上面的例子:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PersonationsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">find_by:</span> <span class="symbol">:token</span>,, <span class="class"><span class="keyword">class</span>: <span class="title">User</span>, <span class="title">id_params</span>: :<span class="title">token</span></span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： <span class="doctag">@personation</span> = User.find_by_token(params[:token])</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class PersonationsController &lt; ApplicationController
+  load_resource find_by: :token,, class: User, id_params: :token
+end
 
+#### 等同于： @personation = User.find_by_token(params[:token])
+</code></pre>
 <p>可以将through，find_by,  id_params 结合运用：</p>
 <p>以常见的一个订阅为例， 用户订阅项目：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SubscriptionsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action &#123; <span class="variable">@user</span> = current_user &#125;</span><br><span class="line">  load_resource <span class="symbol">through:</span> <span class="symbol">:user</span>, <span class="symbol">find_by:</span> <span class="symbol">:project_id</span>, <span class="symbol">id_param:</span> <span class="symbol">:project_id</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于：</span></span><br><span class="line"><span class="comment">#### <span class="doctag">@subscription</span> = <span class="doctag">@user</span>.subscriptions.find_by_project_id(params[:project_id])</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class SubscriptionsController &lt; ApplicationController
+  before_action &#123; @user = current_user &#125;
+  load_resource through: :user, find_by: :project_id, id_param: :project_id
+end
+
+#### 等同于：
+#### @subscription = @user.subscriptions.find_by_project_id(params[:project_id])
+</code></pre>
+</li>
 <li><p>new</p>
 <p>指定除默认的new，create之外，哪些action需要new resource。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; ApplicationController</span></span><br><span class="line">  load_resource <span class="symbol">new:</span> <span class="symbol">:build</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">build</span></span></span><br><span class="line">    .....</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#### 等同于： 在调用build action前，执行 <span class="doctag">@task</span> = Task.new</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">class TasksController &lt; ApplicationController
+  load_resource new: :build
+
+  def build
+    .....
+  end
+end
+
+#### 等同于： 在调用build action前，执行 @task = Task.new
+</code></pre>
+</li>
 <li><p>prepend</p>
 <p>值为true或者false，默认false。如果设置为true，则会调用prepend_before_filter 而不是 before_filter。</p>
 </li>
@@ -620,7 +716,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -727,7 +823,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -769,7 +865,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

@@ -417,46 +417,195 @@
 <p>步骤如下：</p>
 <ul>
 <li><p>新增review model，终端运行：</p>
-<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">rails g model review comment:<span class="built_in">string</span> user_id:<span class="built_in">int</span>eger event_id:<span class="built_in">int</span>eger</span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure></li>
+<pre><code>rails g model review comment:string user_id:integer event_id:integer
+rake db:migrate
+</code></pre>
+</li>
 <li><p>建立review与event，user的关系：</p>
 <ul>
 <li><p>在<code>review.rb</code>中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">belongs_to <span class="symbol">:user</span></span><br><span class="line">belongs_to <span class="symbol">:event</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">belongs_to :user
+belongs_to :event
+</code></pre>
+</li>
 <li><p>在<code>event.rb</code>中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:reviews</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">has_many :reviews
+</code></pre>
+</li>
 <li><p>在<code>user.rb</code>中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:reviews</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">has_many :reviews
+</code></pre>
+</li>
 </ul>
 </li>
 <li><p>编辑<code>config/routes.rb</code>,在resources :events中添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"> resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line"> + resources <span class="symbol">:reviews</span></span><br><span class="line">.....</span><br><span class="line">   <span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">  resources :events do
+  + resources :reviews
+    .....
+    end
+</code></pre>
+</li>
 <li><p>新建review controller</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">rails g controller reviews</span></span><br></pre></td></tr></table></figure></li>
+<pre><code>rails g controller reviews
+</code></pre>
+</li>
 <li><p>编辑<code>app/controllers/reviews_controller.rb</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ReviewsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">new</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:event_id</span>])</span><br><span class="line">    <span class="variable">@review</span> = Review.new</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:event_id</span>])</span><br><span class="line">    <span class="variable">@review</span> = Review.new(review_params)</span><br><span class="line">    <span class="variable">@review</span>.event = <span class="variable">@event</span></span><br><span class="line">    <span class="variable">@review</span>.user = current_user</span><br><span class="line">    <span class="variable">@review</span>.save</span><br><span class="line">    redirect_to <span class="symbol">:back</span>, <span class="symbol">alert:</span> <span class="string">&quot;评论已经创建&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:event_id</span>])</span><br><span class="line">    <span class="variable">@review</span> = Review.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@review</span>.destroy</span><br><span class="line">    redirect_to <span class="symbol">:back</span>, <span class="symbol">alert:</span> <span class="string">&quot;评论已经删除&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">review_params</span></span></span><br><span class="line">    params.<span class="keyword">require</span>(<span class="symbol">:review</span>).permit(<span class="symbol">:comment</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
-<li><p>编辑<code>app/controllers/events_controller.rb</code>, 在show部分，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="variable">@event</span> = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">+ <span class="variable">@reviews</span> = <span class="variable">@event</span>.reviews.all</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure></li>
-<li><p>编辑event的<code>show.html.erb</code>，给评论区腾出位置，这里用了两次partial来引用review，后面会建相应的文档:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;!-- 活动讨论区 --&gt;</span><br><span class="line">  &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">event_reviews</span>&quot;&gt;</span></span><br><span class="line">    &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">row</span>&quot;&gt;</span></span><br><span class="line">      &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">col</span>-<span class="title">md</span>-8 <span class="title">col</span>-<span class="title">md</span>-<span class="title">offset</span>-2&quot;&gt;</span></span><br><span class="line">        &lt;%= render <span class="symbol">:partial</span> =&gt; <span class="string">&quot;reviews/form&quot;</span>, <span class="symbol">:locals</span> =&gt; &#123;<span class="symbol">:event</span> =&gt; <span class="variable">@event</span> &#125; %&gt;</span><br><span class="line">        &lt;hr&gt;</span><br><span class="line">        &lt;% <span class="keyword">if</span> <span class="variable">@reviews</span>.blank? %&gt;</span><br><span class="line">          &lt;p&gt;该活动还没有人讨论，来侃几句吧？&lt;<span class="regexp">/p&gt;</span></span><br><span class="line"><span class="regexp">        &lt;% else %&gt;</span></span><br><span class="line"><span class="regexp">        &lt;div id=&quot;reviews_list&quot;&gt;</span></span><br><span class="line"><span class="regexp">          &lt;% @reviews.each do |review| %&gt;</span></span><br><span class="line"><span class="regexp">        &lt;%= render :partial =&gt; &quot;reviews/review</span><span class="string">&quot;, :locals =&gt; &#123; :review =&gt; review &#125;%&gt;</span></span><br><span class="line"><span class="string">          &lt;% end %&gt;</span></span><br><span class="line"><span class="string">        &lt;/div&gt;</span></span><br><span class="line"><span class="string">        &lt;% end %&gt;</span></span><br><span class="line"><span class="string">        &lt;hr&gt;</span></span><br><span class="line"><span class="string">      &lt;/div&gt;</span></span><br><span class="line"><span class="string">    &lt;/div&gt;</span></span><br><span class="line"><span class="string">  &lt;/div&gt;</span></span><br><span class="line"><span class="string"> ......</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class ReviewsController &lt; ApplicationController
+  before_action :authenticate_user!
 
+  def new
+    @event = Event.find(params[:event_id])
+    @review = Review.new
+  end
+
+  def create
+    @event = Event.find(params[:event_id])
+    @review = Review.new(review_params)
+    @review.event = @event
+    @review.user = current_user
+    @review.save
+    redirect_to :back, alert: &quot;评论已经创建&quot;
+  end
+
+  def destroy
+    @event = Event.find(params[:event_id])
+    @review = Review.find(params[:id])
+    @review.destroy
+    redirect_to :back, alert: &quot;评论已经删除&quot;
+  end
+
+  private
+
+  def review_params
+    params.require(:review).permit(:comment)
+  end
+
+end
+</code></pre>
+</li>
+<li><p>编辑<code>app/controllers/events_controller.rb</code>, 在show部分，添加：</p>
+<pre><code class="Ruby">......
+def show
+  @event = Event.find(params[:id])
++ @reviews = @event.reviews.all
+end
+......
+</code></pre>
+</li>
+<li><p>编辑event的<code>show.html.erb</code>，给评论区腾出位置，这里用了两次partial来引用review，后面会建相应的文档:</p>
+<pre><code class="Ruby">......
+&lt;!-- 活动讨论区 --&gt;
+  &lt;div class=&quot;event_reviews&quot;&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;div class=&quot;col-md-8 col-md-offset-2&quot;&gt;
+        &lt;%= render :partial =&gt; &quot;reviews/form&quot;, :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;
+        &lt;hr&gt;
+        &lt;% if @reviews.blank? %&gt;
+          &lt;p&gt;该活动还没有人讨论，来侃几句吧？&lt;/p&gt;
+        &lt;% else %&gt;
+        &lt;div id=&quot;reviews_list&quot;&gt;
+          &lt;% @reviews.each do |review| %&gt;
+        &lt;%= render :partial =&gt; &quot;reviews/review&quot;, :locals =&gt; &#123; :review =&gt; review &#125;%&gt;
+          &lt;% end %&gt;
+        &lt;/div&gt;
+        &lt;% end %&gt;
+        &lt;hr&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+ ......
+</code></pre>
 <p>​</p>
 </li>
 <li><p>在<code>app/views/reviews</code>下，新增<code>_review.html.erb</code>, <code>_form.html.erb</code> 。<code>_review.html.erb</code>用来显示评论区列表，<code>_form.html.erb</code>则用于新增评论。</p>
 <ul>
 <li><p>编辑<code>_review.html.erb</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;div id=<span class="string">&quot;reivew-&lt;%= review.id %&gt;&quot;</span> <span class="class"><span class="keyword">class</span>=&quot;<span class="title">reviews</span>&quot; <span class="title">style</span>=&quot;<span class="title">text</span>-<span class="title">align</span>: <span class="title">left</span>;</span><span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">    &lt;!-- 显示用户头像 --&gt;</span></span><br><span class="line"><span class="string">  &lt;ul&gt;</span></span><br><span class="line"><span class="string">    &lt;div class=&quot;</span>user_avatar<span class="string">&quot; style=&quot;</span><span class="symbol">float:</span> left;<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">      &lt;% if review.user.avatar.present? %&gt;</span></span><br><span class="line"><span class="string">        &lt;%= image_tag(review.user.avatar.thumb.url, class: &quot;</span>review_avatar<span class="string">&quot;)%&gt;</span></span><br><span class="line"><span class="string">      &lt;% else %&gt;</span></span><br><span class="line"><span class="string">        &lt;%= image_tag(&quot;</span><span class="symbol">https:</span>/<span class="regexp">/ws4.sinaimg.cn/large</span><span class="regexp">/006tNc79gy1fj8fv5d1tdj30zk0npdig.jpg&quot;, class: &quot;review_avatar&quot;)%&gt;</span></span><br><span class="line"><span class="regexp">      &lt;% end %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/div</span>&gt;</span><br><span class="line">  &lt;<span class="regexp">/ul&gt;</span></span><br><span class="line"><span class="regexp">  &lt;!-- 显示其他信息 --&gt;</span></span><br><span class="line"><span class="regexp">    &lt;div class=&quot;row&quot;&gt;</span></span><br><span class="line"><span class="regexp">      &lt;div class=&quot;col-md-9 review-user-info&quot;&gt;</span></span><br><span class="line"><span class="regexp">        &lt;%= review.user.display_name %&gt;</span></span><br><span class="line"><span class="regexp">      &lt;/div</span>&gt;</span><br><span class="line">      &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">col</span>-<span class="title">md</span>-3&quot;&gt;</span></span><br><span class="line">        &lt;%= review.created_at %&gt;</span><br><span class="line">      &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/div</span>&gt;</span><br><span class="line">    &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">review</span>-<span class="title">comment</span>&quot;&gt;</span></span><br><span class="line">      &lt;%= review.content %&gt;</span><br><span class="line">    &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp">    &lt;!-- 用户可以删除自己的评论 --&gt;</span></span><br><span class="line"><span class="regexp">    &lt;% if current_user == review.user %&gt;</span></span><br><span class="line"><span class="regexp">    &lt;div class=&quot;pull-right&quot;&gt;</span></span><br><span class="line"><span class="regexp">      &lt;%= link_to(&quot;delete&quot;, event_review_path(review.event,review), method: :delete, :remote =&gt; true)%&gt;</span></span><br><span class="line"><span class="regexp">    &lt;/div</span>&gt;</span><br><span class="line">  &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">&lt;div id=&quot;reivew-&lt;%= review.id %&gt;&quot; class=&quot;reviews&quot; style=&quot;text-align: left;&quot;&gt;
+    &lt;!-- 显示用户头像 --&gt;
+  &lt;ul&gt;
+    &lt;div class=&quot;user_avatar&quot; style=&quot;float: left;&quot;&gt;
+      &lt;% if review.user.avatar.present? %&gt;
+        &lt;%= image_tag(review.user.avatar.thumb.url, class: &quot;review_avatar&quot;)%&gt;
+      &lt;% else %&gt;
+        &lt;%= image_tag(&quot;https://ws4.sinaimg.cn/large/006tNc79gy1fj8fv5d1tdj30zk0npdig.jpg&quot;, class: &quot;review_avatar&quot;)%&gt;
+      &lt;% end %&gt;
+    &lt;/div&gt;
+  &lt;/ul&gt;
+  &lt;!-- 显示其他信息 --&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;div class=&quot;col-md-9 review-user-info&quot;&gt;
+        &lt;%= review.user.display_name %&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;col-md-3&quot;&gt;
+        &lt;%= review.created_at %&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;review-comment&quot;&gt;
+      &lt;%= review.content %&gt;
+    &lt;/div&gt;
+    &lt;!-- 用户可以删除自己的评论 --&gt;
+    &lt;% if current_user == review.user %&gt;
+    &lt;div class=&quot;pull-right&quot;&gt;
+      &lt;%= link_to(&quot;delete&quot;, event_review_path(review.event,review), method: :delete, :remote =&gt; true)%&gt;
+    &lt;/div&gt;
+  &lt;% end %&gt;
+&lt;/div&gt;
+</code></pre>
+</li>
 <li><p>编辑<code>_form.html.erb</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">contain</span>&quot;&gt;</span></span><br><span class="line">  &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">row</span>&quot; <span class="title">style</span>=&quot; <span class="title">margin</span>-<span class="title">top</span>: 50<span class="title">px</span>;</span><span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">    &lt;div class=&quot;</span>col-md-<span class="number">12</span><span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">      &lt;%= simple_form_for [@event, @event.reviews.build ], :remote =&gt; true do |f| %&gt;</span></span><br><span class="line"><span class="string">        &lt;div class=&quot;</span>form-group<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">          &lt;%= f.input :content, label: &quot;</span>吐糟或者提问，请随意<span class="string">&quot;, input_html: &#123; class: &quot;</span>form-control<span class="string">&quot;&#125;%&gt;</span></span><br><span class="line"><span class="string">        &lt;/div&gt;</span></span><br><span class="line"><span class="string">        &lt;div class=&quot;</span>form-action<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">          &lt;%= f.submit &quot;</span>我来说两句<span class="string">&quot;, disable_with: &quot;</span>Submiting....<span class="string">&quot;, class: &quot;</span>btn btn-danger<span class="string">&quot;%&gt;</span></span><br><span class="line"><span class="string">        &lt;/div&gt;</span></span><br><span class="line"><span class="string">      &lt;% end %&gt;</span></span><br><span class="line"><span class="string">    &lt;/div&gt;</span></span><br><span class="line"><span class="string">  &lt;/div&gt;</span></span><br><span class="line"><span class="string">&lt;/div&gt;</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">&lt;div class=&quot;contain&quot;&gt;
+  &lt;div class=&quot;row&quot; style=&quot; margin-top: 50px;&quot;&gt;
+    &lt;div class=&quot;col-md-12&quot;&gt;
+      &lt;%= simple_form_for [@event, @event.reviews.build ], :remote =&gt; true do |f| %&gt;
+        &lt;div class=&quot;form-group&quot;&gt;
+          &lt;%= f.input :content, label: &quot;吐糟或者提问，请随意&quot;, input_html: &#123; class: &quot;form-control&quot;&#125;%&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;form-action&quot;&gt;
+          &lt;%= f.submit &quot;我来说两句&quot;, disable_with: &quot;Submiting....&quot;, class: &quot;btn btn-danger&quot;%&gt;
+        &lt;/div&gt;
+      &lt;% end %&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+</li>
 </ul>
 </li>
 <li><p>编辑<code>app/controllers/events_controller.rb</code>， 拿掉create, destroy 的redirect_to：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:event_id</span>])</span><br><span class="line">    <span class="variable">@review</span> = Review.new(review_params)</span><br><span class="line">    <span class="variable">@review</span>.event = <span class="variable">@event</span></span><br><span class="line">    <span class="variable">@review</span>.user = current_user</span><br><span class="line">    <span class="variable">@review</span>.save</span><br><span class="line">  - redirect_to <span class="symbol">:back</span>, <span class="symbol">alert:</span> <span class="string">&quot;评论已经创建&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">destroy</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:event_id</span>])</span><br><span class="line">    <span class="variable">@review</span> = Review.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    <span class="variable">@review</span>.destroy</span><br><span class="line">  - redirect_to <span class="symbol">:back</span>, <span class="symbol">alert:</span> <span class="string">&quot;评论已经删除&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">......
+def create
+    @event = Event.find(params[:event_id])
+    @review = Review.new(review_params)
+    @review.event = @event
+    @review.user = current_user
+    @review.save
+  - redirect_to :back, alert: &quot;评论已经创建&quot;
+  end
+
+  def destroy
+    @event = Event.find(params[:event_id])
+    @review = Review.find(params[:id])
+    @review.destroy
+  - redirect_to :back, alert: &quot;评论已经删除&quot;
+  end
+  ......
+</code></pre>
+</li>
 <li><p>新增<code>app/views/reviews/create.js.erb</code>, <code>app/views/reviews/destroy.js.erb</code>, 分别编辑：</p>
 <ul>
 <li><p><code>app/views/reviews/create.js.erb</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> <span class="variable">@review</span>.valid? %&gt;</span><br><span class="line">  <span class="variable">$(</span><span class="string">&quot;#reviews_list&quot;</span>).prepend(<span class="string">&quot;&lt;%=j render :partial =&gt; &quot;</span>review<span class="string">&quot;, :locals =&gt; &#123;:review =&gt; @review &#125; %&gt;&quot;</span>);</span><br><span class="line">  <span class="variable">$(</span><span class="string">&quot;#review_content&quot;</span>).val(<span class="string">&quot;&quot;</span>);</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">  alert(<span class="string">&quot;评论失败&quot;</span>);</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">&lt;% if @review.valid? %&gt;
+  $(&quot;#reviews_list&quot;).prepend(&quot;&lt;%=j render :partial =&gt; &quot;review&quot;, :locals =&gt; &#123;:review =&gt; @review &#125; %&gt;&quot;);
+  $(&quot;#review_content&quot;).val(&quot;&quot;);
+&lt;% else %&gt;
+  alert(&quot;评论失败&quot;);
+&lt;% end %&gt;
+</code></pre>
+</li>
 <li><p><code>app/views/reviews/destroy.js.erb</code>中，</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">$(<span class="string">&quot;#reivew-&lt;%= @review.id %&gt;&quot;</span>).<span class="builtin-name">remove</span>();</span><br></pre></td></tr></table></figure></li>
+<pre><code>$(&quot;#reivew-&lt;%= @review.id %&gt;&quot;).remove();
+</code></pre>
+</li>
 </ul>
 </li>
 </ul>
@@ -628,7 +777,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -735,7 +884,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -777,7 +926,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

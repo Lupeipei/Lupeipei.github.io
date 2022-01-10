@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>595 words</span>
+              <span>602 words</span>
             </span>
           
 
@@ -401,30 +401,39 @@
 <span id="more"></span> 
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>终端执行：</p>
-<figure class="highlight actionscript"><table><tr><td class="code"><pre><span class="line">hexo <span class="keyword">new</span> XXXX</span><br></pre></td></tr></table></figure>
-
+<pre><code>hexo new XXXX
+</code></pre>
 <p>出现报错：</p>
-<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">NODE_MODULE_VERSION <span class="number">48.</span> This version <span class="keyword">of</span> <span class="module-access"><span class="module"><span class="identifier">Node</span>.</span></span>js requires</span><br><span class="line">Error: The <span class="keyword">module</span> &#x27;/usr/local/lib/node_modules/hexo-cli/node_modules/dtrace-provider/build/Release/<span class="module-access"><span class="module"><span class="identifier">DTraceProviderBindings</span>.</span></span>node&#x27;</span><br><span class="line">was compiled against a different <span class="module-access"><span class="module"><span class="identifier">Node</span>.</span></span>js version using</span><br><span class="line">NODE_MODULE_VERSION <span class="number">48.</span> This version <span class="keyword">of</span> <span class="module-access"><span class="module"><span class="identifier">Node</span>.</span></span>js requires</span><br><span class="line">NODE_MODULE_VERSION <span class="number">64.</span> Please <span class="keyword">try</span> re-compiling <span class="keyword">or</span> re-installing</span><br><span class="line">the <span class="keyword">module</span> (<span class="keyword">for</span> instance, using `npm rebuild` <span class="keyword">or</span> `npm install`).</span><br></pre></td></tr></table></figure>
-
+<pre><code>NODE_MODULE_VERSION 48. This version of Node.js requires
+Error: The module &#39;/usr/local/lib/node_modules/hexo-cli/node_modules/dtrace-provider/build/Release/DTraceProviderBindings.node&#39;
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 48. This version of Node.js requires
+NODE_MODULE_VERSION 64. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+</code></pre>
 <p>其中：Node 10.1.0, npm 5.6.0 , hexo 3.7.1</p>
 <p>虽然这样的提示并不影响使用，但是每次都出现这么一长串，真的是有点受不了，于是决定解决它，没成想竟然是个坑。记录下解决过程。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>按照提示，使用<code>npm rebuild</code> ，rebuild过程中出现了各种报错，最后还输出了这么一句<code>This is probably not a problem with npm</code>, 不是npm，难道是hexo?</p>
 <p>随后Google，在hexo issues里找到了这篇<a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues/2534">#2534</a>。尝试着用里面提到的方法：</p>
-<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">rm -rvf node_modules</span><br><span class="line">npm <span class="keyword">install</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rm -rvf node_modules
+npm install
+</code></pre>
 <p><code>npm install</code>时出错，后面我又<code>npm install</code>了一次，OK，没有报错，但是奇怪的是执行<code>hexo g -d</code> 依然会出现上面的报错，说明问题还是没有解决。</p>
 <p>于是执行了这样的命令：</p>
-<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">npm <span class="keyword">update</span> hexo</span><br><span class="line">npm <span class="keyword">update</span> -<span class="keyword">g</span> hexo-<span class="keyword">cli</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>npm update hexo
+npm update -g hexo-cli
+</code></pre>
 <p>没有报错，应该是OK了，稍稍踏实了，再次执行<code>hexo g -d</code>，结果 还是报错，比上次更为严重：</p>
 <p>hexo已经挂了。</p>
 <p>显示<code>Cannot find module &#39;highlight.js/lib/languages/shell&#39;</code> .</p>
 <p>既然找不到highlight， 那就安装一个吧！终端执行：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">npm <span class="keyword">install </span>highlight.<span class="keyword">js </span>--save</span><br></pre></td></tr></table></figure>
-
+<pre><code>npm install highlight.js --save
+</code></pre>
 <p>出现报错：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">node</span>-pre-gyp ERR! Tried to download(<span class="number">404</span>): https://fsevents-binaries.s<span class="number">3</span>-us-west-<span class="number">2</span>.amazonaws.com/v<span class="number">1</span>.<span class="number">1</span>.<span class="number">1</span>/fse-v<span class="number">1</span>.<span class="number">1</span>.<span class="number">1</span>-node-v<span class="number">64</span>-darwin-x<span class="number">64</span>.tar.gz</span><br><span class="line"><span class="attribute">node</span>-pre-gyp ERR! Pre-built binaries not found for fsevents@<span class="number">1</span>.<span class="number">1</span>.<span class="number">1</span> and node@<span class="number">10</span>.<span class="number">1</span>.<span class="number">0</span> (node-v<span class="number">64</span> ABI) (falling back to source compile with node-gyp)</span><br><span class="line"><span class="attribute">node</span>-pre-gyp http <span class="number">404</span> status code downloading tarball https://fsevents-binaries.s<span class="number">3</span>-us-west-<span class="number">2</span>.amazonaws.com/v<span class="number">1</span>.<span class="number">1</span>.<span class="number">1</span>/fse-v<span class="number">1</span>.<span class="number">1</span>.<span class="number">1</span>-node-v<span class="number">64</span>-darwin-x<span class="number">64</span>.tar.gz</span><br></pre></td></tr></table></figure>
-
+<pre><code>node-pre-gyp ERR! Tried to download(404): https://fsevents-binaries.s3-us-west-2.amazonaws.com/v1.1.1/fse-v1.1.1-node-v64-darwin-x64.tar.gz
+node-pre-gyp ERR! Pre-built binaries not found for fsevents@1.1.1 and node@10.1.0 (node-v64 ABI) (falling back to source compile with node-gyp)
+node-pre-gyp http 404 status code downloading tarball https://fsevents-binaries.s3-us-west-2.amazonaws.com/v1.1.1/fse-v1.1.1-node-v64-darwin-x64.tar.gz
+</code></pre>
 <p>发现fsevents在之前的报错中也有出现过，难道是fsevents与node版本不兼容？Google后找到了这篇：</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/strongloop/fsevents/issues/181">Install on OS X fails as prebuilt binary seems to be missing from S3 </a></p>
 <p>上面提到了1.1.1版本存在bug，升级到1.2+，好，死马当活马医，<code>npm i fsevents</code> ，装了最新的fsevents, 1.2.3.</p>
@@ -592,7 +601,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -699,7 +708,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -741,7 +750,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

@@ -1,0 +1,909 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Vim," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="来看看如何自定义状态栏显示. Statusline 是 Vim 的一个 option, 可通过: :set statusline?  查看当前的 statusline 配置. 当然, 我们也可以自定义状态栏的显示内容. 打开一个Markdown 文件,  命令行模式下, 输入: :set statusline&#x3D;%f\ -\ FileType:\ %y  会看到状态栏显示如下类似内容: foo.md">
+<meta property="og:type" content="article">
+<meta property="og:title" content="status lines">
+<meta property="og:url" content="http://lupeipei.github.io/posts/vimscript-learning-on-statusline/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="来看看如何自定义状态栏显示. Statusline 是 Vim 的一个 option, 可通过: :set statusline?  查看当前的 statusline 配置. 当然, 我们也可以自定义状态栏的显示内容. 打开一个Markdown 文件,  命令行模式下, 输入: :set statusline&#x3D;%f\ -\ FileType:\ %y  会看到状态栏显示如下类似内容: foo.md">
+<meta property="og:locale">
+<meta property="article:published_time" content="2022-01-10T07:48:42.000Z">
+<meta property="article:modified_time" content="2022-01-10T07:54:21.359Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Vim">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/vimscript-learning-on-statusline/"/>
+
+
+
+
+
+  <title></title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <div class="container   ">
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner" style="display: none;"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-series">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-file-text"></i> <br />
+            
+            专题
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner" style="width: 100%;">
+        <div class="sidebar-book">
+  
+    <div class="sidebar-book-header">
+      <div class="title">VimScript 学习笔记</div>
+    </div>
+  
+
+  <div class="sidebar-book-body">
+    <div class="book-catalog-body">
+      <div class="book-toc-content">
+        <ul>
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-preface/" class="text">前言</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-echo/" class="text">echo vs echom</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-set-option/" class="text">set option</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-mapping/" class="text">mapping</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-leaders/" class="text">Leaders</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-edit-your-vimrc/" class="text">editing your vimrc</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-abbrev/" class="text">Abbreviations</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-buffer-local/" class="text">Buffer-Local</a>
+              </li>
+            
+          
+            
+            
+              <li>
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-autocmd/" class="text">autocmd</a>
+              </li>
+            
+          
+            
+            
+              <li class="active">
+                <div class="wholerow"></div>
+                <a href="/posts/vimscript-learning-on-statusline/" class="text">status lines</a>
+              </li>
+            
+          
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+        <div class="content-wrap" style="margin-left: 280px; padding: 30px;">
+          <div id="content" class="content">
+            
+<div class="content-book">
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-book " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/vimscript-learning-on-statusline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                status lines
+              
+            
+          </h1>
+        
+      <div class="post-meta"></div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>来看看如何自定义状态栏显示.</p>
+<p>Statusline 是 Vim 的一个 option, 可通过:</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> statusline?</span><br></pre></td></tr></table></figure>
+
+<p>查看当前的 statusline 配置.</p>
+<p>当然, 我们也可以自定义状态栏的显示内容.</p>
+<p>打开一个Markdown 文件,  命令行模式下, 输入:</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:set statusline=%f\ -\ FileType:\</span> %y</span><br></pre></td></tr></table></figure>
+
+<p>会看到状态栏显示如下类似内容:</p>
+<figure class="highlight stylus"><table><tr><td class="code"><pre><span class="line">foo<span class="selector-class">.md</span> - FileType: <span class="selector-attr">[markdown]</span></span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>%f</code>表示当前文件的相对路径, <code>%y </code> 表示文件的类型.</p>
+<p>statusline 的设置, 有些类似 C 里面的 printf.</p>
+<p>它的通用格式如下:</p>
+<figure class="highlight dust"><table><tr><td class="code"><pre><span class="line"><span class="xml">%-0</span><span class="template-variable">&#123;minwid&#125;</span><span class="xml">.</span><span class="template-variable">&#123;maxwid&#125;</span><span class="template-variable">&#123;item&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中, 除了<code>%</code>  和 <code>&#123;item&#125;</code>, 其他都是可选的. 而 minwd, maxwid 分别指的是最小和最大宽度.</p>
+<p>看几个简单的例子就清楚了.</p>
+<p>显示行号:</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:set statusline=Current:\</span> %4l\ Total:\ %4L</span><br></pre></td></tr></table></figure>
+
+<p>会看到状态栏显示如下类似内容:</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Current</span>:    <span class="number">9</span> Total:   <span class="number">66</span></span><br></pre></td></tr></table></figure>
+
+<p>这里设置了最短长度4, 默认用空格来补全.</p>
+<p>可以设置为用0来补全:</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:set statusline=Current:\</span> %04l\ Total:\ %04L</span><br></pre></td></tr></table></figure>
+
+<p>状态栏显示如下:</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Current</span>: <span class="number">0009</span> Total: <span class="number">0066</span></span><br></pre></td></tr></table></figure>
+
+<p>再比如, 显示文件的绝对路径:</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> <span class="attribute">statusline</span>=%.20F</span><br></pre></td></tr></table></figure>
+
+<p>此处, 最大宽度设置为20, 状态栏显示如下:</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">&lt;-<span class="keyword">on</span>-buffer-<span class="keyword">local</span>.md</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>:h statusline</code> , 可以查看所有可用的 item 及其对应含义.</p>
+<p>此外, 如果 statusline 是以 <code>%!</code> 开头, 比如 <code>:set statusline=%!MyStatusLine()</code> , 则表示<code>MyStatusLine()</code> 是个表达式, 这个表达式的结果才是 statusline 对应的值.</p>
+<p>如果你安装了airline, 命令模式输入:</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> statusline?</span><br></pre></td></tr></table></figure>
+
+<p>会看到输出结果:</p>
+<figure class="highlight leaf"><table><tr><td class="code"><pre><span class="line">statusline=%!airline<span class="function"><span class="keyword">#</span><span class="title">statusline</span><span class="params">(1)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>这里就是使用了<code>%!</code>.</p>
+<p>书中还介绍了<code>%=</code>, 用于对齐, 这里就略过了.</p>
+<p>OK, 本节结束, 我去吃点好吃的奖励下自己还没弃坑😋</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Vim/" rel="tag"># Vim</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        
+      
+
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+          
+        
+      
+        
+      
+      
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/vimscript-learning-on-autocmd/" rel="next" title="autocmd">
+                <i class="fa fa-chevron-left"></i> autocmd
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+</div>
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    377.5k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+
+

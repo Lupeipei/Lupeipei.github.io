@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>581 words</span>
+              <span>583 words</span>
             </span>
           
 
@@ -402,25 +402,54 @@
 <p>起因是后台频现用户上传了违规图片, 收到了七牛的警告邮件. 老大要求搭建一个nsfw(Not-Safe-For-Work)服务, 在图片上传到七牛云存储前, 先调用这个服务, 确定图片没有违规, 再上传.</p>
 <h4 id="搭建服务"><a href="#搭建服务" class="headerlink" title="搭建服务"></a>搭建服务</h4><p>找到了全网star最多的一个开源项目 <a target="_blank" rel="noopener" href="https://github.com/infinitered/nsfwjs">nsfwjs</a>,  文档中给到了一个完整的 Express 的例子. 照着来就好.</p>
 <p>参考 <a target="_blank" rel="noopener" href="https://expressjs.com/">Express Docs</a> 官方文档, 使用express-generator 快速搭个架子, 将 <a target="_blank" rel="noopener" href="https://github.com/infinitered/nsfwjs">nsfwjs</a> 文档中给到的<a target="_blank" rel="noopener" href="https://github.com/infinitered/nsfwjs/blob/master/example/node_demo/server.js">server.js</a> 部分的示例代码放进去. 本地起服务 <code>node server.js</code>, 使用 curl 测试, 结果符合预期:</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl --request POST localhost:8080/nsfw --header &#x27;Content-Type: multipart/form-data&#x27; --data-binary &#x27;image=@/full/path/to/picture.jpg&#x27;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="shell">curl --request POST localhost:8080/nsfw --header &#39;Content-Type: multipart/form-data&#39; --data-binary &#39;image=@/full/path/to/picture.jpg&#39;
+</code></pre>
 <h4 id="支持多格式"><a href="#支持多格式" class="headerlink" title="支持多格式"></a>支持多格式</h4><p><a target="_blank" rel="noopener" href="https://github.com/infinitered/nsfwjs">nsfwjs</a> 给到的例子中, 只支持JPEG格式的文件,  改用 <a target="_blank" rel="noopener" href="https://github.com/dy/image-decode">image-decode</a> 换掉  jpeg-js. 可支持jpeg, jpg, png, gif, bmp, tiff, webp 格式的图片, 基本满足需求.</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yarn remove jpeg-js</span><br><span class="line">yarn add image-decode</span><br></pre></td></tr></table></figure>
-
+<pre><code class="shell">yarn remove jpeg-js
+yarn add image-decode
+</code></pre>
 <p>修改 convert 部分的代码如下:</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> decode = <span class="built_in">require</span>(<span class="string">&#x27;image-decode&#x27;</span>)</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> convert = <span class="keyword">async</span> (img) =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> &#123; data, width, height &#125; = decode(img)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> numChannels = <span class="number">3</span></span><br><span class="line">  <span class="keyword">const</span> numPixels = width * height</span><br><span class="line">  <span class="keyword">const</span> values = <span class="keyword">new</span> <span class="built_in">Int32Array</span>(numPixels * numChannels)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; numPixels; i++)</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> c = <span class="number">0</span>; c &lt; numChannels; ++c)</span><br><span class="line">      values[i * numChannels + c] = data[i * <span class="number">4</span> + c]</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> tf.tensor3d(values, [height, width, numChannels], <span class="string">&#x27;int32&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">const decode = require(&#39;image-decode&#39;)
 
+......
+
+const convert = async (img) =&gt; &#123;
+  const &#123; data, width, height &#125; = decode(img)
+
+  const numChannels = 3
+  const numPixels = width * height
+  const values = new Int32Array(numPixels * numChannels)
+
+  for (let i = 0; i &lt; numPixels; i++)
+    for (let c = 0; c &lt; numChannels; ++c)
+      values[i * numChannels + c] = data[i * 4 + c]
+
+  return tf.tensor3d(values, [height, width, numChannels], &#39;int32&#39;)
+&#125;
+</code></pre>
 <h4 id="CROS-配置"><a href="#CROS-配置" class="headerlink" title="CROS 配置"></a>CROS 配置</h4><p>在本地起了 Vue 的一个项目, 在这个 Vue 项目中, 使用 axios 给 nsfw 项目发请求的时候, 会出现 CROS 的报错.</p>
 <p>当时直接 Google, StackOverflow 上一堆提到全局设置 header 的, 试了下, 结果无效, 踩了点坑…. 其实直接使用 <a target="_blank" rel="noopener" href="https://github.com/expressjs/cors">cors</a> 就能简单粗暴地解决:</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">yarn <span class="builtin-name">add</span> cors</span><br></pre></td></tr></table></figure>
-
+<pre><code>yarn add cors
+</code></pre>
 <p>修改 server.js:</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> cors = <span class="built_in">require</span>(<span class="string">&#x27;cors&#x27;</span>);</span><br><span class="line">......</span><br><span class="line"><span class="keyword">var</span> app = express();</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line"><span class="comment">// cors settings</span></span><br><span class="line"><span class="keyword">var</span> corsOptionsDelegate = <span class="function"><span class="keyword">function</span> (<span class="params">req, callback</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> corsOptions = &#123; <span class="attr">origin</span>: <span class="literal">true</span>, <span class="attr">credentials</span>: <span class="literal">true</span> &#125;</span><br><span class="line">  callback(<span class="literal">null</span>, corsOptions)</span><br><span class="line">&#125;</span><br><span class="line">app.use(cors(corsOptionsDelegate));</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">var cors = require(&#39;cors&#39;);
+......
+var app = express();
 
+......
+
+// cors settings
+var corsOptionsDelegate = function (req, callback) &#123;
+  const corsOptions = &#123; origin: true, credentials: true &#125;
+  callback(null, corsOptions)
+&#125;
+app.use(cors(corsOptionsDelegate));
+......
+</code></pre>
 <p> 这里设置了<code>&#123; origin: true, credentials: true &#125;</code>, <a target="_blank" rel="noopener" href="https://github.com/expressjs/cors">cors</a> 的文档中, 默认配置中 origin 为 *, credentials 未设置.</p>
 <p>直接使用默认配置会报错:</p>
-<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">Response to preflight request doesn<span class="symbol">&#x27;t</span> pass <span class="keyword">access</span> control check: The value <span class="keyword">of</span> the <span class="symbol">&#x27;Access</span>-Control-Allow-Origin&#x27; header <span class="keyword">in</span> the response must <span class="keyword">not</span> be the wildcard <span class="string">&#x27;*&#x27;</span> <span class="keyword">when</span> the request<span class="symbol">&#x27;s</span> credentials mode <span class="keyword">is</span> <span class="symbol">&#x27;include</span>&#x27;</span><br></pre></td></tr></table></figure>
-
+<pre><code>Response to preflight request doesn&#39;t pass access control check: The value of the &#39;Access-Control-Allow-Origin&#39; header in the response must not be the wildcard &#39;*&#39; when the request&#39;s credentials mode is &#39;include&#39;
+</code></pre>
 <p>干脆直接都设置成true.</p>
 <p>再次使用 axios 发送请求, OK.</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/infinitered/nsfwjs">nsfwjs</a></p>
@@ -586,7 +615,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -693,7 +722,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -735,7 +764,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

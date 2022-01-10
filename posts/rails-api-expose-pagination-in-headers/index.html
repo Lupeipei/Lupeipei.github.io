@@ -383,7 +383,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>494 words</span>
+              <span>496 words</span>
             </span>
           
 
@@ -415,14 +415,31 @@
 <p>查看<a target="_blank" rel="noopener" href="https://github.com/cyu/rack-cors">rack-cors</a>文档，找到用于设置Access-Control-Expose-Headers的options <strong>expose</strong>。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fz7lq4oxk0j31na0jodn9.jpg"></p>
 <p>参考文档，修改Rack的配置，假定我们需要塞进header中的是：<strong>X-Pagination-Current-Page, X-Pagination-Page-Count, X-Pagination-Per-Page,  X-Pagination-Total-Count</strong>。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">use Rack::Cors <span class="keyword">do</span></span><br><span class="line">  allow <span class="keyword">do</span></span><br><span class="line">    origins <span class="string">&#x27;*&#x27;</span></span><br><span class="line">    resource <span class="string">&#x27;/public/*&#x27;</span>,</span><br><span class="line">      <span class="symbol">headers:</span> <span class="symbol">:any</span>,</span><br><span class="line">      <span class="symbol">methods:</span> <span class="symbol">:any</span></span><br><span class="line">      <span class="symbol">expose:</span> [<span class="string">&#x27;X-Pagination-Current-Page&#x27;</span>, <span class="string">&#x27;X-Pagination-Page-Count&#x27;</span>, <span class="string">&#x27;X-Pagination-Per-Page&#x27;</span>, <span class="string">&#x27;X-Pagination-Total-Count&#x27;</span>]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">use Rack::Cors do
+  allow do
+    origins &#39;*&#39;
+    resource &#39;/public/*&#39;,
+      headers: :any,
+      methods: :any
+      expose: [&#39;X-Pagination-Current-Page&#39;, &#39;X-Pagination-Page-Count&#39;, &#39;X-Pagination-Per-Page&#39;, &#39;X-Pagination-Total-Count&#39;]
+  end
+end
+</code></pre>
 <p>重启服务器。</p>
 <p>Step2:</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/kaminari/kaminari">kaminari</a>的文档中，列出了current_page, total_pages等多个可以获取分页信息的方法。</p>
 <p>以User的index 接口为例，修改<code>users_controller.rb</code>文件，在index部分的最后，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    .....</span><br><span class="line">    <span class="keyword">if</span> params[<span class="symbol">:page</span>]</span><br><span class="line">        <span class="variable">@users</span> = <span class="variable">@users</span>.page(params[<span class="symbol">:page</span>])</span><br><span class="line">        response.headers[<span class="string">&#x27;X-Pagination-Current-Page&#x27;</span>] = <span class="variable">@users</span>.current_page</span><br><span class="line">        response.headers[<span class="string">&#x27;X-Pagination-Page-Count&#x27;</span>] = <span class="variable">@users</span>.total_pages</span><br><span class="line">        response.headers[<span class="string">&#x27;X-Pagination-Per-Page&#x27;</span>] = <span class="variable">@users</span>.limit_value</span><br><span class="line">        response.headers[<span class="string">&#x27;X-Pagination-Total-Count&#x27;</span>] = <span class="variable">@users</span>.total_count</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">def index
+    .....
+    if params[:page]
+        @users = @users.page(params[:page])
+        response.headers[&#39;X-Pagination-Current-Page&#39;] = @users.current_page
+        response.headers[&#39;X-Pagination-Page-Count&#39;] = @users.total_pages
+        response.headers[&#39;X-Pagination-Per-Page&#39;] = @users.limit_value
+        response.headers[&#39;X-Pagination-Total-Count&#39;] = @users.total_count
+    end
+end
+</code></pre>
 <p>【鉴于其他接口也难免会涉及到分页，可以将这部分代码封装成一个方法，放在API的BaseController中，让所有继承该类的controllers可直接调用该方法。】</p>
 <p>OK，搞定。</p>
 <p>这时前端调接口，可以看到获取的header中含有pagination相关信息：</p>
@@ -588,7 +605,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -695,7 +712,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -737,7 +754,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

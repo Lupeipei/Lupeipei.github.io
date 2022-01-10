@@ -450,15 +450,20 @@
 <li>rebase</li>
 </ul>
 <p>先看merge，很简单，终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git checkout master ## 切到分支master</span><br><span class="line">git merge experiment  ## 将experiment merge 到master</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Shell">git checkout master ## 切到分支master
+git merge experiment  ## 将experiment merge 到master
+</code></pre>
 <p>用three-merge  【我理解为三路合并】的方式来将两个最新的分支快照（C3和C4）和它们最近的共同祖先（C2）之间进行合并，创建了一个新的快照 C5。</p>
 <p>效果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsd7rrxa4vj30g10683ym.jpg"></p>
 <p>​</p>
 <p>​</p>
 <p>rebase的方式，终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git checkout experiment ## 切到分支experiment</span><br><span class="line">git rebase master ## 将experiment嫁接到master上，即ancestor由原来的C2，变成了C3，生成了新的snapshot C4‘</span><br><span class="line">git checkout master ## 切回到master</span><br><span class="line">git merge experiment ## 将experiment merge进 master</span><br></pre></td></tr></table></figure>
+<pre><code class="Shell">git checkout experiment ## 切到分支experiment
+git rebase master ## 将experiment嫁接到master上，即ancestor由原来的C2，变成了C3，生成了新的snapshot C4‘
+git checkout master ## 切回到master
+git merge experiment ## 将experiment merge进 master
+</code></pre>
 <p>效果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsd7ywqkh0j30g604sglo.jpg"></p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsd81284n1j30he04sq2y.jpg"></p>
@@ -468,22 +473,25 @@
 </blockquote>
 <p>思路也很清晰，先把远端最新的代码pull下来，让本地的master与origin/master同步，然后将B1 rebase 到同步后的master上即可。</p>
 <p>终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git checkout master ## 切换到master</span><br><span class="line">git pull origin master ## 拉下origin/master，让本地master与origin/master同步</span><br><span class="line">git checkout B1 ## 切换到分支B1</span><br><span class="line">git rebase master ## 将B1嫁接到master上，这样B1就是在最新的master上进行开发了，随后你push B1时，项目的maintainer就可以直接merge你的分支了</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Shell">git checkout master ## 切换到master
+git pull origin master ## 拉下origin/master，让本地master与origin/master同步
+git checkout B1 ## 切换到分支B1
+git rebase master ## 将B1嫁接到master上，这样B1就是在最新的master上进行开发了，随后你push B1时，项目的maintainer就可以直接merge你的分支了
+</code></pre>
 <p>当然， rebase master的时候，可能会出现冲突问题，比如B2分支和你的B1同时修改了同一个地方，此时需要手动修正冲突，修改后，<code>git add</code>， 不用commit，然后<code>git rebase —continue</code>，直到没有冲突，完成rebase。</p>
 <p>如果rebase仅仅只是这样，好像也没什么神奇的，下面才是重头戏。</p>
 </li>
 <li><p>偷天换日，篡改历史</p>
 <p>执行如下命令，可以进入git rebase的interactive 交互模式 ：</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">git rebase -<span class="selector-tag">i</span> xxx</span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i xxx
+</code></pre>
 <p>其中XXX指的是你要在哪个commit的基础上进行修改，也就是最后一个修改的commit的父commit，比如你现在在分支B上，想要rebase 分支B的最后3个，那就写：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">git</span> rebase -i HEAD~<span class="number">3</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i HEAD~3
+</code></pre>
 <p>这样rebase的时候，重新生成的commit history，就会是从HEAD, HEAD<del>1到HEAD</del>2的快照，而不会影响其它的snapshot。</p>
 <p>同样，想要rebase 分支B的所有commit，假定B是从master主分支上开发的，则可以直接：</p>
-<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">git rebase -i <span class="literal">master</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i master
+</code></pre>
 <p>进入到interactive 模式后， 可以看到目前有7个命令可以使用：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1frl89ao69gj30yk0f0whk.jpg"></p>
 <p>简单过一下上面的命令列表：</p>
@@ -502,8 +510,8 @@
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdb6606a4j30ov07qtae.jpg"></p>
 <p>我们把最后6个拎出来练练。</p>
 <p>终端执行：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">git</span> rebase -i HEAD~<span class="number">6</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i HEAD~6
+</code></pre>
 <p>使用默认编辑器打开了git-rebase-todo：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdbrskqurj30hy0fktar.jpg"></p>
 <p>我们修改一下commit “  implement like &amp; dislike movie “ ，把 &amp; 换成 and， 使用reword 命令试试。</p>
@@ -516,8 +524,15 @@
 <p>同样的步骤，我们这次动 <strong>41e6c73</strong> implement my favorite movies, 把my 改成 users‘：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdcefvmkdj30g4034wev.jpg"></p>
 <p>保存后退出，终端会输出如下的内容：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Stopped at 41e6c73... implement my favorite movies</span><br><span class="line">You can amend the commit now, with</span><br><span class="line"></span><br><span class="line">	git commit --amend</span><br><span class="line"></span><br><span class="line">Once you are satisfied with your changes, run</span><br><span class="line"></span><br><span class="line">	git rebase --continue</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">Stopped at 41e6c73... implement my favorite movies
+You can amend the commit now, with
 
+    git commit --amend
+
+Once you are satisfied with your changes, run
+
+    git rebase --continue
+</code></pre>
 <p>按照指示来，执行<code>git commit --amend</code>, 在打开的编辑器中修改：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdclnuardj30i5024aa7.jpg"></p>
 <p>保存后退出，执行<code>git rebase --continue </code>, 完成， 此时查看short SHA-1, 会发现，从刚刚修改的那条commit开始，又重新生成了新的short SHA-1。</p>
@@ -527,16 +542,23 @@
 <p>还是一样的，在它前面添加e:</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdcw0a3f4j30hr03dmxl.jpg"></p>
 <p>同样，保存后退出，回到命令行，我们reset下这个commit，将所有的文件从history里面捞出来，变成unstaged状态，然后再创建多个commit。终端执行：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">git <span class="keyword">reset</span> HEAD~</span><br><span class="line">git <span class="keyword">add</span> app/controllers/movies_controller.rb</span><br><span class="line">git <span class="keyword">commit</span> -m &quot;add like and dislike actions&quot;</span><br><span class="line">git <span class="keyword">add</span> app/views/movies/<span class="keyword">show</span>.html.erb</span><br><span class="line">git <span class="keyword">commit</span> -m &quot;add like and dislike button on movie&#x27;s show page&quot;</span><br><span class="line">git <span class="keyword">add</span> config/routes.rb</span><br><span class="line">git <span class="keyword">commit</span> -m &quot;update routes for like and dislike actions&quot;</span><br><span class="line">git rebase <span class="comment">--continue</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git reset HEAD~
+git add app/controllers/movies_controller.rb
+git commit -m &quot;add like and dislike actions&quot;
+git add app/views/movies/show.html.erb
+git commit -m &quot;add like and dislike button on movie&#39;s show page&quot;
+git add config/routes.rb
+git commit -m &quot;update routes for like and dislike actions&quot;
+git rebase --continue
+</code></pre>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdd83pbc6j30r408wdi9.jpg"></p>
 <p>此时，一个commit被拆成了三个，short SHA-1也都更新了。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsddapyuonj30pc04jmy2.jpg"></p>
 <p>好，下一个，squash。</p>
 <p>刚刚我们用<code>edit</code>拆了一个commit，现在我们使用<code>squash</code>把它们合并回来。</p>
 <p>终端执行：</p>
- <figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">git</span> rebase -i HEAD~<span class="number">8</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i HEAD~8
+</code></pre>
 <p>在<strong>bf9a37c</strong> 和<strong>66c0d7e</strong>前面的pick改成s:</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsddmig2w9j30ja04taas.jpg"></p>
 <p>保存后退出，会打开COMMIT_EDITMSG:</p>
@@ -569,8 +591,8 @@
 <p>在pro git中没有看到exec相关的例子，不过在这篇文章<a target="_blank" rel="noopener" href="http://kamalmarhubi.com/blog/2016/03/08/git-rebase-exec-make-sure-your-tests-pass-at-each-commit-and-other-rebase-goodies/">git rebase –exec: make sure your tests pass at each commit! (and other rebase goodies)</a>里面看到相关的操作, 照着试试。</p>
 <p>选择<strong>9996f59</strong> render partial with collection， 我们添加上exec。</p>
 <p>终端执行：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">git</span> rebase -i --exec <span class="string">&quot;pwd&quot;</span> <span class="number">9996</span>f<span class="number">59</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i --exec &quot;pwd&quot; 9996f59
+</code></pre>
 <p>会在<strong>9996f59</strong>后执行 pwd 命令，可以看到已经执行了pwd命令：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdgn2vahrj30k401s0sv.jpg"></p>
 <p>额，Google上exec相关的内容还是较少的，少有的几篇说到了测试与重置authors的：</p>
@@ -580,8 +602,8 @@
 </ul>
 <p>d，移除commit：</p>
 <p>终端执行：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">git</span> rebase -i HEAD-<span class="number">6</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git rebase -i HEAD-6
+</code></pre>
 <p>删除最后一条 <strong>bac0634</strong>：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsdgv7qw4lj30hk044q3h.jpg"></p>
 <p>保存后退出， 查看fork：</p>
@@ -607,8 +629,9 @@
 <p>此时，git merge了C4‘， C7和C1，重新生成快照C8，这时C8中来自于C4‘中的commit history，会跟C7中的commit history有重合的部分，相当于存在两个C4，导致出现两个一模一样的commit。</p>
 <p>书中在rebase your rebase 部分中，提到一个针对这种情况的解决方法，思路就是分辨出所有的snapshot中，哪些是你做的修改，哪些是你的同事做的，值得庆幸的是，git 帮我们处理了这种情况。</p>
 <p>终端执行：</p>
- <figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">git fetch</span><br><span class="line">git rebase teamone/<span class="literal">master</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>git fetch
+git rebase teamone/master
+</code></pre>
 <p>会得到这样的效果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fsda5p6fh0j30gl086wet.jpg"></p>
 <p>相当于将C2，C3直接嫁接到C4‘上，生成了新的commit，厉害！不过这种方法的前提是C4与C4’需要是一样的snapshot。至于原因，书中这样说的：</p>
@@ -789,7 +812,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -896,7 +919,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -938,7 +961,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

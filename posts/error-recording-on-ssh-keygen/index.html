@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>947 words</span>
+              <span>951 words</span>
             </span>
           
 
@@ -401,35 +401,36 @@
 <span id="more"></span>
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用<code>ssh-keygen -t ecdsa -b 521</code> 新生成了一对key，更新了服务器的authorized_keys，登录正常，但是cap deploy时，一直报错：</p>
-<figure class="highlight lasso"><table><tr><td class="code"><pre><span class="line">Net<span class="type">::SSH</span><span class="type">::Exception</span>: Cannot decode <span class="keyword">private</span> key of <span class="keyword">type</span> ecdsa<span class="params">-sha2</span><span class="params">-nistp521</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>Net::SSH::Exception: Cannot decode private key of type ecdsa-sha2-nistp521
+</code></pre>
 <p>即使按照提示，安装了指定的gem 也没有效果。</p>
-<figure class="highlight 1c"><table><tr><td class="code"><pre><span class="line">gem &#x27;ed<span class="number">2551</span>9&#x27;</span><br><span class="line">gem &#x27;bcrypt_pbkdf&#x27;</span><br></pre></td></tr></table></figure>
-
+<pre><code>gem &#39;ed25519&#39;
+gem &#39;bcrypt_pbkdf&#39;
+</code></pre>
 <p>本机 OpenSSH 版本: 8.1。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>简单提一下中间的解决过程。</p>
 <p>最开始的时候，采取了重新生成key的方式，bits 改为 256：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ssh</span>-keygen -t ecdsa -b <span class="number">256</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>ssh-keygen -t ecdsa -b 256
+</code></pre>
 <p>结果：无效。</p>
 <p>然后在老大的忽悠下，重装了系统。「成功满足了他老人家看机子不爽，孜孜不倦建议重装的诉求。」</p>
 <p>重装后问题依然存在。</p>
 <p>鉴于老大可以正常发布，对比了private key，得出的结论是format 不一致。</p>
 <p>本机上private key 的format 使用的是 OpenSSH private key，也就是私钥的第一行是</p>
-<figure class="highlight brainfuck"><table><tr><td class="code"><pre><span class="line">--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span><span class="comment">BEGIN</span> <span class="comment">OPENSSH</span> <span class="comment">PRIVATE</span> <span class="comment">KEY</span>--<span class="literal">-</span><span class="literal">-</span><span class="literal">-</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>-----BEGIN OPENSSH PRIVATE KEY-----
+</code></pre>
 <p>而老大的则是OpenSSL format，也就是private key 第一行以<code>-----BEGIN EC PRIVATE KEY-----</code> 打头。</p>
 <p>搜<a target="_blank" rel="noopener" href="https://www.openssh.com/releasenotes.html">OpenSSH Release Notes</a> ，change log 中提到了，7.8+版本后默认生成的private key format 是OpenSSH，如果需要生成OpenSSL的PEM format，指定format为 PEM 即可。</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ssh</span>-keygen -t ecdsa -b <span class="number">521</span> -m PEM</span><br></pre></td></tr></table></figure>
-
+<pre><code>ssh-keygen -t ecdsa -b 521 -m PEM
+</code></pre>
 <p>随后部署，OK。「但感觉还是懵逼的，服务器上sshd版本问题？只支持PEM format ？」</p>
 <h4 id="有关ssh-keygen"><a href="#有关ssh-keygen" class="headerlink" title="有关ssh-keygen"></a>有关ssh-keygen</h4><p>问题解决后，补一补 ssh-keygen 的小知识。</p>
 <p>ssh-keygen 可以根据不同的算法生成key，使用 <code>option -t</code> 可以指定生成的key的type(rsa, dsa, ecdsa and ed25519) .</p>
-<figure class="highlight coq"><table><tr><td class="code"><pre><span class="line">-t dsa | <span class="type">ecdsa</span> | <span class="type">ed25519</span> | <span class="type">rsa</span></span><br></pre></td></tr></table></figure>
-
+<pre><code> -t dsa | ecdsa | ed25519 | rsa
+</code></pre>
 <p>默认使用的是rsa-sha2-512。</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">The</span> available RSA signature variants are “ssh-rsa” (SHA<span class="number">1</span> signatures, not recommended), “rsa-sha<span class="number">2</span>-<span class="number">256</span>”, and “rsa-sha<span class="number">2</span>-<span class="number">512</span>” (the default)</span><br></pre></td></tr></table></figure>
-
+<pre><code>The available RSA signature variants are “ssh-rsa” (SHA1 signatures, not recommended), “rsa-sha2-256”, and “rsa-sha2-512” (the default)
+</code></pre>
 <p>四种算法 dsa | ecdsa | ed25519 | rsa 的对比，参考<a target="_blank" rel="noopener" href="https://www.ssh.com/ssh/keygen/">SSH-KEYGEN - GENERATE A NEW SSH KEY</a></p>
 <blockquote>
 <p>rsa:</p>
@@ -442,17 +443,21 @@
 <p>this is a new algorithm added in OpenSSH. Support for it in clients is not yet universal. Thus its use in general purpose applications may not yet be advisable.【新算法，支持不广泛，可以尝试使用】</p>
 </blockquote>
 <p>例子：</p>
-<figure class="highlight excel"><table><tr><td class="code"><pre><span class="line">ssh-keygen -<span class="built_in">t</span> rsa -b <span class="number">4096</span></span><br><span class="line">ssh-keygen -<span class="built_in">t</span> dsa</span><br><span class="line">ssh-keygen -<span class="built_in">t</span> ecdsa -b <span class="number">521</span></span><br><span class="line">ssh-keygen -<span class="built_in">t</span> <span class="symbol">ed25519</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>ssh-keygen -t rsa -b 4096
+ssh-keygen -t dsa
+ssh-keygen -t ecdsa -b 521
+ssh-keygen -t ed25519
+</code></pre>
 <p>生成的key，可以指定comment，比如：</p>
-<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">ssh-keygen -t rsa -b <span class="number">4096</span> -<span class="type">C</span> <span class="symbol">&#x27;your_email</span><span class="meta">@example</span>.com&#x27;</span><br></pre></td></tr></table></figure>
-
+<pre><code>ssh-keygen -t rsa -b 4096 -C &#39;your_email@example.com&#39;
+</code></pre>
 <p>这样生成的key 中comment 是指定的邮箱，而不是有关本机的用户信息。</p>
 <p>默认情况下，使用ssh-keygen 生成的public 和 private key，会分别设置访问权限为644和600，这也是为什么，把本地的public key 添加到服务器后，需要自己手动 chmod， 给 authorized_keys 设置 644，而本机生成时则不用。</p>
 <p>最后，说一个根据private key 生成 public key的小技巧。</p>
 <p>如果你不小心丢了public key「虽然概率极低」，可以根据 private key 重新生成，比如：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">key=~<span class="regexp">/.ssh/i</span>d_ecdsa</span><br><span class="line">ssh-keygen -yf <span class="variable">$key</span> &gt; <span class="variable">$key</span>.pub</span><br></pre></td></tr></table></figure>
-
+<pre><code>key=~/.ssh/id_ecdsa
+ssh-keygen -yf $key &gt; $key.pub
+</code></pre>
 <p>不过需要多一句的是，根据 private key 重新生成的public key 中，comment 默认为空。我试过使用 -C 来指定 comment，但是无效，comment 依然为空，不过comment不影响使用key的正常使用，可以pass。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://www.ssh.com/ssh/keygen/">SSH-KEYGEN - GENERATE A NEW SSH KEY</a></p>
 <p><a target="_blank" rel="noopener" href="https://man.openbsd.org/ssh-keygen.1">ssh-keygen</a></p>
@@ -618,7 +623,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -725,7 +730,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -767,7 +772,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

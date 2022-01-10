@@ -382,7 +382,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2.6k words</span>
+              <span>2.7k words</span>
             </span>
           
 
@@ -409,8 +409,15 @@
 <ul>
 <li><p>实例变量</p>
 <p>看个书中的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">		<span class="variable">@v</span> = <span class="number">1</span></span><br><span class="line">	<span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">object = MyClass.new <span class="comment"># 这时object.instance_variables是[]</span></span><br><span class="line">object.my_method <span class="comment"># 这时object.instance_variables是<span class="doctag">@v</span></span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class MyClass
+    def my_method
+        @v = 1
+    end
+end
 
+object = MyClass.new # 这时object.instance_variables是[]
+object.my_method # 这时object.instance_variables是@v
+</code></pre>
 <p>这里，@v是实例变量，object 创建时，并没有任何实例变量，当object调用my_method时，它有了实例变量@v。你可以通过<code>object.instance_variables</code>来验证。</p>
 </li>
 </ul>
@@ -428,14 +435,28 @@
 <ul>
 <li><p>打开类(open class)与猴子补丁（monkey patch）</p>
 <p>看个简单的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a</span>;</span> <span class="string">&#x27;a&#x27;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">b</span>;</span> <span class="string">&#x27;b&#x27;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = A.new</span><br><span class="line">obj.a</span><br><span class="line">obj.b</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class A
+  def a; &#39;a&#39;; end
+end
 
+class A
+  def b; &#39;b&#39;; end
+end
+
+obj = A.new
+obj.a
+obj.b
+</code></pre>
 <p>这里，Ruby先是定义了这个类A，并定义了method a，随后，Ruby重新打开了类A，定义了method b。</p>
 <p>打开类是Ruby很强大的利器，可以动态修改已经存在的类，即使是String，Array这类标准库中的类也不例外。</p>
 <p>不过利剑用的不好，容易伤着自己。打开类容易带来<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Monkey_patch"><strong>猴子补丁</strong></a>的问题。</p>
 <p>书中举的例子很好，这里直接引用：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Array</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">replace</span><span class="params">(original, replacement)</span></span></span><br><span class="line">    <span class="keyword">self</span>.map &#123;<span class="params">|e|</span> e == original ? replacement : e&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Array
+  def replace(original, replacement)
+    self.map &#123;|e| e == original ? replacement : e&#125;
+  end
+end
+</code></pre>
 <p>这里，打开了Array这个标准库中的类，然后定义了一个replace的method，我们知道Array自身已经有一个replace的method了，那么重新定义，会覆盖掉原来的replace，而你的程序中的其他部分极有可能依赖于原来的replace，这可能会导致危险的后果。这种method就属于猴子补丁。</p>
 <p>如何解决？</p>
 <p>两种方法。</p>
@@ -445,26 +466,61 @@
 </li>
 <li><p>用<strong>细化（Refinement）</strong></p>
 <p>先定义一个module，然后在这个module里面定义这个method，然后使用using方法来启用这个method，<strong>细化的作用范围只在声明了using的模块内部有效</strong>。看例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">ArrayExtensions</span></span></span><br><span class="line">  refine Array <span class="keyword">do</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">replace</span><span class="params">(original, replacement)</span></span></span><br><span class="line">      <span class="keyword">self</span>.map &#123;<span class="params">|e|</span> e == original ? replacement : e&#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span>  <span class="title">ArrayStuff</span></span></span><br><span class="line">  using ArrayExtensions</span><br><span class="line">  [<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>].replace(<span class="string">&quot;a&quot;</span>, <span class="string">&quot;d&quot;</span>) <span class="comment"># =&gt; [&quot;d&quot;, &quot;b&quot;, &quot;c&quot;]</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">[<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>].replace([<span class="string">&quot;a&quot;</span>, <span class="string">&quot;d&quot;</span>]) <span class="comment"># =&gt; [&quot;a&quot;, &quot;d&quot;]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module ArrayExtensions
+  refine Array do
+    def replace(original, replacement)
+      self.map &#123;|e| e == original ? replacement : e&#125;
+    end
+  end
+end
 
+module  ArrayStuff
+  using ArrayExtensions
+  [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace(&quot;a&quot;, &quot;d&quot;) # =&gt; [&quot;d&quot;, &quot;b&quot;, &quot;c&quot;]
+end
+
+[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;].replace([&quot;a&quot;, &quot;d&quot;]) # =&gt; [&quot;a&quot;, &quot;d&quot;]
+</code></pre>
 <p> 前者调用的是在ArrayExtensions中refine的method replace，而且只在声明了using ArrayExtensions的module ArrayStuff有效， 后者调用的则是Array标准库中的replace method。</p>
 <p>它只在你希望它生效的地方生效，这真的蛮好。不过<strong>细化也有其陷阱</strong>，看段代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&quot;original my_method&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_other_method</span></span></span><br><span class="line">    my_method</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyClassRefinement</span></span></span><br><span class="line">  refine MyClass <span class="keyword">do</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">      puts <span class="string">&quot;refined my_method&quot;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">using MyClassRefinement</span><br><span class="line">MyClass.new.my_method  <span class="comment"># =&gt; &quot;refined my_method&quot;</span></span><br><span class="line">MyClass.new.my_other_method <span class="comment"># =&gt; &quot;original my_method&quot;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class MyClass
+  def my_method
+    puts &quot;original my_method&quot;
+  end
 
+  def my_other_method
+    my_method
+  end
+end
+
+module MyClassRefinement
+  refine MyClass do
+    def my_method
+      puts &quot;refined my_method&quot;
+    end
+  end
+end
+
+using MyClassRefinement
+MyClass.new.my_method  # =&gt; &quot;refined my_method&quot;
+MyClass.new.my_other_method # =&gt; &quot;original my_method&quot;
+</code></pre>
 <p>这里，my_other_method对my_method的调用，是在using之后，所以后面还是调用了之前未细化的my_method，所以用细化的时候还是要小心些。</p>
 </li>
 </ul>
 </li>
 <li><p>Superclass</p>
 <p>superclass是一个类方法，可以获取当前类的父类。像上面细化例子里面的MyClass，它的superclass是Object。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Array.superclass <span class="comment"># =&gt; Object</span></span><br><span class="line">Object.superclass <span class="comment"># =&gt; BasicObject</span></span><br><span class="line">BasicObject.superclass <span class="comment"># =&gt; nil</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Array.superclass # =&gt; Object
+Object.superclass # =&gt; BasicObject
+BasicObject.superclass # =&gt; nil
+</code></pre>
 <p>以MyClass为例，obj是它的实例对象，对应的class, superclass如下：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79ly1fp7v0xt72bj31hc0u0493.jpg"></p>
 </li>
 <li><p>模块Module</p>
-<figure class="highlight coq"><table><tr><td class="code"><pre><span class="line"><span class="keyword">Class</span>.superclass =&gt; <span class="keyword">Module</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>Class.superclass =&gt; Module
+</code></pre>
 <p>Module可以看成是一堆method的集合，类和模块很接近，使用的时候，如果你希望自己的代码包含在别的代码中，使用module，如果希望某段代码被实例化或者被继承，用类。</p>
 </li>
 </ul>
@@ -474,14 +530,36 @@
 <p>Ruby中的常量类似变量，它的值是可以修改的，那么它与变量有什么区别？最大的区别在于作用域。</p>
 <p>Ruby代码中的常量类似于文件系统中的文件，类和模块就像是目录。类似不同目录下，不同文件可以有相同的名字，不同的模块和类中，也可以有相同名字的常量。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  MyContant = <span class="string">&#x27;outer contant&#x27;</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">    MyContant = <span class="string">&#x27;inner contant&#x27;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  C::MyContant <span class="comment"># =&gt; &quot;inner contant&quot;</span></span><br><span class="line">  M::MyContant <span class="comment"># =&gt; &quot;outer contant&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">M::C::MyContant <span class="comment"># =&gt; &quot;inner contant&quot;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M
+  MyContant = &#39;outer contant&#39;
+  class C
+    MyContant = &#39;inner contant&#39;
+  end
+  C::MyContant # =&gt; &quot;inner contant&quot;
+  M::MyContant # =&gt; &quot;outer contant&quot;
+end
 
+M::C::MyContant # =&gt; &quot;inner contant&quot;
+</code></pre>
 <p>这里，常量使用了路径引用的方式。用::进行分割。而M这种用来充当常量容器的模块，被称之为<strong>命名空间</strong>。</p>
 </li>
 <li><p>命名空间</p>
 <p>我觉得命名空间的一个作用是隔离。比如下面这种：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">N</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">    puts <span class="string">&quot;in module N&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">    puts <span class="string">&quot;in module M&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">N::C <span class="comment"># =&gt; in module N</span></span><br><span class="line">M::C <span class="comment"># =&gt; in module M</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module N
+  class C
+    puts &quot;in module N&quot;
+  end
+end
 
+module M
+  class C
+    puts &quot;in module M&quot;
+  end
+end
+
+N::C # =&gt; in module N
+M::C # =&gt; in module M
+</code></pre>
 <p>使用命名空间可以轻松解决<strong>类同名</strong>的问题。这里书中提到了一个细节，有关load的使用。</p>
 <p>load用于加载代码，比如<code>load(&#39;demo.rb&#39;)</code>，demo.rb文件中如果定义了常量，就有可能污染当前程序的命名空间，怎么解决？通过参数来强制限定其只在自身范围内有效：<code>load(&#39;demo.rb&#39;, true)</code>.</p>
 </li>
@@ -491,28 +569,84 @@
 <p><strong>接收者</strong>：调用方法所在的对象，比如my_array.replace()， 这里my_array就是接收者。</p>
 <p><strong>祖先链</strong>：以任意一个Ruby类为例，它从superclass一路往上找，superclass的superclass，直到BasicObject，其经历的路径，就是该类的祖先链。</p>
 <p>查看某个class的祖先链，使用ancestors【这是一个类方法】。比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Array.ancestors <span class="comment"># =&gt; [Array, Enumerable, Object, Kernel, BasicObject]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Array.ancestors # =&gt; [Array, Enumerable, Object, Kernel, BasicObject]
+</code></pre>
 <p>这里Kernel模块是包含在Object这个class中的。于是，无论哪个对象都可以随意使用Kernel模块中的方法，这些方法又称之为<strong>内核方法</strong>（Kernel Method）.同样，你也可以<strong>打开Kernal，新增方法，这个方法就会对所有的对象可用了</strong>，cool吧？</p>
 <p>祖先链中包含模块，当某个模块包含在某个类中时，Ruby就会把该模块加入到祖先链中。</p>
 <p><strong>模块的位置在include它的类之上。如果是prepend， 则是在prepend它的类之下</strong>。</p>
 <p>【prepend也是很好的方法包装术，后面的章节中它还会出场】</p>
 <p>看几个例子加深理解：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M1</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span> &lt; C;</span> <span class="keyword">end</span></span><br><span class="line">D.ancestors <span class="comment"># =&gt; [D, C, M1, Object, Kernel, BasicObject]</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C2</span></span></span><br><span class="line">  prepend M1</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D2</span> &lt; C2;</span> <span class="keyword">end</span></span><br><span class="line">D2.ancestors <span class="comment"># =&gt; [D2, M1, C2, Object, Kernel, BasicObject]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1; end
 
+class C
+  include M1
+end
+
+class D &lt; C; end
+D.ancestors # =&gt; [D, C, M1, Object, Kernel, BasicObject]
+
+
+class C2
+  prepend M1
+end
+
+class D2 &lt; C2; end
+D2.ancestors # =&gt; [D2, M1, C2, Object, Kernel, BasicObject]
+</code></pre>
 <p><strong>一个模块只会在祖先链中出现一次：</strong></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span>;</span> <span class="keyword">end</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M2</span></span></span><br><span class="line">  <span class="keyword">include</span> M1</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M3</span></span></span><br><span class="line">  prepend M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">M3.ancestors <span class="comment"># =&gt; [M1, M3, M2]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1; end
+module M2
+  include M1
+end
 
+module M3
+  prepend M1
+  include M2
+end
+
+M3.ancestors # =&gt; [M1, M3, M2]
+</code></pre>
 <p><strong>人生的出场顺序很重要，祖先链中也是：</strong></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span>;</span> <span class="keyword">end</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M2</span>;</span> <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C2</span></span></span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line">  <span class="keyword">include</span> M1</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.ancestors <span class="comment"># =&gt; [C, M2, M1]</span></span><br><span class="line">C2.ancestors <span class="comment"># =&gt; [C2, M1, M2]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1; end
+module M2; end
 
+class C
+  include M1
+  include M2
+end
+
+class C2
+  include M2
+  include M1
+end
+
+C.ancestors # =&gt; [C, M2, M1]
+C2.ancestors # =&gt; [C2, M1, M2]
+</code></pre>
 <p>理解祖先链很有必要，它对于理解后面章节中，特别是单件类，类方法，实例方法等的覆写，扩展等很有帮助。</p>
 <ul>
 <li><p>方法查找</p>
 <p>一句话：<strong>向右一步，再向上</strong></p>
 <p><strong>搞懂了祖先链，其实也就知道了方法的查找</strong>，从接收者对应的class开始（向右一步），一直沿着祖先链往上找，直到找到这个method即可。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello, Ruby! this is M1&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M2</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello, Ruby! this is M2&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.new.hello</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1
+  def hello
+    puts &quot;hello, Ruby! this is M1&quot;
+  end
+end
+module M2
+  def hello
+    puts &quot;hello, Ruby! this is M2&quot;
+  end
+end
 
+class C
+  include M1
+  include M2
+end
+
+C.new.hello
+</code></pre>
 <p>这里hello是调用哪个？</p>
 <p>我们知道C.ancestors是 [C, M2, M1]，M2中有hello这个method，所以它会找到最近的那个，也就是M2的hello ，输出：<code>hello, Ruby! this is M2</code>。</p>
 </li>
@@ -520,15 +654,30 @@
 <p>Ruby中每一行代码都会在一个对象中被执行，这个对象就是所谓的当前对象，可以用self表示。</p>
 <p>任何时刻，只有一个对象可以充当当前对象，当调用一个方法时，接收者就成为了self。</p>
 <p>看个例子【书中的这个例子很好，直接拿来】：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">test_self</span></span></span><br><span class="line">    <span class="variable">@var</span> = <span class="number">1</span></span><br><span class="line">    my_method()</span><br><span class="line">    <span class="keyword">self</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    <span class="variable">@var</span> = <span class="variable">@var</span> + <span class="number">1</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = C.new</span><br><span class="line"></span><br><span class="line">obj.test_self <span class="comment"># =&gt; #&lt;C:0x007faf9d0588f0 <span class="doctag">@var</span>=2&gt;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class C
+  def test_self
+    @var = 1
+    my_method()
+    self
+  end
 
+  def my_method
+    @var = @var + 1
+  end
+end
+
+obj = C.new
+
+obj.test_self # =&gt; #&lt;C:0x007faf9d0588f0 @var=2&gt;
+</code></pre>
 <p>调用test_self时，obj就成为了self，@var成了obj的实例变量，执行my_method时，@var仍然是obj的实例变量， 最后返回self的引用，可以看到@var变为2。</p>
 <p>有关self部分，可以顺带说说两种情况。</p>
 <ul>
 <li><p>顶层上下文（top level context）</p>
 <p>如果没有调用任何方法，此时谁是self？运行irb，问Ruby：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">self</span> <span class="comment"># =&gt; main</span></span><br><span class="line"><span class="keyword">self</span>.<span class="keyword">class</span>  <span class="comment"># =&gt; Object</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">self # =&gt; main
+self.class  # =&gt; Object
+</code></pre>
 <p>Ruby程序开始运行时，解释器会创建一个名为main的对象作为当前对象，也就是self。这个对象又叫做<strong>顶层上下文</strong>（top level context）。</p>
 </li>
 <li><p>类或模块中，self的角色由这个类或模块本身担任</p>
@@ -536,11 +685,22 @@
 </ul>
 <p>书中还提到了借助self，重新理解private。即：<strong>不能明确指定接收者来调用私有方法</strong>。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">public_method</span></span></span><br><span class="line">    <span class="keyword">self</span>.private_method</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  private</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">private_method</span>;</span> <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span>  </span><br><span class="line"></span><br><span class="line">C.new.public_method</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class C
+  def public_method
+    self.private_method
+  end
 
+  private
+
+  def private_method; end
+  end
+end  
+
+C.new.public_method
+</code></pre>
 <p>运行时会报错：</p>
-<figure class="highlight oxygene"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">method</span> `<span class="title">private_method</span>&#x27; <span class="title">called</span> <span class="title">for</span> #&lt;<span class="title">C</span>:</span><span class="number">0</span>x007fce270f4478&gt; (NoMethodError)</span><br></pre></td></tr></table></figure>
-
+<pre><code>private method `private_method&#39; called for #&lt;C:0x007fce270f4478&gt; (NoMethodError)
+</code></pre>
 <p>因为此处用了self，所以调用public_method时，C的对象便成为了self， 而private_method是不能直接被实例对象调用的。去掉public_method中的self即可。</p>
 <p>这部分的主要内容基本如上，是不是感觉学到了好多？: P</p>
 </li>
@@ -708,7 +868,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -815,7 +975,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -857,7 +1017,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

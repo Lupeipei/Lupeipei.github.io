@@ -384,7 +384,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>839 words</span>
+              <span>851 words</span>
             </span>
           
 
@@ -406,21 +406,24 @@
 
 <h4 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h4><p> 之前用<a target="_blank" rel="noopener" href="https://github.com/wvanbergen/chunky_png">chunky png</a>来做图片处理，后面发现在添加线条及文字这方面，<a target="_blank" rel="noopener" href="https://github.com/wvanbergen/chunky_png">chunky png</a>很受限，决定换成<a target="_blank" rel="noopener" href="https://github.com/rmagick/rmagick">RMagick</a>，随后又因为它吃内存的原因，换成了 <a target="_blank" rel="noopener" href="https://github.com/minimagick/minimagick">mini_magick</a> , <a target="_blank" rel="noopener" href="https://github.com/minimagick/minimagick">mini_magick</a>的用法与<a target="_blank" rel="noopener" href="https://github.com/rmagick/rmagick">RMagick</a>较相似，这里记录下<a target="_blank" rel="noopener" href="https://github.com/rmagick/rmagick">RMagick</a>的draw用法【单纯觉得很好玩 : P】，另，安装的时候，踩了点坑，顺带把安装也写写。</p>
 <h4 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h4><p>Mac OS下：</p>
- <figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">brew </span><span class="keyword">install </span>imagemagick</span><br><span class="line">gem <span class="keyword">install </span>rmagick</span><br></pre></td></tr></table></figure>
-
+<pre><code>brew install imagemagick
+gem install rmagick
+</code></pre>
 <p>如果已经安装了imagemagick，则：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">brew </span>upgrade imagemagick</span><br><span class="line">gem <span class="keyword">install </span>rmagick</span><br></pre></td></tr></table></figure>
-
+<pre><code>brew upgrade imagemagick
+gem install rmagick
+</code></pre>
 <p>对于<strong>Mac OSX Sierra</strong> (and High Sierra)，安装的时候，可能还是失败，看日志，可能会出现这样的报错信息：</p>
-<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="attribute">Can</span>&#x27;t install RMagick <span class="number">2</span>.<span class="number">16</span>.<span class="number">0</span>. Can&#x27;t find MagickWand.h.</span><br></pre></td></tr></table></figure>
-
+<pre><code>Can&#39;t install RMagick 2.16.0. Can&#39;t find MagickWand.h.
+</code></pre>
 <p>如何解决？参考这个<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/39494672/rmagick-installation-cant-find-magickwand-h">RMagick installation: Can’t find MagickWand.h</a></p>
 <p>终端输入：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">brew </span>unlink imagemagick</span><br><span class="line"><span class="keyword">brew </span><span class="keyword">install </span>imagemagick@<span class="number">6</span> &amp;&amp; <span class="keyword">brew </span>link imagemagick@<span class="number">6</span> --force</span><br></pre></td></tr></table></figure>
-
+<pre><code>brew unlink imagemagick
+brew install imagemagick@6 &amp;&amp; brew link imagemagick@6 --force
+</code></pre>
 <p>然后：</p>
-<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">gem <span class="keyword">install</span> rmagick</span><br></pre></td></tr></table></figure>
-
+<pre><code>gem install rmagick
+</code></pre>
 <p>OK，你已经get到了这个轮子，看看怎么使用吧。</p>
 <h4 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h4><p>RMagick不仅仅可以用来给图片添加线条和文字，它还可以新建，读写图片等，戳<a target="_blank" rel="noopener" href="https://rmagick.github.io/usage.html">官网</a>详见。</p>
 <p>重点看它的draw类。【因为我觉得Drawing on and adding text to images是它最cool的功能点：P】</p>
@@ -428,23 +431,59 @@
 <ul>
 <li><p>添加线条</p>
 <p>以添加一个方框为例，新建<code>demo.rb</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;RMagick&#x27;</span></span><br><span class="line"><span class="keyword">include</span> Magick</span><br><span class="line"></span><br><span class="line">demo = ImageList.new(<span class="string">&quot;demo.png&quot;</span>) <span class="comment"># 建image对象，这里demo.png是存在的，若要新建一张图片，可以用Image.new</span></span><br><span class="line">border = Magick::Draw.new <span class="comment"># 建draw实例</span></span><br><span class="line">border.stroke(<span class="string">&#x27;rgb(255,0,0)&#x27;</span>) <span class="comment"># 线条颜色，这里红色</span></span><br><span class="line">border.fill(<span class="string">&#x27;transparent&#x27;</span>) <span class="comment"># 填充色，这里不填充，选透明</span></span><br><span class="line">border.stroke_width(<span class="number">4</span>) <span class="comment"># 线条宽度</span></span><br><span class="line">border.rectangle(<span class="number">100</span>, <span class="number">100</span>, <span class="number">500</span>, <span class="number">500</span>) <span class="comment"># 方框线条的位置，左上角起始点,右下角终止点</span></span><br><span class="line">border.draw(demo) <span class="comment"># 给demo画上</span></span><br><span class="line">demo.write(<span class="string">&#x27;demo.png&#x27;</span>) <span class="comment"># 保存</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;RMagick&#39;
+include Magick
 
+demo = ImageList.new(&quot;demo.png&quot;) # 建image对象，这里demo.png是存在的，若要新建一张图片，可以用Image.new
+border = Magick::Draw.new # 建draw实例
+border.stroke(&#39;rgb(255,0,0)&#39;) # 线条颜色，这里红色
+border.fill(&#39;transparent&#39;) # 填充色，这里不填充，选透明
+border.stroke_width(4) # 线条宽度
+border.rectangle(100, 100, 500, 500) # 方框线条的位置，左上角起始点,右下角终止点
+border.draw(demo) # 给demo画上
+demo.write(&#39;demo.png&#39;) # 保存
+</code></pre>
 <p>这里，demo.png本来是一张空白图片：【不要怀疑，我真的放了一张空白的图片】</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp6upeoxkfj31hc0hndfm.jpg"></p>
 <p>终端运行<code>ruby demo.rb</code>后，demo.png成了这样：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp6urjqvynj31hc0hn0nb.jpg"></p>
 <p>好玩吧？还可以画其他的，比如圆形，星星等等，比如我们画个星星:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;RMagick&#x27;</span></span><br><span class="line"><span class="keyword">include</span> Magick</span><br><span class="line"></span><br><span class="line">demo = ImageList.new(<span class="string">&quot;demo.png&quot;</span>)</span><br><span class="line">star = Magick::Draw.new</span><br><span class="line">star.stroke(<span class="string">&#x27;red&#x27;</span>).stroke_width(<span class="number">3</span>)</span><br><span class="line">star.fill(<span class="string">&#x27;yellow&#x27;</span>)</span><br><span class="line">star.polygon( <span class="number">75</span>,<span class="number">37.5</span>,     <span class="number">89.5</span>,<span class="number">80.5</span>, <span class="number">134.5</span>,<span class="number">80.5</span>,   <span class="number">98.5</span>,<span class="number">107.5</span>,</span><br><span class="line">           <span class="number">111.5</span>,<span class="number">150.5</span>,  <span class="number">75</span>,<span class="number">125</span>,    <span class="number">38.5</span>,<span class="number">150.5</span>,   <span class="number">51.5</span>,<span class="number">107.5</span>,</span><br><span class="line">           <span class="number">15.5</span>,<span class="number">80.5</span>,    <span class="number">60.5</span>,<span class="number">80.5</span>)</span><br><span class="line">star.draw(demo)</span><br><span class="line">demo.write(<span class="string">&#x27;demo.png&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;RMagick&#39;
+include Magick
 
+demo = ImageList.new(&quot;demo.png&quot;)
+star = Magick::Draw.new
+star.stroke(&#39;red&#39;).stroke_width(3)
+star.fill(&#39;yellow&#39;)
+star.polygon( 75,37.5,     89.5,80.5, 134.5,80.5,   98.5,107.5,
+           111.5,150.5,  75,125,    38.5,150.5,   51.5,107.5,
+           15.5,80.5,    60.5,80.5)
+star.draw(demo)
+demo.write(&#39;demo.png&#39;)
+</code></pre>
 <p> 运行后，效果图：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp6uxrz3c5j31hc0hngll.jpg"></p>
 <p>画图基本的套路就是这样，想画画其他的？看它的<a target="_blank" rel="noopener" href="https://rmagick.github.io/draw.html">draw class</a>的文档。</p>
 </li>
 <li><p>添加文字</p>
 <p>还是用demo.png，我们看看如何在空白页上添加文字：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;RMagick&#x27;</span></span><br><span class="line"><span class="keyword">include</span> Magick</span><br><span class="line"></span><br><span class="line">demo = ImageList.new(<span class="string">&quot;demo.png&quot;</span>)</span><br><span class="line">Text = <span class="string">&#x27;I Love Ruby!&#x27;</span> <span class="comment"># 需要添加的文字</span></span><br><span class="line">text = Magick::Draw.new</span><br><span class="line">text.font_family = <span class="string">&#x27;helvetica&#x27;</span> <span class="comment"># 字体</span></span><br><span class="line">text.pointsize = <span class="number">60</span> <span class="comment"># 大小</span></span><br><span class="line">text.gravity = Magick::CenterGravity <span class="comment"># 字的朝向，这里是区域的中心</span></span><br><span class="line"><span class="comment"># 调用annotate(img, width, height, x, y, text)这个method给demo添加文字， width, height, x, y决定字体的摆放位置</span></span><br><span class="line"><span class="comment"># 把文字当成一个长方形，width, height是起始位置【gravity设定的起始点】，x, y是偏移量. fill是填充色</span></span><br><span class="line">text.annotate(demo, <span class="number">0</span>,<span class="number">0</span>,<span class="number">2</span>,<span class="number">2</span>, Text) &#123;</span><br><span class="line">    <span class="keyword">self</span>.fill = <span class="string">&#x27;red&#x27;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">demo.write(<span class="string">&#x27;demo.png&#x27;</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">require &#39;RMagick&#39;
+include Magick
 
+demo = ImageList.new(&quot;demo.png&quot;)
+Text = &#39;I Love Ruby!&#39; # 需要添加的文字
+text = Magick::Draw.new
+text.font_family = &#39;helvetica&#39; # 字体
+text.pointsize = 60 # 大小
+text.gravity = Magick::CenterGravity # 字的朝向，这里是区域的中心
+# 调用annotate(img, width, height, x, y, text)这个method给demo添加文字， width, height, x, y决定字体的摆放位置
+# 把文字当成一个长方形，width, height是起始位置【gravity设定的起始点】，x, y是偏移量. fill是填充色
+text.annotate(demo, 0,0,2,2, Text) &#123;
+    self.fill = &#39;red&#39;
+&#125;
+
+demo.write(&#39;demo.png&#39;)
+</code></pre>
 <p>效果图：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fp6veoa0fmj31hc0hna9x.jpg"></p>
 <p>哈哈，是不是很cool？我就抛砖引玉，剩下的，看文档，自己玩吧！</p>
@@ -612,7 +651,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -719,7 +758,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -761,7 +800,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

@@ -401,8 +401,8 @@
 
 <h4 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h4><p>官网上V3.8 的rspec-core中<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/v/3-8/docs/metadata">metadata</a>部分，含三部分current_example, described class, User-defined metadata，但是没有明确的定义metadata[也可能是我没找到……]。</p>
 <p><a target="_blank" rel="noopener" href="https://www.tutorialspoint.com/rspec/rspec_metadata.htm">tutorials point</a>针对metadata给到的定义：</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">data <span class="keyword">about</span> your describe, context <span class="keyword">and</span> <span class="keyword">it</span> blocks.</span><br></pre></td></tr></table></figure>
-
+<pre><code>data about your describe, context and it blocks.
+</code></pre>
 <p><a target="_blank" rel="noopener" href="https://pragprog.com/book/rspec3/effective-testing-with-rspec-3">Effective Testing with RSpec 3</a> 在chapter8中提到Metadata解决了RSpec中的一个特殊问题：</p>
 <blockquote>
 <p> Keep information about the context your specs are running in</p>
@@ -422,15 +422,46 @@
 <p>想要查看metadata的内容，需要通过当前的example来调用metadata这个method，而example对象的引用，可以通过 it, subject, let , before, after, around 后接block来获取。</p>
 <p>看个简单的例子感受下。</p>
 <p>安装Rspec后，在rails项目中随意跑一个example，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## spec/metadata_spec.rb</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails_helper&#x27;</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="symbol">:hash</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;hello&quot;</span> <span class="keyword">do</span> <span class="params">|example|</span></span><br><span class="line">    pp example.metadata</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">## spec/metadata_spec.rb
 
+require &#39;rails_helper&#39;
+
+RSpec.describe :hash do
+  it &quot;hello&quot; do |example|
+    pp example.metadata
+  end
+end
+</code></pre>
 <p>执行后，输出如下结果：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&#123;<span class="symbol">:block=&gt;</span></span><br><span class="line">  #&lt;Proc:0x007fcd83b1dc28@/Users/xxxx/xxx/spec/metadata_spec.rb:4&gt;,</span><br><span class="line"> <span class="symbol">:description_args=&gt;</span>[<span class="string">&quot;hello&quot;</span>],</span><br><span class="line"> <span class="symbol">:description=&gt;<span class="string">&quot;hello&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:full_description=&gt;<span class="string">&quot;hash hello&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:described_class=&gt;</span><span class="symbol">:hash</span>,</span><br><span class="line"> <span class="symbol">:file_path=&gt;<span class="string">&quot;./spec/metadata_spec.rb&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:line_number=&gt;</span><span class="number">4</span>,</span><br><span class="line"> <span class="symbol">:location=&gt;<span class="string">&quot;./spec/metadata_spec.rb:4&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:absolute_file_path=&gt;<span class="string">&quot;/Users/xxxx/xxx/spec/metadata_spec.rb&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:rerun_file_path=&gt;<span class="string">&quot;./spec/metadata_spec.rb&quot;</span></span>,</span><br><span class="line"> <span class="symbol">:scoped_id=&gt;<span class="string">&quot;1:1&quot;</span></span>,</span><br><span class="line"> ...........</span><br><span class="line"> <span class="symbol">:last_run_status=&gt;<span class="string">&quot;unknown&quot;</span></span>&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">&#123;:block=&gt;
+  #&lt;Proc:0x007fcd83b1dc28@/Users/xxxx/xxx/spec/metadata_spec.rb:4&gt;,
+ :description_args=&gt;[&quot;hello&quot;],
+ :description=&gt;&quot;hello&quot;,
+ :full_description=&gt;&quot;hash hello&quot;,
+ :described_class=&gt;:hash,
+ :file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
+ :line_number=&gt;4,
+ :location=&gt;&quot;./spec/metadata_spec.rb:4&quot;,
+ :absolute_file_path=&gt;&quot;/Users/xxxx/xxx/spec/metadata_spec.rb&quot;,
+ :rerun_file_path=&gt;&quot;./spec/metadata_spec.rb&quot;,
+ :scoped_id=&gt;&quot;1:1&quot;,
+ ...........
+ :last_run_status=&gt;&quot;unknown&quot;&#125;
+</code></pre>
 <p>这里输出的都是metadata默认的内容，你也可以自定义metadata。</p>
 <p>Rspec官网上举了一些例子，这里看一个简单的，给你的example加上tag fast：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## spec/metadata_spec.rb</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails_helper&#x27;</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="symbol">:hash</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;hello&quot;</span>, <span class="symbol">fast:</span> <span class="literal">true</span> <span class="keyword">do</span> <span class="params">|example|</span></span><br><span class="line">    pp example.metadata</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 也可以写成it &quot;hello&quot;, :fast do  |example|, Rspec默认缺省的value为true</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">## spec/metadata_spec.rb
 
+require &#39;rails_helper&#39;
+
+RSpec.describe :hash do
+  it &quot;hello&quot;, fast: true do |example|
+    pp example.metadata
+  end
+end
+
+## 也可以写成it &quot;hello&quot;, :fast do  |example|, Rspec默认缺省的value为true
+</code></pre>
 <p>执行后，会发现输出结果中有<code>:fast=&gt;true</code>。</p>
 <p>如果是在RSpec.describe中添加fast，则内嵌的所有example的metadata中都会带有<code>:fast=&gt;true</code>。</p>
 <h4 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h4><p>通过metadata可以给example或者example group添加同样的metadata，这样执行时，可以选择执行匹配要求的example了，此外也可以将module批量include到指定的example group中【后面会提到】。</p>
@@ -444,37 +475,89 @@
 <p><strong>指定目录下的所有example group都添加上同一个metadata</strong></p>
 <p>用过Rspec都知道，所有spec/controllers下的文件，都不需要添加type: :controller 这个metadata，RSpec会给所有该目录下的example group默认添加上type: :controller,这个是怎么实现的呢？</p>
 <p>像这样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### spec/spec_helper.rb</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.define_derived_metadata(<span class="symbol">file_path:</span> /spec\/controllers/) <span class="keyword">do</span> <span class="params">|meta|</span></span><br><span class="line">    meta[<span class="symbol">:type</span>] = <span class="symbol">:controller</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### spec/spec_helper.rb
 
+RSpec.configure do |config|
+  config.define_derived_metadata(file_path: /spec\/controllers/) do |meta|
+    meta[:type] = :controller
+  end
+end
+</code></pre>
 <p>再比如：给spec/unit下的所有example group都添加上focus这个tag。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### spec/spec_helper.rb</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.define_derived_metadata(<span class="symbol">file_path:</span> /spec\/unit/) <span class="keyword">do</span> <span class="params">|meta|</span></span><br><span class="line">    meta[<span class="symbol">:focus</span>] = <span class="literal">true</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### spec/spec_helper.rb
 
+RSpec.configure do |config|
+  config.define_derived_metadata(file_path: /spec\/unit/) do |meta|
+    meta[:focus] = true
+  end
+end
+</code></pre>
 <p><strong>有条件地添加特定的metadata</strong></p>
 <p>这里看一个实用性的例子，有关<a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/expectation-framework-integration/aggregating-failures">aggregate_failures</a>【没用过aggregate_failures？参考部分附上了aggregate_failure的简单说明，可有助理解】。</p>
 <p>要求除了已经添加aggregate_failures为false的example group，所有其他的example group都将aggregate_failure设置为true。</p>
 <p>比如在clazz_a和clazz_b中，添加了aggregate_failures为false， 现在希望除了clazz_a和clazz_b外，其他都默认指定aggregate_failures为true。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### spec/models/clazz_a_spec.rb</span></span><br><span class="line">RSpec.descirbe <span class="symbol">:clazz_a</span>, <span class="symbol">aggregate_failures:</span> <span class="literal">false</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;xxx&quot;</span> <span class="keyword">do</span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### spec/models/clazz_b_spec.rb</span></span><br><span class="line">RSpec.descirbe <span class="symbol">:clazz_b</span>, <span class="symbol">aggregate_failures:</span> <span class="literal">false</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;xxx&quot;</span> <span class="keyword">do</span></span><br><span class="line">    ......</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### spec/models/clazz_a_spec.rb
+RSpec.descirbe :clazz_a, aggregate_failures: false do
+  context &quot;xxx&quot; do
+    ......
+  end
+end
 
+### spec/models/clazz_b_spec.rb
+RSpec.descirbe :clazz_b, aggregate_failures: false do
+  context &quot;xxx&quot; do
+    ......
+  end
+end
+</code></pre>
 <p>实现的方式也很简单：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### spec/spec_helper.rb</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.define_derived_metadata <span class="keyword">do</span> <span class="params">|meta|</span></span><br><span class="line">    meta[<span class="symbol">:aggregate_failures</span>] = <span class="literal">true</span> <span class="keyword">unless</span> meta.key?(<span class="symbol">:aggregate_failures</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### spec/spec_helper.rb
 
+RSpec.configure do |config|
+  config.define_derived_metadata do |meta|
+    meta[:aggregate_failures] = true unless meta.key?(:aggregate_failures)
+  end
+end
+</code></pre>
 <p>如果example group中已经添加了aggregate_failures，则pass，否则添加aggregate_failures为true。</p>
 <p>Cool!</p>
 <h4 id="back-to-shared-context"><a href="#back-to-shared-context" class="headerlink" title="back to shared_context"></a>back to shared_context</h4><p>回到之前困惑的shared_context 中。</p>
 <p>我们知道，通过使用include_context “xxx” 可以调用定义的shared_context，同样，也可以通过给example添加metadata来调用。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#### spec/support/shared_stuff.rb</span></span><br><span class="line"></span><br><span class="line">RSpec.shared_context <span class="string">&quot;shared stuff&quot;</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:h</span>) &#123; &#123; <span class="symbol">:hello</span> =&gt; <span class="string">&quot;world&quot;</span> &#125; &#125; <span class="comment">## 没啥意义的context，仅仅用来举例</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.include_context <span class="string">&quot;shared stuff&quot;</span>, <span class="symbol">include_shared:</span> <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">#### spec/support/shared_stuff.rb
 
+RSpec.shared_context &quot;shared stuff&quot; do
+  let(:h) &#123; &#123; :hello =&gt; &quot;world&quot; &#125; &#125; ## 没啥意义的context，仅仅用来举例
+end
+RSpec.configure do |config|
+  config.include_context &quot;shared stuff&quot;, include_shared: true
+end
+</code></pre>
 <p>使用时，只要给example group添加上<code>include_shared: true</code>这个metadata即可, 效果等同于调用了<code>include_context &quot;shared stuff&quot;</code>。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#### spec/shared_stuff_example.rb</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails_helper&#x27;</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">&quot;support/shared_stuff.rb&quot;</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">&quot;this is an example&quot;</span>, <span class="symbol">:include_shared</span> <span class="keyword">do</span></span><br><span class="line">  it &#123; expect(h[<span class="symbol">:hello</span>]).to eq <span class="string">&quot;world&quot;</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">#### spec/shared_stuff_example.rb
 
+require &#39;rails_helper&#39;
+require &quot;support/shared_stuff.rb&quot;
+
+RSpec.describe &quot;this is an example&quot;, :include_shared do
+  it &#123; expect(h[:hello]).to eq &quot;world&quot; &#125;
+end
+</code></pre>
 <p>执行，pass。</p>
 <p>上面的例子，可以理解为所有添加了<code>include_shared： true</code>的example group 都执行了<code>include_context &quot;shared stuff&quot;</code> ,事实上，确实如此。</p>
 <p>再看一个更常见的例子：</p>
 <p>我们在一个module Signin中定义了一些实现不同用户登录的methods【比如sgin_in_admin, sign_in_guest……】，现在希望在spec/controller下的所有example group中都可以调用这些method的。</p>
 <p>使用metadata可以这样实现：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### spec/support/sign_in.rb</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">SignIn</span></span></span><br><span class="line">  ..... <span class="comment">### methods</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.<span class="keyword">include</span> SignIn, <span class="symbol">type:</span> <span class="symbol">:controller</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### spec/support/sign_in.rb
 
+module SignIn
+  ..... ### methods
+end
+
+RSpec.configure do |config|
+  config.include SignIn, type: :controller
+end
+</code></pre>
 <p>这样，所有metadata中type为controller的example group便都会执行<code>include SignIn</code>了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/metadata">Rspec core metadata</a></p>
 <p><a target="_blank" rel="noopener" href="https://relishapp.com/rspec/rspec-core/docs/example-groups/shared-context">Rspec core shared context</a></p>
@@ -640,7 +723,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -747,7 +830,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -789,7 +872,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

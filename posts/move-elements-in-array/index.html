@@ -407,12 +407,55 @@
 <p>遍历A中的元素，如果该元素属于B，则塞进一个新的数组中，不属于B，则单独生成一个单一元素的数组，然后把这些生成的新数组组合起来，最后生成一个大的数组，这个内嵌数组的大数组长这样：[[2], [4], [5, 1, 9], [0]]， 这样只需要针对大数组进行元素互换即可。</p>
 <p>我这表达可能还不够清晰，看代码实现吧！</p>
 <h4 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h4><p>定义一个method reorder，这里我们用step来表示移位，step为正，则向前移动step步，step为负，则向后移动step步，有关参数部分的检验，这里略去。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">reorder</span><span class="params">(current, part ,step)</span></span></span><br><span class="line">  order_index = <span class="literal">nil</span></span><br><span class="line">  new_order = []</span><br><span class="line">  current.each <span class="keyword">do</span> <span class="params">|item|</span></span><br><span class="line">    <span class="keyword">if</span> part.<span class="keyword">include</span>?(item)</span><br><span class="line">      <span class="keyword">if</span> order_index</span><br><span class="line">        new_order[order_index] &lt;&lt; item</span><br><span class="line">      <span class="keyword">else</span></span><br><span class="line">        new_order &lt;&lt; [item]</span><br><span class="line">        order_index = new_order.count - <span class="number">1</span></span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">      new_order &lt;&lt; [item]</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  new_index = order_index + step</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> new_index &gt;= <span class="number">0</span> &amp;&amp; new_index &lt; current.count</span><br><span class="line">    new_order[order_index], new_order[new_index] = new_order[new_index], new_order[order_index]</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  new_order.flatten!</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">def reorder(current, part ,step)
+  order_index = nil
+  new_order = []
+  current.each do |item|
+    if part.include?(item)
+      if order_index
+        new_order[order_index] &lt;&lt; item
+      else
+        new_order &lt;&lt; [item]
+        order_index = new_order.count - 1
+      end
+    else
+      new_order &lt;&lt; [item]
+    end
+  end
 
+  new_index = order_index + step
+
+  if new_index &gt;= 0 &amp;&amp; new_index &lt; current.count
+    new_order[order_index], new_order[new_index] = new_order[new_index], new_order[order_index]
+  end
+  new_order.flatten!
+end
+</code></pre>
 <p>基本跟思路走的。</p>
 <p>用一两个例子测试一下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">a = [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">b1 = [<span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">15</span>, <span class="number">52</span>]</span><br><span class="line">b2 = [<span class="number">57</span>]</span><br><span class="line">b3 = [<span class="number">65</span>]</span><br><span class="line">b4 = [<span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b1, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b2, -<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">27</span>, <span class="number">20</span>, <span class="number">57</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b3, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br><span class="line"></span><br><span class="line">p reorder(a, b4, -<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">=&gt; [<span class="number">65</span>, <span class="number">34</span>, <span class="number">47</span>, <span class="number">29</span>, <span class="number">72</span>, <span class="number">74</span>, <span class="number">15</span>, <span class="number">52</span>, <span class="number">90</span>, <span class="number">23</span>, <span class="number">31</span>, <span class="number">56</span>, <span class="number">89</span>, <span class="number">3</span>, <span class="number">85</span>, <span class="number">55</span>, <span class="number">57</span>, <span class="number">27</span>, <span class="number">20</span>]</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">a = [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
 
+b1 = [90, 23, 31, 15, 52]
+b2 = [57]
+b3 = [65]
+b4 = [20]
+
+p reorder(a, b1, 2)
+
+=&gt; [65, 34, 47, 29, 15, 52, 90, 23, 31, 72, 74, 56, 89, 3, 85, 55, 57, 27, 20]
+
+p reorder(a, b2, -2)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 27, 20, 57]
+
+p reorder(a, b3, 1)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
+
+p reorder(a, b4, -1)
+
+=&gt; [65, 34, 47, 29, 72, 74, 15, 52, 90, 23, 31, 56, 89, 3, 85, 55, 57, 27, 20]
+</code></pre>
 <p>b1是a中[15, 52, 90, 23, 31]这5个元素无序组合而成，reorder(a, b1, 2) ，则需要将这5个元素往前移动两位，通过最后生成的新数组，可以看到确实移动了两位，15前面的72，74都移动到了31的后面。</p>
 <p>b2是含单一元素的数组，一样适用。</p>
 <p>b3, b4是特例，分别是a的第一个和最后一个元素，第一个元素无法向前移动一位，最后一个元素也无法向后移动一位，所以生成的new_order与a一样。</p>
@@ -576,7 +619,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -683,7 +726,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -725,7 +768,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>

@@ -383,7 +383,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>958 words</span>
+              <span>965 words</span>
             </span>
           
 
@@ -407,43 +407,54 @@
 <h4 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h4><p>创建实例后，点击VM实例页面中的SSH按钮，连接到服务器。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1g2u38httrvj31g00f0mzc.jpg"></p>
 <p>登录服务器后，先获取 root 权限：</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">sudo -<span class="selector-tag">i</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>sudo -i
+</code></pre>
 <p>更新系统：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">apt update</span></span><br><span class="line"><span class="attribute">apt upgrade</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>apt update
+apt upgrade
+</code></pre>
 <h4 id="启用BBR"><a href="#启用BBR" class="headerlink" title="启用BBR"></a>启用BBR</h4><p>BBR 由 Google 开发，供 Linux 内核的 TCP 协议栈使用，具体我也不甚了解，可以简单理解为它能加速网络传输速度。</p>
 <p>好了，启用吧。</p>
 <p>写入配置：</p>
-<figure class="highlight arcade"><table><tr><td class="code"><pre><span class="line">echo <span class="string">&quot;net.core.default_qdisc=fq&quot;</span> &gt;&gt; <span class="regexp">/etc/</span>sysctl.conf</span><br><span class="line"></span><br><span class="line">echo <span class="string">&quot;net.ipv4.tcp_congestion_control=bbr&quot;</span> &gt;&gt; <span class="regexp">/etc/</span>sysctl.conf</span><br></pre></td></tr></table></figure>
+<pre><code>echo &quot;net.core.default_qdisc=fq&quot; &gt;&gt; /etc/sysctl.conf
 
+echo &quot;net.ipv4.tcp_congestion_control=bbr&quot; &gt;&gt; /etc/sysctl.conf
+</code></pre>
 <p>配置生效：</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">sysctl -<span class="selector-tag">p</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>sysctl -p
+</code></pre>
 <p>校验：</p>
-<figure class="highlight 1c"><table><tr><td class="code"><pre><span class="line">lsmod <span class="string">| grep bbr</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>lsmod | grep bbr
+</code></pre>
 <p>看到输出类似<code>tcp_bbr  20480 </code> 这样的内容，则表明启用成功了。</p>
 <h4 id="搭建SS-Server"><a href="#搭建SS-Server" class="headerlink" title="搭建SS Server"></a>搭建SS Server</h4><p>SS Server的安装可以参考官方文档：<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/shadowsocks/blob/master/README.md">shadowsocks</a>.</p>
 <p>更新软件包：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">apt-<span class="keyword">get</span> <span class="keyword">update</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>apt-get update
+</code></pre>
 <p>安装python-pip：</p>
-<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">apt-<span class="builtin-name">get</span> install python-pip</span><br></pre></td></tr></table></figure>
-
+<pre><code>apt-get install python-pip
+</code></pre>
 <p>使用 pip 安装 SS server：</p>
-<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">pip <span class="keyword">install</span> shadowsocks</span><br></pre></td></tr></table></figure>
-
+<pre><code>pip install shadowsocks
+</code></pre>
 <p>安装成功后，创建配置文件：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">vi <span class="regexp">/etc/</span>shadowsocks.json</span><br></pre></td></tr></table></figure>
-
+<pre><code>vi /etc/shadowsocks.json
+</code></pre>
 <p>在文件中添加以下内容：</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;server&quot;</span>:<span class="string">&quot;0.0.0.0&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;server_port&quot;</span>:<span class="number">8388</span>,</span><br><span class="line">    <span class="attr">&quot;local_address&quot;</span>: <span class="string">&quot;127.0.0.1&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;local_port&quot;</span>:<span class="number">1080</span>,</span><br><span class="line">    <span class="attr">&quot;password&quot;</span>:<span class="string">&quot;password&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;timeout&quot;</span>:<span class="number">300</span>,</span><br><span class="line">    <span class="attr">&quot;method&quot;</span>:<span class="string">&quot;aes-256-cfb&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<pre><code>&#123;
+    &quot;server&quot;:&quot;0.0.0.0&quot;,
+    &quot;server_port&quot;:8388,
+    &quot;local_address&quot;: &quot;127.0.0.1&quot;,
+    &quot;local_port&quot;:1080,
+    &quot;password&quot;:&quot;password&quot;,
+    &quot;timeout&quot;:300,
+    &quot;method&quot;:&quot;aes-256-cfb&quot;
+&#125;
+</code></pre>
 <p>这里：server_port， password对应的是之后你在Shadowsocks客户端上配置的端口和密码，请自定义。</p>
 <p>保存文件后，启动SS server：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">ssserver -c <span class="regexp">/etc/</span>shadowsocks.json -d start</span><br></pre></td></tr></table></figure>
-
+<pre><code>ssserver -c /etc/shadowsocks.json -d start
+</code></pre>
 <p>看到输出started，则表示启动成功。</p>
 <p>但是很不幸，我执行这一步时，启动报错，显示：</p>
 <blockquote>
@@ -457,36 +468,65 @@
 <p>修改完成后，重新启动SS server即可。</p>
 <p>更多SS server相关命令，参考<a target="_blank" rel="noopener" href="https://github.com/shadowsocks/shadowsocks/wiki">shadowsocks wiki</a>.</p>
 <h4 id="设置开机自启"><a href="#设置开机自启" class="headerlink" title="设置开机自启"></a>设置开机自启</h4><p>创建脚本文件：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">vi <span class="regexp">/etc/i</span>nit.d/shadowsocks</span><br></pre></td></tr></table></figure>
-
+<pre><code>vi /etc/init.d/shadowsocks
+</code></pre>
 <p>添加如下内容：</p>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line">start()&#123;</span><br><span class="line">　　　ssserver -c /etc/shadowsocks.json -d start</span><br><span class="line">&#125;</span><br><span class="line">stop()&#123;</span><br><span class="line">　　　ssserver -c /etc/shadowsocks.json -d stop</span><br><span class="line">&#125;</span><br><span class="line">case &quot;$1&quot; in</span><br><span class="line">start)</span><br><span class="line">　　　start</span><br><span class="line">　　　;;</span><br><span class="line">stop)</span><br><span class="line">　　　stop</span><br><span class="line">　　　;;</span><br><span class="line">reload)</span><br><span class="line">　　　stop</span><br><span class="line">　　　start</span><br><span class="line">　　　;;</span><br><span class="line">*)</span><br><span class="line">      echo &quot;Usage: $0 &#123;start|reload|stop&#125;&quot;</span><br><span class="line">      exit 1</span><br><span class="line">　　　;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
+<pre><code class="shell">#!/bin/sh
 
+start()&#123;
+　　　ssserver -c /etc/shadowsocks.json -d start
+&#125;
+stop()&#123;
+　　　ssserver -c /etc/shadowsocks.json -d stop
+&#125;
+case &quot;$1&quot; in
+start)
+　　　start
+　　　;;
+stop)
+　　　stop
+　　　;;
+reload)
+　　　stop
+　　　start
+　　　;;
+*)
+      echo &quot;Usage: $0 &#123;start|reload|stop&#125;&quot;
+      exit 1
+　　　;;
+esac
+</code></pre>
 <p>为该文件添加可执行权限：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">chmod +x <span class="regexp">/etc/i</span>nit.d/shadowsocks</span><br></pre></td></tr></table></figure>
-
+<pre><code>chmod +x /etc/init.d/shadowsocks
+</code></pre>
 <p>新建shadowsocks.conf:</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">vi <span class="regexp">/etc/i</span>nit/shadowsocks.conf</span><br></pre></td></tr></table></figure>
-
+<pre><code>vi /etc/init/shadowsocks.conf
+</code></pre>
 <p>添加如下内容：</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">start <span class="keyword">on</span> (runlevel [<span class="number">2345</span>])stop <span class="keyword">on</span> (runlevel [<span class="number">016</span>])pre-start <span class="keyword">script</span></span><br><span class="line">/etc/init.d/shadowsocks start</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">script</span></span><br><span class="line"></span><br><span class="line">post-stop <span class="keyword">script</span></span><br><span class="line">/etc/init.d/shadowsocks stop</span><br><span class="line"><span class="keyword">end</span> <span class="keyword">script</span></span><br></pre></td></tr></table></figure>
+<pre><code>start on (runlevel [2345])stop on (runlevel [016])pre-start script
+/etc/init.d/shadowsocks start
+end script
 
+post-stop script
+/etc/init.d/shadowsocks stop
+end script
+</code></pre>
 <p>执行：</p>
-<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line">update-rc.d <span class="keyword">shadowsocks </span>defaults</span><br></pre></td></tr></table></figure>
-
+<pre><code>update-rc.d shadowsocks defaults
+</code></pre>
 <p>开机自启设置完成。</p>
 <p>如果开机自启没有成功，请检查下<code>/etc/init.d/shadowsocks</code> 文件，确保脚本中不存在语法错误，比如中文符号。</p>
 <h4 id="防火墙配置"><a href="#防火墙配置" class="headerlink" title="防火墙配置"></a>防火墙配置</h4><p>写这个是因为当时按照教程搭建完SS server后，发现还是翻不了墙，又不知道哪里出了问题，领导帮忙debug了下，修改了防火墙规则，问题解决。</p>
 <p>在GCP 主页中，选择菜单 <strong>VPC 网络</strong> =&gt;<strong>防火墙规则</strong>， <strong>创建防火墙规则</strong>:</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1g2utgj3mtaj30u00zwdkd.jpg"></p>
-<h4 id="查看日志"><a href="#查看日志" class="headerlink" title="查看日志"></a>查看日志</h4><figure class="highlight lasso"><table><tr><td class="code"><pre><span class="line">less /<span class="built_in">var</span>/<span class="keyword">log</span>/shadowsocks.<span class="keyword">log</span></span><br></pre></td></tr></table></figure>
-
+<h4 id="查看日志"><a href="#查看日志" class="headerlink" title="查看日志"></a>查看日志</h4><pre><code>less /var/log/shadowsocks.log
+</code></pre>
 <p>如果日志上没有访问记录，可以考虑查看防火墙状态：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ufw status</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>ufw status
+</code></pre>
 <p>或者查看端口情况：</p>
-<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">netstat -anp</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>netstat -anp
+</code></pre>
 <p>判断问题出在哪里。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://godjose.com/2017/06/14/new-article/">用Google Cloud Platform搭建Shadowsocks服务教程</a></p>
 <p><a target="_blank" rel="noopener" href="http://tplove.info/post/21/">ShadowSocks2.8.2启动报错”undefined symbol EVP_CIPHER_CTX_cleanup”</a></p>
@@ -651,7 +691,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">313</span>
+                <span class="site-state-item-count">314</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -758,7 +798,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2021</span>
+  <span itemprop="copyrightYear">2022</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
@@ -800,7 +840,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    375.7k
+    377.5k
   </span>
 
 </div>
