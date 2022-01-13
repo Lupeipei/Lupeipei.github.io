@@ -31684,10 +31684,11 @@ echo $x
 
 <p>表示, 在 normal 模式下, 按下<code>\</code>, 就会删除当前光标所在的行.</p>
 <p>mapping的设置, 跟模式有关系.</p>
-<p><code>map</code>: normal mode 下的 mapping, 只在 normal 模式下有效.</p>
 <p><code>nmap</code> : normal mode 下的 mapping, 只在 normal 模式下有效.</p>
 <p><code>vmap</code> : visual mode 下的 mapping, 只在 visual 模式下有效.</p>
 <p><code>imap</code> : insert mode 下的 mapping, 只在 insert 模式下有效.</p>
+<p><code>omap</code> : operator-pending mode 下的 mapping, 只在 operator-pending 模式下有效.</p>
+<p><code>map</code>: normal, visual, operating mode 下的 mapping, 在 normal/visual/operator-pending 模式下有效.</p>
 <p>map 有一个大坑, 叫做 Recursion, 书中给了一个例子, 比如:</p>
 <figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">nmap</span> dd O<span class="symbol">&lt;esc&gt;</span>jddk</span><br></pre></td></tr></table></figure>
 
@@ -36413,6 +36414,42 @@ echo $x
 <p>这里就是使用了<code>%!</code>.</p>
 <p>书中还介绍了<code>%=</code>, 用于对齐, 这里就略过了.</p>
 <p>OK, 本节结束, 我去吃点好吃的奖励下自己还没弃坑😋</p>
+]]></content>
+      <categories>
+        <category>VimScript 学习笔记</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Operator Pending Mappings</title>
+    <url>/posts/vimscript-learning-on-operator-pending-mappings/</url>
+    <content><![CDATA[<p>前面介绍 mapping 的时候, 留了个operator-pending 的坑, 现在来填. </p>
+<p>官方文档中, 对 Operator-pending mappings 的解释是:</p>
+<blockquote>
+<p>Operator-pending mappings can be used to define a movement command that can be<br>used with any operator. </p>
+</blockquote>
+<p>Operator-pending mappings 可以用于定义会被执行的移动指令.[我这翻译的…]</p>
+<p>看个简单的例子来理解.</p>
+<p>打开文件test.txt, 内容如下:</p>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">This <span class="keyword">is</span> (<span class="keyword">some</span>) <span class="built_in">text</span> <span class="keyword">about</span> topic one.</span><br><span class="line"></span><br><span class="line">It has multiple (<span class="built_in">paragraphs</span>).</span><br><span class="line">part1(<span class="built_in">paragraph</span>) content.</span><br><span class="line">part2(<span class="built_in">paragraph</span>) content.</span><br><span class="line">part3(<span class="built_in">paragraph</span>) content.</span><br><span class="line">.....</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
+<p>命令模式下, 执行:</p>
+<figure class="highlight less"><table><tr><td class="code"><pre><span class="line">:<span class="selector-tag">onoremap</span> <span class="selector-tag">p</span> <span class="selector-tag">i</span>(</span><br></pre></td></tr></table></figure>
+
+<p>这时, 在 normal 模式下, 按<code>dp</code>, 等同于<code>di(</code>, 即删除<code>()</code> 里的内容.</p>
+<p>这里默认从当前光标所在位置, 往下查找第一个<code>()</code>, 然后执行操作.</p>
+<p>比如, 我们把光标移动到第三行 It has……, 按<code>dp</code>,  会发现 paragraphs 被删除了.</p>
+<p>当光标停留在最后一行 end, 按<code>dp</code>, 发现无效.</p>
+<p>如果想要消除光标所在位置, 就需要使用<code>&lt;C-u&gt;</code> CTRL-u.</p>
+<p>来看个例子:</p>
+<figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:onoremap i( :&lt;C-u&gt;normal!</span> 0f)vi(&lt;CR&gt;</span><br></pre></td></tr></table></figure>
+
+<p>此时, 按<code>di(</code>, 不管光标在哪里, 会删除光标所在行的第一个<code>()</code> 中的内容.</p>
+<p>鉴于 Operator-pending mappings 我平时用到的很少, 也没有细细研究, 目前就不多扯了.</p>
+<p>想要了解更多, 可以看官方文档:</p>
+<figure class="highlight armasm"><table><tr><td class="code"><pre><span class="line">:h omap-<span class="meta">info</span></span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
         <category>VimScript 学习笔记</category>
