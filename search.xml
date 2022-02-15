@@ -36517,4 +36517,43 @@ echo $x
         <tag>Poem</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Using Puppeteer with executablePath in Electron</title>
+    <url>/posts/using-puppeteer-with-executablePath-in-electron/</url>
+    <content><![CDATA[<p>记录 Electron 踩坑过程.</p>
+<span id="more"></span> 
+
+<h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>使用 Electron 创建桌面应用, 程序中调用了 <a href="https://github.com/puppeteer/puppeteer">puppeteer</a>,  开发环境下一切正常, 使用 electron-builder 在Mac上打包成 Windows下的可执行文件后, 程序在Windows上跑时一直卡着不动.</p>
+<p>Debug后发现一直卡在 <code>puppeteer.launch</code> .</p>
+<p>环境:</p>
+<p>puppeteer: 13.0.1</p>
+<p>electron: 17.0.0</p>
+<p>electron-builder: 22.10.4</p>
+<p>node: 12.22.3</p>
+<p>yarn: 1.22.10</p>
+<h4 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h4><p>Debug后发现问题的根源在于 MacOS 上打包时,  node_module 中 puppeteer 的Chrome, 是适配MacOS系统版本的, 这个Chrome 在 Windows下肯定是无法正常运行的.</p>
+<p>参考<a href="https://github.com/puppeteer/puppeteer/issues/2134">puppeteer issue: run from electron</a> 中, scriptify 的回复:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagespuppeteer.jpg"></p>
+<p>自己写一个脚本, 本地下载个Windows版本的chrome, 然后打包进去, <code>puppeteer.launch</code> 时指定 executablePath.</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 下载 chrome.</span></span><br><span class="line"><span class="keyword">const</span> puppeteer = <span class="built_in">require</span>(<span class="string">&#x27;puppeteer&#x27;</span>);</span><br><span class="line"></span><br><span class="line">(<span class="keyword">async</span>() =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> browserFetcher = puppeteer.createBrowserFetcher(&#123; <span class="attr">platform</span>: <span class="string">&quot;win32&quot;</span> &#125;);</span><br><span class="line">  <span class="keyword">const</span> revisionInfo = <span class="keyword">await</span> browserFetcher.download(<span class="string">&#x27;533271&#x27;</span>);</span><br><span class="line"></span><br><span class="line">  <span class="built_in">console</span>.log(revisionInfo)</span><br><span class="line">&#125;)();</span><br></pre></td></tr></table></figure>
+
+<p>按照 scriptify 给的方法, 修改package.json:</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;build&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;asar&quot;</span>: <span class="literal">true</span>,</span><br><span class="line">    <span class="string">&quot;asarUnpack&quot;</span>: <span class="string">&quot;node_modules/puppeteer/.local-chromium/win32-533271/**/*&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>修改调用 <code>puppeteer.launch</code> 的地方:</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> homeDir = puppeteer.executablePath().split(<span class="string">&#x27;app.asar&#x27;</span>)[<span class="number">0</span>];</span><br><span class="line"><span class="keyword">const</span> executablePath = homeDir.concat(<span class="string">&quot;app.asar.unpacked\\node_modules\\puppeteer\\.local-chromium\\win32-533271\\chrome-win32\\chrome.exe&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> browser = <span class="keyword">await</span> puppeteer.launch(&#123; <span class="attr">executablePath</span>: executablePath, <span class="attr">args</span>: [ <span class="string">&quot;--disable-gpu&quot;</span>, <span class="string">&quot;--disable-dev-shm-usage&quot;</span>, <span class="string">&quot;--disable-setuid-sandbox&quot;</span>, <span class="string">&quot;--no-sandbox&quot;</span> ] &#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>诡异的是, 打包后扔进 Windows里面运行, 发现 Chrome.exe 文件是存在的. 但是 puppeteer 依然没有成功运行.</p>
+<p>最后无奈, 直接换成 在Windows下打包, 同时指定 executablePath.问题解决.</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/puppeteer/puppeteer/issues/2134">puppeteer issue: run from electron</a></p>
+<p><a href="https://yrq110.me/post/front-end/the-right-way-to-use-puppeteer-in-electron/">配置Electron中Puppeteer executablePath的正确姿势</a></p>
+]]></content>
+      <categories>
+        <category>CS</category>
+      </categories>
+      <tags>
+        <tag>ErrorTracking</tag>
+        <tag>Electron</tag>
+      </tags>
+  </entry>
 </search>
