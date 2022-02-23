@@ -1,0 +1,1043 @@
+
+  <!doctype html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Acme,Traefik," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="Lucia" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="Traefik 踩坑记录.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Traefik 改用 acme.sh 为域名生成证书">
+<meta property="og:url" content="http://lupeipei.github.io/posts/using-acme-sh-to-generate-certs-for-tls-in-traefik/index.html">
+<meta property="og:site_name" content="Lucia">
+<meta property="og:description" content="Traefik 踩坑记录.">
+<meta property="og:locale">
+<meta property="article:published_time" content="2022-02-23T10:21:58.000Z">
+<meta property="article:modified_time" content="2022-02-23T10:40:47.471Z">
+<meta property="article:author" content="Lucia">
+<meta property="article:tag" content="Acme">
+<meta property="article:tag" content="Traefik">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://lupeipei.github.io/posts/using-acme-sh-to-generate-certs-for-tls-in-traefik/"/>
+
+
+
+
+
+  <title> Traefik 改用 acme.sh 为域名生成证书 | Lucia </title>
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lucia</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-series">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-file-text"></i> <br />
+            
+            专题
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-post " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://lupeipei.github.io/posts/using-acme-sh-to-generate-certs-for-tls-in-traefik/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lucia">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Traefik 改用 acme.sh 为域名生成证书
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2022-02-23T18:21:58+08:00">
+                2022-02-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/CS/" itemprop="url" rel="index">
+                    <span itemprop="name">CS</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <span class="post-letters-count">
+              &nbsp; | &nbsp;
+              <span>1.6k words</span>
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>Traefik 踩坑记录.</p>
+<span id="more"></span> 
+
+<p>Traefik 可以配置自动生成证书的 ACME 供应商, 比如Let’s Encrypt.</p>
+<p>官方文档提到会自动更新证书. 但实际情况是, 到期了证书有时并没有更新, 导致出现证书过期的情况. </p>
+<p>这里记录下在服务器上配置 Traefik 时, 改用 acme.sh 来签证书并自动更新的步骤. </p>
+<h4 id="前置条件"><a href="#前置条件" class="headerlink" title="前置条件"></a>前置条件</h4><p>默认服务器为Ubuntu, traefik 已启用, 对应的docker-compose.yml 存放在/opt/global目录下.</p>
+<p>其中<code>/opt/global/docker-compose.yml</code> 的具体内容如下.</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">traefik:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">traefik:v2.2</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">&quot;traefik&quot;</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;8080:8080&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;80:80&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;443:443&quot;</span></span><br><span class="line">    <span class="attr">networks:</span></span><br><span class="line">       <span class="bullet">-</span> <span class="string">my_proxy</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/var/run/docker.sock:/var/run/docker.sock</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./traefik.toml:/traefik.toml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./providers:/providers</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./acme.json:/acme.json</span></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line">  <span class="attr">my_proxy:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>我们挂载了/opt/global 目录下的 <code>traefik.toml</code>, 该文件存放了一些默认的配置, 内容如下:</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line">[<span class="string">entryPoints</span>]</span><br><span class="line">  [<span class="string">entryPoints.web</span>]</span><br><span class="line">    <span class="string">address</span> <span class="string">=</span> <span class="string">&quot;:80&quot;</span></span><br><span class="line"></span><br><span class="line">  [<span class="string">entryPoints.websecure</span>]</span><br><span class="line">    <span class="string">address</span> <span class="string">=</span> <span class="string">&quot;:443&quot;</span></span><br><span class="line"></span><br><span class="line">  [<span class="string">entryPoints.traefik</span>]</span><br><span class="line">    <span class="string">address</span> <span class="string">=</span> <span class="string">&quot;:8080&quot;</span></span><br><span class="line"></span><br><span class="line">[<span class="string">api</span>]</span><br><span class="line">  <span class="string">insecure</span> <span class="string">=</span> <span class="literal">true</span></span><br><span class="line">  <span class="string">dashboard</span> <span class="string">=</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">[<span class="string">log</span>]</span><br><span class="line">  <span class="string">level=</span> <span class="string">&quot;DEBUG&quot;</span></span><br><span class="line"></span><br><span class="line">[<span class="string">certificatesResolvers</span>]</span><br><span class="line">  [<span class="string">certificatesResolvers.lets-encrypt</span>]</span><br><span class="line">    [<span class="string">certificatesResolvers.lets-encrypt.acme</span>]</span><br><span class="line">      <span class="string">email</span> <span class="string">=</span> <span class="string">&quot;myEmail@gmail.com&quot;</span></span><br><span class="line">      <span class="string">storage</span> <span class="string">=</span> <span class="string">&quot;acme.json&quot;</span></span><br><span class="line">    [<span class="string">certificatesResolvers.lets-encrypt.acme.tlsChallenge</span>]</span><br><span class="line"></span><br><span class="line">[<span class="string">providers.docker</span>]</span><br><span class="line">  <span class="string">watch</span> <span class="string">=</span> <span class="literal">true</span></span><br><span class="line">  <span class="string">exposedByDefault=false</span></span><br><span class="line">  <span class="string">network</span> <span class="string">=</span> <span class="string">&quot;my_proxy&quot;</span></span><br><span class="line"></span><br><span class="line">[<span class="string">providers.file</span>]</span><br><span class="line">  <span class="string">watch</span> <span class="string">=</span> <span class="literal">true</span></span><br><span class="line">  <span class="string">directory=&quot;/providers&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到我们声明了一个证书解析器 (certificatesResolvers)  lets-encrypt. </p>
+<p>而 我们需要使用 acme.sh 生成证书的 Web项目, 存放在/opt/web/ 下, 其 <code>docker-compose.yml</code> 内容如下:</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">my-web:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">my-docker-image</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="string">......</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.enable=true&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web-http.rule=Host(`example.com`, `api.example.com`) &amp;&amp; PathPrefix(`/`)&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web-http.entrypoints=web&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web-http.middlewares=my-web-https&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.middlewares.my-web-https.redirectscheme.scheme=https&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web.rule=Host(`example.com`, `api.example.com`) &amp;&amp; PathPrefix(`/`)&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web.entrypoints=websecure&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web.tls.certresolver=lets-encrypt&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.services.my-web-http.loadbalancer.server.port=80&quot;</span></span><br><span class="line">    <span class="attr">networks:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">my_proxy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line">  <span class="attr">my_proxy:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>这里可以看到, 我们给 web 配置的 certresolver 配置为之前定义的 lets-encrypt. </p>
+<p> 如果查看 <code>acme.json</code> 文件, 你会看到类似如下内容, Certificates 部分有我们的 <code>example.com</code> 及子域名<code>api.example.com</code>  :</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">&quot;lets-encrypt&quot;</span>: &#123;</span><br><span class="line">    <span class="attr">&quot;Account&quot;</span>: &#123;</span><br><span class="line">      <span class="attr">&quot;Email&quot;</span>: <span class="string">&quot;myEmail@gmail.com&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;Registration&quot;</span>: &#123;</span><br><span class="line">        <span class="attr">&quot;body&quot;</span>: &#123;</span><br><span class="line">          <span class="attr">&quot;status&quot;</span>: <span class="string">&quot;valid&quot;</span>,</span><br><span class="line">          <span class="attr">&quot;contact&quot;</span>: [</span><br><span class="line">            <span class="string">&quot;mailto:myEmail@gmail.com&quot;</span></span><br><span class="line">          ]</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;uri&quot;</span>: <span class="string">&quot;https://acme-v02.api.letsencrypt.org/acme/acct/xxxxx&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      <span class="attr">&quot;PrivateKey&quot;</span>: <span class="string">&quot;xxxx&quot;</span>,</span><br><span class="line">       <span class="attr">&quot;KeyType&quot;</span>: <span class="string">&quot;4096&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">&quot;Certificates&quot;</span>: [</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">&quot;domain&quot;</span>: &#123;</span><br><span class="line">          <span class="attr">&quot;main&quot;</span>: <span class="string">&quot;example.com&quot;</span>,</span><br><span class="line">          <span class="attr">&quot;sans&quot;</span>: [<span class="string">&quot;api.example.com&quot;</span>]</span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;certificate&quot;</span>:<span class="string">&quot;xxxx&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;xxxxxx&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;store&quot;</span>: <span class="string">&quot;default&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      &#123;</span><br><span class="line">        <span class="attr">&quot;domain&quot;</span>: &#123;</span><br><span class="line">          <span class="attr">&quot;main&quot;</span>: <span class="string">&quot;example1.com&quot;</span></span><br><span class="line">        &#125;,</span><br><span class="line">        <span class="attr">&quot;certificate&quot;</span>:<span class="string">&quot;xxxx&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;xxxxxx&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;store&quot;</span>: <span class="string">&quot;default&quot;</span></span><br><span class="line">      &#125;,</span><br><span class="line">      .........</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>此时, 网站正常访问.</p>
+<p>现在我们来更改 <code>example.com</code> 的 tls 配置, 证书改用 acme.sh 来签发.</p>
+<h4 id="改用-acme-sh"><a href="#改用-acme-sh" class="headerlink" title="改用 acme.sh"></a>改用 acme.sh</h4><p>acme 验证的主要方式是 standalone 和 webroot.</p>
+<p>鉴于 standalone 需要占用80或者443端口, 导致需要暂停服务器,这里我们使用 webroot 方式来验证域名.</p>
+<p> webroot 模式下, acme 会在网站根目录下生成一个临时子目录 <code>.well-known/acme-challenge</code>，然后服务器会向这个路径发请求，如果请求成功，则验证通过, 随后会删除掉这个临时目录. </p>
+<p>我们将根目录web root 默认为 /var/www, 同时在当前目录下, 新增两个文件夹, 用来分别挂载 /var/www 和 /acme.sh 目录.</p>
+<p>/opt/global/ 目录下, 新建文件 <code>docker-compose.acme.sh.yml</code>, 内容如下:</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">acme.sh:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">neilpang/acme.sh:3.0.0</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">acme.sh</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./nginx:/var/www</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./acme.sh:/acme.sh</span></span><br><span class="line">    <span class="attr">command:</span> <span class="string">daemon</span></span><br></pre></td></tr></table></figure>
+
+<p>新增文件夹:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir nginx acme.sh</span><br></pre></td></tr></table></figure>
+
+<p>生成的证书会存放在acme.sh 目录中, 而 nginx 目录用于验证域名.</p>
+<p>这里我们起一个nginx 服务, 使得 traefik 将所有匹配 <code>/.well-known</code> 的路径请求都转发到这个nginx 上. 同时, 将当前目录下的 nginx 目录挂载到 nginx 服务的静态文件默认地址 <code>/usr/share/nginx/html</code> . </p>
+<p>这样, 当使用 webroot 模式验证域名时, acme.sh 就会在 <code>/opt/global/nginx</code> 目录下,生成临时子目录 <code>.well-known/acme-challenge</code>, 而验证时, 访问 <code>/usr/share/nginx/html</code>, 也就是访问我们的 <code>/opt/global/nginx</code> 目录.</p>
+<p>我们新增文件 <code>/opt/global/docker-compose.nginx.yml</code> , 添加如下内容:</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">nginx:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx:latest</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.enable=true&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.global-nginx.rule=HostRegexp(`&#123;catch_all:.*&#125;`) &amp;&amp; PathPrefix(`/.well-known`)&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.global-nginx.priority=999&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.services.global-nginx.loadbalancer.server.port=80&quot;</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./nginx:/usr/share/nginx/html</span></span><br><span class="line">    <span class="attr">networks:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">my_proxy</span></span><br><span class="line"></span><br><span class="line"><span class="attr">networks:</span></span><br><span class="line">  <span class="attr">my_proxy:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>这里有一点需要提一下.</p>
+<p>我们给 nginx 服务配置 traefik 时,  设置了priority的值为999. 默认情况下,  traefik 中路径的 priority是根据rule的长度来决定的. 这里我们希望所有带有 <code>/.well-known</code> 的请求都转发到这个 nginx 上, 所以手动设置了999.</p>
+<p>启动 nginx:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker-compose --file docker-compose.nginx.yml up -d</span><br></pre></td></tr></table></figure>
+
+<p>nginx 启动后, 我们启动 acme.sh.</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker-compose --file docker-compose.acme.sh.yml up -d</span><br></pre></td></tr></table></figure>
+
+<p>开始签证书啦.</p>
+<p>第一次使用acme.sh时, 需要注册用户邮箱:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker exec -it acme.sh sh -l</span><br><span class="line">acme.sh --register-account -m myEmail@gmail.com</span><br><span class="line">acme.sh --issue -d example.com -d api.example.com --webroot /var/www</span><br></pre></td></tr></table></figure>
+
+<p>正常情况下, 会一切顺利. 默认CA是ZeroSSL.com</p>
+<p>如果 acme.sh 签发证书时 Timeout了, 请设置代理. </p>
+<h4 id="更新配置"><a href="#更新配置" class="headerlink" title="更新配置"></a>更新配置</h4><p>证书签发成功后, 我们查看 <code>/opt/global/acme.sh/example.com</code> 目录, 会看到刚刚生成的证书.</p>
+<p>现在, 我们把新鲜出炉的证书用起来.</p>
+<p>修改 <code>/opt/global/docker-compose.yml</code> , 将 <code>/opt/global/acme.sh</code> 目录挂载到 traefik 中:</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">traefik:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">traefik:v2.2</span></span><br><span class="line">    <span class="attr">container_name:</span> <span class="string">&quot;traefik&quot;</span></span><br><span class="line">    <span class="string">......</span></span><br><span class="line">    <span class="attr">volumes:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/var/run/docker.sock:/var/run/docker.sock</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./traefik.toml:/traefik.toml</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./providers:/providers</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./acme.json:/acme.json</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">./acme.sh:/acme.sh</span></span><br></pre></td></tr></table></figure>
+
+<p>然后我们在traefik 的动态配置中把证书放进去.</p>
+<p>在 <code>/opt/global/providers</code> 目录下, 新增 <code>example_com_certs.toml</code> 文件, 写入我们的证书路径:</p>
+<figure class="highlight toml"><table><tr><td class="code"><pre><span class="line"><span class="section">[[tls.certificates]]</span></span><br><span class="line">  <span class="attr">certFile</span> = <span class="string">&quot;/acme.sh/example.com/fullchain.cer&quot;</span></span><br><span class="line">  <span class="attr">keyFile</span> = <span class="string">&quot;/acme.sh/example.com/example.com.key&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>同时, 我们需要将 <code>/opt/global/acme.json</code> 文件中 Certificates 部分, 有关 example.com 的证书内容删除.</p>
+<p>最后, 修改 <code>/opt/web/docker-compose.yml</code>, 把tls 部分的配置, 改为options=default.</p>
+<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;3&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line">  <span class="attr">my-web:</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">my-docker-image</span></span><br><span class="line">    <span class="attr">restart:</span> <span class="string">unless-stopped</span></span><br><span class="line">    <span class="string">......</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">    <span class="string">......</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web.entrypoints=websecure&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.routers.my-web.tls.options=default&quot;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;traefik.http.services.my-web-http.loadbalancer.server.port=80&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>重启 traefik.</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">docker restart traefik</span><br></pre></td></tr></table></figure>
+
+<p>再次请求 <a target="_blank" rel="noopener" href="https://example.com/">https://example.com</a>, 会发现证书已经签成由ZeroSSL 颁发的证书. </p>
+<p>替换完成. 撒花! 🥳</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://doc.traefik.io/traefik/">traefik doc</a></p>
+<p><a target="_blank" rel="noopener" href="https://doc.traefik.io/traefik/https/acme/">traefick: let’s Encrypt</a></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/acmesh-official/acme.sh">acme.sh</a></p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+  <div class="reward-container">
+    <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+      <span>赞赏支持</span>
+    </button>
+    <div id="qr" style="display: none;">
+      
+        <div id="wechat" style="display: inline-block">
+          <img id="wechat_qr" src="/images/wechat.png" alt=" WeChat Pay"/>
+          <p>Wechat</p>
+        </div>
+      
+      
+        <div id="alipay" style="display: inline-block">
+          <img id="alipay_qr" src="/images/alipay.png" alt=" Alipay"/>
+          <p>Alipay</p>
+        </div>
+      
+    </div>
+  </div>
+
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Acme/" rel="tag"># Acme</a>
+          
+            <a href="/tags/Traefik/" rel="tag"># Traefik</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/posts/using-puppeteer-with-executablePath-in-electron/" rel="next" title="Using Puppeteer with executablePath in Electron">
+                <i class="fa fa-chevron-left"></i> Using Puppeteer with executablePath in Electron
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      
+  <script src="https://utteranc.es/client.js"
+    repo="Lupeipei/Lupeipei.github.io"
+    issue-term="pathname"
+    label="Comment"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
+
+
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.jpg"
+               alt="" />
+          <p class="site-author-name" itemprop="name"></p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">319</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">68</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/Lupeipei" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://twitter.com/luciaca27276337" target="_blank" title="Twitter">
+                  
+                    <i class="fa fa-fw fa-twitter"></i>
+                  
+                  Twitter
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%89%8D%E7%BD%AE%E6%9D%A1%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">前置条件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%94%B9%E7%94%A8-acme-sh"><span class="nav-number">2.</span> <span class="nav-text">改用 acme.sh</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E9%85%8D%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">更新配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">参考</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lucia</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" target="_blank" rel="noopener" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" target="_blank" rel="noopener" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+      
+    </span>
+  
+
+  
+    <span class="site-pv">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+      
+    </span>
+  
+  &nbsp; | &nbsp;
+  <span class="post-count">
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    380.5k
+  </span>
+
+</div>
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
+
+
+
