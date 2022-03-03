@@ -36642,4 +36642,128 @@ echo $x
         <tag>Traefik</tag>
       </tags>
   </entry>
+  <entry>
+    <title>深入解析CID</title>
+    <url>/posts/what-is-cid/</url>
+    <content><![CDATA[<p>这是 IPFS 相关内容的第一篇, 打算花点时间把之前自己刷 <a href="https://proto.school/tutorials">ProtoSchool</a> 系列课程所学到的知识梳理下.</p>
+<p>第一篇就从 CID 开始吧. </p>
+<span id="more"></span> 
+
+<p>当然, 又一次, 强烈推荐刷原文 ,妥妥真香系列.</p>
+<h4 id="是什么与为什么"><a href="#是什么与为什么" class="headerlink" title="是什么与为什么"></a>是什么与为什么</h4><p>CID 是 Content Identifier 的缩写, 中文可以译成内容标识符.</p>
+<p>CID是用来做什么的呢?    </p>
+<p>我们知道, 网络中用于标识资源的方式是统一资源标识符URI(Uniform Resource Identifier). </p>
+<p>URI主要有两种类型: URL(Uniform Resource Locator) 和 URN( Uniform Resource Name).</p>
+<p>在Web2.0中,  我们最常用的是URL. 即统一资源定位符, 资源基于数据存储的位置来寻址. 这种标识资源的方式, 可以称之为 Location addressing.</p>
+<p>比如一张图片的URL 为<code>https://www.puppies.com/cute_cat.jpg</code> .我们会预设, 这是一个有关小猫照片的URL. 访问该URL后, 会看到一张猫咪的萌照.</p>
+<p>那么URLs这种标识资源的方式会有什么问题呢?</p>
+<blockquote>
+<p>最主要的就是安全问题.</p>
+<p>我们无法通过一个URL, 来验证这个URL给到我们的是我们想要的内容. 比如上面的URL, 可能打开后, 不是一张猫咪的萌照, 而是一张小狗的照片, 甚至可能会是一个木马病毒.</p>
+<p>也就是说, 托管在中心化网络上的文件, 它们的内容与它们基于位置的地址 URLs 是没有直接关系的. 我们不能通过URLs或者文件名来确定资源的内容.</p>
+<p>另一个存在的问题是大量重复的资源文件存储在相同或者不同的服务器上. 用户看到的是不同的URLs, 但这些URLs 所标识的都是完全一样的资源文件, 这就造成空间上不必要的浪费.</p>
+</blockquote>
+<p>那么, 能否有一种基于文件内容的标识符呢? 我们能否从 location-based addressing 转向 content-based addressing?</p>
+<blockquote>
+<p>答案当然是Yes : P</p>
+<p>在去中心化的网络中, 资源的标识就是基于内容的.</p>
+<p>针对任意给定的资源文件, 我们可以通过特定的算法, 为其生成唯一的识别码. 即Content addressing. </p>
+<p>这里要介绍的CID, 就是一种特殊形式的内容寻址. </p>
+<p>这种基于内容的资源标识方式, 相比URLs, 除了更安全, 避免资源冗余外,  还有一个优势.</p>
+<p>在中心化的网络中, 当我们基于某个URLs去获取数据时, 如果该服务点挂了, 那我们就无法获取到数据了, 但是在去中心化的网络中, 我们只要有所需要资源的内容地址, 比如CID, 就可以向全网的节点发送请求.</p>
+</blockquote>
+<p>了解了是什么和为什么后, 我们来看看CID具体是怎么生成的.</p>
+<h4 id="基本构成及演进"><a href="#基本构成及演进" class="headerlink" title="基本构成及演进"></a>基本构成及演进</h4><p>CID 由IPFS 开发. 一个常见的CID 长这样:</p>
+<figure class="highlight gcode"><table><tr><td class="code"><pre><span class="line">QmY<span class="number">7</span>Yh<span class="number">4</span>UquoXHLPF<span class="meta">o2</span>XbhXkhBvFoPwmQUSa<span class="number">92</span>px<span class="symbol">nxjQuPU</span></span><br></pre></td></tr></table></figure>
+
+<p>CID的大致创建过程, 是使用一种加密算法(cryptographic algorithm)，将任意大小的输入（数据或文件）映射到固定大小的输出。这种对于输入数据的转换, 称为加密哈希摘要(cryptographic hash digest)。</p>
+<p>IPFS目前大部分CID是使用  <code>sha2-256</code> 算法, 也就是 256 bits, 32bytes. </p>
+<p>从这里也可以看出, CID的长度, 是由 <strong>cryptographic hash</strong> 加密哈希算法来决定的, 而跟文件本身的大小无关. 任意长度的输入通过相同的哈希函数进行处理, 会得到固定长度的输出.</p>
+<p>但鉴于哈希算法可能会被证明是不安全的,  比如 sha1 , 所以CID需要支持多种哈希算法.</p>
+<p>既然要支持多种加密算法，那我们怎么知道这个特定的哈希值是使用哪种算法生成的呢?</p>
+<p>CID 使用 multihash 来标识所用的加密算法.</p>
+<p>具体就是<strong>将长度和使用的算法, 作为Hash值的唯一识别前缀</strong>.</p>
+<h5 id="Multihash"><a href="#Multihash" class="headerlink" title="Multihash"></a>Multihash</h5><p>Multihash 遵循 TLV 模式, 即 <strong>T</strong>ype, <strong>L</strong>ength, <strong>V</strong>alue:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesT0006L02-multihash.jpeg"></p>
+<p>Type</p>
+<blockquote>
+<p>标识所使用的加密算法 cryptographic algorithm. </p>
+<p>通过 <a href="https://github.com/multiformats/multicodec/blob/master/table.csv">multicodec table</a> 可以查看对应的算法, 比如, <code>sha2-256</code>  的code 为 18, 用16进制表示则是 <code>0x12</code> </p>
+</blockquote>
+<p>Length</p>
+<blockquote>
+<p> 长度, 如果用的是<code>sha2-256</code> 算法, 则是32 bytes</p>
+</blockquote>
+<p>Value</p>
+<blockquote>
+<p>生成的哈希值</p>
+</blockquote>
+<p>当我们通过加密哈希摘要得到一个固定大小的输出时, 这个输出是二进制格式的. 对受众来说, 不是那么友好, 因此需要将其编码成字符串, 用字符串表示CID.</p>
+<p>IPFS 最初是使用 base58btc 将二进制格式的哈希值, 进行编码压缩, 得到类似这样的结果:</p>
+<figure class="highlight gcode"><table><tr><td class="code"><pre><span class="line">QmY<span class="number">7</span>Yh<span class="number">4</span>UquoXHLPF<span class="meta">o2</span>XbhXkhBvFoPwmQUSa<span class="number">92</span>px<span class="symbol">nxjQuPU</span></span><br></pre></td></tr></table></figure>
+
+<p>以 Qm开头, 这也就是第一代CID v0.</p>
+<p>但随之问题也就来了.</p>
+<ul>
+<li><p>我们如何得知程序是用什么方法对原数据本身进行了编码? 我们知道文件内保存数据的形式是二进制, 将二进制数据序列化用的是 protobuf 还是JSON, 抑或是其他 ？</p>
+</li>
+<li><p>我们如何得知程序是用什么方法来创建CID的字符串表示的? CIDv0 版本使用了 base58btc , 但是如果我们想要使用 base32 或者 base64 怎么办呢?</p>
+</li>
+</ul>
+<p>为了解决这两个问题, CID不得不演进, 由此, CIDv1应运而生.</p>
+<p>针对第一个问题,  CIDv1 引入了另外的前缀, 用来标识针对文件数据所使用的编码方式. 也就是 Multicodec Prefix.</p>
+<p>这样, 我们的CID 就扩展成了这样:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesT0006L03-multicodec.png"></p>
+<p>这里 Multicodec Prefix 的值是 01110000, 即 0x70, 查看<a href="https://github.com/multiformats/multicodec/blob/master/table.csv">codec identifier table</a>, 对应的就是 dag-pb. </p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images20220303145823.png"></p>
+<p>dag-pb 表示 MerkleDAG protobuf, 是 <a href="https://ipld.io/">IPLD</a> (<strong>I</strong>nter<strong>P</strong>lanetary <strong>L</strong>inked <strong>D</strong>ata)的一种. [不懂 IPLD? 没事, 我暂时也没整明白, 先把 dag-pb 当作是一种特殊的 protobuf 看待, 不影响整体理解]</p>
+<p>为了区分版本, CIDv1 还添加了 version prefix.</p>
+<p>所以整个 CID 的构成就变成这样:</p>
+<figure class="highlight apache"><table><tr><td class="code"><pre><span class="line"><span class="section">&lt;cid-version&gt;</span><span class="section">&lt;multicodec&gt;</span><span class="section">&lt;multihash-algorithm&gt;</span><span class="section">&lt;multihash-length&gt;</span><span class="section">&lt;multihash-hash&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中, cid-version 表示CID的版本.</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesT0006L04-version-prefix.png"></p>
+<p>针对第二个问题, 我们已经知道, CIDv0 中, 默认使用base58btc.</p>
+<p>那么在CIDv1及之后的版本中, 如果我们使用了其他的编码方式, 如何让他人知道你使用的是哪种编码方法呢?</p>
+<p>大概你也猜到了, 继续用前缀. [不得不叹一句: 前缀大法好]</p>
+<p>Multibase prefix 就是用来表示在字符串和二进制格式之间转换CID时所使用的基础编码。</p>
+<p>与前面Multicodec prefix 不同的是,  它不是放在二进制格式的输出结果中, 而是放在了转换后的字符串中.</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesT0006L05-multibase-prefix.png"></p>
+<p>来看两个字符串格式的CID:</p>
+<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR</span></span><br><span class="line">bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi</span><br></pre></td></tr></table></figure>
+
+<p>我们知道第一个CID是CIDv0, 因为它以Qm开头, 第二个以b开头, 表示编码方法为 base32.</p>
+<p>通过查看完整的 <a href="https://github.com/multiformats/multibase/blob/master/multibase.csv">multibase</a> 表, 可以知道CID具体所采用的基础编码方法.</p>
+<p>至此, 我们基本把CID的构成和演进理得差不多了.</p>
+<p>如果你本地安装了ipfs,  通过命令行, 可以查看CID 的相关内容, 比如支持的base encoding:</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">ipfs cid bases</span><br></pre></td></tr></table></figure>
+
+<p>支持的 Cryptographic hashing  算法:</p>
+<figure class="highlight ebnf"><table><tr><td class="code"><pre><span class="line"><span class="attribute">ipfs cid hashes</span></span><br></pre></td></tr></table></figure>
+
+<p>目前ipfs (0.11.0) 的CID, 依然默认是 v0 版本.</p>
+<h4 id="在线解析"><a href="#在线解析" class="headerlink" title="在线解析"></a>在线解析</h4><p>考虑到CID的构成复杂,  IPFS提供了<a href="https://cid.ipfs.io/">CID inspector</a> 来帮助我们解析CID结果. </p>
+<p>以 QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR 为例:</p>
+<p>结果如下:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesimage-20220205151801443.png"></p>
+<p>这里我们可以分别看到 multibase, version, muticodec, multihash对应的值.</p>
+<p>稍稍提一下, 因为 multibase和 muticodec 是CIDv1后提出的, 而我们的CID 是v0版本的,  所以解析后, 这两部分显示了 implicit.</p>
+<p>我们将解析后得到的CIDv1, 继续解析, 得到如下的结果:</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/imagesXnip2022-02-05_15-21-18.jpg"></p>
+<p>此时, 我们看到multibase 为base32.</p>
+<p>不管是 v0 还是 v1 的CID, 它们的摘要值都是C3C4…31DE94391A, 表示着同一份文件.</p>
+<p>OK, 基本算是缕得差不多了, CID的内容就先到这啦.</p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://en.wikipedia.org/wiki/Uniform_Resource_Identifier">URI  wiki</a></p>
+<p><a href="https://github.com/ipfs/go-ipfs">go-ipfs</a></p>
+<p><a href="https://proto.school/anatomy-of-a-cid">Anatomy of a CID</a></p>
+<p><a href="https://proto.school/content-addressing">content addressing</a></p>
+<p><a href="https://github.com/multiformats/multicodec">multicodec</a></p>
+]]></content>
+      <categories>
+        <category>CS</category>
+      </categories>
+      <tags>
+        <tag>IPFS</tag>
+      </tags>
+  </entry>
 </search>
