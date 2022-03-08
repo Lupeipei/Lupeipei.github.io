@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2022-03-03T11:43:10.896Z</updated>
+  <updated>2022-03-08T08:30:58.439Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Variables</title>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-variables/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-variables/</id>
+    <published>2022-03-08T08:20:21.000Z</published>
+    <updated>2022-03-08T08:30:58.439Z</updated>
+    
+    <content type="html"><![CDATA[<p>时隔一个多月没更了, 这频率委实慢了些😄️</p><p>虽慢但不弃坑, 来继续填坑😉.</p><p>从这一节开始, 我们正式来学 VimScript 的语法知识啦.</p><p>先从变量开始. 来看下变量的声明, 赋值及作用域.</p><h4 id="声明与赋值"><a href="#声明与赋值" class="headerlink" title="声明与赋值"></a>声明与赋值</h4><p>VimScript 使用 let 来声明变量.</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">:<span class="built_in">let</span> foo=<span class="string">&#x27;bar&#x27;</span></span><br><span class="line">:<span class="built_in">echo</span> foo</span><br><span class="line">:<span class="built_in">let</span> foo=2</span><br><span class="line">:<span class="built_in">echo</span> foo</span><br></pre></td></tr></table></figure><p>会分别输出:</p><figure class="highlight gauss"><table><tr><td class="code"><pre><span class="line"><span class="built_in">bar</span></span><br><span class="line"><span class="number">2</span></span><br></pre></td></tr></table></figure><p>之前我们提到 option, option 可以通过 <code>&amp;&#123;option&#125;</code> 来做为变量进行读写操作.</p><p>看个例子:</p><figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> textwidth=80</span><br><span class="line">:echo <span class="comment">&amp;textwidth</span></span><br><span class="line">:let <span class="comment">&amp;textwidth = &amp;textwidth + 10</span></span><br><span class="line">:echo <span class="comment">&amp;textwidth</span></span><br><span class="line">:<span class="keyword">set</span> <span class="comment">textwidth?</span></span><br></pre></td></tr></table></figure><p>会依次输出:</p><figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">80</span><br><span class="line">90</span><br><span class="line"><span class="attribute">textwidth</span>=90</span><br></pre></td></tr></table></figure><p>这里也可以看出, 把 option 转为变量, 使用 let 来更新 option 的值, 比 <code>set option=&#123;value&#125;</code> 要灵活一些.</p><p>如果只想针对当前 Window 的 option 进行写操作而不修改全局的 option, 只需要给变量添加相应的 namespace 即可.[其实是变量的作用域, 待会会提到]</p><figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:let &amp;l:textwidth</span> = 10</span><br><span class="line">:echo &amp;textwidth</span><br></pre></td></tr></table></figure><p>此时输出是10. [我们也可以使用<code>:setlocal textwidth = 10</code> 来设置 local textwidth]</p><p>开一个新的 Window, 继续输出:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:e</span> text.txt</span><br><span class="line"><span class="symbol">:echo</span> &amp;textwidth</span><br></pre></td></tr></table></figure><p>此时输出是 90.</p><p>说明刚刚针对 textwidth 的修改, 只对前一个 Window 有效.</p><p>[ 这里需要在不同的 Windows 下进行上面的操作, 因为同一个 Window 下的 buffers 共享相同的 option,  如果在同一个 Window 下的不同 buffer 中执行 <code>:echo &amp;textwidth </code> , 输出都是10.]</p><p>除了 option 外, registers 也可以作为变量来进行读写. 格式为 <code>@&#123;register&#125;</code></p><p>比如, 我们设置寄存器 a 的值为 hello.</p><figure class="highlight ceylon"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">let</span> <span class="meta">@a</span>=<span class="string">&quot;hello&quot;</span></span><br></pre></td></tr></table></figure><p>Normal 模式下, 在文件的任何位置, 按<code>&quot;ap</code>,  Vim 会把 寄存器 a 的值 hello, 粘贴在光标处.</p><p>也可以读取寄存器的值. 在文件中, 选中某个单词, 比如 world, 按 <code>y</code> 后, 在命令行执行:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">echo</span> @<span class="comment">&quot;</span></span><br></pre></td></tr></table></figure><p>会输出 world.</p><p>使用<code>:help registers</code> , 可以查看所有可以读写的寄存器.</p><p>除了声明变量外, 当我们想要删除某个变量时, 可以使用 <code>unlet</code>.</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:unlet</span> foo</span><br><span class="line"><span class="symbol">:echo</span> foo</span><br></pre></td></tr></table></figure><p>此时会输出错误信息:  Undefined variable: foo.</p><p>注意, unlet 不能用于 <code>&amp;&#123;option&#125;</code>, <code>@&#123;register&#125;</code>.</p><h4 id="作用域"><a href="#作用域" class="headerlink" title="作用域"></a>作用域</h4><p>在设置 local option 时, 我们已经提到了作用域.</p><p>现在以 buffer 为例, 我们来定义一个 buffer-variable:</p><figure class="highlight asciidoc"><table><tr><td class="code"><pre><span class="line"><span class="meta">:let b:hello</span> = &quot;world&quot;</span><br><span class="line"><span class="meta">:echo b:hello</span></span><br></pre></td></tr></table></figure><p>输出: world.</p><p>在另一个 buffer 中, 执行:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">echo</span> <span class="variable">b:hello</span></span><br></pre></td></tr></table></figure><p>输出: Undefined variable: b:hello.</p><p>因为声明的 b:hello 只对前一个 buffer 有效.</p><p>可以通过 <code>:help internal-variables</code> , 来查看内部变量的 scope 列表.</p><figure class="highlight coq"><table><tr><td class="code"><pre><span class="line">|<span class="type">buffer</span>-variable|    <span class="type">b</span>:  <span class="keyword">Local</span> to the current buffer.</span><br><span class="line">|<span class="type">window</span>-variable|    <span class="type">w</span>:  <span class="keyword">Local</span> to the current window.</span><br><span class="line">|<span class="type">tabpage</span>-variable|   <span class="type">t</span>:  <span class="keyword">Local</span> to the current tab page.</span><br><span class="line">|<span class="type">global</span>-variable|    <span class="type">g</span>:  <span class="keyword">Global</span>.</span><br><span class="line">|<span class="type">local</span>-variable|     <span class="type">l</span>:  <span class="keyword">Local</span> to a function.</span><br><span class="line">|<span class="type">script</span>-variable|    <span class="type">s</span>:  <span class="keyword">Local</span> to a |<span class="type">:source</span>|<span class="type">&#x27;ed</span> Vim script.</span><br><span class="line">|<span class="type">function</span>-argument|  <span class="type">a</span>:  <span class="keyword">Function</span> argument (only inside a function).</span><br><span class="line">|<span class="type">vim</span>-variable|       <span class="type">v</span>:  <span class="keyword">Global</span>, predefined <span class="built_in">by</span> Vim.</span><br></pre></td></tr></table></figure><p>这里可以看出, 刚刚我们通过<code>&amp;l:textwidth=&#123;value&#125;</code> 设置了textwidth, 我们可以猜 Vim 中的 <code>&#123;option&#125;</code>, <code>&#123;option&#125;=</code> 本质上应该是个函数.</p><p>上述列表中的 script-variable,  function-argument 大量存在plugin中，随意选择一个Vim 插件，查看其源代码，就会看到<code>s:var</code>, <code>a:var</code> 的身影.</p><p>OK, 变量的介绍就到这啦, 下一篇来说说 if.</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;时隔一个多月没更了, 这频率委实慢了些😄️&lt;/p&gt;
+&lt;p&gt;虽慢但不弃坑, 来继续填坑😉.&lt;/p&gt;
+&lt;p&gt;从这一节开始, 我们正式来学 VimScript 的语法知识啦.&lt;/p&gt;
+&lt;p&gt;先从变量开始. 来看下变量的声明, 赋值及作用域.&lt;/p&gt;
+&lt;h4 id=&quot;声明与赋值
+      
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>深入解析CID</title>
@@ -496,28 +525,6 @@
     
     
       <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>读《一间只属于自己的房间》</title>
-    <link href="http://lupeipei.github.io/posts/notes-of-a-room-of-ones-own/"/>
-    <id>http://lupeipei.github.io/posts/notes-of-a-room-of-ones-own/</id>
-    <published>2021-10-15T09:32:16.000Z</published>
-    <updated>2021-10-15T09:35:55.949Z</updated>
-    
-    <content type="html"><![CDATA[<p>将近一个世纪前的作品.</p><span id="more"></span><p>读完这本书后, 去了解了作者伍尔夫的生平, 不得不感叹, 真的是名奇女子.</p><p>书中的某些建议, 放在今天, 依然非常中肯.</p><blockquote><p>一个女人如果要写小说，那么她必须拥有两样东西，一样是金钱，另一样是一间自己的房间。</p><p>我希望，大家无论通过什么方法，都能挣到足够的钱，去旅行，去闲着，去思考世界的过去和未来，去看书做梦，去街角闲逛，让思绪的钓线深深沉入街流之中。</p><p>我想说的很简单、很平淡：没有什么比做自己更重要。</p></blockquote><p>看有些书评, 说这本书是女权运动和女性主义理论史上最具影响力的著作之一. 本人读书少, 读女性方面的书更少, 只觉得这本书确实很值得女性去阅读.</p><p>毕竟现实不会因为你是女性而区别对待.</p><p>现实就是, 你没有臂膀可以依靠，只能自己前进.</p><p>如同书中所说的, 人与人的关系, 不仅仅是男人和女人之间的关系，也是人和真实世界的关系.</p><p>细想一下, 如果伍尔夫生前没有显赫的家世, 没有遇到理解她, 尊重她的丈夫伦纳德, 她大概率也不会有一间可以上锁的房间, 有充足的时间去思考, 去写作, 继而成为享有声誉的现代主义作家.</p><p>艺术可能不那么需要钱, 但一定需要闲.</p><p>她是幸运的.</p><p>玩偶之家的故事不会在她身上上演.</p><p>但她也是不幸的, 童年的阴影伴随了她的一生.</p><p>除了一些对女性的建议, 书中作者对于写作的一些观点也有些新颖, 我从来没去想过, 文字会出卖写作者.</p><p>文字是写作者表达自我的一种方式.</p><p>好的文字里, 没有取悦, 没有讨好, 没有说教, 没有憎恨, 没有抗议.</p><p>好的文字, 需要写作者内心平静.</p><p>这样看来, 金钱和房间, 在某种程度上, 为写作者的内心平静提供了物质基础.</p><p>其实不管女性是否写作, 物质基础都很重要. 拥有自己的房间, 意味着你能有属于自己独立的时间和空间, 而独处, 不管对于男性还是女性, 都是重要的精神养分.</p><p>写到这里,  我内心的OS只有一个: 好好赚钱啊💰️.</p><p>另一个稍微意外的地方与书无关, 是被伍尔夫的容貌稍稍惊艳到.</p><p>真正一枚明明可以靠颜值, 偏偏要靠才华的女子.</p><p>记得看伍尔夫的生平往事时, 有的文章提到了伦纳德第一次见到伍尔夫的场景, 当时的她, 身穿一袭白裙、手持阳伞, 初见她的这位少年, 平静的心不禁掀起了波澜, 这才有了后来的不离不弃, 相伴余生.</p><p>附上一张20岁的伍尔夫:</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images336.jpg"></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;将近一个世纪前的作品.&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/categories/Reading/"/>
-    
-    
-      <category term="Reading" scheme="http://lupeipei.github.io/tags/Reading/"/>
     
   </entry>
   
