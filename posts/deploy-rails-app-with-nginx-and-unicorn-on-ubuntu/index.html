@@ -412,444 +412,162 @@
 <p>【如果你也和我一样是枚小白，补充下，这里，Unicorn是一个HTTP server，类似Passenger或者puma。由于Unicorn不能直接被用户访问，使用Nginx作为反向代理，来缓冲用户与Rails应用之间的请求与响应。】</p>
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><h5 id="1、准备Rails-App"><a href="#1、准备Rails-App" class="headerlink" title="1、准备Rails App"></a>1、准备Rails App</h5><ul>
 <li><p>本地新建一个rails项目recipes</p>
-<pre><code class="Shell">rails new recipes
-cd recipes
-git init
-git add .
-git commit -m &quot;new project recipes&quot;
-# 将recipes托管到第三方代码库，这里选GitHub
-git remote add origin https://github.com/XXXXX/recipes.git
-git push -u origin master
-rails g scaffold topic title:string description:text
-rake db:migrate
-git add .
-git commit -m &quot;create topic model&quot;
-rails s
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rails new recipes</span><br><span class="line">cd recipes</span><br><span class="line">git init</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;new project recipes&quot;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 将recipes托管到第三方代码库，这里选GitHub</span></span><br><span class="line">git remote add origin https://github.com/XXXXX/recipes.git</span><br><span class="line">git push -u origin master</span><br><span class="line">rails g scaffold topic title:string description:text</span><br><span class="line">rake db:migrate</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;create topic model&quot;</span><br><span class="line">rails s</span><br></pre></td></tr></table></figure>
+
 <p>修改<code>config/routes.rb</code>,把主页设定成topic的index, 添加<code>root &quot;topics#index&quot;</code>：</p>
-<pre><code class="Ruby">Rails.application.routes.draw do
-  resources :topics
- + root &quot;topics#index&quot;
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Rails.application.routes.draw <span class="keyword">do</span></span><br><span class="line">  resources <span class="symbol">:topics</span></span><br><span class="line"> + root <span class="string">&quot;topics#index&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这时，在浏览器打开<a target="_blank" rel="noopener" href="http://localhost:3000/%EF%BC%8C%E7%94%BB%E9%A3%8E%E6%98%AF%E8%BF%99%E6%A0%B7%E7%9A%84%EF%BC%9A">http://localhost:3000/，画风是这样的：</a></p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fnv0kthg2xj30og06874g.jpg"></p>
-<pre><code class="Shell">git add .
-git commit -m &quot;update routes&quot;
-git push
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;update routes&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure></li>
 <li><p>添加gem： unicorn, foreman, dotenv-rails</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fnv3oaphuhj30k50g9abf.jpg"></p>
 <p>终端运行：</p>
-<pre><code>bundler install
-</code></pre>
+<figure class="highlight cmake"><table><tr><td class="code"><pre><span class="line">bundler <span class="keyword">install</span></span><br></pre></td></tr></table></figure>
+
 <p>添加<code>config/deploy.rb</code>， 内容如下：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fnv4da7cvhj30m50k040q.jpg"></p>
 <p>【repo_url 换成你自己的URL】</p>
 <p>根目录下添加Procfile 文件，内容如下：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fnv4nzvr2mj30mw095t9v.jpg"></p>
-<pre><code class="Shell">git add .
-git commit -m &quot;add unicorn to project&quot;
-git push
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git add .</span><br><span class="line">git commit -m &quot;add unicorn to project&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure>
+
 <p>将所有进度push至remote， 好，我们开始部署！</p>
 </li>
 </ul>
 <h5 id="2、安装套件"><a href="#2、安装套件" class="headerlink" title="2、安装套件"></a>2、安装套件</h5><p>这里以Ubuntu16.04为例，假定你已经添加一个免密登陆的用户deploy，我们将项目部署在home/deploy下。</p>
 <ul>
 <li><p>登陆服务器，更新，升级：</p>
-<pre><code class="Shell">sudo apt-get update -y
-sudo apt-get upgrade -y
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get update -y</span><br><span class="line">sudo apt-get upgrade -y</span><br></pre></td></tr></table></figure></li>
 <li><p>裝套件，这些是Ruby on Rails 需要的：</p>
-<pre><code class="Shell">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install -y build-essential git-core bison openssl libreadline6-dev curl zlib1g zlib1g-dev libssl-dev libyaml-dev libsqlite3-0 libsqlite3-dev sqlite3 autoconf libc6-dev libpcre3-dev libcurl4-nss-dev libxml2-dev libxslt-dev imagemagick nodejs libffi-dev</span><br></pre></td></tr></table></figure>
+
 <p>如果安装的nodejs版本低，尝试这样：</p>
-<pre><code class="Shell">#nodejs v9
-curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
-sudo apt-get install -y nodejs
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">nodejs v9</span></span><br><span class="line">curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -</span><br><span class="line">sudo apt-get install -y nodejs</span><br></pre></td></tr></table></figure></li>
 <li><p>裝Ruby</p>
 <p>检查版本：</p>
-<pre><code class="shell">ruby --version
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ruby --version</span><br></pre></td></tr></table></figure>
+
 <p>如果有旧的版本，比如1.8/1.9， 卸载掉:</p>
-<pre><code class="Shell">sudo apt-get remove -y ruby1.8 ruby1.9
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get remove -y ruby1.8 ruby1.9</span><br></pre></td></tr></table></figure>
+
 <p>下载，解压，编译，安装：</p>
-<pre><code class="shell">mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby
-wget https://cache.ruby-lang.org/pub/ruby/ruby-2.4.0.tar.gz
-tar -xzvf ruby-2.4.0.tar.gz
-cd ruby-2.4.0/
-./configure --prefix=/usr
-make
-sudo make install
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir /tmp/ruby &amp;&amp; cd /tmp/ruby</span><br><span class="line">wget https://cache.ruby-lang.org/pub/ruby/ruby-2.4.0.tar.gz</span><br><span class="line">tar -xzvf ruby-2.4.0.tar.gz</span><br><span class="line">cd ruby-2.4.0/</span><br><span class="line">./configure --prefix=/usr</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br><span class="line"></span><br><span class="line">ruby -v</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 处理SSL问题，加入国内gems镜像</span></span><br><span class="line">gem sources --add http://gems.ruby-china.org/ --remove https://rubygems.org/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 如果报错：uninitialized constant Gem::RemoteFetcher::Zlib， 则执行：sudo apt-get install zlib1g-dev</span></span><br><span class="line"></span><br><span class="line">gem sources -l</span><br><span class="line"></span><br><span class="line">sudo gem install bundler --no-ri --no-rdoc --source https://gems.ruby-china.org</span><br></pre></td></tr></table></figure>
 
-ruby -v
-
-# 处理SSL问题，加入国内gems镜像
-gem sources --add http://gems.ruby-china.org/ --remove https://rubygems.org/
-# 如果报错：uninitialized constant Gem::RemoteFetcher::Zlib， 则执行：sudo apt-get install zlib1g-dev
-
-gem sources -l
-
-sudo gem install bundler --no-ri --no-rdoc --source https://gems.ruby-china.org
-</code></pre>
 <p>戳这里<a target="_blank" rel="noopener" href="http://cache.ruby-lang.org/pub/ruby/">pub ruby</a> 查看ruby最新版本。</p>
 </li>
 <li><p>装 foreman gems:</p>
-<pre><code class="Shell">sudo gem install rake bundler foreman --no-ri --no-rdoc
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo gem install rake bundler foreman --no-ri --no-rdoc</span><br></pre></td></tr></table></figure></li>
 <li><p>装runit：</p>
-<pre><code class="Shell">sudo apt-get install runit
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install runit</span><br></pre></td></tr></table></figure></li>
 <li><p>裝SQL：</p>
-<pre><code class="Shell">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install mysql-common mysql-client libmysqlclient-dev mysql-server</span><br></pre></td></tr></table></figure>
+
 <p>执行过程中会让你配置一个数据库的 root 密码， 记下来，设定rails的数据库时会用到。</p>
 <p>建新的数据库：</p>
 <p>执行<code>mysql -u root -p</code> 进入console, 输入：</p>
-<pre><code class="Sql">CREATE DATABASE recipes CHARACTER SET utf8mb4;
-</code></pre>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> DATABASE recipes <span class="type">CHARACTER</span> <span class="keyword">SET</span> utf8mb4;</span><br></pre></td></tr></table></figure>
+
 <p>创建user deploy，并给user分配数据库 recipes的权限, 把$password 替换成你自己设置的密码：</p>
-<pre><code class="sql">CREATE USER &#39;deploy&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;$password&#39;;
-GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, LOCK TABLES ON `recipes`.* TO &#39;deploy&#39;@&#39;localhost&#39;;
-exit
-</code></pre>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">&#x27;deploy&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span> IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;$password&#x27;</span>;</span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">SELECT</span>, <span class="keyword">INSERT</span>, UPDATE, <span class="keyword">DELETE</span>, <span class="keyword">CREATE</span>, <span class="keyword">DROP</span>, INDEX, <span class="keyword">ALTER</span>, LOCK TABLES <span class="keyword">ON</span> `recipes`.<span class="operator">*</span> <span class="keyword">TO</span> <span class="string">&#x27;deploy&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span>;</span><br><span class="line">exit</span><br></pre></td></tr></table></figure>
+
 <p>退出SQL的session后，尝试连接一下数据库：</p>
-<pre><code class="Shell">sudo mysql -u deploy -p -D recipes
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo mysql -u deploy -p -D recipes</span><br></pre></td></tr></table></figure>
+
 <p>这时会让你输入密码，输入刚刚替换$password的密码即可。</p>
 </li>
 </ul>
 <h5 id="3、部署项目"><a href="#3、部署项目" class="headerlink" title="3、部署项目"></a>3、部署项目</h5><ul>
 <li><p>clone项目到服务器</p>
 <p>deploy身份登陆，执行：</p>
-<pre><code class="Shell">sudo git clone //github.com/XXXXX/recipes.git recipes
-cd recipes
-ls -la
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo git clone //github.com/XXXXX/recipes.git recipes</span><br><span class="line">cd recipes</span><br><span class="line">ls -la</span><br></pre></td></tr></table></figure>
+
 <p>如果recipes下面文件的owner不是deploy，执行：</p>
-<pre><code class="Shell">sudo chown deploy:deploy . -R
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo chown deploy:deploy . -R</span><br></pre></td></tr></table></figure>
+
 <p><strong>确保deploy对recipes下的文件拥有读写权限，不然后面部署时会失败</strong>。</p>
 <p>配置文件：</p>
-<pre><code class="Shell">sudo mkdir -p log tmp/pids tmp/sockets
-sudo chown -R deploy log/ tmp/
-sudo chmod -R u+rwX,go-w log/ tmp/
-sudo chmod -R u+rwX,go-w log/
-sudo chmod -R u+rwX tmp/
-touch .env
-touch config/unicorn.rb
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo mkdir -p log tmp/pids tmp/sockets</span><br><span class="line">sudo chown -R deploy log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/ tmp/</span><br><span class="line">sudo chmod -R u+rwX,go-w log/</span><br><span class="line">sudo chmod -R u+rwX tmp/</span><br><span class="line">touch .env</span><br><span class="line">touch config/unicorn.rb</span><br></pre></td></tr></table></figure>
+
 <p>配置.env:</p>
-<pre><code class="Shell"># ==== Required configuration settings  ====
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ==== Required configuration settings  ====</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Replace the following with the output from <span class="string">&quot;rake secret&quot;</span></span></span><br><span class="line">APP_SECRET_TOKEN=REPLACE_ME_NOW!</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">###########################</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash">      Database Setup      <span class="comment">#</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">###########################</span></span></span><br><span class="line"></span><br><span class="line">DATABASE_ADAPTER=mysql2</span><br><span class="line">DATABASE_ENCODING=utf8</span><br><span class="line">DATABASE_RECONNECT=true</span><br><span class="line">DATABASE_NAME=recipes</span><br><span class="line">DATABASE_POOL=20</span><br><span class="line">DATABASE_USERNAME=deploy</span><br><span class="line">DATABASE_PASSWORD=&quot;your_password&quot;</span><br><span class="line"><span class="meta">#</span><span class="bash">DATABASE_HOST=your-domain-here.com</span></span><br><span class="line"><span class="meta">#</span><span class="bash">DATABASE_PORT=3306</span></span><br><span class="line"><span class="meta">#</span><span class="bash">DATABASE_SOCKET=/tmp/mysql.sock</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> MySQL only: If you are running a MySQL server &gt;=5.5.3, you should</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">set</span> DATABASE_ENCODING to utf8mb4 instead of utf8 so that the</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> database can hold 4-byte UTF-8 characters like emoji.</span></span><br><span class="line"><span class="meta">#</span><span class="bash">DATABASE_ENCODING=utf8mb4</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ==== Additional required production settings ====</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Configure Rails environment.  This should only be needed <span class="keyword">in</span> production and may cause errors <span class="keyword">in</span> development.</span></span><br><span class="line">RAILS_ENV=production</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Should Rails force all requests to use SSL?</span></span><br><span class="line">FORCE_SSL=false</span><br><span class="line"><span class="meta">#</span><span class="bash"> 设置SECRET_KEY_BASE，config/secrets.yml中有用到，用development的secret_key_base即可</span></span><br><span class="line">SECRET_KEY_BASE= your_devlopment_secret_key_base</span><br></pre></td></tr></table></figure>
 
-# Replace the following with the output from &quot;rake secret&quot;
-APP_SECRET_TOKEN=REPLACE_ME_NOW!
-
-############################
-#      Database Setup      #
-############################
-
-DATABASE_ADAPTER=mysql2
-DATABASE_ENCODING=utf8
-DATABASE_RECONNECT=true
-DATABASE_NAME=recipes
-DATABASE_POOL=20
-DATABASE_USERNAME=deploy
-DATABASE_PASSWORD=&quot;your_password&quot;
-#DATABASE_HOST=your-domain-here.com
-#DATABASE_PORT=3306
-#DATABASE_SOCKET=/tmp/mysql.sock
-
-# MySQL only: If you are running a MySQL server &gt;=5.5.3, you should
-# set DATABASE_ENCODING to utf8mb4 instead of utf8 so that the
-# database can hold 4-byte UTF-8 characters like emoji.
-#DATABASE_ENCODING=utf8mb4
-
-# ==== Additional required production settings ====
-
-# Configure Rails environment.  This should only be needed in production and may cause errors in development.
-RAILS_ENV=production
-
-# Should Rails force all requests to use SSL?
-FORCE_SSL=false
-# 设置SECRET_KEY_BASE，config/secrets.yml中有用到，用development的secret_key_base即可
-SECRET_KEY_BASE= your_devlopment_secret_key_base
-</code></pre>
 <p>配置<code> config/unicorn.rb</code>：</p>
-<pre><code class="Ruby">wd = File.expand_path(File.join(File.dirname(__FILE__), &#39;..&#39;))
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">wd = File.expand_path(File.join(File.dirname(<span class="keyword">__FILE__</span>), <span class="string">&#x27;..&#x27;</span>))</span><br><span class="line"></span><br><span class="line">app_path = wd</span><br><span class="line"></span><br><span class="line">worker_processes <span class="number">2</span></span><br><span class="line">preload_app <span class="literal">true</span></span><br><span class="line">timeout <span class="number">180</span></span><br><span class="line">listen <span class="string">&quot;<span class="subst">#&#123;wd&#125;</span>/tmp/sockets/unicorn.socket&quot;</span></span><br><span class="line"></span><br><span class="line">working_directory app_path</span><br><span class="line"></span><br><span class="line">rails_env = ENV[<span class="string">&#x27;RAILS_ENV&#x27;</span>] <span class="params">||</span> <span class="string">&#x27;production&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Log everything to one file</span></span><br><span class="line">stderr_path <span class="string">&quot;log/unicorn.log&quot;</span></span><br><span class="line">stdout_path <span class="string">&quot;log/unicorn.log&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Set master PID location</span></span><br><span class="line">pid <span class="string">&quot;<span class="subst">#&#123;wd&#125;</span>/tmp/pids/unicorn.pid&quot;</span></span><br><span class="line"></span><br><span class="line">before_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.connection.disconnect!</span><br><span class="line">  old_pid = <span class="string">&quot;<span class="subst">#&#123;server.config[<span class="symbol">:pid</span>]&#125;</span>.oldbin&quot;</span></span><br><span class="line">  <span class="keyword">if</span> File.exist?(old_pid) &amp;&amp; server.pid != old_pid</span><br><span class="line">    <span class="keyword">begin</span></span><br><span class="line">      Process.kill(<span class="string">&quot;QUIT&quot;</span>, File.read(old_pid).to_i)</span><br><span class="line">    <span class="keyword">rescue</span> Errno::ENOENT, Errno::ESRCH</span><br><span class="line">      <span class="comment"># someone else did our job for us</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">after_fork <span class="keyword">do</span> <span class="params">|server, worker|</span></span><br><span class="line">  ActiveRecord::Base.establish_connection</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-app_path = wd
-
-worker_processes 2
-preload_app true
-timeout 180
-listen &quot;#&#123;wd&#125;/tmp/sockets/unicorn.socket&quot;
-
-working_directory app_path
-
-rails_env = ENV[&#39;RAILS_ENV&#39;] || &#39;production&#39;
-
-# Log everything to one file
-stderr_path &quot;log/unicorn.log&quot;
-stdout_path &quot;log/unicorn.log&quot;
-
-# Set master PID location
-pid &quot;#&#123;wd&#125;/tmp/pids/unicorn.pid&quot;
-
-before_fork do |server, worker|
-  ActiveRecord::Base.connection.disconnect!
-  old_pid = &quot;#&#123;server.config[:pid]&#125;.oldbin&quot;
-  if File.exist?(old_pid) &amp;&amp; server.pid != old_pid
-    begin
-      Process.kill(&quot;QUIT&quot;, File.read(old_pid).to_i)
-    rescue Errno::ENOENT, Errno::ESRCH
-      # someone else did our job for us
-    end
-  end
-end
-
-after_fork do |server, worker|
-  ActiveRecord::Base.establish_connection
-end
-</code></pre>
 <p>安装gems：</p>
-<pre><code class="shell">sudo bundle install --deployment --without development test
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo bundle install --deployment --without development test</span><br></pre></td></tr></table></figure>
+
 <p>migrate 数据库：</p>
-<pre><code class="shell">sudo bundle exec rake db:migrate RAILS_ENV=production
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo bundle exec rake db:migrate RAILS_ENV=production</span><br></pre></td></tr></table></figure>
+
 <p>编译assets：</p>
-<pre><code class="Shell">sudo bundle exec rake assets:precompile RAILS_ENV=production
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo bundle exec rake assets:precompile RAILS_ENV=production</span><br></pre></td></tr></table></figure>
+
 <p>修改Procfile：</p>
-<pre><code class="shell">sudo vi Procfile
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vi Procfile</span><br></pre></td></tr></table></figure>
+
 <p>注释掉Procfile这两行：</p>
-<pre><code>web: bundle exec rails server -p $&#123;PORT-3000&#125; -b $&#123;IP-0.0.0.0&#125;
-jobs: bundle exec rails runner bin/threaded.rb
-</code></pre>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">web: bundle <span class="built_in">exec</span> rails server -p <span class="variable">$&#123;PORT-3000&#125;</span> -b <span class="variable">$&#123;IP-0.0.0.0&#125;</span></span><br><span class="line"><span class="built_in">jobs</span>: bundle <span class="built_in">exec</span> rails runner bin/threaded.rb</span><br></pre></td></tr></table></figure>
+
 <p>同时取消对Procfile这两行的注释：</p>
-<pre><code># web: bundle exec unicorn -c config/unicorn.rb
-# jobs: bundle exec rails runner bin/threaded.rb
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> web: bundle <span class="built_in">exec</span> unicorn -c config/unicorn.rb</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">jobs</span>: bundle <span class="built_in">exec</span> rails runner bin/threaded.rb</span></span><br></pre></td></tr></table></figure>
+
 <p>创建Unicorn的初始脚本：</p>
 <p>终端输入：</p>
-<pre><code class="shell">sudo vi /etc/init.d/unicorn_recipes
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vi /etc/init.d/unicorn_recipes</span><br></pre></td></tr></table></figure>
+
 <p>然后在文件中放入以下内容：</p>
-<pre><code class="shell">#!/bin/sh
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## BEGIN INIT INFO</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Provides:          unicorn</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Required-Start:    <span class="variable">$all</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Required-Stop:     <span class="variable">$all</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Default-Start:     2 3 4 5</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Default-Stop:      0 1 6</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Short-Description: starts the unicorn app server</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description:       starts unicorn using start-stop-daemon</span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">## END INIT INFO</span></span></span><br><span class="line"></span><br><span class="line">set -e</span><br><span class="line"></span><br><span class="line">USAGE=&quot;Usage: $0 &lt;start|stop|restart|upgrade|rotate|force-stop&gt;&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> app settings</span></span><br><span class="line">USER=&quot;deploy&quot;</span><br><span class="line">APP_NAME=&quot;recipes&quot;</span><br><span class="line">APP_ROOT=&quot;/home/$USER/$APP_NAME&quot;</span><br><span class="line">ENV=&quot;production&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> environment settings</span></span><br><span class="line">PATH=&quot;/home/$USER/.rbenv/shims:/home/$USER/.rbenv/bin:$PATH&quot;</span><br><span class="line">CMD=&quot;cd $APP_ROOT &amp;&amp; bundle exec unicorn -c config/unicorn.rb -E $ENV -D&quot;</span><br><span class="line">PID=&quot;$APP_ROOT/tmp/pids/unicorn.pid&quot;</span><br><span class="line">OLD_PID=&quot;$PID.oldbin&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> make sure the app exists</span></span><br><span class="line">cd $APP_ROOT || exit 1</span><br><span class="line"></span><br><span class="line">sig () &#123;</span><br><span class="line">  test -s &quot;$PID&quot; &amp;&amp; kill -$1 `cat $PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">oldsig () &#123;</span><br><span class="line">  test -s $OLD_PID &amp;&amp; kill -$1 `cat $OLD_PID`</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">case $1 in</span><br><span class="line">  start)</span><br><span class="line">    sig 0 &amp;&amp; echo &gt;&amp;2 &quot;Already running&quot; &amp;&amp; exit 0</span><br><span class="line">    echo &quot;Starting $APP_NAME&quot;</span><br><span class="line">    su - $USER -c &quot;$CMD&quot;</span><br><span class="line">    ;;</span><br><span class="line">  stop)</span><br><span class="line">    echo &quot;Stopping $APP_NAME&quot;</span><br><span class="line">    sig QUIT &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 &quot;Not running&quot;</span><br><span class="line">    ;;</span><br><span class="line">  force-stop)</span><br><span class="line">    echo &quot;Force stopping $APP_NAME&quot;</span><br><span class="line">    sig TERM &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 &quot;Not running&quot;</span><br><span class="line">    ;;</span><br><span class="line">  restart|reload|upgrade)</span><br><span class="line">    sig USR2 &amp;&amp; echo &quot;reloaded $APP_NAME&quot; &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 &quot;Couldn&#x27;t reload, starting &#x27;$CMD&#x27; instead&quot;</span><br><span class="line">    $CMD</span><br><span class="line">    ;;</span><br><span class="line">  rotate)</span><br><span class="line">    sig USR1 &amp;&amp; echo rotated logs OK &amp;&amp; exit 0</span><br><span class="line">    echo &gt;&amp;2 &quot;Couldn&#x27;t rotate logs&quot; &amp;&amp; exit 1</span><br><span class="line">    ;;</span><br><span class="line">  *)</span><br><span class="line">    echo &gt;&amp;2 $USAGE</span><br><span class="line">    exit 1</span><br><span class="line">    ;;</span><br><span class="line">esac</span><br></pre></td></tr></table></figure>
 
-### BEGIN INIT INFO
-# Provides:          unicorn
-# Required-Start:    $all
-# Required-Stop:     $all
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: starts the unicorn app server
-# Description:       starts unicorn using start-stop-daemon
-### END INIT INFO
-
-set -e
-
-USAGE=&quot;Usage: $0 &lt;start|stop|restart|upgrade|rotate|force-stop&gt;&quot;
-
-# app settings
-USER=&quot;deploy&quot;
-APP_NAME=&quot;recipes&quot;
-APP_ROOT=&quot;/home/$USER/$APP_NAME&quot;
-ENV=&quot;production&quot;
-
-# environment settings
-PATH=&quot;/home/$USER/.rbenv/shims:/home/$USER/.rbenv/bin:$PATH&quot;
-CMD=&quot;cd $APP_ROOT &amp;&amp; bundle exec unicorn -c config/unicorn.rb -E $ENV -D&quot;
-PID=&quot;$APP_ROOT/tmp/pids/unicorn.pid&quot;
-OLD_PID=&quot;$PID.oldbin&quot;
-
-# make sure the app exists
-cd $APP_ROOT || exit 1
-
-sig () &#123;
-  test -s &quot;$PID&quot; &amp;&amp; kill -$1 `cat $PID`
-&#125;
-
-oldsig () &#123;
-  test -s $OLD_PID &amp;&amp; kill -$1 `cat $OLD_PID`
-&#125;
-
-case $1 in
-  start)
-    sig 0 &amp;&amp; echo &gt;&amp;2 &quot;Already running&quot; &amp;&amp; exit 0
-    echo &quot;Starting $APP_NAME&quot;
-    su - $USER -c &quot;$CMD&quot;
-    ;;
-  stop)
-    echo &quot;Stopping $APP_NAME&quot;
-    sig QUIT &amp;&amp; exit 0
-    echo &gt;&amp;2 &quot;Not running&quot;
-    ;;
-  force-stop)
-    echo &quot;Force stopping $APP_NAME&quot;
-    sig TERM &amp;&amp; exit 0
-    echo &gt;&amp;2 &quot;Not running&quot;
-    ;;
-  restart|reload|upgrade)
-    sig USR2 &amp;&amp; echo &quot;reloaded $APP_NAME&quot; &amp;&amp; exit 0
-    echo &gt;&amp;2 &quot;Couldn&#39;t reload, starting &#39;$CMD&#39; instead&quot;
-    $CMD
-    ;;
-  rotate)
-    sig USR1 &amp;&amp; echo rotated logs OK &amp;&amp; exit 0
-    echo &gt;&amp;2 &quot;Couldn&#39;t rotate logs&quot; &amp;&amp; exit 1
-    ;;
-  *)
-    echo &gt;&amp;2 $USAGE
-    exit 1
-    ;;
-esac
-</code></pre>
 <p>更改权限，并设置可以在boot上启动：</p>
-<pre><code class="shell">sudo chmod 755 /etc/init.d/unicorn_recipes
-sudo update-rc.d unicorn_recipes defaults
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo chmod 755 /etc/init.d/unicorn_recipes</span><br><span class="line">sudo update-rc.d unicorn_recipes defaults</span><br></pre></td></tr></table></figure>
+
 <p>开启：</p>
-<pre><code class="shell">sudo /etc/init.d/unicorn_recipes start
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo /etc/init.d/unicorn_recipes start</span><br></pre></td></tr></table></figure>
+
 <p>检查unicorn的状态：</p>
-<pre><code class="Shell">sudo service unicorn status
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo service unicorn status</span><br></pre></td></tr></table></figure>
+
 <p>设置logrotate：</p>
-<pre><code class="shell">sudo vi /etc/logrotate.d/recipes
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vi /etc/logrotate.d/recipes</span><br></pre></td></tr></table></figure>
+
 <p>内容如下：</p>
-<pre><code class="Shell">/home/deploy/recipes/log/*.log &#123;
-  daily
-  missingok
-  rotate 180
-  # must use with delaycompress below
-  compress
-  dateext
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">/home/deploy/recipes/log/*.log &#123;</span><br><span class="line">  daily</span><br><span class="line">  missingok</span><br><span class="line">  rotate 180</span><br><span class="line"><span class="meta">  #</span><span class="bash"> must use with delaycompress below</span></span><br><span class="line">  compress</span><br><span class="line">  dateext</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"> this is important <span class="keyword">if</span> using <span class="string">&quot;compress&quot;</span> since we need to call</span></span><br><span class="line"><span class="meta">  #</span><span class="bash"> the <span class="string">&quot;lastaction&quot;</span> script below before compressing:</span></span><br><span class="line">  delaycompress</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"> note the lack of the evil <span class="string">&quot;copytruncate&quot;</span> option <span class="keyword">in</span> this</span></span><br><span class="line"><span class="meta">  #</span><span class="bash"> config.  Unicorn supports the USR1 signal and we send it</span></span><br><span class="line"><span class="meta">  #</span><span class="bash"> as our <span class="string">&quot;lastaction&quot;</span> action:</span></span><br><span class="line">  lastaction</span><br><span class="line">    pid=/home/deploy/recipes/tmp/pids/unicorn.pid</span><br><span class="line">    test -s $pid &amp;&amp; kill -USR1 &quot;$(cat $pid)&quot;</span><br><span class="line">  endscript</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-  # this is important if using &quot;compress&quot; since we need to call
-  # the &quot;lastaction&quot; script below before compressing:
-  delaycompress
-
-  # note the lack of the evil &quot;copytruncate&quot; option in this
-  # config.  Unicorn supports the USR1 signal and we send it
-  # as our &quot;lastaction&quot; action:
-  lastaction
-    pid=/home/deploy/recipes/tmp/pids/unicorn.pid
-    test -s $pid &amp;&amp; kill -USR1 &quot;$(cat $pid)&quot;
-  endscript
-&#125;
-</code></pre>
 <p>如果提示readonly, 无法写入，使用chmod或者chown来获取读写权限。</p>
 </li>
 <li><p>安装Ngnix</p>
-<pre><code class="Shell">sudo apt-get install -y nginx
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install -y nginx</span><br></pre></td></tr></table></figure>
+
 <p>查看版本：</p>
-<pre><code class="Shell">nginx -v
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">nginx -v</span><br></pre></td></tr></table></figure>
+
 <p>在/etc/nginx/sites-available下，新增recipes文件：</p>
-<pre><code class="Shell">sudo vi /etc/nginx/sites-available/recipes
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vi /etc/nginx/sites-available/recipes</span><br></pre></td></tr></table></figure>
+
 <p>内容如下：</p>
-<pre><code class="Shell">###################################
-##         configuration         ##
-###################################
-##
-## See installation.md#using-https for additional HTTPS configuration details.
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">##################################</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#         configuration         ##</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">##################################</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># See installation.md#using-https for additional HTTPS configuration details.</span></span></span><br><span class="line"></span><br><span class="line">upstream recipes &#123;</span><br><span class="line">  server unix:/home/deploy/recipes/tmp/sockets/unicorn.socket fail_timeout=0;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># Normal HTTP host</span></span></span><br><span class="line">server &#123;</span><br><span class="line">  listen 0.0.0.0:80 default_server;</span><br><span class="line">  listen [::]:80 ipv6only=on default_server;</span><br><span class="line">  server_name 101.132.151.71; ## 这里填域名，如果没有，填服务器 IP 位置</span><br><span class="line">  server_tokens off; ## Don&#x27;t show the nginx version number, a security best practice</span><br><span class="line">  root /home/deploy/recipes/public;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># Increase this if you want to upload large attachments</span></span></span><br><span class="line">  client_max_body_size 20m;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># Individual nginx logs for vhost</span></span></span><br><span class="line">  access_log  /var/log/nginx/recipes_access.log;</span><br><span class="line">  error_log   /var/log/nginx/recipes_error.log;</span><br><span class="line"></span><br><span class="line">  location / &#123;</span><br><span class="line">    ## Serve static files from defined root folder.</span><br><span class="line">    ## @huginn is a named location for the upstream fallback, see below.</span><br><span class="line">    try_files $uri $uri/index.html $uri.html @recipes;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># If a file, which is not found in the root folder is requested,</span></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># then the proxy passes the request to the upsteam (huginn unicorn).</span></span></span><br><span class="line">  location @recipes &#123;</span><br><span class="line">    ## If you use HTTPS make sure you disable gzip compression</span><br><span class="line">    ## to be safe against BREACH attack.</span><br><span class="line">    # gzip off;</span><br><span class="line"></span><br><span class="line">    proxy_read_timeout      300;</span><br><span class="line">    proxy_connect_timeout   300;</span><br><span class="line">    proxy_redirect          off;</span><br><span class="line"></span><br><span class="line">    proxy_set_header    Host                $http_host;</span><br><span class="line">    proxy_set_header    X-Real-IP           $remote_addr;</span><br><span class="line">    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;</span><br><span class="line">    proxy_set_header    X-Forwarded-Proto   $scheme;</span><br><span class="line">    proxy_set_header    X-Frame-Options     SAMEORIGIN;</span><br><span class="line"></span><br><span class="line">    proxy_pass http://recipes;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># Enable gzip compression as per rails guide:</span></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression</span></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># WARNING: If you are using relative urls remove the block below</span></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># See config/application.rb under &quot;Relative url support&quot; for the list of</span></span></span><br><span class="line"><span class="meta">  #</span><span class="bash"><span class="comment"># other files that need to be changed for relative url support</span></span></span><br><span class="line">  location ~ ^/(assets)/ &#123;</span><br><span class="line">    root /home/deploy/recipes/public;</span><br><span class="line">    gzip_static on; # to serve pre-gzipped version</span><br><span class="line">    expires max;</span><br><span class="line">    add_header Cache-Control public;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  error_page 502 /502.html;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-upstream recipes &#123;
-  server unix:/home/deploy/recipes/tmp/sockets/unicorn.socket fail_timeout=0;
-&#125;
-
-## Normal HTTP host
-server &#123;
-  listen 0.0.0.0:80 default_server;
-  listen [::]:80 ipv6only=on default_server;
-  server_name 101.132.151.71; ## 这里填域名，如果没有，填服务器 IP 位置
-  server_tokens off; ## Don&#39;t show the nginx version number, a security best practice
-  root /home/deploy/recipes/public;
-
-  ## Increase this if you want to upload large attachments
-  client_max_body_size 20m;
-
-  ## Individual nginx logs for vhost
-  access_log  /var/log/nginx/recipes_access.log;
-  error_log   /var/log/nginx/recipes_error.log;
-
-  location / &#123;
-    ## Serve static files from defined root folder.
-    ## @huginn is a named location for the upstream fallback, see below.
-    try_files $uri $uri/index.html $uri.html @recipes;
-  &#125;
-
-  ## If a file, which is not found in the root folder is requested,
-  ## then the proxy passes the request to the upsteam (huginn unicorn).
-  location @recipes &#123;
-    ## If you use HTTPS make sure you disable gzip compression
-    ## to be safe against BREACH attack.
-    # gzip off;
-
-    proxy_read_timeout      300;
-    proxy_connect_timeout   300;
-    proxy_redirect          off;
-
-    proxy_set_header    Host                $http_host;
-    proxy_set_header    X-Real-IP           $remote_addr;
-    proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
-    proxy_set_header    X-Forwarded-Proto   $scheme;
-    proxy_set_header    X-Frame-Options     SAMEORIGIN;
-
-    proxy_pass http://recipes;
-  &#125;
-
-  ## Enable gzip compression as per rails guide:
-  ## http://guides.rubyonrails.org/asset_pipeline.html#gzip-compression
-  ## WARNING: If you are using relative urls remove the block below
-  ## See config/application.rb under &quot;Relative url support&quot; for the list of
-  ## other files that need to be changed for relative url support
-  location ~ ^/(assets)/ &#123;
-    root /home/deploy/recipes/public;
-    gzip_static on; # to serve pre-gzipped version
-    expires max;
-    add_header Cache-Control public;
-  &#125;
-
-  error_page 502 /502.html;
-&#125;
-</code></pre>
 <p>建立links:</p>
-<pre><code class="Shell">sudo ln -s /etc/nginx/sites-available/recipes /etc/nginx/sites-enabled/recipes
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo ln -s /etc/nginx/sites-available/recipes /etc/nginx/sites-enabled/recipes</span><br></pre></td></tr></table></figure>
+
 <p>删除default：</p>
-<pre><code class="shell">sudo rm /etc/nginx/sites-enabled/default
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo rm /etc/nginx/sites-enabled/default</span><br></pre></td></tr></table></figure>
+
 <p>测试设置：</p>
-<pre><code class="Shell">sudo nginx -t
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo nginx -t</span><br></pre></td></tr></table></figure>
+
 <p>会弹出syntax is ok 和test is successful的信息，终端运行：</p>
-<pre><code class="Shell">sudo service nginx restart
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo service nginx restart</span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>最后的效果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fnvasde46qj30o809rjrn.jpg"></p>
 <p>「终于出来了，太不容易了……」</p>
 <p>P.S</p>
 <p>如果<code>sudo service nginx restart</code>没有任何反应，可以检查以下路径的log：</p>
-<pre><code class="Shell">cd /var/log/nginx
-cd recipes/log
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd /var/log/nginx</span><br><span class="line">cd recipes/log</span><br></pre></td></tr></table></figure>
+
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://www.digitalocean.com/community/tutorials/how-to-deploy-a-rails-app-with-unicorn-and-nginx-on-ubuntu-14-04">How To Deploy a Rails App with Unicorn and Nginx on Ubuntu 14.04</a></p>
 <p><a target="_blank" rel="noopener" href="https://linode.com/docs/development/ror/use-unicorn-and-nginx-on-ubuntu-14-04/">Use Unicorn and Nginx to Configure Ruby on Rails Applications on Ubuntu 14.04</a></p>
 <p><a target="_blank" rel="noopener" href="https://github.com/huginn/huginn/blob/master/doc/manual/installation.md">Huginn install guide for Ubuntu/Debian</a></p>
@@ -1165,7 +883,7 @@ cd recipes/log
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

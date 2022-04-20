@@ -403,15 +403,11 @@
 
 <h4 id="Rspec-针对model-的attribute进行-stub"><a href="#Rspec-针对model-的attribute进行-stub" class="headerlink" title="Rspec 针对model 的attribute进行 stub"></a>Rspec 针对model 的attribute进行 stub</h4><p>一个简单的测试例子：</p>
 <p>有model  Payment,  含字段channel，string 类型。</p>
-<pre><code class="ruby">  it &#39;test&#39; do
-    allow_any_instance_of(Payment).to receive(:channel).and_return &#39;wxpay&#39;
-    a = Payment.new
-    expect(a.channel).to eql &#39;wxpay&#39;
-  end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">it <span class="string">&#x27;test&#x27;</span> <span class="keyword">do</span></span><br><span class="line">  allow_any_instance_of(Payment).to receive(<span class="symbol">:channel</span>).and_return <span class="string">&#x27;wxpay&#x27;</span></span><br><span class="line">  a = Payment.new</span><br><span class="line">  expect(a.channel).to eql <span class="string">&#x27;wxpay&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>看着没什么问题，但是终端跑测试，报错：</p>
-<pre><code>Payment does not implement #channel
-</code></pre>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">Payment <span class="keyword">does</span> <span class="keyword">not</span> implement <span class="comment">#channel</span></span><br></pre></td></tr></table></figure>
+
 <p>参考<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/40535640/rails-rspec-allow-any-instance-of-raises-does-not-implement-error-for-activere">Rails Rspec allow_any_instance_of raises “does not implement” error for ActiveRecord object attributes</a></p>
 <p>有两种解决方法：</p>
 <ul>
@@ -419,50 +415,43 @@
 <li>改用<code>instance_double(&#39;Payment&#39;, channel: &#39;wxpay&#39;)</code> ， 替换掉<code>allow_any_instance_of .....</code></li>
 </ul>
 <p>修改测试代码【这里用instance_double】：</p>
-<pre><code class="ruby">  it &#39;test&#39; do
-    instance_double(&#39;Payment&#39;, channel: &#39;wxpay&#39;)
-    # 或者 allow_any_instance_of(Payment.new.class).to receive(:channel).and_return &#39;wxpay&#39;
-    a = Payment.new
-    expect(a.channel).to eql &#39;wxpay&#39;
-  end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">it <span class="string">&#x27;test&#x27;</span> <span class="keyword">do</span></span><br><span class="line">  instance_double(<span class="string">&#x27;Payment&#x27;</span>, <span class="symbol">channel:</span> <span class="string">&#x27;wxpay&#x27;</span>)</span><br><span class="line">  <span class="comment"># 或者 allow_any_instance_of(Payment.new.class).to receive(:channel).and_return &#x27;wxpay&#x27;</span></span><br><span class="line">  a = Payment.new</span><br><span class="line">  expect(a.channel).to eql <span class="string">&#x27;wxpay&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>OK，passed.</p>
 <h4 id="PostgreSQL-中对array类型的attr查询"><a href="#PostgreSQL-中对array类型的attr查询" class="headerlink" title="PostgreSQL 中对array类型的attr查询"></a>PostgreSQL 中对array类型的attr查询</h4><p>场景：</p>
 <p>model product 中有一属性 categories，数据类型为array.</p>
 <p>现有如下数据：</p>
-<pre><code> product1.categories = [&#39;aa&#39;, &#39;bb&#39;]
- product2.categories = [&#39;cc&#39;]
- product3.categories = [&#39;dd&#39;, &#39;aa&#39;] 
-</code></pre>
+<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">product1.categories</span> = [<span class="string">&#x27;aa&#x27;</span>, <span class="string">&#x27;bb&#x27;</span>]</span><br><span class="line"><span class="attr">product2.categories</span> = [<span class="string">&#x27;cc&#x27;</span>]</span><br><span class="line"><span class="attr">product3.categories</span> = [<span class="string">&#x27;dd&#x27;</span>, <span class="string">&#x27;aa&#x27;</span>] </span><br></pre></td></tr></table></figure>
+
 <p>给定字符串S, 比如 ‘aa’，如何查询出Product中所有类别包含’aa’的记录？ [肉眼看出，是product1,product3]</p>
 <p>在<code>product.rb</code>中的添加一个scope：</p>
-<pre><code class="ruby">  scope :categroy_cont, -&gt; (categroy) &#123; where(&quot;? = ANY(categories)&quot;, categroy)&#125;
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">scope <span class="symbol">:categroy_cont</span>, -&gt; (categroy) &#123; where(<span class="string">&quot;? = ANY(categories)&quot;</span>, categroy)&#125;</span><br></pre></td></tr></table></figure>
+
 <p>执行<code>Product.all.category_cont(&#39;aa&#39;)</code> 即可。</p>
 <h4 id="复制整个文件夹，丢失权限和links"><a href="#复制整个文件夹，丢失权限和links" class="headerlink" title="复制整个文件夹，丢失权限和links"></a>复制整个文件夹，丢失权限和links</h4><p>之前复制了一个Rails项目，终端执行：</p>
-<pre><code>bin/yarn xxxx
-</code></pre>
+<figure class="highlight mipsasm"><table><tr><td class="code"><pre><span class="line"><span class="keyword">bin/yarn </span>xxxx</span><br></pre></td></tr></table></figure>
+
 <p>报错，显示 <strong>permission denied: bin/yarn</strong> </p>
 <p>终端执行： </p>
-<pre><code>ls -al bin
-</code></pre>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">ls</span> -<span class="keyword">al</span> bin</span><br></pre></td></tr></table></figure>
+
 <p>bin下面有yarn文件，但是文件属性中没有可执行的权限，, 执行：</p>
-<pre><code>chmod +x bin/*
-</code></pre>
+<figure class="highlight llvm"><table><tr><td class="code"><pre><span class="line">chmod +<span class="keyword">x</span> bin/*</span><br></pre></td></tr></table></figure>
+
 <p>解决了。</p>
 <p>当时只知道copy 文件的时候，文件的权限遗失，但是不知道为什么会出现这种情况。</p>
 <p>后面偶然发现了原因，手贱啊，原来是自己当时手动复制了整个文件夹，然后重命名了复制的那个文件夹，结果导致新项目中的link和可执行权限全部丢失了。</p>
 <p>正确的复制方式，保留link 和权限：</p>
-<pre><code class="shell">cp -a fold1 fold2
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cp -a fold1 fold2</span><br></pre></td></tr></table></figure>
+
 <p>这样复制后，得到的fold2下，所有的权限和link都不会丢失。</p>
 <h4 id="git-文件名大小写"><a href="#git-文件名大小写" class="headerlink" title="git 文件名大小写"></a>git 文件名大小写</h4><p>记录下这个，纯粹是因为在大小写这个问题上踩的坑有些过分了。</p>
 <p>直接使用命令：</p>
-<pre><code class="shell">git mv oldfileName newfileName
-</code></pre>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git mv oldfileName newfileName</span><br></pre></td></tr></table></figure>
+
 <p>比如文件名为Hello.rb， 修改为hello.rb:</p>
-<pre><code>git mv Hello.rb hello.rb
-</code></pre>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">git mv <span class="module-access"><span class="module"><span class="identifier">Hello</span>.</span></span>rb hello.rb</span><br></pre></td></tr></table></figure>
+
 <p>或者稍微麻烦一点：</p>
 <p>先将文件重命名为Hello1.rb，提交，commit，然后再重命名为hello.rb，再提交，最后将两个commit合并 rebase成一个commit。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/rspec/rspec-rails/issues/1357">Dynamic method verification fails when method stubbed using allow_any_instance_of on a class not previously instantiated</a></p>
@@ -781,7 +770,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

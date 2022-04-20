@@ -382,7 +382,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>577 words</span>
+              <span>575 words</span>
             </span>
           
 
@@ -403,23 +403,15 @@
 <span id="more"></span>
 
 <h4 id="一个简单的focus指令"><a href="#一个简单的focus指令" class="headerlink" title="一个简单的focus指令"></a>一个简单的focus指令</h4><p>在plugins文件夹下，新建文件<code>directives.js</code>，放入如下内容：</p>
-<pre><code class="js">// focus指令的定义参考vuejs官方文档
-import Vue from &#39;vue&#39;
-Vue.directive(&#39;focus&#39;, &#123;
-  inserted: function (el) &#123;
-    el.focus()
-  &#125;
-&#125;)
-</code></pre>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// focus指令的定义参考vuejs官方文档</span></span><br><span class="line"><span class="keyword">import</span> Vue <span class="keyword">from</span> <span class="string">&#x27;vue&#x27;</span></span><br><span class="line">Vue.directive(<span class="string">&#x27;focus&#x27;</span>, &#123;</span><br><span class="line">  <span class="attr">inserted</span>: <span class="function"><span class="keyword">function</span> (<span class="params">el</span>) </span>&#123;</span><br><span class="line">    el.focus()</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
 <p>修改<code>nuxt.config.js</code>文件，添加自定义指令声明：</p>
-<pre><code class="js">  plugins: [
-    &#39;~/plugins/directives&#39;
-  ],
-</code></pre>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line">plugins: [</span><br><span class="line">  <span class="string">&#x27;~/plugins/directives&#x27;</span></span><br><span class="line">],</span><br></pre></td></tr></table></figure>
+
 <p>重启nuxt,  好了，可以开始使用了。</p>
 <p>任意页面中添加:</p>
-<pre><code class="html">&lt;input v-focus&gt;
-</code></pre>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">v-focus</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
 <p>效果：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1g0bwp3to18j318y0isaag.jpg"></p>
 <h4 id="全选实现"><a href="#全选实现" class="headerlink" title="全选实现"></a>全选实现</h4><p>先看效果：</p>
@@ -427,55 +419,12 @@ Vue.directive(&#39;focus&#39;, &#123;
 <p>思路是给全选按钮一个class: select-all, 每个选项一个class：select-item， 最外面包一层指令: select-all-container. 这样所有相关的checkbox都在指令的el内了，这样就可以定位到对应的元素。</p>
 <p>然后利用bind钩子函数，来给按钮添加change事件。</p>
 <p>具体步骤基本同focus，只是<code>directives.js</code>的内容不一样，这里贴上指令的定义部分和示例的HTML代码：</p>
-<pre><code class="js">// plugins/directives.js
-import Vue from &#39;vue&#39;
-import $ from &#39;jquery&#39;
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="comment">// plugins/directives.js</span></span><br><span class="line"><span class="keyword">import</span> Vue <span class="keyword">from</span> <span class="string">&#x27;vue&#x27;</span></span><br><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">&#x27;jquery&#x27;</span></span><br><span class="line"></span><br><span class="line">Vue.directive(<span class="string">&#x27;select-all-container&#x27;</span>, &#123;</span><br><span class="line">  <span class="attr">bind</span>: <span class="function"><span class="keyword">function</span> (<span class="params">el</span>) </span>&#123;</span><br><span class="line">    $(el).on(<span class="string">&#x27;change&#x27;</span>, <span class="string">&#x27;.select-item&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">const</span> $items = $(el).find(<span class="string">&#x27;.select-item&#x27;</span>)</span><br><span class="line">      <span class="keyword">const</span> allChecked = $items.length != <span class="number">0</span> &amp;&amp; $items.not(<span class="string">&#x27;:checked&#x27;</span>).length == <span class="number">0</span></span><br><span class="line">      $(el).find(<span class="string">&#x27;.select-all&#x27;</span>).prop(<span class="string">&#x27;checked&#x27;</span>, allChecked)</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    $(el).on(<span class="string">&#x27;change&#x27;</span>, <span class="string">&#x27;.select-all&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      $(el).find(<span class="string">&#x27;.select-item&#x27;</span>).prop(<span class="string">&#x27;checked&#x27;</span>, <span class="built_in">this</span>.checked)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-Vue.directive(&#39;select-all-container&#39;, &#123;
-  bind: function (el) &#123;
-    $(el).on(&#39;change&#39;, &#39;.select-item&#39;, function() &#123;
-      const $items = $(el).find(&#39;.select-item&#39;)
-      const allChecked = $items.length != 0 &amp;&amp; $items.not(&#39;:checked&#39;).length == 0
-      $(el).find(&#39;.select-all&#39;).prop(&#39;checked&#39;, allChecked)
-    &#125;)
-
-    $(el).on(&#39;change&#39;, &#39;.select-all&#39;, function() &#123;
-      $(el).find(&#39;.select-item&#39;).prop(&#39;checked&#39;, this.checked)
-    &#125;)
-  &#125;
-&#125;)
-</code></pre>
 <p>调用bind钩子函数，给全选及单个子选项添加change事件。</p>
 <p>HTML示例部分：</p>
-<pre><code class="html">&lt;template&gt;
-  &lt;div v-select-all-container&gt;
-    &lt;label&gt;
-      &lt;input type=&quot;checkbox&quot; class=&quot;select-all&quot;&gt; 全选
-    &lt;/label&gt;
-    &lt;ul class=&quot;list-unstyled ml-4&quot;&gt;
-      &lt;li v-for=&quot;student in students&quot; :key=&quot;student.id&quot;&gt;
-        &lt;label&gt;
-          &lt;input type=&quot;checkbox&quot; :value=&quot;student.id&quot; class=&quot;select-item&quot;&gt;
-          &#123;&#123; student.name &#125;&#125;
-        &lt;/label&gt;
-      &lt;/li&gt;
-    &lt;/ul&gt;
-  &lt;/div&gt;
-&lt;/template&gt;
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">template</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">div</span> <span class="attr">v-select-all-container</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">label</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;checkbox&quot;</span> <span class="attr">class</span>=<span class="string">&quot;select-all&quot;</span>&gt;</span> 全选</span><br><span class="line">    <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">ul</span> <span class="attr">class</span>=<span class="string">&quot;list-unstyled ml-4&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">li</span> <span class="attr">v-for</span>=<span class="string">&quot;student in students&quot;</span> <span class="attr">:key</span>=<span class="string">&quot;student.id&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">label</span>&gt;</span></span><br><span class="line">          <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;checkbox&quot;</span> <span class="attr">:value</span>=<span class="string">&quot;student.id&quot;</span> <span class="attr">class</span>=<span class="string">&quot;select-item&quot;</span>&gt;</span></span><br><span class="line">          &#123;&#123; student.name &#125;&#125;</span><br><span class="line">        <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">li</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">ul</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">template</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="javascript"></span></span><br><span class="line"><span class="javascript">  <span class="keyword">export</span> <span class="keyword">default</span> &#123;</span></span><br><span class="line"><span class="javascript">      <span class="function"><span class="title">data</span>(<span class="params"></span>)</span> &#123;</span></span><br><span class="line"><span class="javascript">          <span class="keyword">return</span> &#123;</span></span><br><span class="line"><span class="javascript">              <span class="attr">students</span>: [&#123; <span class="string">&#x27;id&#x27;</span>: <span class="number">1</span>, <span class="string">&#x27;name&#x27;</span>: <span class="string">&quot;张三&quot;</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">&#x27;id&#x27;</span>: <span class="number">2</span>, <span class="string">&#x27;name&#x27;</span>: <span class="string">&quot;李四&quot;</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">&#x27;id&#x27;</span>: <span class="number">3</span>, <span class="string">&#x27;name&#x27;</span>: <span class="string">&quot;王五&quot;</span> &#125;,</span></span><br><span class="line"><span class="javascript">                         &#123; <span class="string">&#x27;id&#x27;</span>: <span class="number">4</span>, <span class="string">&#x27;name&#x27;</span>: <span class="string">&quot;赵麻子&quot;</span> &#125;]</span></span><br><span class="line"><span class="javascript">          &#125;</span></span><br><span class="line"><span class="javascript">      &#125;  </span></span><br><span class="line"><span class="javascript">  &#125;    </span></span><br><span class="line"><span class="javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span>    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-&lt;script&gt;
-  export default &#123;
-      data() &#123;
-          return &#123;
-              students: [&#123; &#39;id&#39;: 1, &#39;name&#39;: &quot;张三&quot; &#125;,
-                         &#123; &#39;id&#39;: 2, &#39;name&#39;: &quot;李四&quot; &#125;,
-                         &#123; &#39;id&#39;: 3, &#39;name&#39;: &quot;王五&quot; &#125;,
-                         &#123; &#39;id&#39;: 4, &#39;name&#39;: &quot;赵麻子&quot; &#125;]
-          &#125;
-      &#125;  
-  &#125;    
-&lt;/script&gt;    
-</code></pre>
 <p>好，大功告成。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/nuxt/nuxt.js/issues/3127">Where do custom directives belong?</a></p>
 <p><a target="_blank" rel="noopener" href="https://vuejs.org/v2/guide/custom-directive.html">custom-directive</a></p>
@@ -788,7 +737,7 @@ Vue.directive(&#39;select-all-container&#39;, &#123;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

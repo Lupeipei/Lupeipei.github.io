@@ -431,98 +431,34 @@
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fk0k6757yzg30yb0jyhdu.gif"></p>
 <ul>
 <li><p>新建model apply_event，终端：</p>
-<pre><code>rails g model apply_event user_id:integer event_id:integer
-</code></pre>
-</li>
+<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">rails g <span class="keyword">model</span> apply_event user_id:<span class="keyword">integer</span> event_id:<span class="keyword">integer</span></span><br></pre></td></tr></table></figure></li>
 <li><p>建立apply_event, user, event三者之间的关系:</p>
 <ul>
 <li><p>在<code>app/models/apply_event.rb</code>中添加：</p>
-<pre><code class="Ruby">class ApplyEvent &lt; ApplicationRecord
- + belongs_to :user
- + belongs_to :event
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ApplyEvent</span> &lt; ApplicationRecord</span></span><br><span class="line"> + belongs_to <span class="symbol">:user</span></span><br><span class="line"> + belongs_to <span class="symbol">:event</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>app/models/event.rb</code>中添加：</p>
-<pre><code class="Ruby">......
-has_many :apply_events
-has_many :appliers, :through =&gt; :apply_events, :source =&gt; :user
-......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">has_many <span class="symbol">:apply_events</span></span><br><span class="line">has_many <span class="symbol">:appliers</span>, <span class="symbol">:through</span> =&gt; <span class="symbol">:apply_events</span>, <span class="symbol">:source</span> =&gt; <span class="symbol">:user</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure></li>
 <li><p>在<code>app/models/user.rb</code>中添加：</p>
-<pre><code class="Ruby">......
-has_many :apply_events
-has_many :applied_events, through: :apply_events, source: :event
-......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">has_many <span class="symbol">:apply_events</span></span><br><span class="line">has_many <span class="symbol">:applied_events</span>, <span class="symbol">through:</span> <span class="symbol">:apply_events</span>, <span class="symbol">source:</span> <span class="symbol">:event</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure></li>
 </ul>
 </li>
 <li><p>用户可以申请参加活动或取消申请</p>
 <ul>
 <li><p>在<code>app/models/user.rb</code>中添加：</p>
-<pre><code class="Ruby">  ......
-  def apply_already?(event)
-    applied_events.include?(event)
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">apply_already?</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events.<span class="keyword">include</span>?(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">apply!</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events &lt;&lt; event</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">cancel!</span><span class="params">(event)</span></span></span><br><span class="line">  applied_events.delete(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
-  def apply!(event)
-    applied_events &lt;&lt; event
-  end
-
-  def cancel!(event)
-    applied_events.delete(event)
-  end
-  ......
-</code></pre>
 <p>​</p>
 </li>
 <li><p>在<code>app/controllers/events_controller.rb</code>中添加：</p>
-<pre><code class="Ruby">class EventsController &lt; ApplicationController
-  ......
-  def apply
-    @event = Event.find(params[:id])
-    type = params[:type]
-    if type == &quot;apply&quot;
-      current_user.apply!(@event)
-    else type == &quot;cancel&quot;
-      current_user.cancel!(@event)
-    end
-    redirect_to :back
-  end
-  ......
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EventsController</span> &lt; ApplicationController</span></span><br><span class="line">  ......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">&quot;apply&quot;</span></span><br><span class="line">      current_user.apply!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">&quot;cancel&quot;</span></span><br><span class="line">      current_user.cancel!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>申请参加活动，需要用户在登录状态下，修改<code>app/controllers/events_controller.rb</code>的<code>before_action :authenticate_user!</code>部分，加上apply</p>
-<pre><code class="Ruby">- before_action :authenticate_user!, only: [:new, :create,.....]
-+ before_action :authenticate_user!, only: [:apply,:new, :create,.....]
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">- before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:new</span>, <span class="symbol">:create</span>,.....]</span><br><span class="line">+ before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:apply</span>,<span class="symbol">:new</span>, <span class="symbol">:create</span>,.....]</span><br></pre></td></tr></table></figure></li>
 <li><p>修改<code>config/routes.rb</code>， 添加如下代码：</p>
-<pre><code class="Ruby">  ......
-  resources :events do
-    ......
-  + put :apply, on: :member
-  end
-  ......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"> ......</span><br><span class="line"> resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">......</span><br><span class="line"> + put <span class="symbol">:apply</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure></li>
 <li><p>修改<code>app/views/events/show.html.erb</code>， 添加如下代码：</p>
-<pre><code class="Ruby">......
-&lt;% if @event.end_time &lt; Time.now %&gt;
-    &lt;label class=&quot;label label-default event-over&quot;&gt;活动已结束&lt;/label&gt;
-&lt;% elsif @event.appliers.count &gt;= @event.limited_num %&gt;
-    &lt;label class=&quot;label label-default event-over&quot;&gt;活动已满员&lt;/label&gt;
-&lt;% else %&gt;
-  &lt;% if current_user &amp;&amp; current_user.apply_already?(@event) %&gt;
-    &lt;%= link_to(&quot;取消申请&quot;, apply_event_path(@event, type: &quot;cancel&quot;), method: :put, class: &quot;btn btn-default event-apply&quot;)%&gt;
-  &lt;% else %&gt;
-    &lt;%= link_to(&quot;申请赴约&quot;, apply_event_path(@event, type: &quot;apply&quot;), method: :put, class: &quot;btn btn-success event-apply&quot;)%&gt;
-  &lt;% end %&gt;
-&lt;% end %&gt;
-......
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">&lt;% <span class="keyword">if</span> <span class="variable">@event</span>.end_time &lt; Time.now %&gt;</span><br><span class="line">	&lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已结束&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">&lt;% <span class="keyword">elsif</span> <span class="variable">@event</span>.appliers.count &gt;= <span class="variable">@event</span>.limited_num %&gt;</span><br><span class="line">	&lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已满员&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(<span class="variable">@event</span>) %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">&quot;取消申请&quot;</span>, apply_event_path(<span class="variable">@event</span>, <span class="symbol">type:</span> <span class="string">&quot;cancel&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">apply</span>&quot;)%&gt;</span></span><br><span class="line">  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">&quot;申请赴约&quot;</span>, apply_event_path(<span class="variable">@event</span>, <span class="symbol">type:</span> <span class="string">&quot;apply&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span> <span class="title">event</span>-<span class="title">apply</span>&quot;)%&gt;</span></span><br><span class="line">  &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
 <p>现在看看，可以实现申请及取消申请了。但是，你很快就会发现，点击按钮后页面会refresh一下，这个不好不好，我们请上ajax。</p>
 </li>
 </ul>
@@ -532,54 +468,13 @@ end
 <li><p>新增<code>app/views/events/_apply.html.erb</code>, <code>app/views/events/apply.js.erb</code></p>
 </li>
 <li><p>修改<code>app/views/events/show.html.erb</code>, 给这块要动态变化的区域加上ID</p>
-<pre><code class="Ruby">+ &lt;div class=&quot;col-md-2&quot; id=&quot;apply-&lt;%= @event.id %&gt;&quot;&gt;
--              &lt;% if @event.end_time &lt; Time.now %&gt;
--                  &lt;label class=&quot;label label-default event-over&quot;&gt;活动已结束&lt;/label&gt;
--              &lt;% elsif @event.appliers.count &gt;= @event.limited_num %&gt;
--                  &lt;label class=&quot;label label-default event-over&quot;&gt;活动已满员&lt;/label&gt;
--              &lt;% else %&gt;
--                &lt;% if current_user &amp;&amp; current_user.apply_already?(@event) %&gt;
--                  &lt;%= link_to(&quot;取消申请&quot;, apply_event_path(@event, type: &quot;cancel&quot;), method: :put, class: &quot;btn btn-default event-apply&quot;)%&gt;
--                &lt;% else %&gt;
--                  &lt;%= link_to(&quot;申请赴约&quot;, apply_event_path(@event, type: &quot;apply&quot;), method: :put, class: &quot;btn btn-success event-apply&quot;)%&gt;
--                &lt;% end %&gt;
--              &lt;% end %&gt;
-+              &lt;%= render :partial =&gt; &quot;apply&quot;, :locals =&gt; &#123;:event =&gt; @event &#125;%&gt;
-+ &lt;/div&gt;
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">+ &lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">col</span>-<span class="title">md</span>-2&quot; <span class="title">id</span>=&quot;<span class="title">apply</span>-&lt;%= @<span class="title">event</span>.<span class="title">id</span> %&gt;&quot;&gt;</span></span><br><span class="line">-              &lt;% <span class="keyword">if</span> <span class="variable">@event</span>.end_time &lt; Time.now %&gt;</span><br><span class="line">-              	&lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已结束&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">-              &lt;% <span class="keyword">elsif</span> <span class="variable">@event</span>.appliers.count &gt;= <span class="variable">@event</span>.limited_num %&gt;</span><br><span class="line">-              	&lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已满员&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">-              &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-                &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(<span class="variable">@event</span>) %&gt;</span><br><span class="line">-                  &lt;%= link_to(<span class="string">&quot;取消申请&quot;</span>, apply_event_path(<span class="variable">@event</span>, <span class="symbol">type:</span> <span class="string">&quot;cancel&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">apply</span>&quot;)%&gt;</span></span><br><span class="line">-                &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-                  &lt;%= link_to(<span class="string">&quot;申请赴约&quot;</span>, apply_event_path(<span class="variable">@event</span>, <span class="symbol">type:</span> <span class="string">&quot;apply&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span> <span class="title">event</span>-<span class="title">apply</span>&quot;)%&gt;</span></span><br><span class="line">-                &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">-              &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">+              &lt;%= render <span class="symbol">:partial</span> =&gt; <span class="string">&quot;apply&quot;</span>, <span class="symbol">:locals</span> =&gt; &#123;<span class="symbol">:event</span> =&gt; <span class="variable">@event</span> &#125;%&gt;</span><br><span class="line">+ &lt;<span class="regexp">/div&gt;</span></span><br></pre></td></tr></table></figure></li>
 <li><p>编辑<code>app/views/events/_apply.html.erb</code>, 添加如下代码：</p>
-<pre><code class="Ruby">&lt;% if event.end_time &lt; Time.now %&gt;
-  &lt;label class=&quot;label label-default event-over&quot;&gt;活动已结束&lt;/label&gt;
-&lt;% elsif event.appliers.count &gt;= event.limited_num %&gt;
-  &lt;label class=&quot;label label-default event-over&quot;&gt;活动已满员&lt;/label&gt;
-&lt;% else %&gt;
-  &lt;% if current_user &amp;&amp; current_user.apply_already?(event) %&gt;
-    &lt;%= link_to apply_event_path(event, type: &quot;cancel&quot;), method: :put, :remote =&gt; true do %&gt;
-    &lt;span class=&quot;btn btn-default event-apply&quot;&gt;取消申请&lt;/span&gt;
-    &lt;% end %&gt;
-  &lt;% else %&gt;
-    &lt;%= link_to apply_event_path(event, type: &quot;apply&quot;), method: :put, :remote =&gt; true do %&gt;
-    &lt;span class=&quot;btn btn-success event-apply&quot;&gt;申请赴约&lt;/span&gt;
-    &lt;% end %&gt;
-  &lt;% end %&gt;
-&lt;% end %&gt;
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> event.end_time &lt; Time.now %&gt;</span><br><span class="line">  &lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已结束&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">&lt;% <span class="keyword">elsif</span> event.appliers.count &gt;= event.limited_num %&gt;</span><br><span class="line">  &lt;label <span class="class"><span class="keyword">class</span>=&quot;<span class="title">label</span> <span class="title">label</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">over</span>&quot;&gt;活动已满员&lt;/<span class="title">label</span>&gt;</span></span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.apply_already?(event) %&gt;</span><br><span class="line">    &lt;%= link_to apply_event_path(event, <span class="symbol">type:</span> <span class="string">&quot;cancel&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;span <span class="class"><span class="keyword">class</span>=&quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span> <span class="title">event</span>-<span class="title">apply</span>&quot;&gt;取消申请&lt;/<span class="title">span</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to apply_event_path(event, <span class="symbol">type:</span> <span class="string">&quot;apply&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;span <span class="class"><span class="keyword">class</span>=&quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span> <span class="title">event</span>-<span class="title">apply</span>&quot;&gt;申请赴约&lt;/<span class="title">span</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">  &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure></li>
 <li><p>编辑<code>app/views/events/apply.js.erb</code>, 添加如下代码：</p>
-<pre><code class="Ruby">str = &quot;&lt;%=j render :partial =&gt; &quot;apply&quot;, :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;&quot;;
-$(&quot;#apply-&lt;%= @event.id %&gt;&quot;).html(str);
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">str = <span class="string">&quot;&lt;%=j render :partial =&gt; &quot;</span>apply<span class="string">&quot;, :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;&quot;</span>;</span><br><span class="line"><span class="variable">$(</span><span class="string">&quot;#apply-&lt;%= @event.id %&gt;&quot;</span>).html(str);</span><br></pre></td></tr></table></figure></li>
 <li><p>编辑<code>app/controllers/events_controller.rb</code>， 拿掉apply的redirect_to</p>
-<pre><code class="Ruby">  ......
-  def apply
-    ......
-    # redirect_to :back
-  end
-  ......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"> ......</span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span></span><br><span class="line">......</span><br><span class="line">   <span class="comment"># redirect_to :back</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>现在试试，可以快速申请，快速取消啦，棒棒哒！！</p>
 </li>
@@ -590,86 +485,19 @@ $(&quot;#apply-&lt;%= @event.id %&gt;&quot;).html(str);
 <p>这部分就比较简单啦。</p>
 <ul>
 <li><p>新增controller，终端运行：</p>
-<pre><code class="Ruby">rails g controller account::apply_events
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">rails g controller account::apply_events</span><br></pre></td></tr></table></figure></li>
 <li><p>修改<code>config/routes.rb</code>， 添加如下代码：</p>
-<pre><code class="Ruby">  ......
-  namespace :account do
-    ......
-  + resources :apply_events
-  end
-  ......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"> ......</span><br><span class="line"> namespace <span class="symbol">:account</span> <span class="keyword">do</span></span><br><span class="line">......</span><br><span class="line"> + resources <span class="symbol">:apply_events</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"> ......</span><br></pre></td></tr></table></figure></li>
 <li><p>编辑<code>app/controllers/account/apply_events_controller.rb</code>，添加</p>
-<pre><code class="Ruby">class Account::ApplyEventsController &lt; ApplicationController
-  before_action :authenticate_user!
-
-  def index
-    @events = current_user.applied_events
-  end
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Account::ApplyEventsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:authenticate_user!</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">index</span></span></span><br><span class="line">    <span class="variable">@events</span> = current_user.applied_events</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p>新增<code>app/views/account/apply_events/index.html.erb</code>, 添加如下代码：</p>
 </li>
 </ul>
-<pre><code class="Ruby">&lt;h1 class=&quot;text-center&quot;&gt;我的申请&lt;/h1&gt;
+  <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;h1 <span class="class"><span class="keyword">class</span>=&quot;<span class="title">text</span>-<span class="title">center</span>&quot;&gt;我的申请&lt;/<span class="title">h1</span>&gt;</span></span><br><span class="line"></span><br><span class="line">&lt;div <span class="class"><span class="keyword">class</span>=&quot;<span class="title">col</span>-<span class="title">md</span>-10 <span class="title">col</span>-<span class="title">md</span>-<span class="title">offset</span>-1&quot; <span class="title">style</span>=&quot;<span class="title">margin</span>-<span class="title">top</span>: 20<span class="title">px</span>;</span><span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">  &lt;table class=&quot;</span>table table-bordered<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">    &lt;thead&gt;</span></span><br><span class="line"><span class="string">      &lt;tr&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;活动名称&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;开始时间&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;结束时间&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;地点&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;主办方&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;类别&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;人数限额&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;剩余名额&lt;/th&gt;</span></span><br><span class="line"><span class="string">        &lt;th&gt;状态&lt;/th&gt;</span></span><br><span class="line"><span class="string">      &lt;/tr&gt;</span></span><br><span class="line"><span class="string">    &lt;/thead&gt;</span></span><br><span class="line"><span class="string">    &lt;tbody&gt;</span></span><br><span class="line"><span class="string">      &lt;% @events.each do |event| %&gt;</span></span><br><span class="line"><span class="string">        &lt;tr&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;</span></span><br><span class="line"><span class="string">            &lt;% link_to event_path(event)%&gt;</span></span><br><span class="line"><span class="string">             &lt;% if event.logo.present? %&gt;</span></span><br><span class="line"><span class="string">              &lt;%= link_to image_tag(event.logo.thumb.url, class:&quot;</span>event_logo_sm<span class="string">&quot;)%&gt;</span></span><br><span class="line"><span class="string">            &lt;% else %&gt;</span></span><br><span class="line"><span class="string">              &lt;%= link_to image_tag(&quot;</span><span class="symbol">http:</span>/<span class="regexp">/placehold.it/</span>100x100&amp;text=No Pic<span class="string">&quot;, class: &quot;</span>event_logo_sm<span class="string">&quot;)%&gt;</span></span><br><span class="line"><span class="string">            &lt;% end %&gt;</span></span><br><span class="line"><span class="string">            &lt;%= link_to(event.title, event_path(event)) %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.start_time %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.end_time %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.address %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.sponsor %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.category.name %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.limited_num %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= event.limited_num - event.appliers.count %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">          &lt;td&gt;&lt;%= t(event.status, :scope =&gt; &quot;</span>event.status<span class="string">&quot;) %&gt;&lt;/td&gt;</span></span><br><span class="line"><span class="string">        &lt;/tr&gt;</span></span><br><span class="line"><span class="string">      &lt;% end %&gt;</span></span><br><span class="line"><span class="string">    &lt;/tbody&gt;</span></span><br><span class="line"><span class="string">  &lt;/table&gt;</span></span><br><span class="line"><span class="string">&lt;/div&gt;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">&lt;!-- 分页 --&gt;</span></span><br><span class="line"><span class="string">&lt;div class=&quot;</span>text-center<span class="string">&quot;&gt;</span></span><br><span class="line"><span class="string">  &lt;%= will_paginate @events, renderer: BootstrapPagination::Rails, :previous_label =&gt; &#x27;上一页&#x27;, :next_label =&gt; &#x27;下一页&#x27; %&gt;</span></span><br><span class="line"><span class="string">&lt;/div&gt;</span></span><br></pre></td></tr></table></figure>
 
-&lt;div class=&quot;col-md-10 col-md-offset-1&quot; style=&quot;margin-top: 20px;&quot;&gt;
-  &lt;table class=&quot;table table-bordered&quot;&gt;
-    &lt;thead&gt;
-      &lt;tr&gt;
-        &lt;th&gt;活动名称&lt;/th&gt;
-        &lt;th&gt;开始时间&lt;/th&gt;
-        &lt;th&gt;结束时间&lt;/th&gt;
-        &lt;th&gt;地点&lt;/th&gt;
-        &lt;th&gt;主办方&lt;/th&gt;
-        &lt;th&gt;类别&lt;/th&gt;
-        &lt;th&gt;人数限额&lt;/th&gt;
-        &lt;th&gt;剩余名额&lt;/th&gt;
-        &lt;th&gt;状态&lt;/th&gt;
-      &lt;/tr&gt;
-    &lt;/thead&gt;
-    &lt;tbody&gt;
-      &lt;% @events.each do |event| %&gt;
-        &lt;tr&gt;
-          &lt;td&gt;
-            &lt;% link_to event_path(event)%&gt;
-             &lt;% if event.logo.present? %&gt;
-              &lt;%= link_to image_tag(event.logo.thumb.url, class:&quot;event_logo_sm&quot;)%&gt;
-            &lt;% else %&gt;
-              &lt;%= link_to image_tag(&quot;http://placehold.it/100x100&amp;text=No Pic&quot;, class: &quot;event_logo_sm&quot;)%&gt;
-            &lt;% end %&gt;
-            &lt;%= link_to(event.title, event_path(event)) %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.start_time %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.end_time %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.address %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.sponsor %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.category.name %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.limited_num %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= event.limited_num - event.appliers.count %&gt;&lt;/td&gt;
-          &lt;td&gt;&lt;%= t(event.status, :scope =&gt; &quot;event.status&quot;) %&gt;&lt;/td&gt;
-        &lt;/tr&gt;
-      &lt;% end %&gt;
-    &lt;/tbody&gt;
-  &lt;/table&gt;
-&lt;/div&gt;
-
-
-&lt;!-- 分页 --&gt;
-&lt;div class=&quot;text-center&quot;&gt;
-  &lt;%= will_paginate @events, renderer: BootstrapPagination::Rails, :previous_label =&gt; &#39;上一页&#39;, :next_label =&gt; &#39;下一页&#39; %&gt;
-&lt;/div&gt;
-</code></pre>
 <ul>
 <li><p>编辑<code>app/views/common/_navbar.html.erb</code>，加上<strong>我的申请</strong>入口：</p>
-<pre><code class="Ruby">......
-+ &lt;li&gt;&lt;%= link_to(&quot; 我的申请&quot;,account_apply_events_path(current_user), class: &quot;btn btn-default&quot;)%&gt;&lt;/li&gt;
-......
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">......</span><br><span class="line">+ &lt;li&gt;&lt;%= link_to(<span class="string">&quot; 我的申请&quot;</span>,account_apply_events_path(current_user), <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>&quot;)%&gt;&lt;/<span class="title">li</span>&gt;</span></span><br><span class="line">......</span><br></pre></td></tr></table></figure></li>
 </ul>
 <p>试试看，可以啦！</p>
 
@@ -980,7 +808,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

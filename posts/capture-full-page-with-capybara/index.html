@@ -386,7 +386,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>627 words</span>
+              <span>626 words</span>
             </span>
           
 
@@ -410,8 +410,8 @@
 <p>这样的需求肯定不是你第一个提出来，所以Google下， how to get full page screenshot with capybara ，会得到一些相关的链接，比如这条：</p>
 <p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/16695075/is-it-possible-to-take-a-screenshot-of-the-whole-page-with-selenium-capybara">Is it possible to take a screenshot of the whole page with Selenium/Capybara?</a></p>
 <p>看解答，很简单，窃喜，这么快就解决了：</p>
-<pre><code>page.save_screenshot(&#39;screen.png&#39;, full: true)
-</code></pre>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">page.save<span class="constructor">_screenshot(&#x27;<span class="params">screen</span>.<span class="params">png</span>&#x27;, <span class="params">full</span>: <span class="params">true</span>)</span></span><br></pre></td></tr></table></figure>
+
 <p>连提问者本人都对这个解答很满意，亲测有效，立马试试。</p>
 <p>然后你会发现，根本没有任何效果，截取的仍然不是整个网页，只是一部分页面，这时候，可以去看源码<a target="_blank" rel="noopener" href="http://www.rubydoc.info/github/jnicklas/capybara/Capybara%2FSession:save_screenshot">Capybara::Session#save_screenshot</a>, 发现确实有option的选项：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fn9bsxoifmj30n00drgo3.jpg"></p>
@@ -428,15 +428,8 @@
 <p>所以，剩下的就简单了，去resize window即可。</p>
 <p>好，不废话了，直接上货：</p>
 <p>在<code>features/support</code>下新建文件<code>screenshot.rb</code>, 放入以下内容：</p>
-<pre><code class="Ruby">def full_page_screenshot(file_name = nil)
-  width  = Capybara.page.execute_script(&quot;return Math.max(document.body.scrollWidth, document.body.offsetWidth);&quot;)
-  height = Capybara.page.execute_script(&quot;return Math.max(document.body.scrollHeight, document.body.offsetHeight);&quot;)
-  window = Capybara.current_session.driver.browser.manage.window
-  window.resize_to(width, height)
-  file = Capybara.page.save_screenshot(file_name)
-  return file
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">full_page_screenshot</span><span class="params">(file_name = <span class="literal">nil</span>)</span></span></span><br><span class="line">  width  = Capybara.page.execute_script(<span class="string">&quot;return Math.max(document.body.scrollWidth, document.body.offsetWidth);&quot;</span>)</span><br><span class="line">  height = Capybara.page.execute_script(<span class="string">&quot;return Math.max(document.body.scrollHeight, document.body.offsetHeight);&quot;</span>)</span><br><span class="line">  window = Capybara.current_session.driver.browser.manage.window</span><br><span class="line">  window.resize_to(width, height)</span><br><span class="line">  file = Capybara.page.save_screenshot(file_name)</span><br><span class="line">  <span class="keyword">return</span> file</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>上图看清楚点：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fnack5oeqyj30o303l74z.jpg"></p>
 <p>这里，width，height是调用脚本来运行得到的，也就是借助JS获取了当前打开页面的长宽值。</p>
@@ -757,7 +750,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

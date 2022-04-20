@@ -403,63 +403,19 @@
 <p>目前最新的版本是<a target="_blank" rel="noopener" href="https://rubygems.org/search?utf8=%E2%9C%93&query=cancancan">2.2.0</a>， 安装部分可见文档，这里我记录下自己在定义权限时遇到的问题，同时附上验证权限及Rspec下如何测试Ability。</p>
 <h4 id="定义权限"><a href="#定义权限" class="headerlink" title="定义权限"></a>定义权限</h4><p>cancancan的wiki中<a target="_blank" rel="noopener" href="https://github.com/CanCanCommunity/cancancan/wiki/defining-abilities">Defining Abilities</a>中给到了权限定义的例子：</p>
 <p>较常规的，比如：</p>
-<pre><code class="Ruby">## ability.rb
-class Ability
-  include CanCan::Ability
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    can <span class="symbol">:read</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">if</span> user.present?</span><br><span class="line">      can <span class="symbol">:manage</span>, Post, <span class="symbol">user_id:</span> user.id</span><br><span class="line">      can <span class="symbol">:manage</span>, Comment</span><br><span class="line">      can <span class="symbol">:read</span>, Tag, <span class="symbol">released:</span> <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def initialize(user)
-    can :read, :all
-    if user.present?
-      can :manage, Post, user_id: user.id
-      can :manage, Comment
-      can :read, Tag, released: true
-    end
-    if user.admin?
-      can :manage, :all
-    end
-  end
-end
-</code></pre>
 <p>简单说一下，<code>can :manage, Post, user_id: user.id</code>, 表明post含有字段user_id，且当前的user.id等于project的user_id，可以理解成对于所有current_user创建的post，都有manage的权限。</p>
 <p>而<code>can :read, Tag, released: true</code>则表明，用户只能阅读已经发布的tag。</p>
 <p>需要注意的是，Ability的初始化，默认是在application_controller中添加了helper method:current_ability， 可以在它的源码module CanCan的定义中看到，调用了钩子方法included，当include CanCan时，这些method会自动引入：</p>
-<pre><code class="Ruby">def self.included(base)
-  base.extend ClassMethods
-  base.helper_method :can?, :cannot?, :current_ability if base.respond_to? :helper_method
-  base.class_attribute :_cancan_skipper
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def <span class="keyword">self</span>.included(base)</span><br><span class="line">  base.extend ClassMethods</span><br><span class="line">  base.helper_method <span class="symbol">:can?</span>, <span class="symbol">:cannot?</span>, <span class="symbol">:current_ability</span> <span class="keyword">if</span> base.respond_to? <span class="symbol">:helper_method</span></span><br><span class="line">  base.class_attribute <span class="symbol">:_cancan_skipper</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>而module CanCan是自动included 到所有的controller的，这样所有的controller都拥有了current_ability 这个helper method。</p>
 <p>我们可以通过在ApplicationController中自定义current_ability来定制权限分配。</p>
 <p>看一个稍微有点不一样的场景：</p>
 <p>现有model: project，user，member，task，其中project与task是一对多的关系，member是连接user与project之间多对多关系的中间表，4个model的表结构如下：</p>
-<pre><code class="Ruby"># Table name: projects
-#
-#  id         :bigint(8)        not null, primary key
-#  name       :string
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Table name: projects</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  name       :string</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                     :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  email                  :string           default(&quot;&quot;), not null</span></span><br><span class="line"><span class="comment">#  name                   :string</span></span><br><span class="line"><span class="comment">#  admin                  :boolean          default(FALSE)</span></span><br><span class="line">......[users使用devise创建，其他的attributes省去]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: task</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id           :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  title        :string</span></span><br><span class="line"><span class="comment">#  content      :text</span></span><br><span class="line"><span class="comment">#  project_id   :bigint(8)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: members</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :bigint(8)        not null, primary key</span></span><br><span class="line"><span class="comment">#  role       :string           [owner, member]</span></span><br><span class="line"><span class="comment">#  project_id :bigint(8)</span></span><br><span class="line"><span class="comment">#  user_id    :bigint(8)</span></span><br></pre></td></tr></table></figure>
 
-# Table name: users
-#
-#  id                     :bigint(8)        not null, primary key
-#  email                  :string           default(&quot;&quot;), not null
-#  name                   :string
-#  admin                  :boolean          default(FALSE)
-......[users使用devise创建，其他的attributes省去]
-
-# Table name: task
-#
-#  id           :bigint(8)        not null, primary key
-#  title        :string
-#  content      :text
-#  project_id   :bigint(8)
-
-# Table name: members
-#
-#  id         :bigint(8)        not null, primary key
-#  role       :string           [owner, member]
-#  project_id :bigint(8)
-#  user_id    :bigint(8)
-</code></pre>
 <p>需要定义权限如下：</p>
 <ul>
 <li><p>user是admin时，拥有最高权限，即can :manage, :all</p>
@@ -467,237 +423,55 @@ end
 <li><p>User不是admin时，根据user在project中的角色来决定他的权限，比如role为owner时，可以读和改project，manage task，role为member时，则只能读project, manage task。</p>
 <p>这里就相当于initialize ability的时候，user是参数，需要判断是否是admin，另外需要创建一个新的method，将member作为参数传递过去，根据member的role来定义权限。</p>
 <p>我们先来定义从user出发的权限：</p>
-<pre><code class="Ruby">## ability.rb
-class Ability
-  include CanCan::Ability
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## ability.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def initialize(user)
-    return unless user
-    if user.admin?
-      can :manage, :all
-      return
-    end
-  end
-end
-</code></pre>
 <p>而current_ability的默认定义是这样的：</p>
-<pre><code class="Ruby">def current_ability
-  @current_ability ||= Ability.new(current_user)
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  <span class="variable">@current_ability</span> <span class="params">||</span>= Ability.new(current_user)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这样user的权限是OK了，但是member呢？我们需要基于项目给user授权，同一个user在不同的项目中可能有不同的角色。我们需要重新修改下ability的初始化，把user和member的授权都定义在单独的method中：</p>
-<pre><code class="Ruby">class Ability
-  include CanCan::Ability
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Ability</span></span></span><br><span class="line">  <span class="keyword">include</span> CanCan::Ability</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(&amp;block)</span></span></span><br><span class="line">    block.(<span class="keyword">self</span>)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_user_permissions</span><span class="params">(user)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> user</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> user.admin?</span><br><span class="line">      can <span class="symbol">:manage</span>, <span class="symbol">:all</span></span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    can <span class="symbol">:read</span>, Project, <span class="symbol">members:</span> &#123; <span class="symbol">user_id:</span> user.id &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">apply_member_permissions</span><span class="params">(member)</span></span></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">unless</span> member</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.owner?</span><br><span class="line">      can [<span class="symbol">:read</span>, <span class="symbol">:update</span>], member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> member.role.member?</span><br><span class="line">      can <span class="symbol">:read</span>, member.project</span><br><span class="line">      can <span class="symbol">:manage</span>, Task</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def initialize(&amp;block)
-    block.(self)
-  end
-
-  def apply_user_permissions(user)
-    return unless user
-
-    if user.admin?
-      can :manage, :all
-      return
-    end
-    can :read, Project, members: &#123; user_id: user.id &#125;
-  end
-
-  def apply_member_permissions(member)
-    return unless member
-
-    if member.role.owner?
-      can [:read, :update], member.project
-      can :manage, Task
-    end
-
-    if member.role.member?
-      can :read, member.project
-      can :manage, Task
-    end
-  end
-end
-</code></pre>
 <p>这样权限就定义好了，要如何使用呢？</p>
 <p>在<code>application_controller.rb</code>中，添加current_ability method：</p>
-<pre><code class="Ruby">  def current_ability
-    @current_ability ||= Ability.new &#123; |a| a.apply_user_permissions(current_user) &#125;
-  end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">  <span class="variable">@current_ability</span> <span class="params">||</span>= Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(current_user) &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>传递给apply_user_permissions的参数是current_user，类似地，调用apply_member_permissions，传递的是current_member，而这个权限的初始化，则在project和task中，遵循着DRY原则，我们新建一个BaseController来定义current_ability， 然后让ProjectsController， TasksController继承它。</p>
-<pre><code class="ruby">def BaseController &lt; ApplicationController
-  def current_ability
-    super.tap &#123; |a| a.apply_member_permissions(current_member) &#125;
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def BaseController &lt; ApplicationController</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这里，先调用了ApplicationController中的current_ability，判断如果user是admin，则直接manage all，如果不是admin，同时也不是nil，则调用apply_member_permissions来授权，那么current_member如何定义呢？参考<a target="_blank" rel="noopener" href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/">define a helper method like devise’s current_user</a>, 我们可以这样写：</p>
-<pre><code class="Ruby">def current_member
-  @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">  <span class="variable">@current_member</span> <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>首先找出当前project的所有members，然后在members中找出user_id == current_user.id的那一条member纪录即可。【此处，current_project的定义略去，可参见<a target="_blank" rel="noopener" href="https://luciaca.cn/2018/06/24/define-a-helper-method-like-devise-current-user/">define a helper method like devise’s current_user</a>】</p>
 <p>将这个method添加到BaseController中：</p>
-<pre><code class="Ruby">def BaseController &lt; ApplicationController
-  def current_member
-    @current_member ||= current_project&amp;.members&amp;.where(user_id: current_user)&amp;.take
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def BaseController &lt; ApplicationController</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_member</span></span></span><br><span class="line">    <span class="variable">@current_member</span> <span class="params">||</span>= current_project&amp;.members&amp;.where(<span class="symbol">user_id:</span> current_user)&amp;.take</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">current_ability</span></span></span><br><span class="line">    <span class="keyword">super</span>.tap &#123; <span class="params">|a|</span> a.apply_member_permissions(current_member) &#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  def current_ability
-    super.tap &#123; |a| a.apply_member_permissions(current_member) &#125;
-  end
-end
-</code></pre>
 <p>让ProjectsController， TasksController都继承自BaseController：</p>
-<pre><code class="Ruby">### projects_controller.rb
-class ProjectsController &lt; BaseController
-  ......
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### projects_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ProjectsController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### tasks_controller.rb</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TasksController</span> &lt; BaseController</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-### tasks_controller.rb
-class TasksController &lt; BaseController
-  ......
-end
-</code></pre>
 <p>OK!! 下面看看如何验证权限。</p>
 </li>
 </ul>
 <h4 id="验证权限"><a href="#验证权限" class="headerlink" title="验证权限"></a>验证权限</h4><p>验证权限其实比较简单，在view中直接添加if语句即可：</p>
-<pre><code class="Ruby">&lt;%= link_to &quot;New Post&quot;, new_post_path if can? :create, Post %&gt;
+  <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;%= link_to <span class="string">&quot;New Post&quot;</span>, new_post_path <span class="keyword">if</span> can? <span class="symbol">:create</span>, Post %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">&quot;edit Post&quot;</span>, edit_post_path(<span class="variable">@post</span>) <span class="keyword">if</span> can? <span class="symbol">:edit</span>, <span class="variable">@post</span> %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="variable">@post</span>.title, post_path(<span class="variable">@post</span>) <span class="keyword">if</span> can? <span class="symbol">:read</span>, <span class="variable">@post</span> %&gt;</span><br><span class="line"></span><br><span class="line">&lt;%= link_to <span class="string">&quot;destroy Post&quot;</span>, post_path(<span class="variable">@post</span>), <span class="symbol">method:</span> <span class="symbol">:delete</span> <span class="keyword">if</span> can? <span class="symbol">:destroy</span>, <span class="variable">@post</span> %&gt;</span><br><span class="line"></span><br><span class="line">&lt;% <span class="keyword">if</span> cannot? <span class="symbol">:destroy</span>, <span class="variable">@post</span> %&gt;</span><br><span class="line"> &lt;span <span class="class"><span class="keyword">class</span>=&quot;<span class="title">permission</span>-<span class="title">message</span>&quot;&gt;<span class="title">you</span> <span class="title">are</span> <span class="title">not</span> <span class="title">allowed</span> <span class="title">to</span> <span class="title">delete</span> <span class="title">this</span> <span class="title">post</span>&lt;/<span class="title">span</span>&gt;</span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
 
-&lt;%= link_to &quot;edit Post&quot;, edit_post_path(@post) if can? :edit, @post %&gt;
-
-&lt;%= link_to @post.title, post_path(@post) if can? :read, @post %&gt;
-
-&lt;%= link_to &quot;destroy Post&quot;, post_path(@post), method: :delete if can? :destroy, @post %&gt;
-
-&lt;% if cannot? :destroy, @post %&gt;
- &lt;span class=&quot;permission-message&quot;&gt;you are not allowed to delete this post&lt;/span&gt;
-&lt;% end %&gt;
-</code></pre>
 <h4 id="加载资源并授权"><a href="#加载资源并授权" class="headerlink" title="加载资源并授权"></a>加载资源并授权</h4><p>非常好用的一个method：<code>load_and_authorize_resource</code>, 顾名思义，就是加载资源并授权，可以拆分成：<code>load_resource</code>, <code>authorize_resource</code>来单独使用。</p>
 <p>看个简单的例子：</p>
-<pre><code class="Ruby">class PostsController &lt; ApplicationController
- load_and_authorize_resource
- def show
- end
-end
-</code></pre>
+ <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  load_and_authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>等同于：</p>
-<pre><code class="Ruby">class PostsController &lt; ApplicationController
-  def show
-    @post = Post.find(params[:id])
-    authorize! :read, @post
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">    <span class="variable">@post</span> = Post.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    authorize! <span class="symbol">:read</span>, <span class="variable">@post</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>你也可以按需择取，比如你load_resource的方式不是通过 <code>Post.find(params[:id])</code>，而是自定义了一个current_post的helper method，则可以这样：</p>
-<pre><code class="Ruby">class PostsController &lt; ApplicationController
-  before_action -&gt; &#123; @post = current_post &#125;
-  authorize_resource
-  def show
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">PostsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action -&gt; &#123; <span class="variable">@post</span> = current_post &#125;</span><br><span class="line">  authorize_resource</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">show</span></span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <h4 id="有关Rspec"><a href="#有关Rspec" class="headerlink" title="有关Rspec"></a>有关Rspec</h4><p>Rspec部分比较简单，参见<a target="_blank" rel="noopener" href="https://github.com/CanCanCommunity/cancancan/wiki/Testing-Abilities#rspec">test Ability Rspec</a>.</p>
 <p>这里，直接用上面定义的ability为例，来写一写对应的Rspec。</p>
 <p>先写好factories：</p>
-<pre><code class="Ruby">### users.rb
-FactoryBot.define do
-  factory :user do
-    email &#123; Faker::Internet.email &#125;
-    name &#123; Faker::Name.name &#125;
-    password &quot;password&quot;
-    password_confirmation &quot;password&quot;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### users.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:user</span> <span class="keyword">do</span></span><br><span class="line">    email &#123; Faker::Internet.email &#125;</span><br><span class="line">    name &#123; Faker::Name.name &#125;</span><br><span class="line">    password <span class="string">&quot;password&quot;</span></span><br><span class="line">    password_confirmation <span class="string">&quot;password&quot;</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      admin <span class="literal">true</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### projects.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:project</span> <span class="keyword">do</span></span><br><span class="line">    name <span class="string">&quot;My project&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### members.rb</span></span><br><span class="line">FactoryBot.define <span class="keyword">do</span></span><br><span class="line">  factory <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">    project</span><br><span class="line">    user</span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:admin</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">&quot;admin&quot;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    trait <span class="symbol">:member</span> <span class="keyword">do</span></span><br><span class="line">      role <span class="string">&quot;member&quot;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    trait :admin do
-      admin true
-    end
-  end
-end
-
-### projects.rb
-FactoryBot.define do
-  factory :project do
-    name &quot;My project&quot;
-  end
-end
-
-### members.rb
-FactoryBot.define do
-  factory :member do
-    project
-    user
-
-    trait :admin do
-      role &quot;admin&quot;
-    end
-
-    trait :member do
-      role &quot;member&quot;
-    end
-  end
-end
-</code></pre>
 <p>在<code>spec/models/ability_spec.rb</code>添加如下内容：</p>
-<pre><code class="Ruby">require &#39;rails_helper&#39;
-require &#39;cancan/matchers&#39;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails_helper&#x27;</span></span><br><span class="line"><span class="keyword">require</span> <span class="string">&#x27;cancan/matchers&#x27;</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Ability, <span class="symbol">type:</span> <span class="symbol">:model</span> <span class="keyword">do</span></span><br><span class="line">  describe <span class="string">&quot;#apply_user_permissions&quot;</span> <span class="keyword">do</span></span><br><span class="line">    context <span class="string">&quot;admin&quot;</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:admin</span>) &#123; create <span class="symbol">:user</span>, <span class="symbol">:admin</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(admin) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, <span class="symbol">:all</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">&quot;not admin but a member of a project&quot;</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">project:</span> project, <span class="symbol">user:</span> user, <span class="symbol">role:</span> <span class="string">&quot;member&quot;</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">&quot;neither admin nor member of a project&quot;</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:user</span>) &#123; create <span class="symbol">:user</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_user_permissions(user) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.not_to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  describe <span class="string">&quot;#apply_member_permissions&quot;</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">&quot;admin&quot;</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:admin</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to([<span class="symbol">:read</span>, <span class="symbol">:update</span>], project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">&quot;member&quot;</span> <span class="keyword">do</span></span><br><span class="line">      let!(<span class="symbol">:project</span>) &#123; create <span class="symbol">:project</span> &#125;</span><br><span class="line">      let!(<span class="symbol">:member</span>) &#123; create <span class="symbol">:member</span>, <span class="symbol">:member</span>, <span class="symbol">project:</span> project &#125;</span><br><span class="line">      subject(<span class="symbol">:ability</span>) &#123; Ability.new &#123; <span class="params">|a|</span> a.apply_member_permissions(member) &#125; &#125;</span><br><span class="line">      it &#123;</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:read</span>, project)</span><br><span class="line">        is_expected.to be_able_to(<span class="symbol">:manage</span>, Task)</span><br><span class="line">      &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-RSpec.describe Ability, type: :model do
-  describe &quot;#apply_user_permissions&quot; do
-    context &quot;admin&quot; do
-      let!(:admin) &#123; create :user, :admin &#125;
-      let!(:project) &#123; create :project &#125;
-      subject(:ability) &#123; Ability.new &#123; |a| a.apply_user_permissions(admin) &#125; &#125;
-      it &#123;
-        is_expected.to be_able_to(:manage, :all)
-      &#125;
-    end
-
-    context &quot;not admin but a member of a project&quot; do
-      let!(:user) &#123; create :user &#125;
-      let!(:project) &#123; create :project &#125;
-      let!(:member) &#123; create :member, project: project, user: user, role: &quot;member&quot; &#125;
-      subject(:ability) &#123; Ability.new &#123; |a| a.apply_user_permissions(user) &#125; &#125;
-      it &#123;
-        is_expected.to be_able_to(:read, project)
-      &#125;
-    end
-
-    context &quot;neither admin nor member of a project&quot; do
-      let!(:user) &#123; create :user &#125;
-      let!(:project) &#123; create :project &#125;
-      subject(:ability) &#123; Ability.new &#123; |a| a.apply_user_permissions(user) &#125; &#125;
-      it &#123;
-        is_expected.not_to be_able_to(:read, project)
-      &#125;
-    end
-  end
-
-  describe &quot;#apply_member_permissions&quot; do
-
-    context &quot;admin&quot; do
-      let!(:project) &#123; create :project &#125;
-      let!(:member) &#123; create :member, :admin, project: project &#125;
-      subject(:ability) &#123; Ability.new &#123; |a| a.apply_member_permissions(member) &#125; &#125;
-      it &#123;
-        is_expected.to be_able_to([:read, :update], project)
-        is_expected.to be_able_to(:manage, Task)
-      &#125;
-    end
-
-    context &quot;member&quot; do
-      let!(:project) &#123; create :project &#125;
-      let!(:member) &#123; create :member, :member, project: project &#125;
-      subject(:ability) &#123; Ability.new &#123; |a| a.apply_member_permissions(member) &#125; &#125;
-      it &#123;
-        is_expected.to be_able_to(:read, project)
-        is_expected.to be_able_to(:manage, Task)
-      &#125;
-    end
-  end
-end
-</code></pre>
 <p>OK ! 终端跑一下测试，pass！</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://github.com/CanCanCommunity/cancancan">cancancan</a></p>
 
@@ -1010,7 +784,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

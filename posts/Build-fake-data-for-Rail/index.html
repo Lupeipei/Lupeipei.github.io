@@ -406,77 +406,34 @@
 </ul>
 <p>下面以 Job这个model为例，看看如何用seed，rake task来批量生成测试数据，并对比两者之间的优劣。</p>
 <p>Job所含字段：</p>
-<pre><code>string   &quot;title&quot;
-text     &quot;description&quot;
-datetime &quot;created_at&quot;,                    
-datetime &quot;updated_at&quot;,                    
-integer  &quot;wage_upper_bound&quot;
-integer  &quot;wage_lower_bound&quot;
-string   &quot;contact_email&quot;
-boolean  &quot;is_hidden
-</code></pre>
+<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line"><span class="built_in">string</span>   <span class="string">&quot;title&quot;</span></span><br><span class="line"><span class="built_in">text</span>     <span class="string">&quot;description&quot;</span></span><br><span class="line">datetime <span class="string">&quot;created_at&quot;</span>,                    </span><br><span class="line">datetime <span class="string">&quot;updated_at&quot;</span>,                    </span><br><span class="line"><span class="built_in">integer</span>  <span class="string">&quot;wage_upper_bound&quot;</span></span><br><span class="line"><span class="built_in">integer</span>  <span class="string">&quot;wage_lower_bound&quot;</span></span><br><span class="line"><span class="built_in">string</span>   <span class="string">&quot;contact_email&quot;</span></span><br><span class="line"><span class="built_in">boolean</span>  <span class="string">&quot;is_hidden</span></span><br></pre></td></tr></table></figure>
+
 <hr>
 <h3 id="测试数据生成"><a href="#测试数据生成" class="headerlink" title="测试数据生成"></a>测试数据生成</h3><h4 id="Seeds-rb"><a href="#Seeds-rb" class="headerlink" title="Seeds.rb"></a>Seeds.rb</h4><p>在seeds.rb中，将不同的字段放在Array中，然后循环调用这些Array，生成测试数据。</p>
 <p>比如下面这种， 将Job的<code>title</code>， <code>description</code> 放在数组jobs_info中，然后循环赋值，具体步骤如下：</p>
 <p>1、将如下代码贴到<code>seed.rb</code>文档中（为增加可读性，此处jobs_info仅放了3个种子）：</p>
-<pre><code class="Ruby">jobs_info = [[&quot;Web Application Developer&quot;,&quot;Creates, maintains and implements web-based application systems. Resolves issues and recommends enhancements, when necessary. Has knowledge of HTML, Java and related concepts. Relies on knowledge and professional discretion to plan and accomplish goals. Usually reports to a department head. Significant ingenuity and flexibility is expected. May require a bachelor’s degree in a related area and at least 2-4 years of relevant experience.&quot;
-],[ &quot;Android Developer&quot;,&quot;Designs and builds applications for the Android platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;
-],[&quot;iOS Developer&quot;,&quot;Designs and builds applications for the iOS platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;
-]]
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">jobs_info = [[<span class="string">&quot;Web Application Developer&quot;</span>,<span class="string">&quot;Creates, maintains and implements web-based application systems. Resolves issues and recommends enhancements, when necessary. Has knowledge of HTML, Java and related concepts. Relies on knowledge and professional discretion to plan and accomplish goals. Usually reports to a department head. Significant ingenuity and flexibility is expected. May require a bachelor’s degree in a related area and at least 2-4 years of relevant experience.&quot;</span></span><br><span class="line">],[ <span class="string">&quot;Android Developer&quot;</span>,<span class="string">&quot;Designs and builds applications for the Android platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;</span></span><br><span class="line">],[<span class="string">&quot;iOS Developer&quot;</span>,<span class="string">&quot;Designs and builds applications for the iOS platform. Works with outside data sources and API’s. Fixes bugs and improves application performance. Collaborates with cross-functional teams to determine and launch new features. Should have knowledge of core web technologies (HTML5, CSS3, JavaScript). Requires a bachelor’s degree in area of specialty and 2 years of relevant experience.&quot;</span></span><br><span class="line">]]</span><br><span class="line"></span><br><span class="line">create_jobs = <span class="number">10</span>.times to <span class="params">|i|</span></span><br><span class="line">	job_test=jobs_info[rand(<span class="number">0</span>..<span class="number">2</span>)]</span><br><span class="line">	Job.create!([<span class="symbol">title:</span> job_test[<span class="number">0</span>],<span class="symbol">description:</span> job_test[<span class="number">1</span>], <span class="symbol">wage_upper_bound:</span> rand(<span class="number">50</span>..<span class="number">99</span>)*<span class="number">100</span>,<span class="symbol">wage_lower_bound:</span> rand(<span class="number">10</span>..<span class="number">49</span>)*<span class="number">100</span>, <span class="symbol">is_hidden:</span><span class="string">&quot;false&quot;</span>)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">create_jobs = <span class="number">10</span>.times to <span class="params">|i|</span></span><br><span class="line">	job_test=jobs_info[rand(<span class="number">0</span>..<span class="number">2</span>)]</span><br><span class="line">	Job.create!([<span class="symbol">title:</span> job_test[<span class="number">0</span>],<span class="symbol">description:</span> job_test[<span class="number">1</span>], <span class="symbol">wage_upper_bound:</span> rand(<span class="number">50</span>..<span class="number">99</span>)*<span class="number">100</span>,<span class="symbol">wage_lower_bound:</span> rand(<span class="number">10</span>..<span class="number">49</span>)*<span class="number">100</span>, <span class="symbol">is_hidden:</span><span class="string">&quot;true&quot;</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-create_jobs = 10.times to |i|
-    job_test=jobs_info[rand(0..2)]
-    Job.create!([title: job_test[0],description: job_test[1], wage_upper_bound: rand(50..99)*100,wage_lower_bound: rand(10..49)*100, is_hidden:&quot;false&quot;)
-end
-
-
-create_jobs = 10.times to |i|
-    job_test=jobs_info[rand(0..2)]
-    Job.create!([title: job_test[0],description: job_test[1], wage_upper_bound: rand(50..99)*100,wage_lower_bound: rand(10..49)*100, is_hidden:&quot;true&quot;)
-end
-</code></pre>
 <p>2、终端运行:</p>
-<pre><code>rake db:migrate
-rake db:seed
-</code></pre>
+<figure class="highlight stata"><table><tr><td class="code"><pre><span class="line">rake <span class="keyword">db</span>:migrate</span><br><span class="line">rake <span class="keyword">db</span>:seed</span><br></pre></td></tr></table></figure>
+
 <p>3、重启服务器<code>rails s</code></p>
 <p>大功告成！</p>
 <h4 id="rake-task"><a href="#rake-task" class="headerlink" title="rake task"></a>rake task</h4><p>这里我们需要用到强大的faker。点击，看<a target="_blank" rel="noopener" href="https://github.com/stympy/faker">faker</a>文档的具体说明。</p>
 <p>此外，类似的gem还有<a target="_blank" rel="noopener" href="https://github.com/sevenwire/forgery/tree/master">forgery</a> , <a target="_blank" rel="noopener" href="https://github.com/tomharris/random_data">random_data</a>。</p>
 <p>1、在gemfile中添加faker</p>
-<pre><code>gem &#39;faker&#39;
-</code></pre>
+<figure class="highlight nginx"><table><tr><td class="code"><pre><span class="line"><span class="attribute">gem</span> <span class="string">&#x27;faker&#x27;</span></span><br></pre></td></tr></table></figure>
+
 <p>终端<code>bundle install</code></p>
 <p>2、建立一个rake task，这里我们建立一个faker_jobs的任务，终端运行：</p>
-<pre><code>rails g task dev fake_jobs
-</code></pre>
+<figure class="highlight ada"><table><tr><td class="code"><pre><span class="line">rails g <span class="keyword">task</span> dev fake_jobs</span><br></pre></td></tr></table></figure>
+
 <p>生成lib/tasks/dev.rake文件，内容如下：</p>
-<pre><code class="Ruby">namespace :dev do
-  desc &quot;TODO&quot;
-  task fake_jobs: :environment do
-  end
- end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">namespace <span class="symbol">:dev</span> <span class="keyword">do</span></span><br><span class="line">  desc <span class="string">&quot;TODO&quot;</span></span><br><span class="line">  task <span class="symbol">fake_jobs:</span> <span class="symbol">:environment</span> <span class="keyword">do</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>3、根据Job的字段，添加相应的Faker数据。比如下面这样：</p>
-<pre><code class="Ruby">namespace :dev do
-  desc &quot;TODO&quot;
-  task fake_jobs: :environment do
-    Job.delete_all
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">namespace <span class="symbol">:dev</span> <span class="keyword">do</span></span><br><span class="line">  desc <span class="string">&quot;TODO&quot;</span></span><br><span class="line">  task <span class="symbol">fake_jobs:</span> <span class="symbol">:environment</span> <span class="keyword">do</span></span><br><span class="line">    Job.delete_all</span><br><span class="line"></span><br><span class="line">    Jobs = []</span><br><span class="line"></span><br><span class="line">    <span class="number">100</span>.times <span class="keyword">do</span> <span class="params">|i|</span></span><br><span class="line">      Jobs &lt;&lt; Job.create!(<span class="symbol">:title</span> =&gt; Faker::Job.title,</span><br><span class="line">                          <span class="symbol">:description</span> =&gt; Faker::Job.key_skill,</span><br><span class="line">                          <span class="symbol">:wage_upper_bound</span> =&gt; Faker::Number.between(<span class="number">10000</span>,<span class="number">30000</span>),</span><br><span class="line">                          <span class="symbol">:wage_lower_bound</span> =&gt; Faker::Number.between(<span class="number">1000</span>,<span class="number">10000</span>),</span><br><span class="line">                          <span class="symbol">:contact_email</span> =&gt; Faker::Internet.email,</span><br><span class="line">                          <span class="symbol">:is_hidden</span> =&gt; [<span class="literal">true</span>, <span class="literal">false</span>].sample,</span><br><span class="line">                          <span class="symbol">:created_at</span> =&gt; Time.now - rand(<span class="number">10</span>).days - rand(<span class="number">24</span>).hours)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    Jobs = []
-
-    100.times do |i|
-      Jobs &lt;&lt; Job.create!(:title =&gt; Faker::Job.title,
-                          :description =&gt; Faker::Job.key_skill,
-                          :wage_upper_bound =&gt; Faker::Number.between(10000,30000),
-                          :wage_lower_bound =&gt; Faker::Number.between(1000,10000),
-                          :contact_email =&gt; Faker::Internet.email,
-                          :is_hidden =&gt; [true, false].sample,
-                          :created_at =&gt; Time.now - rand(10).days - rand(24).hours)
-  end
- end
-end
-</code></pre>
 <p>4、终端运行：<code>rake dev:fake_orders</code></p>
 <p>5、重启服务器<code>rails s</code> , 搞定！</p>
 <h3 id="优劣对比"><a href="#优劣对比" class="headerlink" title="优劣对比"></a>优劣对比</h3><p>两者有何不同？哪个更优？</p>
@@ -795,7 +752,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

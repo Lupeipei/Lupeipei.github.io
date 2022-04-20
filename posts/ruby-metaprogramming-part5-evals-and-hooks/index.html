@@ -415,38 +415,19 @@
 <h4 id="认识下eval"><a href="#认识下eval" class="headerlink" title="认识下eval"></a>认识下eval</h4><p>定义自己的类宏方法前，先来认识下Kernel#eval。</p>
 <p>eval是内核方法，参数是一段ruby代码文本。相比instance_eval， class_eval，<strong>它只能执行代码字符串</strong>。那instance_eval， class_eval是否能执行代码字符串？可以。</p>
 <p>看个例子：</p>
-<pre><code class="Ruby">my_array = [1,2,3]
-my_array.instance_eval &quot;self.reduce(&amp;:+)&quot; #= &gt; 6
-eval(&quot;my_array.inject &#123;|sum, x| sum + x&#125;&quot;) #= &gt; 6
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_array = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>]</span><br><span class="line">my_array.instance_eval <span class="string">&quot;self.reduce(&amp;:+)&quot;</span> <span class="comment">#= &gt; 6</span></span><br><span class="line">eval(<span class="string">&quot;my_array.inject &#123;|sum, x| sum + x&#125;&quot;</span>) <span class="comment">#= &gt; 6</span></span><br></pre></td></tr></table></figure>
+
 <p>这类代码字符串可以携带一个binding对象，然后在该对象的作用域中执行代码。</p>
 <ul>
 <li><p>eval与binding</p>
 <p>Binding是一个用对象表示的作用域，可以通过Kernel#binding 来创建。ruby 还提供了TOPLEVEL_BINDING的预定义常量，表示顶级作用域的Binding对象。</p>
 <p>看代码理解下：</p>
-<pre><code class="Ruby">class MyClass
-  def my_method
-    @x = 1
-    binding
-  end
-end
-obj = MyClass.new.my_method
-eval(&quot;@x&quot;,obj) #= &gt; 1
-eval(&quot;self&quot;, TOPLEVEL_BINDING) #= &gt; main
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    <span class="variable">@x</span> = <span class="number">1</span></span><br><span class="line">    binding</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">obj = MyClass.new.my_method</span><br><span class="line">eval(<span class="string">&quot;@x&quot;</span>,obj) <span class="comment">#= &gt; 1</span></span><br><span class="line">eval(<span class="string">&quot;self&quot;</span>, TOPLEVEL_BINDING) <span class="comment">#= &gt; main</span></span><br></pre></td></tr></table></figure></li>
 <li><p>eval的麻烦</p>
 <p>最大的问题是安全性，因为执行的是一段字符串，ruby是不会对字符串进行语法检查的，容易引发代码注入攻击。</p>
 <p>看个例子：</p>
-<pre><code class="ruby">def explore_array(method)
-  code = &quot;[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].#&#123;method&#125;&quot;
-  eval code
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">explore_array</span><span class="params">(method)</span></span></span><br><span class="line">  code = <span class="string">&quot;[&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;].<span class="subst">#&#123;method&#125;</span>&quot;</span></span><br><span class="line">  eval code</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">explore_array(<span class="string">&quot;include?(&#x27;a&#x27;)&quot;</span>) <span class="comment">#= &gt; true</span></span><br><span class="line">explore_array(<span class="string">&quot;size&quot;</span>) <span class="comment">#= &gt; 3</span></span><br><span class="line">explore_array(<span class="string">&quot;object_id; Dir.glob(&#x27;*&#x27;)&quot;</span>) <span class="comment">#= &gt; 列出了该文件所在目录下的所有文件</span></span><br></pre></td></tr></table></figure>
 
-explore_array(&quot;include?(&#39;a&#39;)&quot;) #= &gt; true
-explore_array(&quot;size&quot;) #= &gt; 3
-explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;) #= &gt; 列出了该文件所在目录下的所有文件
-</code></pre>
 <p>这里，运行类似<code>explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;)</code>这样的恶意代码可能会带来意想不到的后果。所以，能用代码块就用代码块。</p>
 <p>如何防止代码注入攻击？</p>
 <ul>
@@ -454,14 +435,7 @@ explore_array(&quot;object_id; Dir.glob(&#39;*&#39;)&quot;) #= &gt; 列出了该
 </li>
 <li><p>改用动态方法和动态派发来替换eval</p>
 <p>比如上面的例子，explore_array可以这样写：</p>
-<pre><code class="Ruby">def explore_array(method, *arguments)
-  [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;].send(method, *arguments)
-end
-
-explore_array(:include?, &#39;a&#39;) #= &gt; true
-explore_array(:size) #= &gt; 3
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">explore_array</span><span class="params">(method, *arguments)</span></span></span><br><span class="line">  [<span class="string">&#x27;a&#x27;</span>,<span class="string">&#x27;b&#x27;</span>,<span class="string">&#x27;c&#x27;</span>].send(method, *arguments)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">explore_array(<span class="symbol">:include?</span>, <span class="string">&#x27;a&#x27;</span>) <span class="comment">#= &gt; true</span></span><br><span class="line">explore_array(<span class="symbol">:size</span>) <span class="comment">#= &gt; 3</span></span><br></pre></td></tr></table></figure></li>
 </ul>
 </li>
 <li><p>污染对象和安全级别</p>
@@ -472,120 +446,33 @@ explore_array(:size) #= &gt; 3
 </ul>
 <h4 id="用eval来定义add-checked-attr"><a href="#用eval来定义add-checked-attr" class="headerlink" title="用eval来定义add_checked_attr"></a>用eval来定义add_checked_attr</h4><p>「其实，这里我并不是很理解，为什么要调用eval来定义这个method，然后又去掉它？为什么不直接用class_eval的方式来定义？难道这样绕一圈，仅仅是为了向读者介绍eval？」</p>
 <p>不吐糟，直接看解答：</p>
-<pre><code class="Ruby">def add_checked_attr(klass, attr)
-  eval &quot;
-  class #&#123;klass&#125;
-    def #&#123;attr&#125;=(value)
-      raise &#39;Invalid attribute&#39; unless value
-      @#&#123;attr&#125; = value
-    end
-    def #&#123;attr&#125;
-      @#&#123;attr&#125;
-    end
-  end
-  &quot;
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_checked_attr</span><span class="params">(klass, attr)</span></span></span><br><span class="line">  eval <span class="string">&quot;</span></span><br><span class="line"><span class="string">  class <span class="subst">#&#123;klass&#125;</span></span></span><br><span class="line"><span class="string">    def <span class="subst">#&#123;attr&#125;</span>=(value)</span></span><br><span class="line"><span class="string">      raise &#x27;Invalid attribute&#x27; unless value</span></span><br><span class="line"><span class="string">      @<span class="subst">#&#123;attr&#125;</span> = value</span></span><br><span class="line"><span class="string">    end</span></span><br><span class="line"><span class="string">    def <span class="subst">#&#123;attr&#125;</span></span></span><br><span class="line"><span class="string">      @<span class="subst">#&#123;attr&#125;</span></span></span><br><span class="line"><span class="string">    end</span></span><br><span class="line"><span class="string">  end</span></span><br><span class="line"><span class="string">  &quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <h4 id="去掉eval，加上block"><a href="#去掉eval，加上block" class="headerlink" title="去掉eval，加上block"></a>去掉eval，加上block</h4><p>鉴于eval的问题，改用class_eval来打开类，同时给方法添加一个block</p>
-<pre><code class="Ruby">def add_checked_attr(klass, attr, &amp;validation)
-  klass.class_eval do
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add_checked_attr</span><span class="params">(klass, attr, &amp;validation)</span></span></span><br><span class="line">  klass.class_eval <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    define_method <span class="string">&quot;<span class="subst">#&#123;attr&#125;</span>=&quot;</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">      raise <span class="string">&#x27;Invalid attribute&#x27;</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">      instance_variable_set(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>, value)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    define_method attr <span class="keyword">do</span></span><br><span class="line">      instance_variable_get(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    define_method &quot;#&#123;attr&#125;=&quot; do |value|
-      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-      instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
-    end
-
-    define_method attr do
-      instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
-    end
-
-  end
-end
-</code></pre>
 <h4 id="改造成类宏"><a href="#改造成类宏" class="headerlink" title="改造成类宏"></a>改造成类宏</h4><p>为了让add_checked_attr对所有类都可用，可以将它定义在class中，另修改方法名为attr_checked，去掉类参数。</p>
 <p>解答如下：</p>
-<pre><code class="Ruby">class Class
-  def attr_checked(attr, &amp;validation)
-    define_method &quot;#&#123;attr&#125;=&quot; do |value|
-      raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-      instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
-    end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Class</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">attr_checked</span><span class="params">(attr, &amp;validation)</span></span></span><br><span class="line">    define_method <span class="string">&quot;<span class="subst">#&#123;attr&#125;</span>=&quot;</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">      raise <span class="string">&#x27;Invalid attribute&#x27;</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">      instance_variable_set(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>, value)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    define_method attr <span class="keyword">do</span></span><br><span class="line">      instance_variable_get(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    define_method attr do
-      instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
-    end
-  end
-end
-</code></pre>
 <p>最后请上我们的hooks。</p>
 <h4 id="钩子方法"><a href="#钩子方法" class="headerlink" title="钩子方法"></a>钩子方法</h4><p>看个例子：</p>
-<pre><code class="Ruby">module M
-  def self.included(othermod)
-    puts &quot;M was included into #&#123;othermod&#125;&quot;
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  def <span class="keyword">self</span>.included(othermod)</span><br><span class="line">    puts <span class="string">&quot;M was included into <span class="subst">#&#123;othermod&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="comment">#= &gt; M was included into C</span></span><br></pre></td></tr></table></figure>
 
-class C
-  include M
-end
-#= &gt; M was included into C
-</code></pre>
 <p>Module#included在一个module被include时，被自动调用，这种方法称之为钩子方法，因为<strong>它们像钩子一样，钩住一个特定的事件</strong>。类似的方法还有Module#method_added, Module#extend_object等。</p>
 <p>想要捕获单件方法的钩子事件，需要使用BasicObject的singleton_xxx方法，比如singleton_method_added。</p>
 <p>针对上面的例子，可以覆写include方法得到一样的效果：</p>
-<pre><code class="Ruby">module M;end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span>;</span><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  def <span class="keyword">self</span>.<span class="keyword">include</span>(*modules)</span><br><span class="line">    puts <span class="string">&quot;<span class="subst">#&#123;modules&#125;</span> was included into C&quot;</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="comment">#= &gt; [M] was included into C</span></span><br></pre></td></tr></table></figure>
 
-class C
-  def self.include(*modules)
-    puts &quot;#&#123;modules&#125; was included into C&quot;
-    super
-  end
-  include M
-end
-#= &gt; [M] was included into C
-</code></pre>
 <p>注意这里覆写include中，最后<strong>调用了super</strong>，不然这个module是不会被include的。这种通过覆写添加额外功能的效果，也可以通过环绕别名的方式实现。</p>
 <p>包含并扩展类的方式就用到了钩子，看个例子：</p>
-<pre><code class="Ruby">module M
-  def self.included(klass)
-    klass.extend ClassMethods
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  def <span class="keyword">self</span>.included(klass)</span><br><span class="line">    klass.extend ClassMethods</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">ClassMethods</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">    puts <span class="string">&quot;it could be a class method&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">D.my_method <span class="comment">#= &gt; it could be a class method</span></span><br></pre></td></tr></table></figure>
 
-module ClassMethods
-  def my_method
-    puts &quot;it could be a class method&quot;
-  end
-end
-
-class D
-  include M
-end
-
-D.my_method #= &gt; it could be a class method
-</code></pre>
 <p>类D包含了模块M，调用了M的钩子方法:included， 这个钩子方法接着用module ClassMethods扩展了类D，使得module ClassMethods的my_method 成为了类D的类方法。</p>
 <p>Rails中ActiveSupport有一个module Concern，就封装了包含并扩展的技巧。</p>
 <p>使用这种技巧，完成最后一步。</p>
-<pre><code class="Ruby">module CheckedAttributes
-  def self.included(base)
-    base.extend ClassMethods
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">CheckedAttributes</span></span></span><br><span class="line">  def <span class="keyword">self</span>.included(base)</span><br><span class="line">    base.extend ClassMethods</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="class"><span class="keyword">module</span> <span class="title">ClassMethods</span></span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">attr_checked</span><span class="params">(attr, &amp;validation)</span></span></span><br><span class="line">      define_method <span class="string">&quot;<span class="subst">#&#123;attr&#125;</span>=&quot;</span> <span class="keyword">do</span> <span class="params">|value|</span></span><br><span class="line">        raise <span class="string">&#x27;Invalid attribute&#x27;</span> <span class="keyword">unless</span> validation.call(value) <span class="comment"># validation 是一个proc</span></span><br><span class="line">        instance_variable_set(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>, value)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      define_method attr <span class="keyword">do</span></span><br><span class="line">        instance_variable_get(<span class="string">&quot;@<span class="subst">#&#123;attr&#125;</span>&quot;</span>)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  module ClassMethods
-    def attr_checked(attr, &amp;validation)
-      define_method &quot;#&#123;attr&#125;=&quot; do |value|
-        raise &#39;Invalid attribute&#39; unless validation.call(value) # validation 是一个proc
-        instance_variable_set(&quot;@#&#123;attr&#125;&quot;, value)
-      end
-
-      define_method attr do
-        instance_variable_get(&quot;@#&#123;attr&#125;&quot;)
-      end
-    end
-  end
-end
-</code></pre>
 <p>OK ！</p>
 <h4 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h4><p>整本书到这里，基本算是走完了大半了，后面第二部分是有关rails中的元编程，篇幅就相对而言少了些，作者挑了几个板块说一下。我的感觉是，如果前面的六章理解的七七八八了，可以看一些gem的源代码，有利于加深理解。你会在其中发现很多元编程的身影。</p>
 
@@ -898,7 +785,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

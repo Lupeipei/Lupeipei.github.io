@@ -411,50 +411,8 @@
 </ul>
 <p>看个例子先。</p>
 <p>同一个method，四种调用方式，注意最后一个调用方式有些不同：</p>
-<pre><code class="Ruby"># 代码块
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 代码块</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x)</span></span></span><br><span class="line">    <span class="keyword">yield</span>(x)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = C1.new</span><br><span class="line">obj.my_method(<span class="string">&quot;Ruby&quot;</span>) &#123;<span class="params">|x|</span> puts <span class="string">&quot;hello, <span class="subst">#&#123;x&#125;</span>&quot;</span>&#125; <span class="comment"># =&gt; hello, Ruby</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># proc</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x)</span></span></span><br><span class="line">    <span class="keyword">yield</span>(x)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_proc = Proc.new &#123;<span class="params">|x|</span> puts <span class="string">&quot;hello, <span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">obj = C1.new</span><br><span class="line">obj.my_method(<span class="string">&quot;Ruby&quot;</span>, &amp;my_proc) <span class="comment"># =&gt; hello, Ruby</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># lambda</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x)</span></span></span><br><span class="line">    <span class="keyword">yield</span>(x)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_lambda = <span class="built_in">lambda</span> &#123;<span class="params">|x|</span> puts <span class="string">&quot;hello, <span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">obj = C1.new</span><br><span class="line">obj.my_method(<span class="string">&quot;Ruby&quot;</span>, &amp;my_lambda) <span class="comment"># =&gt; hello, Ruby</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 方法</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C2</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x)</span></span></span><br><span class="line">    puts <span class="string">&quot;hello, <span class="subst">#&#123;x&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = C2.new</span><br><span class="line">m = obj.method <span class="symbol">:my_method</span></span><br><span class="line">m.call(<span class="string">&quot;Ruby&quot;</span>) <span class="comment"># =&gt; hello, Ruby</span></span><br></pre></td></tr></table></figure>
 
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;) &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125; # =&gt; hello, Ruby
-
-# proc
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
-
-my_proc = Proc.new &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125;
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;, &amp;my_proc) # =&gt; hello, Ruby
-
-# lambda
-class C1
-  def my_method(x)
-    yield(x)
-  end
-end
-
-my_lambda = lambda &#123;|x| puts &quot;hello, #&#123;x&#125;&quot;&#125;
-obj = C1.new
-obj.my_method(&quot;Ruby&quot;, &amp;my_lambda) # =&gt; hello, Ruby
-
-
-# 方法
-class C2
-  def my_method(x)
-    puts &quot;hello, #&#123;x&#125;&quot;
-  end
-end
-
-obj = C2.new
-m = obj.method :my_method
-m.call(&quot;Ruby&quot;) # =&gt; hello, Ruby
-</code></pre>
 <p>来认识下这四位小伙伴。</p>
 <h4 id="代码块Blocks"><a href="#代码块Blocks" class="headerlink" title="代码块Blocks"></a>代码块Blocks</h4><p>Ruby中绝大多数都是对象，block则是个特例。【判断某个事物是不是对象，可以用<code>x.is_a? Object</code>来判断】</p>
 <p>戳这里<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/3429553/is-everything-an-object-in-ruby">Is everything an object in ruby?</a>看stack overflow上人们怎么说，不过对于Amadan的answer，我觉得不是特别准确，他提到“<strong>Methods</strong>, operators and blocks <strong>aren’t</strong>, but can be wrapped by objects (Proc).” 而实际上，如果你进irb, 运行<code>puts.is_a? Object</code>，你会发现它返回true，即puts是method，也是对象。</p>
@@ -466,15 +424,7 @@ m.call(&quot;Ruby&quot;) # =&gt; hello, Ruby
 <p>代码块最后一行代码执行的结果会被作为返回值。</p>
 <p>只有在调用一个方法时，才可以定义一个块，块会被直接传递给这个方法，该方法会用yield关键字调用这个块。</p>
 <p>可以通过内核方法block_given?来判断当前调用的方法中是否包含块。比如：</p>
-<pre><code class="Ruby">def my_method
-  return yield if block_given?
-  &#39;no block&#39;
-end
-
-my_method # =&gt; no block
-my_method &#123;&quot;Here&#39;s a block&quot;&#125; # =&gt; Here&#39;s a block
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_method</span></span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">yield</span> <span class="keyword">if</span> block_given?</span><br><span class="line">  <span class="string">&#x27;no block&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_method <span class="comment"># =&gt; no block</span></span><br><span class="line">my_method &#123;<span class="string">&quot;Here&#x27;s a block&quot;</span>&#125; <span class="comment"># =&gt; Here&#x27;s a block</span></span><br></pre></td></tr></table></figure></li>
 <li><p>代码块是闭包closures</p>
 <p>运行代码需要一个执行环境：局部变量，实例变量，self等，这些简称为绑定（binding）。</p>
 <p>那么，块在哪里获得它的绑定呢？</p>
@@ -496,42 +446,18 @@ my_method &#123;&quot;Here&#39;s a block&quot;&#125; # =&gt; Here&#39;s a block
 <li><p>扁平化作用域与共享作用域</p>
 <p><strong>用Class.new方法代替class关键字, Module.new方法代替module关键字, define_method方法代替def关键字</strong>， 就是扁平化作用域。即<strong>用方法调用来替代了作用域门</strong>，使得一个作用域看到另一个作用域里的变量，好似两个作用域挤压在一起，它们可以共享各自的变量。</p>
 <p>看个例子理解下：</p>
-<pre><code class="ruby">my_var = &quot;hello, ruby&quot;
-class C
-  # 需要在这里打印出my_var
-  def my_method(x)
-    # 在这里也要打印出my_var
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_var = <span class="string">&quot;hello, ruby&quot;</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="comment"># 需要在这里打印出my_var</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x)</span></span></span><br><span class="line">    <span class="comment"># 在这里也要打印出my_var</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>这里，my_var存在于顶级作用域中，但是一旦进入class／def这个作用域，my_var就不存在了。</p>
 <p>你也许会说，把my_var 变成全局变量$my_var, 呃，coding的一个原则就是<strong>能不用全局变量就不要用全局变量，存在安全隐患，即使是顶级实例变量，也应当避免少用</strong>。</p>
 <p>我们来扁平化作用域：</p>
-<pre><code class="Ruby">my_var = &quot;hello, ruby&quot;
-C = Class.new do
-  puts &quot;#&#123;my_var&#125;&quot; # =&gt; hello, ruby
-  define_method :my_method do
-    puts &quot;#&#123;my_var&#125;&quot;
-  end
-end
-C.new.my_method # =&gt; hello, ruby
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_var = <span class="string">&quot;hello, ruby&quot;</span></span><br><span class="line">C = Class.new <span class="keyword">do</span></span><br><span class="line">  puts <span class="string">&quot;<span class="subst">#&#123;my_var&#125;</span>&quot;</span> <span class="comment"># =&gt; hello, ruby</span></span><br><span class="line">  define_method <span class="symbol">:my_method</span> <span class="keyword">do</span></span><br><span class="line">    puts <span class="string">&quot;<span class="subst">#&#123;my_var&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.new.my_method <span class="comment"># =&gt; hello, ruby</span></span><br></pre></td></tr></table></figure>
+
 <p>说完扁平化作用域，来看看共享作用域。</p>
 <p>当一个扁平作用域中，定义了多个方法，把这些方法用一个作用域门保护起来，它们就可以共享绑定，这种处理作用域的方法称之为共享作用域。</p>
 <p>看个例子：</p>
-<pre><code class="Ruby">def shared_banding
-  shared = 1
-  define_method :my_method do
-    shared
-  end
-  define_method :my_other_method do |x|
-    shared += x
-  end
-end
-shared_banding # =&gt; 调用方法，切换到def shared_banding的作用域
-my_method # =&gt; 1
-my_other_method(4) # =&gt; 5
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">shared_banding</span></span></span><br><span class="line">  shared = <span class="number">1</span></span><br><span class="line">  define_method <span class="symbol">:my_method</span> <span class="keyword">do</span></span><br><span class="line">    shared</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  define_method <span class="symbol">:my_other_method</span> <span class="keyword">do</span> <span class="params">|x|</span></span><br><span class="line">    shared += x</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">shared_banding <span class="comment"># =&gt; 调用方法，切换到def shared_banding的作用域</span></span><br><span class="line">my_method <span class="comment"># =&gt; 1</span></span><br><span class="line">my_other_method(<span class="number">4</span>) <span class="comment"># =&gt; 5</span></span><br></pre></td></tr></table></figure>
+
 <p>理解了扁平作用域，来看看<a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval">instance_eval</a>与<a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_exec">instance_exec</a>方法。</p>
 </li>
 </ul>
@@ -539,24 +465,8 @@ my_other_method(4) # =&gt; 5
 <li><p>instance_eval 与instance_exec</p>
 <p>两者都是BasicObject的instance methods，打破封装的杠把子。instance_exec比instance_eval稍微灵活些，可以传递参数，Ruby <a target="_blank" rel="noopener" href="http://ruby-doc.org/core-1.9.3/BasicObject.html#method-i-instance_eval">BasicObject 的doc</a> 里面也有举例。</p>
 <p>看段书中的代码理解下：</p>
-<pre><code class="Ruby">class C
-  def initialize
-    @v =1
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span></span></span><br><span class="line">    <span class="variable">@v</span> =<span class="number">1</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = C.new</span><br><span class="line">obj.instance_eval <span class="keyword">do</span></span><br><span class="line">  <span class="keyword">self</span></span><br><span class="line">  <span class="variable">@v</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">v = <span class="number">2</span></span><br><span class="line">obj.instance_eval &#123; <span class="variable">@v</span> &#125;  <span class="comment">#=&gt; 1</span></span><br><span class="line">obj.instance_eval &#123; <span class="variable">@v</span> =v &#125;  <span class="comment">#=&gt; 2</span></span><br><span class="line">obj.instance_eval &#123; <span class="variable">@v</span> &#125;  <span class="comment">#=&gt; 2</span></span><br><span class="line">obj.instance_exec(<span class="number">5</span>) &#123;<span class="params">|x|</span> <span class="variable">@v</span> + x&#125; <span class="comment">#=&gt; 7</span></span><br></pre></td></tr></table></figure>
 
-obj = C.new
-obj.instance_eval do
-  self
-  @v
-end
-
-v = 2
-obj.instance_eval &#123; @v &#125;  #=&gt; 1
-obj.instance_eval &#123; @v =v &#125;  #=&gt; 2
-obj.instance_eval &#123; @v &#125;  #=&gt; 2
-obj.instance_exec(5) &#123;|x| @v + x&#125; #=&gt; 7
-</code></pre>
 <p>直接改变了obj中的实例变量@v，而针对传递给instance_eval与instance_exec的代码块，它有一个名字，叫做<strong>上下文探针</strong>（context probe），好似它们可以深入到对象的代码块中，对对象进行操作。</p>
 </li>
 <li><p>洁净室</p>
@@ -567,22 +477,8 @@ obj.instance_exec(5) &#123;|x| @v + x&#125; #=&gt; 7
 <h4 id="Proc-与lambda"><a href="#Proc-与lambda" class="headerlink" title="Proc 与lambda"></a>Proc 与lambda</h4><p>lambda与Proc很相近，一起说。</p>
 <p>由于代码块不是对象，当你想将代码块存起来以后调用时，就需要对象，有需求便有供应，Proc类应运而生。</p>
 <p>它是由块转换来的对象，可以与块进行互相切换。建一个Proc的对象，有四种方法：</p>
-<pre><code class="Ruby"># Proc.new
-p1 = Proc.new &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
-p1.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Proc.new</span></span><br><span class="line">p1 = Proc.new &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p1.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># proc method</span></span><br><span class="line">p2 = <span class="built_in">proc</span> &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p2.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># lambda method</span></span><br><span class="line">p3 = <span class="built_in">lambda</span> &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p3.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># stabby lambda</span></span><br><span class="line">p4 = -&gt; (x) &#123;puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p4.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br></pre></td></tr></table></figure>
 
-# proc method
-p2 = proc &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
-p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-
-# lambda method
-p3 = lambda &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
-p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-
-# stabby lambda
-p4 = -&gt; (x) &#123;puts &quot;#&#123;x&#125;&quot;&#125;
-p4.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-</code></pre>
 <p>关于Proc，说两点：块与Proc的转换，proc与lambda的区别【这是个频繁被问的问题……】</p>
 <ul>
 <li><p>块与Proc的转换</p>
@@ -591,66 +487,22 @@ p4.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
 <p>解决的方法是<strong>给方法添加一个特殊的参数，这个参数位于参数列表最后，且用&amp;表示</strong>。【还记得<code>block_given?</code>吗？】</p>
 <p>&amp; 操作符的含义是：<strong>这是一个Proc对象，我想把它当作代码块使用，去掉&amp;操作符，就能得到一个Proc对象</strong> 【这里暗含着块与Proc的转换】</p>
 <p>看例子：</p>
-<pre><code class="ruby"># 去掉&amp; 得到一个Proc对象
-def my_method(&amp;my_proc)
-  my_proc
-end
-
-my_proc = my_method &#123;|x| puts &quot;#&#123;x&#125;&quot; &#125;
-my_proc.class # =&gt; Proc
-my_proc.call(&quot;hi&quot;) # =&gt; hi
-
-# &amp; 把Proc转化为块传递给方法
-def my_method(a)
-  puts &quot;#&#123;a&#125;, #&#123;yield&#125;&quot;
-end
-
-my_proc = proc &#123;&quot;world&quot;&#125;
-my_method(&quot;hi&quot;, &amp;my_proc) # =&gt; hi, world
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 去掉&amp; 得到一个Proc对象</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(&amp;my_proc)</span></span></span><br><span class="line">  my_proc</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_proc = my_method &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span> &#125;</span><br><span class="line">my_proc.<span class="keyword">class</span> <span class="comment"># =&gt; Proc</span></span><br><span class="line">my_proc.call(<span class="string">&quot;hi&quot;</span>) <span class="comment"># =&gt; hi</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># &amp; 把Proc转化为块传递给方法</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(a)</span></span></span><br><span class="line">  puts <span class="string">&quot;<span class="subst">#&#123;a&#125;</span>, <span class="subst">#&#123;<span class="keyword">yield</span>&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">my_proc = <span class="built_in">proc</span> &#123;<span class="string">&quot;world&quot;</span>&#125;</span><br><span class="line">my_method(<span class="string">&quot;hi&quot;</span>, &amp;my_proc) <span class="comment"># =&gt; hi, world</span></span><br></pre></td></tr></table></figure></li>
 <li><p>Proc与lambda的对比</p>
 <p>先说个区别：用lambda方法（包括 -&gt;）创建的Proc称为lambda，而用其他方法创建的则是Proc。可以用Proc#lambda来检测。</p>
-<pre><code class="Ruby"># proc method
-p2 = proc &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
-p2.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-p2.lambda? # =&gt; false
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># proc method</span></span><br><span class="line">p2 = <span class="built_in">proc</span> &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p2.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br><span class="line">p2.<span class="built_in">lambda</span>? <span class="comment"># =&gt; false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># lambda method</span></span><br><span class="line">p3 = <span class="built_in">lambda</span> &#123;<span class="params">|x|</span> puts <span class="string">&quot;<span class="subst">#&#123;x&#125;</span>&quot;</span>&#125;</span><br><span class="line">p3.call(<span class="string">&quot;hi,ruby&quot;</span>) <span class="comment"># =&gt; hi,ruby</span></span><br><span class="line">p3.<span class="built_in">lambda</span>? <span class="comment"># =&gt; true</span></span><br></pre></td></tr></table></figure>
 
-# lambda method
-p3 = lambda &#123;|x| puts &quot;#&#123;x&#125;&quot;&#125;
-p3.call(&quot;hi,ruby&quot;) # =&gt; hi,ruby
-p3.lambda? # =&gt; true
-</code></pre>
 <p>最重要的区别有两个：</p>
 <ul>
 <li><p>return有不同的含义</p>
 <p>在proc中，return不是从proc中返回，而是从定义proc的作用域返回。</p>
 <p>觉得书中的例子不够典型，改良了下，可以很明显看出二者的区别：</p>
-<pre><code class="ruby">def my_double
-  a = lambda &#123;return 10&#125;
-  result = a.call
-  return result * 2
-end
-my_double # =&gt; 20
-
-def my_other_double
-  my_proc = Proc.new &#123;return 10&#125;
-  result = my_proc.call
-  return result * 2 # =&gt; 这段代码不会运行！
-end
-my_other_double # =&gt; 10
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_double</span></span></span><br><span class="line">  a = <span class="built_in">lambda</span> &#123;<span class="keyword">return</span> <span class="number">10</span>&#125;</span><br><span class="line">  result = a.call</span><br><span class="line">  <span class="keyword">return</span> result * <span class="number">2</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">my_double <span class="comment"># =&gt; 20</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_other_double</span></span></span><br><span class="line">  my_proc = Proc.new &#123;<span class="keyword">return</span> <span class="number">10</span>&#125;</span><br><span class="line">  result = my_proc.call</span><br><span class="line">  <span class="keyword">return</span> result * <span class="number">2</span> <span class="comment"># =&gt; 这段代码不会运行！</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">my_other_double <span class="comment"># =&gt; 10</span></span><br></pre></td></tr></table></figure></li>
 <li><p>参数问题</p>
 <p>在参数问题上，lambda比proc要严格，而proc则宽容很多。</p>
 <p>比如：</p>
-<pre><code class="Ruby">p = Proc.new &#123;|a, b| puts &quot;#&#123;a&#125;:#&#123;b&#125;&quot;&#125;
-p.call(1,2,3) # =&gt; 1:2
-p.call(1) # =&gt; 1:
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">p = Proc.new &#123;<span class="params">|a, b|</span> puts <span class="string">&quot;<span class="subst">#&#123;a&#125;</span>:<span class="subst">#&#123;b&#125;</span>&quot;</span>&#125;</span><br><span class="line">p.call(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="comment"># =&gt; 1:2</span></span><br><span class="line">p.call(<span class="number">1</span>) <span class="comment"># =&gt; 1:</span></span><br><span class="line"></span><br><span class="line">p2 = <span class="built_in">lambda</span> &#123;<span class="params">|a, b|</span> puts <span class="string">&quot;<span class="subst">#&#123;a&#125;</span>:<span class="subst">#&#123;b&#125;</span>&quot;</span>&#125;</span><br><span class="line">p2.call(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>) <span class="comment"># =&gt; wrong number of arguments (given 3, expected 2) (ArgumentError)</span></span><br></pre></td></tr></table></figure>
 
-p2 = lambda &#123;|a, b| puts &quot;#&#123;a&#125;:#&#123;b&#125;&quot;&#125;
-p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (ArgumentError)
-</code></pre>
 <p>Google下，会发现很多前辈都写过这方面的文章，这里就不多说了，stack overflow上也有一些精彩的answer：<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/1740046/whats-the-difference-between-a-proc-and-a-lambda-in-ruby">What’s the difference between a proc and a lambda in Ruby?</a>， 可加深理解。</p>
 </li>
 </ul>
@@ -971,7 +823,7 @@ p2.call(1,2,3) # =&gt; wrong number of arguments (given 3, expected 2) (Argument
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

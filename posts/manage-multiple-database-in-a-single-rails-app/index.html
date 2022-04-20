@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>485 words</span>
+              <span>478 words</span>
             </span>
           
 
@@ -409,54 +409,27 @@
 </ul>
 <p>具体如下：</p>
 <p>Step1、 新增文件<code>config/works_database.yml</code>，内容如下：</p>
-<pre><code class="Iml"># using another database
-default: &amp;default
-  adapter: mysql2
-  encoding: utf8
-  username: root
-  password:
-  host: localhost
-  pool: 5
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># using another database</span><br><span class="line">default: &amp;default</span><br><span class="line">  adapter: mysql2</span><br><span class="line">  encoding: utf8</span><br><span class="line">  username: root</span><br><span class="line">  password:</span><br><span class="line">  host: localhost</span><br><span class="line">  pool: 5</span><br><span class="line"></span><br><span class="line">development:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_development</span><br><span class="line"></span><br><span class="line">test:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_test</span><br><span class="line"></span><br><span class="line">production:</span><br><span class="line">  &lt;&lt;: *default</span><br><span class="line">  database: works_production</span><br></pre></td></tr></table></figure>
 
-development:
-  &lt;&lt;: *default
-  database: works_development
-
-test:
-  &lt;&lt;: *default
-  database: works_test
-
-production:
-  &lt;&lt;: *default
-  database: works_production
-</code></pre>
 <p>这里，假定数据库works_development是已经存在的，其实就是场景描述中的works数据库。</p>
 <p>Step2、创建initializer去读取配置文件并存入环境变量中</p>
 <p>在config/initializers/下，新增文件<code>works_database.rb</code>，内容如下：</p>
-<pre><code>WORKS_DB = YAML.load_file(File.join(Rails.root.join(&#39;config&#39;,&#39;works_database.yml&#39;)))[Rails.env.to_s]
-</code></pre>
+<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line">WORKS_DB = <span class="module-access"><span class="module"><span class="identifier">YAML</span>.</span></span>load<span class="constructor">_file(File.<span class="params">join</span>(Rails.<span class="params">root</span>.<span class="params">join</span>(&#x27;<span class="params">config</span>&#x27;,&#x27;<span class="params">works_database</span>.<span class="params">yml</span>&#x27;)</span>))<span class="literal">[R<span class="identifier">ails</span>.<span class="identifier">env</span>.<span class="identifier">to_s</span>]</span></span><br></pre></td></tr></table></figure>
+
 <p>这样，我们外部数据库的配置信息就会存储在WORKS_DB中了。</p>
 <p>Step3、 创建一个基类来处理数据库的连接</p>
 <p>新建文件<code>app/models/works_database.rb</code>，放入以下内容：</p>
-<pre><code class="Ruby">class WorksDatabase &lt; ApplicationRecord
-  self.abstract_class = true
-  establish_connection WORKS_DB
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">WorksDatabase</span> &lt; ApplicationRecord</span></span><br><span class="line">  <span class="keyword">self</span>.abstract_class = <span class="literal">true</span></span><br><span class="line">  establish_connection WORKS_DB</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>establish_connection是ActiveRecord::Base的一个类方法，由于WorksDatabase继承自ApplicationRecord，所以可以直接调用，它的作用就是用于连接数据库的。</p>
 <p>Step4、 将需要连接到WORKS_DB的model都继承自WorksDatabase</p>
 <p>修改<code>app/models/article.rb</code>：</p>
-<pre><code class="Ruby">class Article &lt; WorksDatabase
-  belongs_to :user
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Article</span> &lt; WorksDatabase</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>OK !</p>
 <p>Step 3 和Step 4其实可以合并成一步，直接在<code>app/models/article.rb</code>中修改成如下：</p>
-<pre><code class="Ruby">class Article &lt; ActiveRecord::Base
-  belongs_to :user
-  establish_connection WORKS_DB
-end  
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Article</span> &lt; ActiveRecord::Base</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  establish_connection WORKS_DB</span><br><span class="line"><span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
+
 <p>但是这种一般在只有一个或少数几个model需要用到外部数据库时使用的较多，当存在多个models的时候，则推荐用baseclass的方式，把establish_connection封装起来，其他类直接继承该基类即可。即遵守DRY原则。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://www.thegreatcodeadventure.com/managing-multiple-databases-in-a-single-rails-application/">Managing Multiple Databases in a Single Rails Application</a></p>
 
@@ -767,7 +740,7 @@ end
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

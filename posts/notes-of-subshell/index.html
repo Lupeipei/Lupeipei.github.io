@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>845 words</span>
+              <span>792 words</span>
             </span>
           
 
@@ -401,194 +401,50 @@
 
 <h4 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h4><p>本质上是一个完整的新shell，用来跑指定的程序。</p>
 <p>看个简单的例子：</p>
-<pre><code class="shell">x=100
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">x=100</span><br><span class="line"></span><br><span class="line">cat test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/usr/bin</span></span><br><span class="line">echo x is $x</span><br><span class="line"></span><br><span class="line">sh test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">x is</span><br></pre></td></tr></table></figure>
 
-cat test
-# 输出
-#!/usr/bin
-echo x is $x
-
-sh test
-# 输出
-x is
-</code></pre>
 <p>这里，当执行<code>sh test</code> 时，login shell 「即parent shell」会创建一个新的shell来跑 test 程序，这个新的shell有着自己的环境变量，并且对parent shell中的本地变量local variable一无所知，test中的变量 x 默认赋值为null，所以输出结果为<code>x is</code>.</p>
 <h4 id="获取-parent-shell-的-local-variable"><a href="#获取-parent-shell-的-local-variable" class="headerlink" title="获取 parent shell 的 local variable"></a>获取 parent shell 的 local variable</h4><p>两种方法：</p>
 <ul>
 <li><p>export</p>
 <p>export 给 subshell 的变量，其实是复制了一份 parent shell 中的 local variable，所以<strong>针对 exported variable 所做的改变， 都不会影响到 parent shell 原先的同名变量</strong>。</p>
 <p>例子：</p>
-<pre><code class="shell">x=10
-cat var_test
-# 输出
-#!/bin/bash
-echo $x
-if [ -n $x ]; then
-    x=$(($x+1))
-    echo $x
-fi
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">x=10</span><br><span class="line">cat var_test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">echo $x</span><br><span class="line">if [ -n $x ]; then</span><br><span class="line">	x=$(($x+1))</span><br><span class="line">	echo $x</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">sh var_test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出，此时在var_test中 x 为 null, [ -n <span class="variable">$x</span> ] 为 <span class="literal">false</span>, 所以什么都没有输出</span></span><br><span class="line"></span><br><span class="line">export x</span><br><span class="line">sh var_test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出, 此时在var_test中，对 x 进行了修改，但并不影响login shell中的 x</span></span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line"></span><br><span class="line">echo $x</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出, 这里，x 依然是10</span></span><br><span class="line">10</span><br></pre></td></tr></table></figure>
 
-sh var_test
-# 输出，此时在var_test中 x 为 null, [ -n $x ] 为 false, 所以什么都没有输出
-
-export x
-sh var_test
-# 输出, 此时在var_test中，对 x 进行了修改，但并不影响login shell中的 x
-10
-11
-
-echo $x
-# 输出, 这里，x 依然是10
-10
-</code></pre>
 <p>exported variables 可以一直传给后面的subshell：</p>
-<pre><code class="shell">cat var_test3
-# 输出
-y=9
-z=8
-echo x = $x
-echo y = $y
-echo z = $z
-export z
-sh var_test4
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat var_test3</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">y=9</span><br><span class="line">z=8</span><br><span class="line">echo x = $x</span><br><span class="line">echo y = $y</span><br><span class="line">echo z = $z</span><br><span class="line">export z</span><br><span class="line">sh var_test4</span><br><span class="line"></span><br><span class="line">cat var_test4</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">echo x = $x</span><br><span class="line">echo y = $y</span><br><span class="line">echo z = $z</span><br><span class="line"></span><br><span class="line">sh var_test3</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">x =</span><br><span class="line">y = 9</span><br><span class="line">z = 8</span><br><span class="line">x =</span><br><span class="line">y =</span><br><span class="line">z = 8</span><br><span class="line"></span><br><span class="line">x=100</span><br><span class="line">y=90</span><br><span class="line">export x</span><br><span class="line">export y</span><br><span class="line">sh var_test3</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">x = 100</span><br><span class="line">y = 9</span><br><span class="line">z = 8</span><br><span class="line">x = 100</span><br><span class="line">y = 9</span><br><span class="line">z = 8</span><br></pre></td></tr></table></figure>
 
-cat var_test4
-# 输出
-echo x = $x
-echo y = $y
-echo z = $z
-
-sh var_test3
-# 输出
-x =
-y = 9
-z = 8
-x =
-y =
-z = 8
-
-x=100
-y=90
-export x
-export y
-sh var_test3
-# 输出
-x = 100
-y = 9
-z = 8
-x = 100
-y = 9
-z = 8
-</code></pre>
 <p>这里会发现 export 给 var_test3 的变量 y，初始值为90 ， 在 var_test3 中被重新赋值为 9，执行var_test4 时，export 给 var_test4 的 y 此时已经是9， 而不是最初的90。</p>
 </li>
 <li><p>执行脚本的时候，将需要export的变量放在脚本执行命令前面。</p>
 <p>还是上面的例子var_test：</p>
-<pre><code class="shell">unset x
-x=99 sh var_test
-# 输出
-99
-100
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">unset x</span><br><span class="line">x=99 sh var_test</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line"></span><br><span class="line">echo $x</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出, 这里 x 未赋值，默认为 null</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-echo $x
-# 输出, 这里 x 未赋值，默认为 null
-</code></pre>
 <p>将需要export 给subshell 的 x，放在执行命令前，上面的<code>x=99 sh var_test</code> 等价于<code>(x=10;export x;sh var_test)</code>， 而(….) 中所做的改变不会更改其parent shell的环境变量。</p>
 </li>
 </ul>
 <h4 id="…-VS-…"><a href="#…-VS-…" class="headerlink" title="{….; } VS (…..)"></a>{….; } VS (…..)</h4><ul>
 <li><p>{….; }: 命令在当前shell中执行，在{….; } 中做的改变会影响到当前shell.</p>
 <p>例子：</p>
-<pre><code class="shell">x=10
-&#123;x=99;&#125;
-echo $x
-# 输出
-99
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">x=10</span><br><span class="line">&#123;x=99;&#125;</span><br><span class="line">echo $x</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">99</span><br><span class="line"></span><br><span class="line">pwd</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux/acme</span><br><span class="line"></span><br><span class="line">&#123;cd ..; pwd&#125;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux</span><br><span class="line"></span><br><span class="line">pwd</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux</span><br></pre></td></tr></table></figure>
 
-pwd
-# 输出
-/Users/lucia/Linux/acme
-
-&#123;cd ..; pwd&#125;
-# 输出
-/Users/lucia/Linux
-
-pwd
-# 输出
-/Users/lucia/Linux
-</code></pre>
 <p>如果让脚本在当前shell中执行，还可以使用<code>.</code> 和 <code>source</code> 命令。</p>
-<pre><code class="shell">. test.sh
-source test.sh
-</code></pre>
-</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">. test.sh</span><br><span class="line">source test.sh</span><br></pre></td></tr></table></figure></li>
 <li><p> (….): 命令在subshell中执行，同样，在(….)做的修改，并不改变当前shell中的环境。</p>
 </li>
 </ul>
 <p>  例子：</p>
-<pre><code class="shell">x=10
-(x=99)
-echo $x
-# 输出
-10
+  <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">x=10</span><br><span class="line">(x=99)</span><br><span class="line">echo $x</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">10</span><br><span class="line"></span><br><span class="line">pwd</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux/acme</span><br><span class="line"></span><br><span class="line">(cd ..; pwd)</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux</span><br><span class="line"></span><br><span class="line">pwd</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">/Users/lucia/Linux/acme</span><br></pre></td></tr></table></figure>
 
-pwd
-# 输出
-/Users/lucia/Linux/acme
-
-(cd ..; pwd)
-# 输出
-/Users/lucia/Linux
-
-pwd
-# 输出
-/Users/lucia/Linux/acme
-</code></pre>
 <h4 id="Loop-循环是-subshell"><a href="#Loop-循环是-subshell" class="headerlink" title="Loop 循环是 subshell"></a>Loop 循环是 subshell</h4><p>for, while, until 等 loop循环，都属于subshell。</p>
 <p>看个例子：</p>
-<pre><code class="shell">cat subshell_example
-# 输出
-#!/bin/bash
-lineno=0
-cat $* |
-while read line
-do
-    lineno=$(($lineno + 1))
-done
-echo &quot;$lineno&quot;
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat subshell_example</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">lineno=0</span><br><span class="line">cat $* |</span><br><span class="line">while read line</span><br><span class="line">do</span><br><span class="line">	lineno=$(($lineno + 1))</span><br><span class="line">done</span><br><span class="line">echo &quot;$lineno&quot;</span><br><span class="line"></span><br><span class="line">cat sums</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">9124</span><br><span class="line">-750</span><br><span class="line">3631</span><br><span class="line">1231</span><br><span class="line">-1122</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 执行 subshell_example，参数为sums</span></span><br><span class="line">sh subshell_example sums</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">0</span><br></pre></td></tr></table></figure>
 
-cat sums
-# 输出
-9124
--750
-3631
-1231
--1122
-
-# 执行 subshell_example，参数为sums
-sh subshell_example sums
-# 输出
-0
-</code></pre>
 <p>这里，按照代码逻辑，应该输出sums文件中总行数，也就是5，但由于loop循环是一个subshell，<code>echo &quot;$lineno&quot;</code> 输出的一直是loop 外声明的lineno，也就是0。</p>
 <p>那么如何解决？</p>
 <p>这里可以使用 herestring解决这个问题，修改subshell_example文件：</p>
-<pre><code class="shell">cat subshell_example
-# 输出
-#!/bin/bash
-lineno=0
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat subshell_example</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">lineno=0</span><br><span class="line"></span><br><span class="line">while read line</span><br><span class="line">do</span><br><span class="line">	lineno=$(($lineno + 1))</span><br><span class="line">done &lt;&lt;&lt; &quot;$(cat $*)&quot;</span><br><span class="line"></span><br><span class="line">echo &quot;$lineno&quot;</span><br><span class="line"></span><br><span class="line">sh subshell_example sums</span><br><span class="line"><span class="meta">#</span><span class="bash"> 输出</span></span><br><span class="line">5</span><br></pre></td></tr></table></figure>
 
-while read line
-do
-    lineno=$(($lineno + 1))
-done &lt;&lt;&lt; &quot;$(cat $*)&quot;
-
-echo &quot;$lineno&quot;
-
-sh subshell_example sums
-# 输出
-5
-</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://www.amazon.com/Shell-Programming-Unix-Linux-Developers-ebook/dp/B01L480ILM">《Shell Programming in Unix, Linux and OS X》forth edition</a></p>
 <p><a target="_blank" rel="noopener" href="https://bash.cyberciti.biz/guide/Here_strings">Here strings</a></p>
 
@@ -899,7 +755,7 @@ sh subshell_example sums
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>

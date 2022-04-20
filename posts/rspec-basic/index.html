@@ -412,24 +412,11 @@
 <p>最佳效果：写最少的测试，测最多的东西。</p>
 <h4 id="基本结构："><a href="#基本结构：" class="headerlink" title="基本结构："></a>基本结构：</h4><p>最简单的一个场景一个例子:</p>
 <p>describe/it:</p>
-<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
-  it &quot;does something&quot; do
-  end
-end
-</code></pre>
-<p>嵌套:</p>
-<pre><code class="Ruby">RSpec.describe &quot;something&quot; do
-  context &quot;in one context&quot; do
-    it &quot;does one thing&quot; do
-    end
-  end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.describe <span class="string">&quot;something&quot;</span> <span class="keyword">do</span></span><br><span class="line">  it <span class="string">&quot;does something&quot;</span> <span class="keyword">do</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-  context &quot;in another context&quot; do
-    it &quot;does another thing&quot; do
-    end
-  end
-end
-</code></pre>
+<p>嵌套:</p>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.describe <span class="string">&quot;something&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;in one context&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">&quot;does one thing&quot;</span> <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  context <span class="string">&quot;in another context&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">&quot;does another thing&quot;</span> <span class="keyword">do</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>在测试前，通常需要创建测试数据，一般会在每个测试案例中单独创建，也可以借助before【hook methods】来简化，减少重复创建。before调用有两种形式：</p>
 <ul>
 <li>before(:each, &amp;block) - default mode</li>
@@ -437,228 +424,56 @@ end
 </ul>
 <p>使用before(:each )  创建的测试数据，在每个测试结束后都会回滚，即每个测试里面的数据都是独立的。每次执行context前，都会重新执行一次before(:each)，而before(:all) 只执行一次，被这个describe／context下的所有it公用。使用before(:all)时，建议配after(:all) 来清空数据，保证多个describe之间的独立性，同时使用before(:each) 来重新加载数据，以获取最新的数据。</p>
 <p>比如：</p>
-<pre><code class="Ruby">before(:all) do
-  @widget = Widget.create!
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">before(<span class="symbol">:all</span>) <span class="keyword">do</span></span><br><span class="line">  <span class="variable">@widget</span> = Widget.create!</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">before(<span class="symbol">:each</span>) <span class="keyword">do</span></span><br><span class="line">  <span class="variable">@widget</span>.reload</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">after(<span class="symbol">:all</span>) <span class="keyword">do</span></span><br><span class="line">  <span class="variable">@widget</span>.destroy</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-before(:each) do
-  @widget.reload
-end
-
-after(:all) do
-  @widget.destroy
-end
-</code></pre>
 <h4 id="Shared-examples"><a href="#Shared-examples" class="headerlink" title="Shared examples"></a>Shared examples</h4><p>shared_examples 是Rspec的类方法，用于定义class 或者 module的行为，shared的含义就是共享，个人的理解是把多个测试中，重合度高的地方抽出来，封装起来，类似于include module，在module中定义常用方法，每个类include 该module后，就拥有了该module的实例方法。</p>
 <p>可以使用以下四种方式来将定义的shared_examples include到context中：</p>
-<pre><code class="Ruby">include_examples &quot;name&quot;      # include the examples in the current context
-it_behaves_like &quot;name&quot;       # include the examples in a nested context
-it_should_behave_like &quot;name&quot; # include the examples in a nested context
-matching metadata            # include the examples in the current context
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">include_examples <span class="string">&quot;name&quot;</span>      <span class="comment"># include the examples in the current context</span></span><br><span class="line">it_behaves_like <span class="string">&quot;name&quot;</span>       <span class="comment"># include the examples in a nested context</span></span><br><span class="line">it_should_behave_like <span class="string">&quot;name&quot;</span> <span class="comment"># include the examples in a nested context</span></span><br><span class="line">matching metadata            <span class="comment"># include the examples in the current context</span></span><br></pre></td></tr></table></figure>
+
 <p>备注：metadata是什么？describe的部分常会看到 type: :model，这个就是RSpec metadata.【官网中举了相关的例子，还不是很懂】</p>
 <p>看个官方的例子：</p>
-<pre><code class="ruby">require &quot;set&quot;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&quot;set&quot;</span></span><br><span class="line"></span><br><span class="line">RSpec.shared_examples <span class="string">&quot;a collection&quot;</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:collection</span>) &#123; described_class.new([<span class="number">7</span>, <span class="number">2</span>, <span class="number">4</span>]) &#125;</span><br><span class="line"></span><br><span class="line">  context <span class="string">&quot;initialized with 3 items&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it <span class="string">&quot;says it has three items&quot;</span> <span class="keyword">do</span></span><br><span class="line">      expect(collection.size).to eq(<span class="number">3</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  describe <span class="string">&quot;#include?&quot;</span> <span class="keyword">do</span></span><br><span class="line">    context <span class="string">&quot;with an item that is in the collection&quot;</span> <span class="keyword">do</span></span><br><span class="line">      it <span class="string">&quot;returns true&quot;</span> <span class="keyword">do</span></span><br><span class="line">        expect(collection.<span class="keyword">include</span>?(<span class="number">7</span>)).to be_truthy</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    context <span class="string">&quot;with an item that is not in the collection&quot;</span> <span class="keyword">do</span></span><br><span class="line">      it <span class="string">&quot;returns false&quot;</span> <span class="keyword">do</span></span><br><span class="line">        expect(collection.<span class="keyword">include</span>?(<span class="number">9</span>)).to be_falsey</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Array <span class="keyword">do</span></span><br><span class="line">  it_behaves_like <span class="string">&quot;a collection&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Set <span class="keyword">do</span></span><br><span class="line">  it_behaves_like <span class="string">&quot;a collection&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-RSpec.shared_examples &quot;a collection&quot; do
-  let(:collection) &#123; described_class.new([7, 2, 4]) &#125;
-
-  context &quot;initialized with 3 items&quot; do
-    it &quot;says it has three items&quot; do
-      expect(collection.size).to eq(3)
-    end
-  end
-
-  describe &quot;#include?&quot; do
-    context &quot;with an item that is in the collection&quot; do
-      it &quot;returns true&quot; do
-        expect(collection.include?(7)).to be_truthy
-      end
-    end
-
-    context &quot;with an item that is not in the collection&quot; do
-      it &quot;returns false&quot; do
-        expect(collection.include?(9)).to be_falsey
-      end
-    end
-  end
-end
-
-RSpec.describe Array do
-  it_behaves_like &quot;a collection&quot;
-end
-
-RSpec.describe Set do
-  it_behaves_like &quot;a collection&quot;
-end
-</code></pre>
 <p>带参数的shard_example:</p>
-<pre><code class="Ruby">RSpec.shared_examples &quot;a measurable object&quot; do |measurement, measurement_methods|
-  measurement_methods.each do |measurement_method|
-    it &quot;should return #&#123;measurement&#125; from ##&#123;measurement_method&#125;&quot; do
-      expect(subject.send(measurement_method)).to eq(measurement)
-    end
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.shared_examples <span class="string">&quot;a measurable object&quot;</span> <span class="keyword">do</span> <span class="params">|measurement, measurement_methods|</span></span><br><span class="line">  measurement_methods.each <span class="keyword">do</span> <span class="params">|measurement_method|</span></span><br><span class="line">    it <span class="string">&quot;should return <span class="subst">#&#123;measurement&#125;</span> from #<span class="subst">#&#123;measurement_method&#125;</span>&quot;</span> <span class="keyword">do</span></span><br><span class="line">      expect(subject.send(measurement_method)).to eq(measurement)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe Array, <span class="string">&quot;with 3 items&quot;</span> <span class="keyword">do</span></span><br><span class="line">  subject &#123; [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>] &#125;</span><br><span class="line">  it_should_behave_like <span class="string">&quot;a measurable object&quot;</span>, <span class="number">3</span>, [<span class="symbol">:size</span>, <span class="symbol">:length</span>]</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.describe String, <span class="string">&quot;of 6 characters&quot;</span> <span class="keyword">do</span></span><br><span class="line">  subject &#123; <span class="string">&quot;FooBar&quot;</span> &#125;</span><br><span class="line">  it_should_behave_like <span class="string">&quot;a measurable object&quot;</span>, <span class="number">6</span>, [<span class="symbol">:size</span>, <span class="symbol">:length</span>]</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-RSpec.describe Array, &quot;with 3 items&quot; do
-  subject &#123; [1, 2, 3] &#125;
-  it_should_behave_like &quot;a measurable object&quot;, 3, [:size, :length]
-end
-
-RSpec.describe String, &quot;of 6 characters&quot; do
-  subject &#123; &quot;FooBar&quot; &#125;
-  it_should_behave_like &quot;a measurable object&quot;, 6, [:size, :length]
-end
-</code></pre>
 <p>也可以在context中定义shared_examples，然后在该context中调用，注意，可将context看作是一个作用域，出了这个context，则不能调用定义在该context 中的shared_examples：</p>
-<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
-  context &quot;per context&quot; do
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.describe <span class="string">&quot;shared examples&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;per context&quot;</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    shared_examples <span class="string">&quot;shared examples are nestable&quot;</span> <span class="keyword">do</span></span><br><span class="line">      it &#123; expect(<span class="literal">true</span>).to eq <span class="literal">true</span> &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">    it_behaves_like <span class="string">&quot;shared examples are nestable&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    shared_examples &quot;shared examples are nestable&quot; do
-      it &#123; expect(true).to eq true &#125;
-    end
-
-    it_behaves_like &quot;shared examples are nestable&quot;
-  end
-end
-</code></pre>
 <p>如果在另一个context中调用，则会报错：</p>
-<pre><code class="Ruby">RSpec.describe &quot;shared examples&quot; do
-  context &quot;per context&quot; do
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.describe <span class="string">&quot;shared examples&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;per context&quot;</span> <span class="keyword">do</span></span><br><span class="line"></span><br><span class="line">    shared_examples <span class="string">&quot;shared examples are nestable&quot;</span> <span class="keyword">do</span></span><br><span class="line">      it &#123; expect(<span class="literal">true</span>).to eq <span class="literal">true</span> &#125;</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  context <span class="string">&quot;another context&quot;</span> <span class="keyword">do</span></span><br><span class="line">    it_behaves_like <span class="string">&quot;shared examples are nestable&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-    shared_examples &quot;shared examples are nestable&quot; do
-      it &#123; expect(true).to eq true &#125;
-    end
-  end
-
-  context &quot;another context&quot; do
-    it_behaves_like &quot;shared examples are nestable&quot;
-  end
-end
-</code></pre>
 <h4 id="Shared-context"><a href="#Shared-context" class="headerlink" title="Shared context"></a>Shared context</h4><p>shared_context顾名思义，将多个context中共用的部分抽出来，定义成method来反复调用。</p>
 <p>调用已定义好的shared_context的方式有两种，一是include_context，而是metadata。</p>
 <p>看一段简单的例子，先定义一个shared_context:</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot; do
- context &quot;context 1&quot; do
-   let(:a) &#123; create :a &#125;
-   let(:b) &#123; create :b &#125;
-   let(:c) &#123; create :c &#125;
-   let(:d) &#123; create :d &#125;
-   ........ # do something
- end
-end
+ <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 1&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 1&quot;</span> <span class="keyword">do</span></span><br><span class="line">    let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">    let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">    let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">    let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 2&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 2&quot;</span> <span class="keyword">do</span></span><br><span class="line">    let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">    let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">    let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">    let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-### another describe
-
-RSpec.describe &quot;somethings 2&quot; do
- context &quot;context 2&quot; do
-   let(:a) &#123; create :a &#125;
-   let(:b) &#123; create :b &#125;
-   let(:c) &#123; create :c &#125;
-   let(:d) &#123; create :d &#125;
-   ........ # do something
- end
-end
-</code></pre>
 <p>使用shared_context简化，定义shared_context :</p>
 <p>在spec/support下定义一个文件，比如shared_context.rb：</p>
-<pre><code class="Ruby">RSpec.shared_context &quot;shared data&quot; do
-  let(:a) &#123; create :a &#125;
-  let(:b) &#123; create :b &#125;
-  let(:c) &#123; create :c &#125;
-  let(:d) &#123; create :d &#125;
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.shared_context <span class="string">&quot;shared data&quot;</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">  let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">  let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">  let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+
 <p>简化之前的测试：</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot; do
-  context &quot;context 1&quot; do
-    include_context &quot;shared data&quot;
-    ........ # do something
-  end
-end
-
-### another describe
-
-RSpec.describe &quot;somethings 2&quot; do
-  context &quot;context 2&quot; do
-    include_context &quot;shared data&quot;
-    ........ # do something
-  end
-end
-</code></pre>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 1&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 1&quot;</span> <span class="keyword">do</span></span><br><span class="line">    include_context <span class="string">&quot;shared data&quot;</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 2&quot;</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 2&quot;</span> <span class="keyword">do</span></span><br><span class="line">    include_context <span class="string">&quot;shared data&quot;</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 <p>如果使用metadata，如何调用？参考官网的例子，需要修改下刚刚创建的这个shared_data.rb文件：</p>
-<pre><code class="Ruby">RSpec.configure do |rspec|
-  rspec.shared_context_metadata_behavior = :apply_to_host_groups ## 用于设置metadata调用后的作用域
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|rspec|</span></span><br><span class="line">  rspec.shared_context_metadata_behavior = <span class="symbol">:apply_to_host_groups</span> <span class="comment">## 用于设置metadata调用后的作用域</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.shared_context <span class="string">&quot;shared data&quot;</span>, <span class="symbol">:shared_context</span> =&gt; <span class="symbol">:metadata</span> <span class="keyword">do</span></span><br><span class="line">  let(<span class="symbol">:a</span>) &#123; create <span class="symbol">:a</span> &#125;</span><br><span class="line">  let(<span class="symbol">:b</span>) &#123; create <span class="symbol">:b</span> &#125;</span><br><span class="line">  let(<span class="symbol">:c</span>) &#123; create <span class="symbol">:c</span> &#125;</span><br><span class="line">  let(<span class="symbol">:d</span>) &#123; create <span class="symbol">:d</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|rspec|</span></span><br><span class="line">  rspec.include_context <span class="string">&quot;shared data&quot;</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-RSpec.shared_context &quot;shared data&quot;, :shared_context =&gt; :metadata do
-  let(:a) &#123; create :a &#125;
-  let(:b) &#123; create :b &#125;
-  let(:c) &#123; create :c &#125;
-  let(:d) &#123; create :d &#125;
-end
-
-RSpec.configure do |rspec|
-  rspec.include_context &quot;shared data&quot;, :include_shared =&gt; true
-end
-</code></pre>
 <p>那么上面的例子，就可以这样调用了：</p>
-<pre><code class="Ruby">### one describe
-RSpec.describe &quot;somethings 1&quot;, :include_shared =&gt; true do
-  context &quot;context 1&quot; do
-    ........ # do something
-  end
-end
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### one describe</span></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 1&quot;</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 1&quot;</span> <span class="keyword">do</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### another describe</span></span><br><span class="line"></span><br><span class="line">RSpec.describe <span class="string">&quot;somethings 2&quot;</span>, <span class="symbol">:include_shared</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span></span><br><span class="line">  context <span class="string">&quot;context 2&quot;</span> <span class="keyword">do</span></span><br><span class="line">    ........ <span class="comment"># do something</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
 
-### another describe
-
-RSpec.describe &quot;somethings 2&quot;, :include_shared =&gt; true do
-  context &quot;context 2&quot; do
-    ........ # do something
-  end
-end
-</code></pre>
 <p>看到这里，说一下shared_context与shared_example的区别，一个是context层面，一个是class／module层的，如果多个describe中，含有重合度高的context／describe，那么用shared_example来抽出共同的行为进行简化，如果是在多个context中，含有重合度高的代码，比如新建各种测试数据等，更偏向setup，则使用shared_context。</p>
 <h4 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h4><ul>
 <li><p><strong>测试数据重置：</strong></p>
 <p>使用gem：database_rewinder</p>
 <p>配置rewinder：</p>
-<pre><code class="ruby"># spec/support/rspec_helper.rb
-RSpec.configure do |config|
-  config.before :suite do
-    DatabaseRewinder.clean_all
-  end
-
-  config.after :each do
-    DatabaseRewinder.clean
-  end
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># spec/support/rspec_helper.rb</span></span><br><span class="line">RSpec.configure <span class="keyword">do</span> <span class="params">|config|</span></span><br><span class="line">  config.before <span class="symbol">:suite</span> <span class="keyword">do</span></span><br><span class="line">    DatabaseRewinder.clean_all</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  config.after <span class="symbol">:each</span> <span class="keyword">do</span></span><br><span class="line">    DatabaseRewinder.clean</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p><strong>Shoulda-matchers</strong></p>
 <p>使用Shoulda-matchers 来测试关联和验证：</p>
-<pre><code class="ruby">require &#39;rails-helper&#39;
-
-descirbe User do
-  it &#123; should has_many(:posts).dependent(:destroy) &#125;
-  it &#123; should has_many(:groups).through(:groupships) &#125;
-  it &#123; should validate_presence_of :name &#125;
-end
-</code></pre>
-</li>
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="keyword">require</span> <span class="string">&#x27;rails-helper&#x27;</span></span><br><span class="line"></span><br><span class="line">descirbe User <span class="keyword">do</span></span><br><span class="line">  it &#123; should has_many(<span class="symbol">:posts</span>).dependent(<span class="symbol">:destroy</span>) &#125;</span><br><span class="line">  it &#123; should has_many(<span class="symbol">:groups</span>).through(<span class="symbol">:groupships</span>) &#125;</span><br><span class="line">  it &#123; should validate_presence_of <span class="symbol">:name</span> &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
 <li><p><strong>is_expected vs expect</strong></p>
 <p>is_expected 等价于expect(subject)</p>
 <p>比如下面这个例子：</p>
-<pre><code class="Ruby">it &#123; is_expected.to validate_presence_of(:title) &#125;
+<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">it &#123; is_expected.to validate_presence_of(<span class="symbol">:title</span>) &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># equals to</span></span><br><span class="line"></span><br><span class="line">it &#123; expect(subject).to validate_presence_of(<span class="symbol">:title</span>) &#125;</span><br></pre></td></tr></table></figure>
 
-# equals to
-
-it &#123; expect(subject).to validate_presence_of(:title) &#125;
-</code></pre>
 <p> RSpec测试缺省都有一个subject，值为described_class.new，而descirbed_class 是对应需要测试的class的实例，可以当成ruby中的self，如果是model，则是model.new, controller,则是controller.new。</p>
 </li>
 </ul>
@@ -972,7 +787,7 @@ it &#123; expect(subject).to validate_presence_of(:title) &#125;
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    385.6k
+    384.2k
   </span>
 
 </div>
