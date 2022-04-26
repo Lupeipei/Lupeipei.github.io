@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>2.3k words</span>
+              <span>2.4k words</span>
             </span>
           
 
@@ -402,81 +402,132 @@
 <span id="more"></span> 
 
 <h4 id="group"><a href="#group" class="headerlink" title="group"></a>group</h4><p>等同与SQL中的group_by，使用：</p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Student.group(<span class="symbol">:gender</span>).count</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Student.group(:gender).count
+</code></pre>
 <p>即：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">COUNT</span> (<span class="operator">*</span>) <span class="keyword">AS</span> count_all, gender</span><br><span class="line"><span class="keyword">FROM</span> &quot;students&quot; <span class="keyword">GROUP</span> <span class="keyword">BY</span> gender</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT COUNT (*) AS count_all, gender
+FROM &quot;students&quot; GROUP BY gender
+</code></pre>
 <h4 id="join"><a href="#join" class="headerlink" title="join"></a>join</h4><p>School 与Clazz是一对多的关系。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:school</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.joins(:school)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span>  <span class="keyword">FROM</span> &quot;clazzes&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;schools&quot;  <span class="keyword">ON</span> &quot;schools&quot;.&quot;id&quot;<span class="operator">=</span>&quot;clazzes&quot;.&quot;school_id&quot;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;clazzes&quot;.*  FROM &quot;clazzes&quot; INNER JOIN &quot;schools&quot;  ON &quot;schools&quot;.&quot;id&quot;=&quot;clazzes&quot;.&quot;school_id&quot;
+</code></pre>
 <p>同样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">School.joins(<span class="symbol">:clazzes</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">School.joins(:clazzes)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span>  <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;clazzes&quot;  <span class="keyword">ON</span> &quot;clazzes&quot;.&quot;school_id&quot;<span class="operator">=</span>&quot;schools&quot;.&quot;id&quot;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;schools&quot;.*  FROM &quot;schools&quot; INNER JOIN &quot;clazzes&quot;  ON &quot;clazzes&quot;.&quot;school_id&quot;=&quot;schools&quot;.&quot;id&quot;
+</code></pre>
 <p>这里joins的参数的单复数很重要，School 与Clazz是一对多的关系，Clazz.joins(:school)，school必须是单数，School.joins(:clazzes)时，clazzes则是复数，即<strong>参数对应的不是表名，而是association names</strong>。</p>
 <p>多对多的joins, 比如找出hello老师所在的所有班级：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.joins(<span class="symbol">:teachers</span>).where(<span class="symbol">teachers:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;hello&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.joins(:teachers).where(teachers: &#123; name: &quot;hello&quot; &#125;)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;teachers&quot; <span class="keyword">ON</span> &quot;teachers&quot;.&quot;clazz_id&quot; <span class="operator">=</span> &quot;clazzes&quot;.&quot;id&quot;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;teacherships&quot; <span class="keyword">ON</span> &quot;teacherships&quot;.&quot;clazz_id&quot; <span class="operator">=</span> &quot;clazzes&quot;.&quot;id&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;teachers&quot; <span class="keyword">ON</span> &quot;teachers&quot;.&quot;id&quot; <span class="operator">=</span> &quot;teacherships&quot;.&quot;teacher_id&quot; <span class="keyword">WHERE</span> &quot;teachers&quot;.&quot;name&quot;<span class="operator">=</span>&quot;hello&quot;</span><br></pre></td></tr></table></figure>
+<pre><code class="sql"> SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot;
 
+ SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;clazz_id&quot; = &quot;clazzes&quot;.&quot;id&quot; INNER JOIN &quot;teachers&quot; ON &quot;teachers&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;teacher_id&quot; WHERE &quot;teachers&quot;.&quot;name&quot;=&quot;hello&quot;
+</code></pre>
 <p>多表连接查询，比如查找 1班 A组的老师：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;1班&quot;</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;A组&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).where(clazzes: &#123; name: &quot;1班&quot; &#125;, groups: &#123; name: &quot;A组&quot; &#125;)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;teachers&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;teachers&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;teacherships&quot; <span class="keyword">ON</span> &quot;teacherships&quot;.&quot;teacher_id&quot; <span class="operator">=</span> &quot;teachers&quot;.&quot;id&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;clazzes&quot; <span class="keyword">ON</span> &quot;clazzes&quot;.&quot;id&quot; <span class="operator">=</span> &quot;teacherships&quot;.&quot;clazz_id&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;groups&quot; <span class="keyword">ON</span> &quot;groups&quot;.&quot;teacher_id&quot; <span class="operator">=</span> &quot;teachers&quot;.&quot;id&quot;</span><br><span class="line"><span class="keyword">WHERE</span> &quot;clazzes&quot;.&quot;name&quot; <span class="operator">=</span> &quot;1班&quot; <span class="keyword">AND</span> &quot;groups&quot;.&quot;name&quot; <span class="operator">=</span> &quot;A组&quot;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot;
+INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot;
+</code></pre>
 <p>嵌套连接nested joins， 比如找出第一中学1班 A组的老师：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Teacher.joins( <span class="symbol">:groups</span>, <span class="symbol">clazzes:</span> [<span class="symbol">:school</span>]).where(<span class="symbol">clazzes:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;1班&quot;</span> &#125;, <span class="symbol">groups:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;A组&quot;</span> &#125;,<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;第一中学&quot;</span> &#125;)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Teacher.joins( :groups, clazzes: [:school]).where(clazzes: &#123; name: &quot;1班&quot; &#125;, groups: &#123; name: &quot;A组&quot; &#125;,schools: &#123; name: &quot;第一中学&quot; &#125;)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;teachers&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;teachers&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;groups&quot; <span class="keyword">ON</span> &quot;teachers&quot;.id <span class="operator">=</span> &quot;groups&quot;.&quot;teacher_id&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;teacherships&quot; <span class="keyword">ON</span> &quot;teacherships&quot;.&quot;teacher_id&quot; <span class="operator">=</span> &quot;teachers&quot;.&quot;id&quot;</span><br><span class="line"><span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;clazzes&quot; <span class="keyword">ON</span> &quot;clazzes&quot;.&quot;id&quot; <span class="operator">=</span> &quot;teacherships&quot;.&quot;clazz_id&quot; <span class="keyword">INNER</span> <span class="keyword">JOIN</span> &quot;schools&quot; <span class="keyword">ON</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">=</span> &quot;clazzes&quot;.&quot;school_id&quot; <span class="keyword">WHERE</span> &quot;clazzes&quot;.&quot;name&quot; <span class="operator">=</span> &quot;1班&quot; <span class="keyword">AND</span> &quot;groups&quot;.&quot;name&quot; <span class="operator">=</span> &quot;A组&quot; <span class="keyword">AND</span> &quot;schools&quot;.&quot;name&quot; <span class="operator">=</span> &quot;第一中学&quot;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot;
+INNER JOIN &quot;groups&quot; ON &quot;teachers&quot;.id = &quot;groups&quot;.&quot;teacher_id&quot;
+INNER JOIN &quot;teacherships&quot; ON &quot;teacherships&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teacherships&quot;.&quot;clazz_id&quot; INNER JOIN &quot;schools&quot; ON &quot;schools&quot;.&quot;id&quot; = &quot;clazzes&quot;.&quot;school_id&quot; WHERE &quot;clazzes&quot;.&quot;name&quot; = &quot;1班&quot; AND &quot;groups&quot;.&quot;name&quot; = &quot;A组&quot; AND &quot;schools&quot;.&quot;name&quot; = &quot;第一中学&quot;
+</code></pre>
 <p>附上一份各种JOIN的差异对比，帮助我自己记忆：P</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1ftrwrp7v1mj30sg0iaac2.jpg"></p>
 <p>图片来源: <a target="_blank" rel="noopener" href="https://blog.jooq.org/2016/07/05/say-no-to-venn-diagrams-when-explaining-joins/">say no to venn digrams when explaining joins</a></p>
 <h4 id="includes"><a href="#includes" class="headerlink" title="includes"></a>includes</h4><p>N+1效能查询的解决方法。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">clazzes = Clazz.includes(<span class="symbol">:school</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">clazzes = Clazz.includes(:school).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; LIMIT <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot;</span><br><span class="line">  <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot;
+  WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+</code></pre>
 <p>这里先找到10个clazz，然后根据这10个clazz查找对应的school， 有重复的school_id则去重复查询。</p>
 <p>类似joins，includes也可以关联多表：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:orders</span>).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.includes(:school, :orders).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; LIMIT <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">IN</span> (<span class="number">617</span>,<span class="number">1604</span>,<span class="number">783</span>,<span class="number">2554</span>,<span class="number">1841</span>,<span class="number">1469</span>,<span class="number">446</span>,<span class="number">2820</span>,<span class="number">1566</span>,<span class="number">2741</span>)</span><br><span class="line"><span class="keyword">SELECT</span> &quot;orders&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;orders&quot; <span class="keyword">WHERE</span> &quot;orders&quot;.&quot;clazz_id&quot; <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (617,1604,783,2554,1841,1469,446,2820,1566,2741)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+</code></pre>
 <p>嵌套includes：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">orders:</span> [<span class="symbol">:product</span>]).limit(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.includes(:school, orders: [:product]).limit(10)
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; LIMIT <span class="number">10</span></span><br><span class="line"><span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">IN</span> (<span class="number">2741</span>,<span class="number">2742</span>，<span class="number">2743</span>，<span class="number">2744</span>)</span><br><span class="line"><span class="keyword">SELECT</span> &quot;orders&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;orders&quot; <span class="keyword">WHERE</span> &quot;orders&quot;.&quot;clazz_id&quot; <span class="keyword">IN</span> (<span class="number">4732</span>,<span class="number">1648</span>,<span class="number">3715</span>,<span class="number">963</span>,<span class="number">278</span>,<span class="number">4525</span>,<span class="number">7096</span>,<span class="number">9064</span>,<span class="number">10299</span>,<span class="number">7980</span>)</span><br><span class="line"><span class="keyword">SELECT</span> &quot;products&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;products&quot; <span class="keyword">WHERE</span> &quot;products&quot;.&quot;id&quot; <span class="keyword">IN</span> (<span class="number">7</span>,<span class="number">4</span>,<span class="number">16</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT 10
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN (2741,2742，2743，2744)
+SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN (4732,1648,3715,963,278,4525,7096,9064,10299,7980)
+SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN (7,4,16)
+</code></pre>
 <p>nested部分，根据clazz的ID，找到对应的order，然后根据order的ID，再找到product，这里可以看成有一层Order.includes(:product)。</p>
 <p>通过explain方法可以很清楚看到SQL的查询步骤【后面会提到】</p>
 <p>上述nested includes，对应的SQL查询步骤：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="operator">=</span><span class="operator">&gt;</span> EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span>  &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; LIMIT $<span class="number">1</span> [[&quot;LIMIT&quot;, <span class="number">10</span>]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.0</span><span class="number">.42</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">10</span> width<span class="operator">=</span><span class="number">99</span>)</span><br><span class="line">   <span class="operator">-</span><span class="operator">&gt;</span>  Seq Scan <span class="keyword">on</span> clazzes  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.399</span><span class="number">.53</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">9553</span> width<span class="operator">=</span><span class="number">99</span>)</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line">EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[&quot;id&quot;, <span class="number">617</span>], [&quot;id&quot;, <span class="number">1604</span>], [&quot;id&quot;, <span class="number">783</span>], [&quot;id&quot;, <span class="number">2554</span>], [&quot;id&quot;, <span class="number">1841</span>], [&quot;id&quot;, <span class="number">1469</span>], [&quot;id&quot;, <span class="number">446</span>], [&quot;id&quot;, <span class="number">2820</span>], [&quot;id&quot;, <span class="number">1566</span>], [&quot;id&quot;, <span class="number">2741</span>]]</span><br><span class="line">                                      QUERY PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq Scan <span class="keyword">on</span> schools  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">10</span> width<span class="operator">=</span><span class="number">141</span>)</span><br><span class="line">   <span class="keyword">Filter</span>: (id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line">EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span> &quot;orders&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;orders&quot; <span class="keyword">WHERE</span> &quot;orders&quot;.&quot;clazz_id&quot; <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[&quot;clazz_id&quot;, <span class="number">4732</span>], [&quot;clazz_id&quot;, <span class="number">1648</span>], [&quot;clazz_id&quot;, <span class="number">3715</span>], [&quot;clazz_id&quot;, <span class="number">963</span>], [&quot;clazz_id&quot;, <span class="number">278</span>], [&quot;clazz_id&quot;, <span class="number">4525</span>], [&quot;clazz_id&quot;, <span class="number">7096</span>], [&quot;clazz_id&quot;, <span class="number">9064</span>], [&quot;clazz_id&quot;, <span class="number">10299</span>], [&quot;clazz_id&quot;, <span class="number">7980</span>]]</span><br><span class="line">                                               QUERY PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------------------------</span></span><br><span class="line"> Bitmap Heap Scan <span class="keyword">on</span> orders  (cost<span class="operator">=</span><span class="number">47.22</span>.<span class="number">.1262</span><span class="number">.09</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">392</span> width<span class="operator">=</span><span class="number">194</span>)</span><br><span class="line">   Recheck Cond: (clazz_id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">   <span class="operator">-</span><span class="operator">&gt;</span>  Bitmap Index Scan <span class="keyword">on</span> index_orders_on_clazz_id  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.47</span><span class="number">.12</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">392</span> width<span class="operator">=</span><span class="number">0</span>)</span><br><span class="line">         Index Cond: (clazz_id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">(<span class="number">4</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line">EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span> &quot;products&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;products&quot; <span class="keyword">WHERE</span> &quot;products&quot;.&quot;id&quot; <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>) [[&quot;id&quot;, <span class="number">7</span>], [&quot;id&quot;, <span class="number">4</span>], [&quot;id&quot;, <span class="number">16</span>]]</span><br><span class="line">                        QUERY PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------</span></span><br><span class="line"> Seq Scan <span class="keyword">on</span> products  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.1</span><span class="number">.62</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">3</span> width<span class="operator">=</span><span class="number">391</span>)</span><br><span class="line">   <span class="keyword">Filter</span>: (id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;7,4,16&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
 
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;orders&quot;.* FROM &quot;orders&quot; WHERE &quot;orders&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                               QUERY PLAN
+--------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on orders  (cost=47.22..1262.09 rows=392 width=194)
+   Recheck Cond: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+   -&gt;  Bitmap Index Scan on index_orders_on_clazz_id  (cost=0.00..47.12 rows=392 width=0)
+         Index Cond: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+(4 rows)
+
+EXPLAIN for: SELECT &quot;products&quot;.* FROM &quot;products&quot; WHERE &quot;products&quot;.&quot;id&quot; IN ($1, $2, $3) [[&quot;id&quot;, 7], [&quot;id&quot;, 4], [&quot;id&quot;, 16]]
+                        QUERY PLAN
+----------------------------------------------------------
+ Seq Scan on products  (cost=0.00..1.62 rows=3 width=391)
+   Filter: (id = ANY (&#39;&#123;7,4,16&#125;&#39;::integer[]))
+(2 rows)
+</code></pre>
 <p>includes后，如果添加where条件，则需要传递一个hash给到where，如果不是hash，则需要使用references强制连接table。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="string">&quot;schools.name =&#x27;第一小学&#x27;&quot;</span>).references(<span class="symbol">:schools</span>)</span><br><span class="line"><span class="comment">## 等同于</span></span><br><span class="line">Clazz.includes(<span class="symbol">:school</span>).where(<span class="symbol">schools:</span> &#123; <span class="symbol">name:</span> <span class="string">&quot;第一小学&quot;</span>&#125;)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.includes(:school).where(&quot;schools.name =&#39;第一小学&#39;&quot;).references(:schools)
+## 等同于
+Clazz.includes(:school).where(schools: &#123; name: &quot;第一小学&quot;&#125;)
+</code></pre>
 <p>注意到includes接受的参数同joins，是association names，而references则是表名。</p>
 <h4 id="counter-cache"><a href="#counter-cache" class="headerlink" title="counter_cache"></a>counter_cache</h4><p>用来快速获取关联计数，假设school model中有teachers_count这个字段，那么：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Teacher</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:school</span>, <span class="symbol">:counter_cache</span> =&gt; <span class="literal">true</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Teacher &lt; ApplicationRecord
+  belongs_to :school, :counter_cache =&gt; true
+end
+</code></pre>
 <p>这样<em>ActiveRecord</em>就会自动更新schools中的teachers_count的值。</p>
 <p>这里counter_cache对应的列名可以自定义，比如说老师和学生之间是一对多的关系，给老师这张表添加一个字段total_students_count ,则可以在student的model中这么设置：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Student</span> &lt; ApplicationRecord</span></span><br><span class="line">  belongs_to <span class="symbol">:teacher</span>, <span class="symbol">counter_cache:</span> <span class="string">&quot;total_students_count&quot;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">class Student &lt; ApplicationRecord
+  belongs_to :teacher, counter_cache: &quot;total_students_count&quot;
+end
+</code></pre>
 <h4 id="find-each"><a href="#find-each" class="headerlink" title="find_each"></a>find_each</h4><p>find_each 分批查询， 默认每次捞出1000条记录。</p>
 <p>有三个参数可以设置：</p>
 <ul>
@@ -486,50 +537,90 @@
 </ul>
 <p><strong>batch_size</strong></p>
 <p>指定每次捞出的数据量。</p>
-<figure class="highlight reasonml"><table><tr><td class="code"><pre><span class="line"><span class="module-access"><span class="module"><span class="identifier">School</span>.</span></span>find<span class="constructor">_each(<span class="params">batch_size</span>: 200)</span> <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>School.find_each(batch_size: 200) do
+end
+</code></pre>
 <p>那么每次则捞出200条记录，对应到SQL中，则是limit的值变成了200。</p>
 <p>默认是按照primary key(id) 升序排序查询结果：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">ORDER</span> <span class="keyword">BY</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">ASC</span> LIMIT <span class="number">200</span></span><br><span class="line"><span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">&gt;</span> <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">ASC</span> LIMIT <span class="number">200</span></span><br><span class="line">……</span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt; 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 200
+……
+</code></pre>
 <p><strong>start</strong></p>
 <p>从哪条记录开始查询， 默认参数是ID。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">School.find_each(start: 200) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">&gt;=</span> <span class="number">200</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">ASC</span> LIMIT <span class="number">1000</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <p><strong>finish</strong></p>
 <p>指定到哪条记录截止， 默认参数是ID。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">School.find_each(<span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">School.find_each(finish: 2000) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">&lt;=</span> <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">ASC</span> LIMIT <span class="number">1000</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <p>start搭配finish：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">School.find_each(<span class="symbol">start:</span> <span class="number">200</span>, <span class="symbol">finish:</span> <span class="number">2000</span>) <span class="keyword">do</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">School.find_each(start: 200, finish: 2000) do
+end
+</code></pre>
 <p>对应的SQL：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SELECT</span>  &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">&gt;=</span> <span class="number">200</span> <span class="keyword">AND</span> &quot;schools&quot;.&quot;id&quot; <span class="operator">&lt;=</span> <span class="number">2000</span> <span class="keyword">ORDER</span> <span class="keyword">BY</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">ASC</span> LIMIT <span class="number">1000</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="sql">SELECT  &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; &gt;= 200 AND &quot;schools&quot;.&quot;id&quot; &lt;= 2000 ORDER BY &quot;schools&quot;.&quot;id&quot; ASC LIMIT 1000
+</code></pre>
 <h4 id="explain方法"><a href="#explain方法" class="headerlink" title="explain方法"></a>explain方法</h4><p>可以用来查看SQL的执行步骤。<br><code>rails c</code>进入console，执行：<code>User.where(id: 1).explain</code>， 会得到如下结果：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">&quot;users&quot;</span>.* FROM <span class="string">&quot;users&quot;</span> WHERE <span class="string">&quot;users&quot;</span>.<span class="string">&quot;id&quot;</span> = <span class="variable">$1</span> [[<span class="string">&quot;id&quot;</span>, <span class="number">1</span>]]</span><br><span class="line">                                QUERY PLAN</span><br><span class="line">--------------------------------------------------------------------------</span><br><span class="line"> Index Scan using users_pkey on users  (cost=<span class="number">0.42</span>..<span class="number">8.44</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   Index <span class="symbol">Cond:</span> (id = <span class="number">1</span>)</span><br><span class="line">(<span class="number">2</span> rows)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;users&quot;.* FROM &quot;users&quot; WHERE &quot;users&quot;.&quot;id&quot; = $1 [[&quot;id&quot;, 1]]
+                                QUERY PLAN
+--------------------------------------------------------------------------
+ Index Scan using users_pkey on users  (cost=0.42..8.44 rows=1 width=387)
+   Index Cond: (id = 1)
+(2 rows)
+</code></pre>
 <p>显示了数据查询的过程，扫描users的index，最后找到id为1的user。</p>
 <p>看一个joins的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Teacher.joins(<span class="symbol">:clazzes</span>, <span class="symbol">:groups</span>).explain</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Teacher.joins(:clazzes, :groups).explain
+</code></pre>
 <p>对应的输出：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">=&gt; EXPLAIN <span class="symbol">for:</span> SELECT <span class="string">&quot;teachers&quot;</span>.* FROM <span class="string">&quot;teachers&quot;</span> INNER JOIN <span class="string">&quot;clazzes&quot;</span> ON <span class="string">&quot;clazzes&quot;</span>.<span class="string">&quot;id&quot;</span> = <span class="string">&quot;teachers&quot;</span>.<span class="string">&quot;clazz_id&quot;</span> INNER JOIN <span class="string">&quot;groups&quot;</span> ON <span class="string">&quot;groups&quot;</span>.<span class="string">&quot;teacher_id&quot;</span> = <span class="string">&quot;teachers&quot;</span>.<span class="string">&quot;id&quot;</span></span><br><span class="line">                                                   QUERY PLAN</span><br><span class="line">------------------------------------------------------------------------------------------</span><br><span class="line"> Nested Loop  (cost=<span class="number">0.99</span>..<span class="number">2382.37</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">   -&gt;  Nested Loop  (cost=<span class="number">0.71</span>..<span class="number">2382.05</span> rows=<span class="number">1</span> width=<span class="number">391</span>)</span><br><span class="line">         -&gt;  Seq Scan on groups  (cost=<span class="number">0.00</span>..<span class="number">6.02</span> rows=<span class="number">302</span> width=<span class="number">4</span>)</span><br><span class="line">         -&gt;  Index Scan using teachers_pkey on teachers  (cost=<span class="number">0.42</span>..<span class="number">7.86</span> rows=<span class="number">1</span> width=<span class="number">387</span>)</span><br><span class="line">               Index <span class="symbol">Cond:</span> (id = groups.teacher_id)</span><br><span class="line">   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=<span class="number">0.29</span>..<span class="number">0.33</span> rows=<span class="number">1</span> width=<span class="number">4</span>)</span><br><span class="line">         Index <span class="symbol">Cond:</span> (id = teacherships.clazz_id)</span><br><span class="line">(<span class="number">7</span> rows)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">=&gt; EXPLAIN for: SELECT &quot;teachers&quot;.* FROM &quot;teachers&quot; INNER JOIN &quot;clazzes&quot; ON &quot;clazzes&quot;.&quot;id&quot; = &quot;teachers&quot;.&quot;clazz_id&quot; INNER JOIN &quot;groups&quot; ON &quot;groups&quot;.&quot;teacher_id&quot; = &quot;teachers&quot;.&quot;id&quot;
+                                                   QUERY PLAN
+------------------------------------------------------------------------------------------
+ Nested Loop  (cost=0.99..2382.37 rows=1 width=387)
+   -&gt;  Nested Loop  (cost=0.71..2382.05 rows=1 width=391)
+         -&gt;  Seq Scan on groups  (cost=0.00..6.02 rows=302 width=4)
+         -&gt;  Index Scan using teachers_pkey on teachers  (cost=0.42..7.86 rows=1 width=387)
+               Index Cond: (id = groups.teacher_id)
+   -&gt;  Index Only Scan using clazzes_pkey on clazzes  (cost=0.29..0.33 rows=1 width=4)
+         Index Cond: (id = teacherships.clazz_id)
+(7 rows)
+</code></pre>
 <p> 看一个includes的例子，多表includes:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Clazz.includes(<span class="symbol">:school</span>, <span class="symbol">:groups</span>).limit(<span class="number">10</span>).explain</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Clazz.includes(:school, :groups).limit(10).explain
+</code></pre>
 <p>对应的输出：</p>
-<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="operator">=</span><span class="operator">&gt;</span> EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span>  &quot;clazzes&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;clazzes&quot; LIMIT $<span class="number">1</span> [[&quot;LIMIT&quot;, <span class="number">10</span>]]</span><br><span class="line">                            QUERY PLAN</span><br><span class="line"><span class="comment">-------------------------------------------------------------------</span></span><br><span class="line"> Limit  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.0</span><span class="number">.42</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">10</span> width<span class="operator">=</span><span class="number">99</span>)</span><br><span class="line">   <span class="operator">-</span><span class="operator">&gt;</span>  Seq Scan <span class="keyword">on</span> clazzes  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.399</span><span class="number">.53</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">9553</span> width<span class="operator">=</span><span class="number">99</span>)</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line">EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span> &quot;schools&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;schools&quot; <span class="keyword">WHERE</span> &quot;schools&quot;.&quot;id&quot; <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[&quot;id&quot;, <span class="number">617</span>], [&quot;id&quot;, <span class="number">1604</span>], [&quot;id&quot;, <span class="number">783</span>], [&quot;id&quot;, <span class="number">2554</span>], [&quot;id&quot;, <span class="number">1841</span>], [&quot;id&quot;, <span class="number">1469</span>], [&quot;id&quot;, <span class="number">446</span>], [&quot;id&quot;, <span class="number">2820</span>], [&quot;id&quot;, <span class="number">1566</span>], [&quot;id&quot;, <span class="number">2741</span>]]</span><br><span class="line">                                      QUERY PLAN</span><br><span class="line"><span class="comment">--------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq Scan <span class="keyword">on</span> schools  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.40</span><span class="number">.53</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">10</span> width<span class="operator">=</span><span class="number">141</span>)</span><br><span class="line">   <span class="keyword">Filter</span>: (id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br><span class="line"></span><br><span class="line">EXPLAIN <span class="keyword">for</span>: <span class="keyword">SELECT</span> &quot;groups&quot;.<span class="operator">*</span> <span class="keyword">FROM</span> &quot;groups&quot; <span class="keyword">WHERE</span> &quot;groups&quot;.&quot;clazz_id&quot; <span class="keyword">IN</span> ($<span class="number">1</span>, $<span class="number">2</span>, $<span class="number">3</span>, $<span class="number">4</span>, $<span class="number">5</span>, $<span class="number">6</span>, $<span class="number">7</span>, $<span class="number">8</span>, $<span class="number">9</span>, $<span class="number">10</span>) [[&quot;clazz_id&quot;, <span class="number">4732</span>], [&quot;clazz_id&quot;, <span class="number">1648</span>], [&quot;clazz_id&quot;, <span class="number">3715</span>], [&quot;clazz_id&quot;, <span class="number">963</span>], [&quot;clazz_id&quot;, <span class="number">278</span>], [&quot;clazz_id&quot;, <span class="number">4525</span>], [&quot;clazz_id&quot;, <span class="number">7096</span>], [&quot;clazz_id&quot;, <span class="number">9064</span>], [&quot;clazz_id&quot;, <span class="number">10299</span>], [&quot;clazz_id&quot;, <span class="number">7980</span>]]</span><br><span class="line">                                          QUERY PLAN</span><br><span class="line"><span class="comment">----------------------------------------------------------------------------------------------</span></span><br><span class="line"> Seq Scan <span class="keyword">on</span> <span class="keyword">groups</span>  (cost<span class="operator">=</span><span class="number">0.00</span>.<span class="number">.9</span><span class="number">.79</span> <span class="keyword">rows</span><span class="operator">=</span><span class="number">14</span> width<span class="operator">=</span><span class="number">36</span>)</span><br><span class="line">   <span class="keyword">Filter</span>: (clazz_id <span class="operator">=</span> <span class="keyword">ANY</span> (<span class="string">&#x27;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#x27;</span>::<span class="type">integer</span>[]))</span><br><span class="line">(<span class="number">2</span> <span class="keyword">rows</span>)</span><br></pre></td></tr></table></figure>
+<pre><code class="sql">=&gt; EXPLAIN for: SELECT  &quot;clazzes&quot;.* FROM &quot;clazzes&quot; LIMIT $1 [[&quot;LIMIT&quot;, 10]]
+                            QUERY PLAN
+-------------------------------------------------------------------
+ Limit  (cost=0.00..0.42 rows=10 width=99)
+   -&gt;  Seq Scan on clazzes  (cost=0.00..399.53 rows=9553 width=99)
+(2 rows)
 
+EXPLAIN for: SELECT &quot;schools&quot;.* FROM &quot;schools&quot; WHERE &quot;schools&quot;.&quot;id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;id&quot;, 617], [&quot;id&quot;, 1604], [&quot;id&quot;, 783], [&quot;id&quot;, 2554], [&quot;id&quot;, 1841], [&quot;id&quot;, 1469], [&quot;id&quot;, 446], [&quot;id&quot;, 2820], [&quot;id&quot;, 1566], [&quot;id&quot;, 2741]]
+                                      QUERY PLAN
+--------------------------------------------------------------------------------------
+ Seq Scan on schools  (cost=0.00..40.53 rows=10 width=141)
+   Filter: (id = ANY (&#39;&#123;617,1604,783,2554,1841,1469,446,2820,1566,2741&#125;&#39;::integer[]))
+(2 rows)
+
+EXPLAIN for: SELECT &quot;groups&quot;.* FROM &quot;groups&quot; WHERE &quot;groups&quot;.&quot;clazz_id&quot; IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) [[&quot;clazz_id&quot;, 4732], [&quot;clazz_id&quot;, 1648], [&quot;clazz_id&quot;, 3715], [&quot;clazz_id&quot;, 963], [&quot;clazz_id&quot;, 278], [&quot;clazz_id&quot;, 4525], [&quot;clazz_id&quot;, 7096], [&quot;clazz_id&quot;, 9064], [&quot;clazz_id&quot;, 10299], [&quot;clazz_id&quot;, 7980]]
+                                          QUERY PLAN
+----------------------------------------------------------------------------------------------
+ Seq Scan on groups  (cost=0.00..9.79 rows=14 width=36)
+   Filter: (clazz_id = ANY (&#39;&#123;4732,1648,3715,963,278,4525,7096,9064,10299,7980&#125;&#39;::integer[]))
+(2 rows)
+</code></pre>
 <p>可以很清楚地看到分开两步，查询到clazz对应的ID后，分别查询了schools和groups，呃，不多说了，太明显了。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://dev.to/eviedently/a-rubyists-guide-to-postgresqls-explain">A Rubyist’s Guide to Postgresql’s Explain</a></p>
 <p><a target="_blank" rel="noopener" href="https://guides.rubyonrails.org/active_record_querying.html">Active Record Query Interface</a></p>
@@ -842,7 +933,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>586 words</span>
+              <span>587 words</span>
             </span>
           
 
@@ -402,16 +402,34 @@
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>现有model issue，需要对issues进行排序，根据指定的ID集合来决定记录的位置，比如id包含在（4, 6, 9）中的纪录就排在前面，剩下的排在后面。</p>
 <p>使用scope进行处理：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">&#x27;CASE&#x27;</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">&quot;WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">&#x27;, &#x27;</span>)&#125;</span>) THEN 0&quot;</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">&#x27;ELSE 1 END&#x27;</span></span><br><span class="line">    order(order_by.join(<span class="string">&#x27; &#x27;</span>))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  .........
+  IDLIST = [4, 6, 9]
+  scope :order_by_custom_id, -&gt; &#123;
+     order_by = [&#39;CASE&#39;]
+    order_by &lt;&lt; &quot;WHEN id in (#&#123;IDLIST.join(&#39;, &#39;)&#125;) THEN 0&quot;
+    order_by &lt;&lt; &#39;ELSE 1 END&#39;
+    order(order_by.join(&#39; &#39;))
+  &#125;
+end
+</code></pre>
 <p>在controller中调用了该scope。刷新页面后，发现服务器报出warning message：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">DEPRECATION <span class="symbol">WARNING:</span> Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): <span class="string">&quot;CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END&quot;</span>. Non-attribute arguments will be disallowed <span class="keyword">in</span> Rails <span class="number">6.0</span>. This method should <span class="keyword">not</span> be called with user-provided values, such as request parameters <span class="keyword">or</span> model attributes. Known-safe values can be passed by wrapping them <span class="keyword">in</span> Arel.sql().</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">DEPRECATION WARNING: Dangerous query method (method whose arguments are used as raw SQL) called with non-attribute argument(s): &quot;CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END&quot;. Non-attribute arguments will be disallowed in Rails 6.0. This method should not be called with user-provided values, such as request parameters or model attributes. Known-safe values can be passed by wrapping them in Arel.sql().
+</code></pre>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>其实，报错信息里面已经告诉我解决方法了，但是当时一看懵逼，Dangerous query method？！直接Google了一堆，后面在slack上跟同事求助了下，搞定！</p>
 <p>很简单，就是使用warning message里面提到的Arel.sql()方法，将<code>CASE WHEN id in (4,6,9) THEN 0 ELSE 1 END</code> 用Arel.sql() 包起来即可。</p>
 <p>修改scope：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Issue</span> &lt; ApplicationRecord</span></span><br><span class="line">  .........</span><br><span class="line">  IDLIST = [<span class="number">4</span>, <span class="number">6</span>, <span class="number">9</span>]</span><br><span class="line">  scope <span class="symbol">:order_by_custom_id</span>, -&gt; &#123;</span><br><span class="line">     order_by = [<span class="string">&#x27;CASE&#x27;</span>]</span><br><span class="line">    order_by &lt;&lt; <span class="string">&quot;WHEN id in (<span class="subst">#&#123;IDLIST.join(<span class="string">&#x27;, &#x27;</span>)&#125;</span>) THEN 0&quot;</span></span><br><span class="line">    order_by &lt;&lt; <span class="string">&#x27;ELSE 1 END&#x27;</span></span><br><span class="line">    order(Arel.sql(order_by.join(<span class="string">&#x27; &#x27;</span>)))</span><br><span class="line">  &#125;</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Issue &lt; ApplicationRecord
+  .........
+  IDLIST = [4, 6, 9]
+  scope :order_by_custom_id, -&gt; &#123;
+     order_by = [&#39;CASE&#39;]
+    order_by &lt;&lt; &quot;WHEN id in (#&#123;IDLIST.join(&#39;, &#39;)&#125;) THEN 0&quot;
+    order_by &lt;&lt; &#39;ELSE 1 END&#39;
+    order(Arel.sql(order_by.join(&#39; &#39;)))
+  &#125;
+end
+</code></pre>
 <p>OK!</p>
 <p>但是，这个Arel.sql(raw_sql)是什么？</p>
 <p>先看看Arel是什么。</p>
@@ -425,8 +443,10 @@
 </blockquote>
 <p>文档里面还列出了很多例子，从简单的select * from users 到复杂点的joins table，我猜是因为我接触Rails的时间不长，反正是从来没用过这东西。</p>
 <p>Arel.sql(raw_sql) 这个类方法的源代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">def <span class="keyword">self</span>.sql raw_sql</span><br><span class="line">  Arel::Nodes::SqlLiteral.new raw_sql</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def self.sql raw_sql
+  Arel::Nodes::SqlLiteral.new raw_sql
+end
+</code></pre>
 <p>也就是新建了一个Arel::Nodes::SqlLiteral实例，而Arel::Nodes::SqlLiteral为什么是安全的呢？用Arel::Nodes::SqlLiteral 把raw_sql包起来的用意是什么？估计也能猜到，防攻击啥的。果然，Google了下，发现说是可以防止<strong>SQL注入</strong>的情况。</p>
 <p>有些复杂了，脑子暂时消化不了。</p>
 <p>此外，文档中有关<a target="_blank" rel="noopener" href="https://www.rubydoc.info/github/rails/rails/ActiveRecord%2FConnectionAdapters%2FDatabaseStatements:sanitize_limit"><strong>sanitize_limit</strong></a> 部分也有提到SQL injection的问题。</p>
@@ -742,7 +762,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

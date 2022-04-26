@@ -404,33 +404,35 @@
 <span id="more"></span> 
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>开发时，在Rails根目录下，运行<code>rake db:create</code>,  报错：</p>
-<figure class="highlight pgsql"><table><tr><td class="code"><pre><span class="line">could <span class="keyword">not</span> <span class="keyword">connect</span> <span class="keyword">to</span> <span class="keyword">server</span>: <span class="keyword">No</span> such file <span class="keyword">or</span> directory</span><br><span class="line">	<span class="keyword">Is</span> the <span class="keyword">server</span> running locally <span class="keyword">and</span> accepting</span><br><span class="line">	connections <span class="keyword">on</span> Unix <span class="keyword">domain</span> socket &quot;/tmp/.s.PGSQL.5432&quot;?</span><br></pre></td></tr></table></figure>
-
+<pre><code>could not connect to server: No such file or directory
+    Is the server running locally and accepting
+    connections on Unix domain socket &quot;/tmp/.s.PGSQL.5432&quot;?
+</code></pre>
 <p>终端输入：<code>psql</code>, 报同样的错。</p>
 <p>开发环境： PostgreSQL 10.0 ， Rails 5.1.4， Ruby 2.3.6， MacOS Sierra 10.12.3</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>在stack overflow上， <a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/13410686/postgres-could-not-connect-to-server">Postgres could not connect to server</a>中给出了这样的解答：</p>
 <p>终端运行：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">rm <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres/postmaster.pid</span><br></pre></td></tr></table></figure>
-
+<pre><code>rm /usr/local/var/postgres/postmaster.pid
+</code></pre>
 <p>原因是：👇</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fq0vpknxz0j30k204xt98.jpg"></p>
 <p>可惜，我运行后出现报错：</p>
-<figure class="highlight gradle"><table><tr><td class="code"><pre><span class="line">rm: <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres/postmaster.pid: No such <span class="keyword">file</span> or directory</span><br></pre></td></tr></table></figure>
-
+<pre><code>rm: /usr/local/var/postgres/postmaster.pid: No such file or directory
+</code></pre>
 <p>后面的<a target="_blank" rel="noopener" href="https://stackoverflow.com/users/1701175/freepender">FreePender</a> 给出了另一个解释，提到这类问题可能是版本升级导致, 并给出了解答。</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tNc79gy1fq0vvxd6itj30kw0al76b.jpg"></p>
 <p>运行：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">postgres -D <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres</span><br></pre></td></tr></table></figure>
-
+<pre><code>postgres -D /usr/local/var/postgres
+</code></pre>
 <p>找到原因了，是版本不兼容问题：</p>
-<figure class="highlight applescript"><table><tr><td class="code"><pre><span class="line">The data directory was initialized <span class="keyword">by</span> PostgreSQL <span class="built_in">version</span> <span class="number">9.6</span>, which <span class="keyword">is</span> <span class="keyword">not</span> compatible <span class="keyword">with</span> this <span class="built_in">version</span> <span class="number">10.0</span>.</span><br></pre></td></tr></table></figure>
-
+<pre><code>The data directory was initialized by PostgreSQL version 9.6, which is not compatible with this version 10.0.
+</code></pre>
 <p>运行：</p>
-<figure class="highlight awk"><table><tr><td class="code"><pre><span class="line">rm -rf <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres &amp;&amp; initdb <span class="regexp">/usr/</span>local<span class="regexp">/var/</span>postgres -E utf8</span><br></pre></td></tr></table></figure>
-
+<pre><code>rm -rf /usr/local/var/postgres &amp;&amp; initdb /usr/local/var/postgres -E utf8
+</code></pre>
 <p>重新<code>bundle</code>, 终端运行：</p>
-<figure class="highlight gauss"><table><tr><td class="code"><pre><span class="line">rake db:<span class="keyword">create</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>rake db:create
+</code></pre>
 <p>Perfect!! 完美解决！</p>
 <p>Thanks to <a target="_blank" rel="noopener" href="https://stackoverflow.com/users/1701175/freepender">FreePender</a>  for this solution.</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/13410686/postgres-could-not-connect-to-server">Postgres could not connect to server</a></p>
@@ -744,7 +746,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

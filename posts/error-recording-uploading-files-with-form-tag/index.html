@@ -404,18 +404,19 @@
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>表单中上传文件时遇到的一个问题：</p>
 <p>正常情况下，上传文件后，传递的params应该是这样：</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;attachments_attributes&quot;</span><span class="operator">=&gt;</span>[&#123;<span class="string">&quot;file&quot;</span><span class="operator">=&gt;</span>#<span class="operator">&lt;</span><span class="type">ActionDispatch</span>::<span class="type">Http</span>::<span class="type">UploadedFile</span>:<span class="number">0x007f9fcd2b4188</span> <span class="meta">@tempfile</span><span class="operator">=</span>#<span class="type">Tempfile</span>:<span class="operator">/</span><span class="keyword">var</span><span class="operator">/</span>folders<span class="operator">/</span>w4<span class="operator">/</span>qw3_jsfs0572hmqcl34v9xx00000gn<span class="operator">/</span><span class="type">T</span><span class="operator">/</span><span class="type">RackMultipart20180918</span><span class="operator">-</span><span class="number">7216</span><span class="operator">-</span>12k5se6.jpg, <span class="meta">@original_filename</span><span class="operator">=</span><span class="string">&quot;sunset.jpg&quot;</span>, <span class="meta">@content_type</span><span class="operator">=</span><span class="string">&quot;image/jpeg&quot;</span>, <span class="meta">@headers</span><span class="operator">=</span><span class="string">&quot;Content-Disposition: form-data; name=&quot;</span>attachments_attributes[file]<span class="string">&quot;; filename=&quot;</span>sunset.jpg<span class="string">&quot;<span class="subst">\r</span><span class="subst">\n</span>Content-Type: image/jpeg<span class="subst">\r</span><span class="subst">\n</span>&quot;</span><span class="operator">&gt;</span>&#125;]</span><br></pre></td></tr></table></figure>
-
+<pre><code>&quot;attachments_attributes&quot;=&gt;[&#123;&quot;file&quot;=&gt;#&lt;ActionDispatch::Http::UploadedFile:0x007f9fcd2b4188 @tempfile=#Tempfile:/var/folders/w4/qw3_jsfs0572hmqcl34v9xx00000gn/T/RackMultipart20180918-7216-12k5se6.jpg, @original_filename=&quot;sunset.jpg&quot;, @content_type=&quot;image/jpeg&quot;, @headers=&quot;Content-Disposition: form-data; name=&quot;attachments_attributes[file]&quot;; filename=&quot;sunset.jpg&quot;\r\nContent-Type: image/jpeg\r\n&quot;&gt;&#125;]
+</code></pre>
 <p>但是我的却是这样：</p>
-<figure class="highlight coq"><table><tr><td class="code"><pre><span class="line"><span class="string">&quot;attachments_attributes&quot;</span>=&gt;[&#123;<span class="string">&quot;file&quot;</span>=&gt; <span class="string">&quot;sunset.jpg&quot;</span>&#125;]</span><br></pre></td></tr></table></figure>
-
+<pre><code>&quot;attachments_attributes&quot;=&gt;[&#123;&quot;file&quot;=&gt; &quot;sunset.jpg&quot;&#125;]
+</code></pre>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>解决方法其实就在ROR文档中。【果然，文档要细细读啊！】</p>
 <p>在<a target="_blank" rel="noopener" href="https://guides.rubyonrails.org/form_helpers.html">action view form helpers</a>中明明白白提到了：</p>
 <p><img src="/var/folders/w4/qw3_jsfs0572hmqcl34v9xx00000gn/T/abnerworks.Typora/image-20180919092904541.png" alt="image-20180919092904541"></p>
 <p>代码中使用了form_tag，如果需要上传文件，必须添加multipart: true。</p>
 <p>当form_tag添加了<code>multipart: true</code> ，等同于：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">form_tag(<span class="string">&#x27;/upload&#x27;</span>, <span class="symbol">multipart:</span> <span class="literal">true</span>)</span><br><span class="line"><span class="comment"># =&gt; &lt;from action =&quot;/upload&quot;, enctype=&quot;multipart/form-data&quot; method=&quot;post&quot;&gt;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">form_tag(&#39;/upload&#39;, multipart: true)
+# =&gt; &lt;from action =&quot;/upload&quot;, enctype=&quot;multipart/form-data&quot; method=&quot;post&quot;&gt;
+</code></pre>
 <p>而当表单中含有上传文件的控件时，必须使用**enctype=”multipart/form-data”**。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://guides.rubyonrails.org/form_helpers.html">action view form helpers</a></p>
 <p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActionView/Helpers/FormTagHelper/form_tag">form_tag</a></p>
@@ -729,7 +730,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

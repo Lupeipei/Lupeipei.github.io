@@ -380,7 +380,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>227 words</span>
+              <span>228 words</span>
             </span>
           
 
@@ -403,19 +403,22 @@
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>Postgresql 10.4.</p>
 <p>现有 table posters， 含 column content_html， content_html 中可能包含类似<code>&lt;td&gt;&amp;nbsp;&lt;/td&gt;</code>的内容。需要移除该column中的出现的non-break space，但该column 关联其他的attribute，不能直接使用replace来修改，需要先找到对应的poster记录，然后一并修改。</p>
 <p>尝试查找对应记录：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Poster.where(<span class="string">&quot;content_html LIKE ?&quot;</span>, <span class="string">&#x27;%&amp;nbsp;%&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Poster.where(&quot;content_html LIKE ?&quot;, &#39;%&amp;nbsp;%&#39;)
+</code></pre>
 <p>无效。</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>Google后尝试：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Poster.where(<span class="string">&quot;content_html LIKE ?&quot;</span>, <span class="string">&quot;%\xc2\xa0%&quot;</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Poster.where(&quot;content_html LIKE ?&quot;, &quot;%\xc2\xa0%&quot;)
+</code></pre>
 <p>看stack overflow上<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/36849886/replacing-nonbreaking-spaces-a0-in-postgres">Replacing nonbreaking spaces (%A0) in Postgres</a>，有人说该方法无效，可能是PG版本问题？PG 10.4是可以的。</p>
 <p>或者改用Unicode characters：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Poster.where(<span class="string">&quot;content_html LIKE ? OR content_html LIKE ?&quot;</span>, <span class="string">&quot;%\u00a0%&quot;</span>, <span class="string">&quot;%\u2002%&quot;</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">Poster.where(&quot;content_html LIKE ? OR content_html LIKE ?&quot;, &quot;%\u00a0%&quot;, &quot;%\u2002%&quot;)
+</code></pre>
 <p>更新时，使用:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">poster.content_html.tr(<span class="string">&quot;%\xc2\xa0%&quot;</span>, <span class="string">&quot; &quot;</span>)</span><br><span class="line"><span class="comment"># or</span></span><br><span class="line">poster.content_html.tr(<span class="string">&quot;%\u00a0%&quot;</span>, <span class="string">&quot; &quot;</span>)</span><br><span class="line">poster.content_html.tr(<span class="string">&quot;%\u2002%&quot;</span>, <span class="string">&quot; &quot;</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">poster.content_html.tr(&quot;%\xc2\xa0%&quot;, &quot; &quot;)
+# or
+poster.content_html.tr(&quot;%\u00a0%&quot;, &quot; &quot;)
+poster.content_html.tr(&quot;%\u2002%&quot;, &quot; &quot;)
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/36849886/replacing-nonbreaking-spaces-a0-in-postgres">Replacing nonbreaking spaces (%A0) in Postgres</a></p>
 <p><a href="%5Bhttp://www.fileformat.info/info/unicode/category/Zs/list.htm%5D(http://www.fileformat.info/info/unicode/category/Zs/list.htm)">Unicode Characters in the ‘Separator, Space’ Category</a></p>
 
@@ -728,7 +731,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

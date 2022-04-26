@@ -409,67 +409,197 @@
 <p>这里只涉及devise如何发送重置密码的邮件。</p>
 <h4 id="准备工作："><a href="#准备工作：" class="headerlink" title="准备工作："></a>准备工作：</h4><p>三个model：</p>
 <p>对应的表结构：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment"># == Schema Information</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># Table name: members</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :integer          not null, primary key</span></span><br><span class="line"><span class="comment">#  user_id    :integer</span></span><br><span class="line"><span class="comment">#  project_id :integer</span></span><br><span class="line"><span class="comment">#  created_at :datetime         not null</span></span><br><span class="line"><span class="comment">#  updated_at :datetime         not null</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: projects</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id         :integer          not null, primary key</span></span><br><span class="line"><span class="comment">#  title      :string</span></span><br><span class="line"><span class="comment">#  created_at :datetime         not null</span></span><br><span class="line"><span class="comment">#  updated_at :datetime         not null</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Table name: users</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment">#  id                     :integer          not null, primary key</span></span><br><span class="line"><span class="comment">#  email                  :string           default(&quot;&quot;), not null</span></span><br><span class="line"><span class="comment">#  encrypted_password     :string           default(&quot;&quot;), not null</span></span><br><span class="line"><span class="comment">#  reset_password_token   :string</span></span><br><span class="line"><span class="comment">#  reset_password_sent_at :datetime</span></span><br><span class="line"><span class="comment">#  remember_created_at    :datetime</span></span><br><span class="line"><span class="comment">#  sign_in_count          :integer          default(0), not null</span></span><br><span class="line"><span class="comment">#  current_sign_in_at     :datetime</span></span><br><span class="line"><span class="comment">#  last_sign_in_at        :datetime</span></span><br><span class="line"><span class="comment">#  current_sign_in_ip     :string</span></span><br><span class="line"><span class="comment">#  last_sign_in_ip        :string</span></span><br><span class="line"><span class="comment">#  created_at             :datetime         not null</span></span><br><span class="line"><span class="comment">#  updated_at             :datetime         not null</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby"># == Schema Information
+#
+# Table name: members
+#
+#  id         :integer          not null, primary key
+#  user_id    :integer
+#  project_id :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
 
+# Table name: projects
+#
+#  id         :integer          not null, primary key
+#  title      :string
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string           default(&quot;&quot;), not null
+#  encrypted_password     :string           default(&quot;&quot;), not null
+#  reset_password_token   :string
+#  reset_password_sent_at :datetime
+#  remember_created_at    :datetime
+#  sign_in_count          :integer          default(0), not null
+#  current_sign_in_at     :datetime
+#  last_sign_in_at        :datetime
+#  current_sign_in_ip     :string
+#  last_sign_in_ip        :string
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+</code></pre>
 <h4 id="解决："><a href="#解决：" class="headerlink" title="解决："></a>解决：</h4><p>使用devise自带的sessions。在<code>routes.rb</code>中做如下修改：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### config/routes.rb</span></span><br><span class="line"></span><br><span class="line">devise_for <span class="symbol">:users</span>, <span class="symbol">path:</span> <span class="string">&quot;&quot;</span>, <span class="symbol">controllers:</span> &#123;</span><br><span class="line">    <span class="symbol">sessions:</span> <span class="string">&quot;sessions&quot;</span></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### config/routes.rb
 
+devise_for :users, path: &quot;&quot;, controllers: &#123;
+    sessions: &quot;sessions&quot;
+  &#125;
+</code></pre>
 <p>新建一个sessionscontroller：<code>rails g controller sessions</code></p>
 <p> 继承<code>Devise::SessionsController</code>.</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/controllers/sessions_controller.rb</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SessionsController</span> &lt; Devise::SessionsController</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/controllers/sessions_controller.rb
 
+class SessionsController &lt; Devise::SessionsController
+end
+</code></pre>
 <p>如果希望root页面就是显示注册的页面，可以在<code>routes.rb</code>中添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### config/routes.rb</span></span><br><span class="line"></span><br><span class="line"> devise_scope <span class="symbol">:user</span> <span class="keyword">do</span></span><br><span class="line">    get <span class="string">&quot;/&quot;</span>, <span class="symbol">controller:</span> <span class="symbol">:sessions</span>, <span class="symbol">action:</span> <span class="symbol">:new</span></span><br><span class="line">  <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### config/routes.rb
 
+ devise_scope :user do
+    get &quot;/&quot;, controller: :sessions, action: :new
+  end
+</code></pre>
 <p>激活账户涉及confirmable模块，使用<code>rails g devise user</code> 创建user时，默认没有confirmable的，需要自己手动添加，请在创建user时，确保含有以下字段：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">t.string   <span class="symbol">:confirmation_token</span></span><br><span class="line">t.datetime <span class="symbol">:confirmed_at</span></span><br><span class="line">t.datetime <span class="symbol">:confirmation_sent_at</span></span><br><span class="line">t.string   <span class="symbol">:unconfirmed_email</span> <span class="comment"># Only if using reconfirmable</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">t.string   :confirmation_token
+t.datetime :confirmed_at
+t.datetime :confirmation_sent_at
+t.string   :unconfirmed_email # Only if using reconfirmable
+</code></pre>
 <p>「如果已经创建，使用rail g migration，给user添加上这些字段，同时迁移数据，给现有用户的confirmed_at赋值，不然无法登录。」</p>
 <p>修改<code>user.rb</code>, 添加上模块：<code>:confirmable</code></p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/user.rb</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">User</span> &lt; ApplicationRecord</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:validatable</span>, <span class="symbol">:recoverable</span>, <span class="symbol">:confirmable</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/user.rb
 
+class User &lt; ApplicationRecord
+  devise :database_authenticatable, :rememberable, :validatable, :recoverable, :confirmable
+  ......
+end
+</code></pre>
 <p>同时在新增成员的表单中，允许输入用户的邮箱，如果邮箱存在，则直接添加该用户到项目成员中，如果邮箱不存在，则给该邮箱发送确认的邮件。</p>
 <p>修改member.rb, 添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/member.rb</span></span><br><span class="line"></span><br><span class="line">arr_accessor <span class="symbol">:email</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/member.rb
 
+arr_accessor :email
+</code></pre>
 <p>这样member的new.html.erb中就可以使用<code>f.input :email</code>，随后在controller的create action中，通过传过来的email来判断用户是否已经存在。修改create中原来的@member.save，改成@member.submit， 在<code>member.rb</code>中添加submit 函数：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/member.rb</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">submit</span><span class="params">(email)</span></span></span><br><span class="line">    password = SecureRandom.hex(<span class="number">4</span>)</span><br><span class="line">    user = User.where(<span class="symbol">email:</span> email).first_or_initialize(<span class="symbol">password:</span> password, <span class="symbol">password_confirmation:</span> password)</span><br><span class="line">    user.save</span><br><span class="line">    <span class="keyword">self</span>.user = user</span><br><span class="line">    <span class="keyword">self</span>.save</span><br><span class="line">    errors.empty?</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">### 这里省略了errors的delegate，如果email是无效的，需要将user的error delegate给member。</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/member.rb
 
+  def submit(email)
+    password = SecureRandom.hex(4)
+    user = User.where(email: email).first_or_initialize(password: password, password_confirmation: password)
+    user.save
+    self.user = user
+    self.save
+    errors.empty?
+  end
+
+### 这里省略了errors的delegate，如果email是无效的，需要将user的error delegate给member。
+</code></pre>
 <p>在members_controller中，修改create action：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#### app/controllers/projects/members_controller.rb</span></span><br><span class="line"></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">    <span class="keyword">if</span> <span class="variable">@member</span>.submit(member_params[<span class="symbol">:email</span>])</span><br><span class="line">      <span class="variable">@user</span> = <span class="variable">@member</span>.user</span><br><span class="line">      <span class="variable">@user</span>.send_activation_instructions <span class="keyword">unless</span> <span class="variable">@user</span>.confirmed?</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">#### app/controllers/projects/members_controller.rb
 
+ def create
+    if @member.submit(member_params[:email])
+      @user = @member.user
+      @user.send_activation_instructions unless @user.confirmed?
+    end
+  end
+</code></pre>
 <p>而对于send_activation_instructions，发送确认邮件的method，可以参考<code>send_devise_notification</code> 在 devise 中的定义：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/authenticatable.rb</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_devise_notification</span><span class="params">(notification, *args)</span></span></span><br><span class="line">  message = devise_mailer.send(notification, <span class="keyword">self</span>, *args)</span><br><span class="line">  <span class="comment"># Remove once we move to Rails 4.2+ only.</span></span><br><span class="line">  <span class="keyword">if</span> message.respond_to?(<span class="symbol">:deliver_now</span>)</span><br><span class="line">    message.deliver_now</span><br><span class="line">  <span class="keyword">else</span></span><br><span class="line">    message.deliver</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/authenticatable.rb
 
+def send_devise_notification(notification, *args)
+  message = devise_mailer.send(notification, self, *args)
+  # Remove once we move to Rails 4.2+ only.
+  if message.respond_to?(:deliver_now)
+    message.deliver_now
+  else
+    message.deliver
+  end
+end
+</code></pre>
 <p>这里<code>message = devise_mailer.send(notification, self, *args)</code>，devise_mailer使用send，调用参数notification传过来的方法名。</p>
 <p>看Devise::Mailer，里面定义了5个methods, 用于发送不同类型的邮件需求:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">#### app/mailers/devise/mailer.rb</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 以下是confirmation_instructions。</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">confirmation_instructions</span><span class="params">(record, token, opts=&#123;&#125;)</span></span></span><br><span class="line">  <span class="variable">@token</span> = token</span><br><span class="line">  devise_mail(record, <span class="symbol">:confirmation_instructions</span>, opts)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">#### app/mailers/devise/mailer.rb
 
+## 以下是confirmation_instructions。
+
+def confirmation_instructions(record, token, opts=&#123;&#125;)
+  @token = token
+  devise_mail(record, :confirmation_instructions, opts)
+end
+
+.......
+</code></pre>
 <p>参考这个，我们可以写出activation_instructions。</p>
 <p>在 user.rb中，定义: send_activation_instructions。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/user.rb</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">send_activation_instructions</span></span></span><br><span class="line">  token = set_reset_password_token <span class="comment">## 生成 reset_password_token,赋给token变量</span></span><br><span class="line">  send_devise_notification(<span class="symbol">:activation_instructions</span>, token, &#123;&#125;)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/user.rb
 
+def send_activation_instructions
+  token = set_reset_password_token ## 生成 reset_password_token,赋给token变量
+  send_devise_notification(:activation_instructions, token, &#123;&#125;)
+end
+</code></pre>
 <p>新增一个mailer： UserMailer，继承 devise_mailer, 定义 activation_instructions。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/mailers/user_mailer.rb</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UserMailer</span> &lt; Devise::Mailer</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">activation_instructions</span><span class="params">(record, token, opts = &#123;&#125;)</span></span></span><br><span class="line">    <span class="variable">@token</span> = token</span><br><span class="line">    devise_mail(record, <span class="symbol">:activation_instructions</span>, opts)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/mailers/user_mailer.rb
 
+class UserMailer &lt; Devise::Mailer
+
+  def activation_instructions(record, token, opts = &#123;&#125;)
+    @token = token
+    devise_mail(record, :activation_instructions, opts)
+  end
+end
+</code></pre>
 <p>修改<code>user.rb</code>，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/user.rb</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">devise_mailer</span></span></span><br><span class="line">  UserMailer</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/models/user.rb
 
+def devise_mailer
+  UserMailer
+end
+</code></pre>
 <p>同时，设置 reconfirmable 为false：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/models/user.rb</span></span><br><span class="line">  devise <span class="symbol">:database_authenticatable</span>, <span class="symbol">:rememberable</span>, <span class="symbol">:trackable</span>, <span class="symbol">:validatable</span>, <span class="symbol">:recoverable</span>, <span class="symbol">:confirmable</span>, <span class="symbol">reconfirmable:</span> <span class="literal">false</span></span><br><span class="line">  ......</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">### app/models/user.rb
+  devise :database_authenticatable, :rememberable, :trackable, :validatable, :recoverable, :confirmable, reconfirmable: false
+  ......
+</code></pre>
 <p>这样在member调用submit时，user.save就不会抛出异常，要求confirm这个账户了。</p>
 <p>在user_mailer的添加activation_instructions.html.erb 文件，文件内容可参考devise的<code>confirmation_instructions.html.erb</code>.</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### app/views/user_mailer/activation_instructions.html.erb</span></span><br><span class="line"></span><br><span class="line">&lt;p&gt;&lt;%= t(<span class="string">&#x27;.greeting&#x27;</span>, <span class="symbol">recipient:</span> <span class="variable">@resource</span>.name) %&gt;&lt;<span class="regexp">/p&gt;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">&lt;p&gt;&lt;%= t(&#x27;.instruction&#x27;) %&gt;&lt;/p</span>&gt;</span><br><span class="line">&lt;p&gt;&lt;%= link_to t(<span class="string">&#x27;.action&#x27;</span>), edit_reset_password_url(<span class="symbol">reset_password_token:</span> <span class="variable">@token</span>) %&gt;&lt;<span class="regexp">/p&gt;</span></span><br><span class="line"><span class="regexp"></span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### app/views/user_mailer/activation_instructions.html.erb
 
+&lt;p&gt;&lt;%= t(&#39;.greeting&#39;, recipient: @resource.name) %&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;%= t(&#39;.instruction&#39;) %&gt;&lt;/p&gt;
+&lt;p&gt;&lt;%= link_to t(&#39;.action&#39;), edit_reset_password_url(reset_password_token: @token) %&gt;&lt;/p&gt;
+</code></pre>
 <p>这里注意把<code>confirmation_instructions.html.erb</code>中，confirmation_url替换成 edit_reset_password_url，因为我们希望的是用户点击这个链接，跳转到密码修改的页面。</p>
 <p>最后，把reset_password这个功能添加进来。</p>
 <ul>
 <li><p>修改routes.rb，跳过devise自带的confirmations和passwords，用reset_password来完成验证邮箱和密码重置的功能，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">### config/routes.rb</span></span><br><span class="line"></span><br><span class="line">  devise_for <span class="symbol">:users</span>, <span class="symbol">path:</span> <span class="string">&quot;&quot;</span>, <span class="symbol">controllers:</span> &#123;</span><br><span class="line">    <span class="symbol">sessions:</span> <span class="string">&quot;sessions&quot;</span></span><br><span class="line">  &#125;, <span class="symbol">skip:</span> [ <span class="symbol">:confirmations</span>, <span class="symbol">:passwords</span> ]</span><br><span class="line"></span><br><span class="line">  devise_scope <span class="symbol">:user</span> <span class="keyword">do</span></span><br><span class="line">    resource <span class="symbol">:reset_password</span></span><br><span class="line">  <span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
-<li><p>新建controller，继承自devise的passwordsController:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ResetPasswordsController</span> &lt; Devise::PasswordsController</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">update</span></span></span><br><span class="line">    <span class="keyword">super</span> <span class="keyword">do</span> <span class="params">|resource|</span></span><br><span class="line">      resource.confirm <span class="keyword">if</span> resource.errors.empty? &amp;&amp; !resource.confirmed?</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">### config/routes.rb
 
+  devise_for :users, path: &quot;&quot;, controllers: &#123;
+    sessions: &quot;sessions&quot;
+  &#125;, skip: [ :confirmations, :passwords ]
+
+  devise_scope :user do
+    resource :reset_password
+  end
+</code></pre>
+</li>
+<li><p>新建controller，继承自devise的passwordsController:</p>
+<pre><code class="ruby">class ResetPasswordsController &lt; Devise::PasswordsController
+
+  def update
+    super do |resource|
+      resource.confirm if resource.errors.empty? &amp;&amp; !resource.confirmed?
+    end
+  end
+end
+</code></pre>
 <p>这里重新定义了update, 调用super时，传递了一个block，如果user 没有confirmed过，同时更新密码成功，就调用confirm。在修改密码的同时，完成了用户的邮箱验证。</p>
 </li>
 <li><p>在app/views/reset_passwords下，添加edit.html.erb，用户收到邮件时，点击“确认我的账户”时，会跳转到该页面，在该页面进行密码重置。具体页面内容，此处略。</p>
@@ -786,7 +916,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

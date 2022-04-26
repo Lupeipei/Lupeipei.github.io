@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>930 words</span>
+              <span>935 words</span>
             </span>
           
 
@@ -415,8 +415,18 @@
 <li>And &amp; But：用来延续之前的steps</li>
 </ul>
 <h4 id="用例"><a href="#用例" class="headerlink" title="用例"></a>用例</h4><p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> user can manually add movie</span><br><span class="line"></span><br><span class="line"><span class="symbol">Scenario:</span> Add a movie</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	When I follow <span class="string">&quot;Add new movie&quot;</span></span><br><span class="line">	Then I should be on the Create New Movie page</span><br><span class="line">	<span class="keyword">when</span> I fill <span class="keyword">in</span> <span class="string">&quot;Title&quot;</span> with <span class="string">&quot;Men In Black&quot;</span></span><br><span class="line">	And I select <span class="string">&quot;PG-13&quot;</span> from <span class="string">&quot;Rating&quot;</span></span><br><span class="line">	And I press <span class="string">&quot;Save changes&quot;</span></span><br><span class="line">	Then I shoud be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">&quot;Men in Black&quot;</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">Feature: user can manually add movie
 
+Scenario: Add a movie
+    Given I am on the RottenPotatoes home page
+    When I follow &quot;Add new movie&quot;
+    Then I should be on the Create New Movie page
+    when I fill in &quot;Title&quot; with &quot;Men In Black&quot;
+    And I select &quot;PG-13&quot; from &quot;Rating&quot;
+    And I press &quot;Save changes&quot;
+    Then I shoud be on the RottenPotatoes home page
+    And I should see &quot;Men in Black&quot;
+</code></pre>
 <p>这里测试一个feature，用户可以手动添加电影，添加的电影会在首页显示，表明添加成功。</p>
 <p>具体的steps是这样的：</p>
 <p>Given：用户在烂番茄主页，<strong>这是precondition</strong></p>
@@ -431,13 +441,48 @@
 <p>再看一个实例，看看如何DRY：P。</p>
 <p>用户在TMDb首页搜索movie，可能出现的两种结果: 搜索到该影片(happy path)，没有搜索到(bad path)</p>
 <p>测试文件长这样：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">&quot;Search TMDb for a movie&quot;</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">&quot;Search Terms&quot;</span> with <span class="string">&quot;Movie that Does Not Exist&quot;</span></span><br><span class="line">	And I press <span class="string">&quot;Search TMDb&quot;</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">&quot;Movie That Does Not Exist&quot;</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	Given I am on the RottenPotatoes home page</span><br><span class="line">	Then I should see <span class="string">&quot;Search TMDb for a movie&quot;</span></span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">&quot;Search Terms&quot;</span> with <span class="string">&quot;Inception&quot;</span></span><br><span class="line">	And I press <span class="string">&quot;Search TMDb&quot;</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">&quot;Inception&quot;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
+    Database(TMDb)
+    As a movie fan
+    so that I can add new movies without manual tedium
+    I want to add movies by looking up their details in TMDb
+Scenario: Try to add nonexistent movie(sad path)
+    Given I am on the RottenPotatoes home page
+    Then I should see &quot;Search TMDb for a movie&quot;
+    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
+Scenario: Try to add nonexistent movie(happy path)
+    Given I am on the RottenPotatoes home page
+    Then I should see &quot;Search TMDb for a movie&quot;
+    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Inception&quot;
+</code></pre>
 <p>其中，sad path ，happy path都有6个 steps，两者的前两个steps是一样的，how to DRY it?</p>
 <p>这里用到<strong>background</strong>，我的理解是background类似于RSpec中的before。</p>
 <p>我们重构一下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="symbol">Feature:</span> User can add movie by searching <span class="keyword">in</span> The Movie</span><br><span class="line">	Database(TMDb)</span><br><span class="line">	As a movie fan</span><br><span class="line">	so that I can add new movies without manual tedium</span><br><span class="line">	I want to add movies by looking up their details <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Background:</span> Start from the Search form on the home page</span><br><span class="line">			Given I am on the RottenPotatoes home page</span><br><span class="line">			Then I should see <span class="string">&quot;Search TMDb for a movie&quot;</span></span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(sad path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">&quot;Search Terms&quot;</span> with <span class="string">&quot;Movie that Does Not Exist&quot;</span></span><br><span class="line">	And I press <span class="string">&quot;Search TMDb&quot;</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">&quot;Movie That Does Not Exist&quot;</span> was <span class="keyword">not</span> found <span class="keyword">in</span> TMDb</span><br><span class="line"><span class="symbol">Scenario:</span> Try to add nonexistent movie(happy path)</span><br><span class="line">	When I fill <span class="keyword">in</span> <span class="string">&quot;Search Terms&quot;</span> with <span class="string">&quot;Inception&quot;</span></span><br><span class="line">	And I press <span class="string">&quot;Search TMDb&quot;</span></span><br><span class="line">	Then I should be on the RottenPotatoes home page</span><br><span class="line">	And I should see <span class="string">&quot;Inception&quot;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Feature: User can add movie by searching in The Movie
+    Database(TMDb)
+    As a movie fan
+    so that I can add new movies without manual tedium
+    I want to add movies by looking up their details in TMDb
+Background: Start from the Search form on the home page
+            Given I am on the RottenPotatoes home page
+            Then I should see &quot;Search TMDb for a movie&quot;
+Scenario: Try to add nonexistent movie(sad path)
+    When I fill in &quot;Search Terms&quot; with &quot;Movie that Does Not Exist&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Movie That Does Not Exist&quot; was not found in TMDb
+Scenario: Try to add nonexistent movie(happy path)
+    When I fill in &quot;Search Terms&quot; with &quot;Inception&quot;
+    And I press &quot;Search TMDb&quot;
+    Then I should be on the RottenPotatoes home page
+    And I should see &quot;Inception&quot;
+</code></pre>
 <p>OK，大功告成。</p>
 
       
@@ -747,7 +792,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

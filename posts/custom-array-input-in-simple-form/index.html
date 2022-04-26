@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>798 words</span>
+              <span>800 words</span>
             </span>
           
 
@@ -407,28 +407,131 @@
 <ul>
 <li><p>新增component array_input</p>
 <p>添加<code>app/inputs/array_input.rb</code>文件，内容如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ArrayInput</span> &lt; SimpleForm::Inputs::<span class="title">Base</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">input</span><span class="params">(wrapper_options = <span class="literal">nil</span>)</span></span></span><br><span class="line">    existing_values = Array(object.public_send(attribute_name))</span><br><span class="line">    template.content_tag(<span class="symbol">:div</span>) <span class="keyword">do</span></span><br><span class="line">      existing_values.map <span class="keyword">do</span> <span class="params">|array_item|</span></span><br><span class="line">        template.concat builder_input_with_remove_btn(array_item)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> existing_values.empty?</span><br><span class="line">        template.concat builder_input_with_remove_btn(<span class="literal">nil</span>)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      template.concat add_item_btn</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">input_html_options</span></span></span><br><span class="line">    <span class="keyword">super</span>.merge(&#123; <span class="class"><span class="keyword">class</span>: &#x27;<span class="title">form</span>-<span class="title">control</span> <span class="title">rounded</span>&#x27;, <span class="title">type</span>: :<span class="title">text</span> &#125;)</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">builder_input_with_remove_btn</span><span class="params">(element)</span></span></span><br><span class="line">    template.content_tag(<span class="symbol">:div</span>, <span class="class"><span class="keyword">class</span>: &#x27;<span class="title">input</span>-<span class="title">group</span> <span class="title">mb</span>-3&#x27;) <span class="title">do</span></span></span><br><span class="line">      template.concat <span class="variable">@builder</span>.text_field(<span class="literal">nil</span>, input_html_options.merge(<span class="symbol">value:</span> element, <span class="symbol">name:</span> <span class="string">&quot;<span class="subst">#&#123;object_name&#125;</span>[<span class="subst">#&#123;attribute_name&#125;</span>][]&quot;</span>))</span><br><span class="line"> 			template.concat remove_item_btn</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">add_item_btn</span></span></span><br><span class="line">    content = <span class="string">&lt;&lt;~HTML</span></span><br><span class="line"><span class="string">      &lt;button type=&quot;button&quot; class=&quot;btn btn-success btn-sm array-add-item&quot;&gt;新增 +&lt;/button&gt;</span></span><br><span class="line"><span class="string">    HTML</span></span><br><span class="line">    content.html_safe</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">remove_item_btn</span></span></span><br><span class="line">    content = <span class="string">&lt;&lt;~HTML</span></span><br><span class="line"><span class="string">    &lt;div class=&quot;input-group-append ml-2&quot;&gt;</span></span><br><span class="line"><span class="string">      &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary btn-sm rounded array-remove-item&quot;&gt;移除 -&lt;/button&gt;</span></span><br><span class="line"><span class="string">    &lt;/div&gt;</span></span><br><span class="line"><span class="string">    HTML</span></span><br><span class="line">    content.html_safe</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">class ArrayInput &lt; SimpleForm::Inputs::Base
+  def input(wrapper_options = nil)
+    existing_values = Array(object.public_send(attribute_name))
+    template.content_tag(:div) do
+      existing_values.map do |array_item|
+        template.concat builder_input_with_remove_btn(array_item)
+      end
 
+      if existing_values.empty?
+        template.concat builder_input_with_remove_btn(nil)
+      end
+
+      template.concat add_item_btn
+    end
+  end
+
+  def input_html_options
+    super.merge(&#123; class: &#39;form-control rounded&#39;, type: :text &#125;)
+  end
+
+  def builder_input_with_remove_btn(element)
+    template.content_tag(:div, class: &#39;input-group mb-3&#39;) do
+      template.concat @builder.text_field(nil, input_html_options.merge(value: element, name: &quot;#&#123;object_name&#125;[#&#123;attribute_name&#125;][]&quot;))
+             template.concat remove_item_btn
+    end
+  end
+
+  def add_item_btn
+    content = &lt;&lt;~HTML
+      &lt;button type=&quot;button&quot; class=&quot;btn btn-success btn-sm array-add-item&quot;&gt;新增 +&lt;/button&gt;
+    HTML
+    content.html_safe
+  end
+
+  def remove_item_btn
+    content = &lt;&lt;~HTML
+    &lt;div class=&quot;input-group-append ml-2&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary btn-sm rounded array-remove-item&quot;&gt;移除 -&lt;/button&gt;
+    &lt;/div&gt;
+    HTML
+    content.html_safe
+  end
+end
+</code></pre>
 <p>这里，需要注意的是，当content 为空时，只会有一行input，此时的移除按钮应该是disabled才合适。</p>
 <p>我这里给出的解决方法有点蠢，直接在build_input_with_remove_btn中，添加了参数来控制，可以看到效果图中，第一个移除按钮是disabled。</p>
 <p>修改builder_input_with_remove_btn 这个method：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## 给 builder_input_with_remove_btn 添加 disabled 参数</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">builder_input_with_remove_btn</span><span class="params">(element, disabled = <span class="literal">false</span>)</span></span></span><br><span class="line">    template.content_tag(<span class="symbol">:div</span>, <span class="class"><span class="keyword">class</span>: &#x27;<span class="title">input</span>-<span class="title">group</span> <span class="title">mb</span>-3&#x27;) <span class="title">do</span></span></span><br><span class="line">      template.concat <span class="variable">@builder</span>.text_field(<span class="literal">nil</span>, input_html_options.merge(<span class="symbol">value:</span> element, <span class="symbol">name:</span> <span class="string">&quot;<span class="subst">#&#123;object_name&#125;</span>[<span class="subst">#&#123;attribute_name&#125;</span>][]&quot;</span>))</span><br><span class="line">      disabled ? template.concat(disabled_remove_item_btn) : template.concat(remove_item_btn)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  </span><br><span class="line"><span class="comment">## 添加新的 disabled_remove_item_btn</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">disabled_remove_item_btn</span></span></span><br><span class="line">    content = <span class="string">&lt;&lt;~HTML</span></span><br><span class="line"><span class="string">    &lt;div class=&quot;input-group-append ml-2&quot;&gt;</span></span><br><span class="line"><span class="string">      &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary btn-sm rounded array-remove-item&quot; disabled&gt;移除 -&lt;/button&gt;</span></span><br><span class="line"><span class="string">    &lt;/div&gt;</span></span><br><span class="line"><span class="string">    HTML</span></span><br><span class="line">    content.html_safe</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">      </span><br><span class="line"><span class="comment">## 修改 input ，调用新的 builder_input_with_remove_btn</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">input</span><span class="params">(wrapper_options = <span class="literal">nil</span>)</span></span></span><br><span class="line">    existing_values = Array(object.public_send(attribute_name))</span><br><span class="line">    template.content_tag(<span class="symbol">:div</span>) <span class="keyword">do</span></span><br><span class="line">      existing_values.each_with_index <span class="keyword">do</span> <span class="params">|array_el, index|</span></span><br><span class="line">        disabled = index.zero? ? <span class="literal">true</span> : <span class="literal">false</span></span><br><span class="line">        template.concat builder_input_with_remove_btn(array_el, disabled)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> existing_values.empty?</span><br><span class="line">        template.concat builder_input_with_remove_btn(<span class="literal">nil</span>, <span class="literal">true</span>)</span><br><span class="line">      <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">      template.concat add_item_btn</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">## 给 builder_input_with_remove_btn 添加 disabled 参数
+    def builder_input_with_remove_btn(element, disabled = false)
+    template.content_tag(:div, class: &#39;input-group mb-3&#39;) do
+      template.concat @builder.text_field(nil, input_html_options.merge(value: element, name: &quot;#&#123;object_name&#125;[#&#123;attribute_name&#125;][]&quot;))
+      disabled ? template.concat(disabled_remove_item_btn) : template.concat(remove_item_btn)
+    end
+  end
+  
+## 添加新的 disabled_remove_item_btn
+  def disabled_remove_item_btn
+    content = &lt;&lt;~HTML
+    &lt;div class=&quot;input-group-append ml-2&quot;&gt;
+      &lt;button type=&quot;button&quot; class=&quot;btn btn-secondary btn-sm rounded array-remove-item&quot; disabled&gt;移除 -&lt;/button&gt;
+    &lt;/div&gt;
+    HTML
+    content.html_safe
+  end
+      
+## 修改 input ，调用新的 builder_input_with_remove_btn
+  def input(wrapper_options = nil)
+    existing_values = Array(object.public_send(attribute_name))
+    template.content_tag(:div) do
+      existing_values.each_with_index do |array_el, index|
+        disabled = index.zero? ? true : false
+        template.concat builder_input_with_remove_btn(array_el, disabled)
+      end
+
+      if existing_values.empty?
+        template.concat builder_input_with_remove_btn(nil, true)
+      end
+
+      template.concat add_item_btn
+    end
+  end
+</code></pre>
+</li>
 <li><p>给移除和新增按钮添加click监听事件</p>
 <p>在app/javascripts中，添加文件<code>src/array_input.jsx</code>:</p>
- <figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> $ <span class="keyword">from</span> <span class="string">&#x27;jquery&#x27;</span>;</span><br><span class="line"></span><br><span class="line">$(<span class="built_in">document</span>).on(<span class="string">&#x27;content:loaded&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">event</span>) </span>&#123;</span><br><span class="line">  $(event.target).find(<span class="string">&#x27;.array-add-item&#x27;</span>).each(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    $(<span class="built_in">this</span>).on(<span class="string">&#x27;click&#x27;</span>, <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">      e.preventDefault()</span><br><span class="line">      <span class="keyword">const</span> inputList = <span class="built_in">this</span>.parentElement.querySelectorAll(<span class="string">&#x27;.input-group&#x27;</span>)</span><br><span class="line">      <span class="keyword">const</span> lastLineField = inputList[inputList.length - <span class="number">1</span>]</span><br><span class="line">      <span class="keyword">const</span> $cloneField = $(lastLineField).clone()</span><br><span class="line">      $cloneField.find(<span class="string">&#x27;input&#x27;</span>).val(<span class="string">&quot;&quot;</span>)</span><br><span class="line">      $cloneField.find(<span class="string">&#x27;button&#x27;</span>).removeAttr(<span class="string">&#x27;disabled&#x27;</span>)</span><br><span class="line">      $(lastLineField).after($cloneField)</span><br><span class="line">    &#125;)</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  $(event.target).on(<span class="string">&#x27;click&#x27;</span>, <span class="string">&#x27;.array-remove-item&#x27;</span>, <span class="function"><span class="params">e</span> =&gt;</span> &#123;</span><br><span class="line">    e.preventDefault()</span><br><span class="line">    e.currentTarget.parentElement.parentElement.remove()</span><br><span class="line">  &#125;)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<pre><code class="javascript">import $ from &#39;jquery&#39;;
 
+$(document).on(&#39;content:loaded&#39;, function(event) &#123;
+ $(event.target).find(&#39;.array-add-item&#39;).each(function() &#123;
+   $(this).on(&#39;click&#39;, e =&gt; &#123;
+     e.preventDefault()
+     const inputList = this.parentElement.querySelectorAll(&#39;.input-group&#39;)
+     const lastLineField = inputList[inputList.length - 1]
+     const $cloneField = $(lastLineField).clone()
+     $cloneField.find(&#39;input&#39;).val(&quot;&quot;)
+     $cloneField.find(&#39;button&#39;).removeAttr(&#39;disabled&#39;)
+     $(lastLineField).after($cloneField)
+   &#125;)
+ &#125;)
+
+ $(event.target).on(&#39;click&#39;, &#39;.array-remove-item&#39;, e =&gt; &#123;
+   e.preventDefault()
+   e.currentTarget.parentElement.parentElement.remove()
+ &#125;)
+&#125;)
+</code></pre>
 <p>这里针对移除按钮的 click 事件，需要使用<code> on(&#39;click&#39;, &#39;.array-remove-item&#39;,e =&gt; &#123;....&#125;)</code>来全局监听，因为新增事件中，clone出来的input-group 并没有将事件监听也一并clone了。「踩过这个坑的都懂」</p>
 <p>在packs/application.js中，引入刚刚新增的文件：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="string">&#x27;../src/array_input.jsx&#x27;</span>;</span><br></pre></td></tr></table></figure></li>
+<pre><code class="javascript">import &#39;../src/array_input.jsx&#39;;
+</code></pre>
+</li>
 <li><p>修改使用content的地方，确保值正确传递</p>
 <p>修改文件的表单部分：</p>
-<figure class="highlight html"><table><tr><td class="code"><pre><span class="line">&lt;%= f.input :content, as: :array %&gt;</span><br></pre></td></tr></table></figure>
-
+<pre><code class="html">&lt;%= f.input :content, as: :array %&gt;
+</code></pre>
 <p>在controller中，针对传过来的params，设定content为array：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">params.<span class="keyword">require</span>(<span class="symbol">:poem</span>).permit(<span class="symbol">:title</span>, <span class="symbol">:dynasty</span>, <span class="symbol">:author</span>, <span class="symbol">content:</span> [])</span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">params.require(:poem).permit(:title, :dynasty, :author, content: [])
+</code></pre>
 <p>在poem.rb中，清除content中的空行：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">before_save <span class="symbol">:remove_blank_item</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">remove_blank_item</span></span></span><br><span class="line">  <span class="keyword">self</span>.content.reject!(&amp;<span class="symbol">:blank?</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="ruby">before_save :remove_blank_item
+def remove_blank_item
+  self.content.reject!(&amp;:blank?)
+end
+</code></pre>
+</li>
 </ul>
 <p>OK，收工。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://tenforward.consulting/blog/integrating-an-array-column-in-rails-with-simple-form">Integrating an array column with Simple Form in Rails</a></p>
@@ -742,7 +845,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

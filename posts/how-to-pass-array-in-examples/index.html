@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>374 words</span>
+              <span>376 words</span>
             </span>
           
 
@@ -403,21 +403,46 @@
 <h4 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h4><p>当你想要在examples中传递一个Array时，要怎么做？直接传递？我们试试。</p>
 <p>背景如下：</p>
 <p>在文件<code>search.feature</code>中，search_terms的数据是一个数组[ ‘chocolate’ , ‘Nigella Lawson’]：</p>
- <figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span></span><br><span class="line">When I search <span class="keyword">for</span> <span class="string">&quot;&lt;search_terms&gt;&quot;</span></span><br><span class="line">Then I should get a list of <span class="string">&quot;&lt;recipe_title&gt;&quot;</span></span><br><span class="line"><span class="symbol">Examples:</span></span><br><span class="line">        <span class="params">| search_terms |</span> recipe_title <span class="params">|</span></span><br><span class="line"><span class="params">        |</span> [ <span class="string">&#x27;chocolate&#x27;</span> , <span class="string">&#x27;Nigella Lawson&#x27;</span>] <span class="params">| White chocolate <span class="keyword">and</span> mintmousse |</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Scenario Outline:
+When I search for &quot;&lt;search_terms&gt;&quot;
+Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
+Examples:
+        | search_terms | recipe_title |
+        | [ &#39;chocolate&#39; , &#39;Nigella Lawson&#39;] | White chocolate and mintmousse |
+</code></pre>
 <p>对应的step文件，如<code>search_step.rb</code>，内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">When(<span class="regexp">/^I search for &quot;([^&quot;]*)&quot;$/</span>) <span class="keyword">do</span> <span class="params">|terms|</span></span><br><span class="line">  search_terms = terms</span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="regexp">/^I should get a list of &quot;([^&quot;]*)&quot;$/</span>) <span class="keyword">do</span> <span class="params">|recipe_title|</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
+  search_terms = terms
+  ......
+end
 
+Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
+  ......
+end
+</code></pre>
 <p>这时如果直接在终端运行cucumber会报错，因为你的search_terms传递的是一个array。</p>
 <p>在 <a target="_blank" rel="noopener" href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315">Cucumber:10316 -  Passing arrays in tables</a>中有位mswinson提到了这个问题，然后有位叫Andy的回复了他。【蛮好玩的，有兴趣的可以看看。】</p>
 <p>解决方法就是<strong>避开Array，传递String，用“，”来区分各个element，然后在step definitions中用<code>split(/, /)</code>将其转换为Array</strong>。</p>
 <p>比如上面的这个例子，可以这么来：</p>
 <p>修改文件<code>search.feature</code>内容：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Scenario <span class="symbol">Outline:</span></span><br><span class="line">When I search <span class="keyword">for</span> <span class="string">&quot;&lt;search_terms&gt;&quot;</span></span><br><span class="line">Then I should get a list of <span class="string">&quot;&lt;recipe_title&gt;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="symbol">Examples:</span></span><br><span class="line">        <span class="params">| search_terms |</span> recipe_title <span class="params">|</span></span><br><span class="line"><span class="params">        |</span> chocolate , Nigella Lawson<span class="params">| White chocolate <span class="keyword">and</span> mintmousse |</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby"> Scenario Outline:
+ When I search for &quot;&lt;search_terms&gt;&quot;
+ Then I should get a list of &quot;&lt;recipe_title&gt;&quot;
 
+ Examples:
+         | search_terms | recipe_title |
+         | chocolate , Nigella Lawson| White chocolate and mintmousse |
+</code></pre>
 <p>在对应的step文件中， 使用<code>search_terms = terms.split(/, /)</code>。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">When(<span class="regexp">/^I search for &quot;([^&quot;]*)&quot;$/</span>) <span class="keyword">do</span> <span class="params">|terms|</span></span><br><span class="line">  search_terms = terms.split(<span class="regexp">/, /</span>) <span class="comment">## 这时search_terms就是一个array了</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">Then(<span class="regexp">/^I should get a list of &quot;([^&quot;]*)&quot;$/</span>) <span class="keyword">do</span> <span class="params">|recipe_title|</span></span><br><span class="line">  ......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">When(/^I search for &quot;([^&quot;]*)&quot;$/) do |terms|
+  search_terms = terms.split(/, /) ## 这时search_terms就是一个array了
+  ......
+end
 
+Then(/^I should get a list of &quot;([^&quot;]*)&quot;$/) do |recipe_title|
+  ......
+end
+</code></pre>
 <p>OK，完成。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="http://thread.gmane.org/gmane.comp.programming.tools.cucumber/9315">Cucumber:10316 -  Passing arrays in tables</a></p>
 <p>嗯，就这么简单，可我还是想把它写出来，硬生生整出了一篇文章来……</p>
@@ -730,7 +755,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

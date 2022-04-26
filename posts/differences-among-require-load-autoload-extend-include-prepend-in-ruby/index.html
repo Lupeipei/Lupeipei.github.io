@@ -381,7 +381,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>1.7k words</span>
+              <span>1.8k words</span>
             </span>
           
 
@@ -417,8 +417,41 @@
 <li>对于load和require，在ruby运行到require／load时，会立马加载文件，而autoload则只有当你调用module或者class时才会加载文件。</li>
 </ul>
 <p>看个例子来感受下三者的不同：【#= &gt; 表示输出结果】</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## module_m.rb</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  puts <span class="string">&#x27;load a module&#x27;</span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> <span class="title">A</span></span></span><br><span class="line">    def <span class="keyword">self</span>.hello</span><br><span class="line">      puts <span class="string">&#x27;hello&#x27;</span></span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## test.rb</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## require ：只加载一次</span></span><br><span class="line">puts <span class="string">&quot;first load: <span class="subst">#&#123;(<span class="keyword">require</span> <span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line">puts <span class="string">&quot;load again: <span class="subst">#&#123;(<span class="keyword">require</span> <span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line"><span class="comment">#= &gt; load a module</span></span><br><span class="line"><span class="comment">#= &gt; first load: true</span></span><br><span class="line"><span class="comment">#= &gt; load again: false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># load ：多次加载</span></span><br><span class="line">puts <span class="string">&quot;first load: <span class="subst">#&#123;(load <span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line">puts <span class="string">&quot;load again: <span class="subst">#&#123;(load <span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line"><span class="comment">#= &gt; load a module</span></span><br><span class="line"><span class="comment">#= &gt; first load: true</span></span><br><span class="line"><span class="comment">#= &gt; load a module</span></span><br><span class="line"><span class="comment">#= &gt; load again: true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># autoload ：调用时才加载</span></span><br><span class="line">puts <span class="string">&quot;first load: <span class="subst">#&#123;autoload(<span class="symbol">:M</span>,<span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line">puts <span class="string">&quot;load again: <span class="subst">#&#123;autoload(<span class="symbol">:M</span>,<span class="string">&#x27;./module_m.rb&#x27;</span>)&#125;</span>&quot;</span></span><br><span class="line">M::A::hello</span><br><span class="line"><span class="comment">#= &gt; first load:</span></span><br><span class="line"><span class="comment">#= &gt; load again:</span></span><br><span class="line"><span class="comment">#= &gt; hello</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">## module_m.rb
+module M
+  puts &#39;load a module&#39;
+  class A
+    def self.hello
+      puts &#39;hello&#39;
+    end
+  end
+end
 
+## test.rb
+
+## require ：只加载一次
+puts &quot;first load: #&#123;(require &#39;./module_m.rb&#39;)&#125;&quot;
+puts &quot;load again: #&#123;(require &#39;./module_m.rb&#39;)&#125;&quot;
+#= &gt; load a module
+#= &gt; first load: true
+#= &gt; load again: false
+
+# load ：多次加载
+puts &quot;first load: #&#123;(load &#39;./module_m.rb&#39;)&#125;&quot;
+puts &quot;load again: #&#123;(load &#39;./module_m.rb&#39;)&#125;&quot;
+#= &gt; load a module
+#= &gt; first load: true
+#= &gt; load a module
+#= &gt; load again: true
+
+# autoload ：调用时才加载
+puts &quot;first load: #&#123;autoload(:M,&#39;./module_m.rb&#39;)&#125;&quot;
+puts &quot;load again: #&#123;autoload(:M,&#39;./module_m.rb&#39;)&#125;&quot;
+M::A::hello
+#= &gt; first load:
+#= &gt; load again:
+#= &gt; hello
+</code></pre>
 <p>不过现在应该很少有rubyist用autoload了。</p>
 <p>2011年，Matz针对 Autoload will be dead，有如下的声明：</p>
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcgy1fpq5qxl950j30dx06iwfp.jpg"></p>
@@ -431,44 +464,177 @@
 <h4 id="include"><a href="#include" class="headerlink" title="include"></a>include</h4><p>当一个类或者模块 include了一个module M时， 则该类或者模块就拥有了该module M的方法。</p>
 <p>当涉及多个类调用同一方法时，这个方法就可以抽离出来，放入module中，然后类只需include该module即可。这样的做法也正体现了DRY原则。</p>
 <p>例如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span>;</span> puts <span class="string">&quot;hello&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">D</span></span></span><br><span class="line">  <span class="keyword">include</span> M</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.new.my_method <span class="comment">#= &gt; hello</span></span><br><span class="line">D.new.my_method <span class="comment">#= &gt; hello</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M
+  def my_method; puts &quot;hello&quot;; end
+end
 
+class C
+  include M
+end
+
+class D
+  include M
+end
+
+C.new.my_method #= &gt; hello
+D.new.my_method #= &gt; hello
+</code></pre>
 <p>include的另一种较常见的用法是<strong>搭配extend</strong>，实现<strong>包含并扩展</strong>类的功能，同时可能还会搭配着钩子方法included。在一些常用gem的源代码中，可以看到这类用法的身影。</p>
 <h4 id="extend"><a href="#extend" class="headerlink" title="extend"></a>extend</h4><p>当一个类或者对象使用extend 时，相当于<strong>打开了该类或者该对象的单件类</strong>，为其添加了单件方法。</p>
 <p>比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_method</span>;</span> puts <span class="string">&quot;hello&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  extend MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = []</span><br><span class="line">obj.extend MyModule</span><br><span class="line"></span><br><span class="line">C.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">C.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br><span class="line"></span><br><span class="line">obj.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">obj.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br></pre></td></tr></table></figure>
-<p>使用include实现同样的效果：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">MyModule</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">a_method</span>;</span> puts <span class="string">&quot;hello&quot;</span>; <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="class"><span class="keyword">class</span> &lt;&lt; self</span></span><br><span class="line">    <span class="keyword">include</span> MyModule</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = []</span><br><span class="line"><span class="class"><span class="keyword">class</span> &lt;&lt; obj</span></span><br><span class="line">  <span class="keyword">include</span> MyModule</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">C.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br><span class="line"></span><br><span class="line">obj.a_method <span class="comment">#= &gt; hello</span></span><br><span class="line">obj.singleton_methods <span class="comment">#= &gt; [:a_method]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module MyModule
+  def a_method; puts &quot;hello&quot;; end
+end
 
+class C
+  extend MyModule
+end
+
+obj = []
+obj.extend MyModule
+
+C.a_method #= &gt; hello
+C.singleton_methods #= &gt; [:a_method]
+
+obj.a_method #= &gt; hello
+obj.singleton_methods #= &gt; [:a_method]
+</code></pre>
+<p>使用include实现同样的效果：</p>
+<pre><code class="Ruby">module MyModule
+  def a_method; puts &quot;hello&quot;; end
+end
+
+class C
+  class &lt;&lt; self
+    include MyModule
+  end
+end
+
+obj = []
+class &lt;&lt; obj
+  include MyModule
+end
+
+C.a_method #= &gt; hello
+C.singleton_methods #= &gt; [:a_method]
+
+obj.a_method #= &gt; hello
+obj.singleton_methods #= &gt; [:a_method]
+</code></pre>
 <h4 id="prepend"><a href="#prepend" class="headerlink" title="prepend"></a>prepend</h4><p>相比include，extend， prepend「Available since Ruby 2」的知名度和使用率要少很多。</p>
 <p>prepend和include很像，当一个类prepend或include 一个模块时，该模块中的方法会成为该类的实例方法。</p>
 <p>二者的区别在于，模块在祖先链中的位置。 使用include时，模块在包含它的类之上。如果是prepend， 则是在prepend它的类之下。而祖先链中位置的不同，决定了方法调用的顺序。</p>
 <p>比如下面这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is module M1&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M2</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is module M2&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  prepend M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is class C&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.ancestors <span class="comment">#=&gt; [M1, C, M2, Object, Kernel, BasicObject]</span></span><br><span class="line"></span><br><span class="line">C.new.hello <span class="comment">#=&gt; hello! this is module M1</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1
+  def hello
+    puts &quot;hello! this is module M1&quot;
+  end
+end
+module M2
+  def hello
+    puts &quot;hello! this is module M2&quot;
+  end
+end
 
+class C
+  prepend M1
+  include M2
+  def hello
+    puts &quot;hello! this is class C&quot;
+  end
+end
+
+C.ancestors #=&gt; [M1, C, M2, Object, Kernel, BasicObject]
+
+C.new.hello #=&gt; hello! this is module M1
+</code></pre>
 <p>这里，祖先链的顺序是M1在最前面，所以即使C中定义了一个method hello， 也不会被调用，因为module M1覆写了这个method。</p>
 <p>从上面的例子也可以看出，prepend是很方便的方法包装器，假定我们想要给class C的hello method添加一些其他的功能实现，则可以这样写：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;add something outside C#hello&quot;</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">...... <span class="comment"># 省略module M2</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  prepend M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is class C&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.new.hello</span><br><span class="line"><span class="comment">#=&gt; add something outside C#hello</span></span><br><span class="line"><span class="comment">#=&gt; hello! this is class C</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">module M1
+  def hello
+    puts &quot;add something outside C#hello&quot;
+    super
+  end
+end
+...... # 省略module M2
+class C
+  prepend M1
+  include M2
+  def hello
+    puts &quot;hello! this is class C&quot;
+  end
+end
 
+C.new.hello
+#=&gt; add something outside C#hello
+#=&gt; hello! this is class C
+</code></pre>
 <p>在module M1中覆写了hello，同时使用了super，调用了C中原来的hello method。</p>
 <h4 id="extend-require-include中，module在祖先链中的差异"><a href="#extend-require-include中，module在祖先链中的差异" class="headerlink" title="extend, require, include中，module在祖先链中的差异"></a>extend, require, include中，module在祖先链中的差异</h4><p>前面已经提到在使用include时，模块在包含它的类之上。如果是prepend， 则是在prepend它的类之下。那么使用extend，模块会出现在哪里？</p>
 <p>根据之前的例子，改编了下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M1</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is module M1::hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M2</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is module M2&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">## 添加 M3</span></span><br><span class="line"><span class="class"><span class="keyword">module</span> <span class="title">M3</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is module M3&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  prepend M1</span><br><span class="line">  <span class="keyword">include</span> M2</span><br><span class="line">  extend M3</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">hello</span></span></span><br><span class="line">    puts <span class="string">&quot;hello! this is C#hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">C.ancestors <span class="comment">#=&gt; [M1, C, M2, Object, Kernel, BasicObject]</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">module M1
+  def hello
+    puts &quot;hello! this is module M1::hello&quot;
+  end
+end
+module M2
+  def hello
+    puts &quot;hello! this is module M2&quot;
+  end
+end
 
+## 添加 M3
+module M3
+  def hello
+    puts &quot;hello! this is module M3&quot;
+  end
+end
+
+class C
+  prepend M1
+  include M2
+  extend M3
+  def hello
+    puts &quot;hello! this is C#hello&quot;
+  end
+end
+
+C.ancestors #=&gt; [M1, C, M2, Object, Kernel, BasicObject]
+</code></pre>
 <p>此时，C的祖先链中并没有出现M3，那么M3在哪里？</p>
 <p>当类extend某个module时，其实是扩展了该类的类方法，所以，可以在该类的单件类的祖先链里面找找。</p>
 <p>承接上面的例子， 查看C单件类的祖先链：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">C.singleton_class.ancestors</span><br><span class="line"><span class="comment">#=&gt; [#&lt;Class:C&gt;, M3, #&lt;Class:Object&gt;,#&lt;Class:BasicObject&gt;,Class, Module, Object, Kernel,BasicObject]</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">C.singleton_class.ancestors
+#=&gt; [#&lt;Class:C&gt;, M3, #&lt;Class:Object&gt;,#&lt;Class:BasicObject&gt;,Class, Module, Object, Kernel,BasicObject]
+</code></pre>
 <p>可以看到，M3在该类的单件类的上方。此时调用C.hello, 会得到</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">C.hello <span class="comment">#=&gt; hello! this is module M3</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="ruby">C.hello #=&gt; hello! this is module M3
+</code></pre>
 <p>当然，如果你在C中定义了类方法hello，则会调用C自定义的这个类方法，比如：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">...... <span class="comment"># 省略module M1 M2 M3</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  ...... <span class="comment"># 同上，省略</span></span><br><span class="line"></span><br><span class="line">  def <span class="keyword">self</span>.hello</span><br><span class="line">    puts <span class="string">&quot;hello! This is C.hello&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.hello <span class="comment">#=&gt; hello! This is C.hello</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">...... # 省略module M1 M2 M3
+class C
+  ...... # 同上，省略
 
+  def self.hello
+    puts &quot;hello! This is C.hello&quot;
+  end
+end
+C.hello #=&gt; hello! This is C.hello
+</code></pre>
 <p>如果想要调用M3中的hello，在C的hello中加上super即可。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">...... <span class="comment"># 省略module M1 M2 M3</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  ...... <span class="comment"># 同上，省略</span></span><br><span class="line"></span><br><span class="line">  def <span class="keyword">self</span>.hello</span><br><span class="line">    puts <span class="string">&quot;hello! This is C.hello&quot;</span></span><br><span class="line">    <span class="keyword">super</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line">C.hello</span><br><span class="line"><span class="comment">#=&gt; hello! This is C.hello</span></span><br><span class="line"><span class="comment">#=&gt; hello! this is module M3</span></span><br></pre></td></tr></table></figure>
+<pre><code class="ruby">...... # 省略module M1 M2 M3
+class C
+  ...... # 同上，省略
 
+  def self.hello
+    puts &quot;hello! This is C.hello&quot;
+    super
+  end
+end
+C.hello
+#=&gt; hello! This is C.hello
+#=&gt; hello! this is module M3
+</code></pre>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://bugs.ruby-lang.org/issues/5653">I strongly discourage the use of autoload in any standard libraries” (Re: autoload will be dead)</a></p>
 <p><a target="_blank" rel="noopener" href="http://web-k.github.io/blog/2012/12/19/ruby-require-load/">About Ruby require / load / autoload / include / extend</a></p>
 <p><a target="_blank" rel="noopener" href="https://ruby-china.org/topics/25706">基础 Ruby 中 Include, Extend, Load, Require 的使用区别</a></p>
@@ -781,7 +947,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

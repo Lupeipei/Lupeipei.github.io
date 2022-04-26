@@ -403,46 +403,102 @@
 <p>现有model project， model member， model user，可以将member看作是user与project之间多对多关系的中间表，现在需要在project新建后，将创建该project的当前用户current_user设为该项目的负责人，也就是在member中新增一条记录。同时在project 的<code>new.html.erb</code>表单中，只有一个name，即项目名称字段。</p>
 <p>如何实现？</p>
 <p>我开始用了极为粗暴简单的方式，在<code>projects_controller.rb</code>的create action中添加了这么一句：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  <span class="variable">@project</span>.save</span><br><span class="line">  Member.create!(<span class="symbol">role:</span> <span class="string">&quot;owner&quot;</span>, <span class="symbol">project:</span> <span class="variable">@project</span>, <span class="symbol">user:</span> current_user)</span><br><span class="line">  respond_with <span class="variable">@project</span>, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def create
+  @project.save
+  Member.create!(role: &quot;owner&quot;, project: @project, user: current_user)
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
 <p>这样功能是实现了，但是这明显不是正确的写法，找不到一点rails的影子，完全新手小白的方式。老大提到了用assign_attributes和accepts_nested_attributes_for来实现。改写了，实现了，踩了点坑。</p>
 <p>记录下assign_attributes的用法，主要是与accepts_nested_attributes_for结合使用，在不依靠表单的情况下，更新数据库。</p>
 <h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes">assign_attributes</a>，既可以更新model所有的attributes，也可以用来更新model的部分attributes。光看没什么感觉，拿个例子练练手。</p>
 <p>有一个model movie，字段name, description, name要求不能为空,同时与user之间存在一对多的关联。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Movie</span> &lt; ApplicationRecord</span></span><br><span class="line">  validates <span class="symbol">:name</span>, <span class="symbol">presence:</span> <span class="literal">true</span></span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span>  </span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Movie &lt; ApplicationRecord
+  validates :name, presence: true
+  belongs_to :user
+end  
+</code></pre>
 <p>进入console试试：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">m = Movie.new</span><br><span class="line"></span><br><span class="line"><span class="comment">### 只更新一部分</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">&quot;before you&quot;</span>)</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">&quot;id&quot;</span>=&gt;nil, <span class="string">&quot;name&quot;</span>=&gt;<span class="string">&quot;before you&quot;</span>, <span class="string">&quot;description&quot;</span>=&gt;nil, <span class="string">&quot;created_at&quot;</span>=&gt;nil, <span class="string">&quot;updated_at&quot;</span>=&gt;nil, <span class="string">&quot;user_id&quot;</span>=&gt;nil&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">### 更新全部并保存</span></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">&quot;before you&quot;</span>, <span class="symbol">description:</span> <span class="string">&quot;it is a love story&quot;</span>, <span class="symbol">user:</span> User.first)</span><br><span class="line">m.save</span><br><span class="line">=&gt; true</span><br><span class="line">m.attributes</span><br><span class="line">=&gt; &#123;<span class="string">&quot;id&quot;</span>=&gt;<span class="number">7</span>, <span class="string">&quot;name&quot;</span>=&gt;<span class="string">&quot;before you&quot;</span>, <span class="string">&quot;description&quot;</span>=&gt;<span class="string">&quot;it is a love story&quot;</span>, <span class="string">&quot;created_at&quot;</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">&quot;updated_at&quot;</span>=&gt;Sat, <span class="number">23</span> Jun <span class="number">2018</span> <span class="number">01</span><span class="symbol">:</span><span class="number">25</span><span class="symbol">:</span><span class="number">15</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">&quot;user_id&quot;</span>=&gt;<span class="number">1</span>&#125;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">m = Movie.new
 
+### 只更新一部分
+m.assign_attributes(name: &quot;before you&quot;)
+m.attributes
+=&gt; &#123;&quot;id&quot;=&gt;nil, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;nil, &quot;created_at&quot;=&gt;nil, &quot;updated_at&quot;=&gt;nil, &quot;user_id&quot;=&gt;nil&#125;
+
+### 更新全部并保存
+m.assign_attributes(name: &quot;before you&quot;, description: &quot;it is a love story&quot;, user: User.first)
+m.save
+=&gt; true
+m.attributes
+=&gt; &#123;&quot;id&quot;=&gt;7, &quot;name&quot;=&gt;&quot;before you&quot;, &quot;description&quot;=&gt;&quot;it is a love story&quot;, &quot;created_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;updated_at&quot;=&gt;Sat, 23 Jun 2018 01:25:15 UTC +00:00, &quot;user_id&quot;=&gt;1&#125;
+</code></pre>
 <p>上面的例子是create，如果要update呢？</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">m = Movie.first</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: &quot;once&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-04 07:55:59&quot;, user_id: 1&gt;</span><br><span class="line"></span><br><span class="line">m.assign_attributes(<span class="symbol">name:</span> <span class="string">&quot;one day&quot;</span>)</span><br><span class="line">m.attributes</span><br><span class="line"></span><br><span class="line">=&gt; &#123;<span class="string">&quot;id&quot;</span>=&gt;<span class="number">4</span>, <span class="string">&quot;name&quot;</span>=&gt;<span class="string">&quot;one day&quot;</span>, <span class="string">&quot;description&quot;</span>=&gt;<span class="string">&quot;Apart but still together&quot;</span>, <span class="string">&quot;created_at&quot;</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">&quot;updated_at&quot;</span>=&gt;Mon, <span class="number">04</span> Jun <span class="number">2018</span> <span class="number">07</span><span class="symbol">:</span><span class="number">55</span><span class="symbol">:</span><span class="number">59</span> UTC +<span class="number">00</span><span class="symbol">:</span><span class="number">00</span>, <span class="string">&quot;user_id&quot;</span>=&gt;<span class="number">1</span>&#125;</span><br><span class="line"></span><br><span class="line">m.save</span><br><span class="line">m</span><br><span class="line">=&gt; #&lt;Movie id: 4, name: &quot;one day&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-23 01:30:41&quot;, user_id: 1&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">m = Movie.first
+=&gt; #&lt;Movie id: 4, name: &quot;once&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-04 07:55:59&quot;, user_id: 1&gt;
 
+m.assign_attributes(name: &quot;one day&quot;)
+m.attributes
+
+=&gt; &#123;&quot;id&quot;=&gt;4, &quot;name&quot;=&gt;&quot;one day&quot;, &quot;description&quot;=&gt;&quot;Apart but still together&quot;, &quot;created_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;updated_at&quot;=&gt;Mon, 04 Jun 2018 07:55:59 UTC +00:00, &quot;user_id&quot;=&gt;1&#125;
+
+m.save
+m
+=&gt; #&lt;Movie id: 4, name: &quot;one day&quot;, description: &quot;Apart but still together&quot;, created_at: &quot;2018-06-04 07:55:59&quot;, updated_at: &quot;2018-06-23 01:30:41&quot;, user_id: 1&gt;
+</code></pre>
 <p>可以看到成功完成了更新！</p>
 <p>这么看，好像没什么，更新和新建而已，但是结合accepts_nested_attributes_for就很cool了。</p>
 <p>下面的例子均以create为导向，不涉及update。</p>
 <h4 id="单个关联下"><a href="#单个关联下" class="headerlink" title="单个关联下"></a>单个关联下</h4><p>assign_attributes中，针对一对一的关联关系，有一个单独的private method，<a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_one_to_one_association">assign_nested_attributes_for_one_to_one_association</a>， private method不能直接调用，用assign_attributes 和accepts_nested_attributes_for也可以实现一样的效果。</p>
 <p>比如有一个model 别名alias , 与user之间是一对一的关系，每次创建alias时，需要关联到user。对应model中的代码如下：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">Class Alias &lt; ActiveRecord::Base</span><br><span class="line">  belongs_to <span class="symbol">:user</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:user</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">Class Alias &lt; ActiveRecord::Base
+  belongs_to :user
+  accepts_nested_attributes_for :user
+end
+</code></pre>
 <p>这样使用assign_attributes，如果alias的user已经存在，则会更新，如果不存在，则新建一个对应的user。这里要注意，不要在user里面添加<code>belongs_to :alias</code>， 这样你在传递user_attribute时，会报错，显示alias必须存在，而此时alias还没有创建成功。</p>
 <p>进入console试试, 在alias未创建前，创建一个user：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">a = Alias.new</span><br><span class="line"></span><br><span class="line">a.assign_attributes(&#123;<span class="symbol">name:</span> <span class="string">&quot;ruby&quot;</span>, <span class="symbol">user_attributes:</span> &#123; <span class="symbol">email:</span> <span class="string">&quot;world@gmail.com&quot;</span>, <span class="symbol">password:</span> <span class="string">&quot;123456&quot;</span>, <span class="symbol">password_confirmation:</span> <span class="string">&quot;123456&quot;</span>&#125;&#125;)</span><br><span class="line"></span><br><span class="line">a.save</span><br><span class="line">=&gt; true</span><br><span class="line">a</span><br><span class="line">=&gt; #&lt;Alias id: 1, name: &quot;ruby&quot;, user_id: 3, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;</span><br><span class="line">a.user</span><br><span class="line">=&gt; #&lt;User id: 3, email: &quot;world@gmail.com&quot;, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">a = Alias.new
 
+a.assign_attributes(&#123;name: &quot;ruby&quot;, user_attributes: &#123; email: &quot;world@gmail.com&quot;, password: &quot;123456&quot;, password_confirmation: &quot;123456&quot;&#125;&#125;)
+
+a.save
+=&gt; true
+a
+=&gt; #&lt;Alias id: 1, name: &quot;ruby&quot;, user_id: 3, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+a.user
+=&gt; #&lt;User id: 3, email: &quot;world@gmail.com&quot;, created_at: &quot;2018-06-23 02:33:23&quot;, updated_at: &quot;2018-06-23 02:33:23&quot;&gt;
+</code></pre>
 <p>可以看到user已经创建完成！</p>
 <p>不过我觉得这种情况，多半是你需要新建一个默认的user，因为参数的值是你传递过去的，已经定义好了，而不是像页面的表单那样。这个方法的好处在于，你不需要在页面表单中添加user部分，让用户选择，直接在创建alias时就与user建立起了关联。</p>
 <h4 id="多关联下"><a href="#多关联下" class="headerlink" title="多关联下"></a>多关联下</h4><p>如同一对一关联中，一对多关系下，也有一个private method：<a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/NestedAttributes/assign_nested_attributes_for_collection_association">assign_nested_attributes_for_collection_association</a>。 官方给到的例子是这样的：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, &#123;</span><br><span class="line">  <span class="string">&#x27;1&#x27;</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">&#x27;1&#x27;</span>, <span class="symbol">name:</span> <span class="string">&#x27;Peter&#x27;</span> &#125;,</span><br><span class="line">  <span class="string">&#x27;2&#x27;</span> =&gt; &#123; <span class="symbol">name:</span> <span class="string">&#x27;John&#x27;</span> &#125;,</span><br><span class="line">  <span class="string">&#x27;3&#x27;</span> =&gt; &#123; <span class="symbol">id:</span> <span class="string">&#x27;2&#x27;</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, &#123;
+  &#39;1&#39; =&gt; &#123; id: &#39;1&#39;, name: &#39;Peter&#39; &#125;,
+  &#39;2&#39; =&gt; &#123; name: &#39;John&#39; &#125;,
+  &#39;3&#39; =&gt; &#123; id: &#39;2&#39;, _destroy: true &#125;
+&#125;)
+</code></pre>
 <p>People 是复数，这里传递的参数是一个hash，可以看出传了三条记录。如果用assign_attributes怎么实现呢？我这里直接用背景中那个问题来举例。【啧啧，在背景里卖关子没给到解答，悄悄把解答放在了这里。】</p>
 <p>在<code>project.rb</code>中，添加<code>accepts_nested_attributes_for :members</code>:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Project</span> &lt; ApplicationRecord</span></span><br><span class="line">  has_many <span class="symbol">:members</span>, <span class="symbol">dependent:</span> <span class="symbol">:destroy</span></span><br><span class="line">  accepts_nested_attributes_for <span class="symbol">:members</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Project &lt; ApplicationRecord
+  has_many :members, dependent: :destroy
+  accepts_nested_attributes_for :members
+end
+</code></pre>
 <p>这样，我们可以修改controller中的action create了, 在save之前进行assign_attributes:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">create</span></span></span><br><span class="line">  <span class="variable">@project</span>.assign_attributes(<span class="symbol">members_attributes:</span> [ &#123; <span class="symbol">role:</span> <span class="string">&quot;owner&quot;</span>, <span class="symbol">project:</span> <span class="variable">@project</span>, <span class="symbol">user:</span> current_user &#125; ])</span><br><span class="line">  <span class="variable">@project</span>.save</span><br><span class="line">  respond_with <span class="variable">@project</span>, <span class="symbol">location:</span> ok_url_or_default(Project)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">def create
+  @project.assign_attributes(members_attributes: [ &#123; role: &quot;owner&quot;, project: @project, user: current_user &#125; ])
+  @project.save
+  respond_with @project, location: ok_url_or_default(Project)
+end
+</code></pre>
 <p>踩坑的地方就在于members_attributes后面传递的是一个Array数组<code>[ &#123; role: &quot;owner&quot;, project: @project, user: current_user &#125; ]</code>，数组里面的元素才是Hash。启发来自于文档中的这个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">assign_nested_attributes_for_collection_association(<span class="symbol">:people</span>, [</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">&#x27;1&#x27;</span>, <span class="symbol">name:</span> <span class="string">&#x27;Peter&#x27;</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">name:</span> <span class="string">&#x27;John&#x27;</span> &#125;,</span><br><span class="line">  &#123; <span class="symbol">id:</span> <span class="string">&#x27;2&#x27;</span>, <span class="symbol">_destroy:</span> <span class="literal">true</span> &#125;</span><br><span class="line">])</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">assign_nested_attributes_for_collection_association(:people, [
+  &#123; id: &#39;1&#39;, name: &#39;Peter&#39; &#125;,
+  &#123; name: &#39;John&#39; &#125;,
+  &#123; id: &#39;2&#39;, _destroy: true &#125;
+])
+</code></pre>
 <p>OK！</p>
 <p>BTW，还有一个类似assign_attributes的method，update_attributes，官方没有给到例子，可以参考这篇文章<a target="_blank" rel="noopener" href="https://maori.geek.nz/accepts-nested-attributes-for-is-creating-new-records-gotcha-b060665f43ed">accepts_nested_attributes_for is Creating New Records; Gotcha!</a>，感觉跟assign_attributes还是很像的。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://apidock.com/rails/ActiveRecord/AttributeAssignment/assign_attributes">assign_attributes</a></p>
@@ -759,7 +815,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

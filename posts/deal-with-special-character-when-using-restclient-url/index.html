@@ -478,25 +478,28 @@
 <p><strong>小案例：从一个中文字符的处理开始</strong></p>
 <p>restclient中，如果URL含有中文等非英文的特殊字符， 只需要使用<strong>URI::encode</strong>即可。比如下面这个例子：</p>
 <p>网址是 <a target="_blank" rel="noopener" href="http://example.com,/">http://example.com，</a> 用户输入关键字“伊丽莎白好乖滴 ”查询：</p>
-<figure class="highlight qml"><table><tr><td class="code"><pre><span class="line"><span class="built_in">url</span> = <span class="string">&#x27;http://example.com/search?keyword=伊丽莎白好乖滴&#x27;</span></span><br><span class="line">RestClient.get(<span class="built_in">url</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code>url = &#39;http://example.com/search?keyword=伊丽莎白好乖滴&#39;
+RestClient.get(url)
+</code></pre>
 <p>这里，使用restclient发出get请求，会出现URI::InvalidURIError 的错误.</p>
 <p>正确的打开方式可以像这样：</p>
- <figure class="highlight qml"><table><tr><td class="code"><pre><span class="line"><span class="built_in">require</span> <span class="string">&#x27;addressable/uri&#x27;</span></span><br><span class="line"><span class="built_in">url</span> = <span class="string">&#x27;http://example.com/search?keyword=伊丽莎白好乖滴&#x27;</span></span><br><span class="line">RestClient.get(<span class="attribute">URI</span>::encode(<span class="built_in">url</span>))</span><br></pre></td></tr></table></figure>
-
+<pre><code>require &#39;addressable/uri&#39;
+url = &#39;http://example.com/search?keyword=伊丽莎白好乖滴&#39;
+RestClient.get(URI::encode(url))
+</code></pre>
 <p>这样，url中的中文字符会转化为下面这样的ascii码。</p>
-<figure class="highlight llvm"><table><tr><td class="code"><pre><span class="line"><span class="symbol">http:</span>//example.com/search?keyword<span class="operator">=</span><span class="variable">%E4</span><span class="variable">%BC</span><span class="variable">%8</span>A<span class="variable">%E4</span><span class="variable">%B8</span><span class="variable">%BD</span><span class="variable">%E8</span><span class="variable">%8</span>E<span class="variable">%8</span>E<span class="variable">%E7</span><span class="variable">%99</span><span class="variable">%BD</span><span class="variable">%E5</span><span class="variable">%A5</span><span class="variable">%BD</span><span class="variable">%E4</span><span class="variable">%B9</span><span class="variable">%96</span><span class="variable">%E6</span><span class="variable">%BB</span><span class="variable">%B4</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>http://example.com/search?keyword=%E4%BC%8A%E4%B8%BD%E8%8E%8E%E7%99%BD%E5%A5%BD%E4%B9%96%E6%BB%B4
+</code></pre>
 <p><strong>特别加餐：传递给参数的值中，含有&amp;等特殊字符</strong></p>
 <p>需要特别提一句的是，如果你的URL是这样的：</p>
-<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">url</span> = <span class="string">&#x27;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code>url = &#39;http://example.com/search?keyword=XXX&amp;city=shanghai&amp;type=food&#39;
+</code></pre>
 <p>而你希望将<code>&amp;s</code>传递给keyword， 使用URI::encode时，会是这样：</p>
-<figure class="highlight sas"><table><tr><td class="code"><pre><span class="line">http://example.com/search?keyword=<span class="variable">&amp;s</span><span class="variable">&amp;city</span>=shanghai<span class="variable">&amp;type</span>=food</span><br></pre></td></tr></table></figure>
-
+<pre><code>http://example.com/search?keyword=&amp;s&amp;city=shanghai&amp;type=food
+</code></pre>
 <p>这里，因为URL中传递参数时，是用”&amp;”符号隔开的，所以rest client识别的时候，会认为keyword这个参数并没有赋值， 而<code>&amp;s</code>中，s表示另一个参数, 且没有赋值，这样，发出请求后会报错，这种情况如何解决？做这样的处理:</p>
-<figure class="highlight css"><table><tr><td class="code"><pre><span class="line">URI::<span class="built_in">encode</span>(url).<span class="built_in">sub</span>(<span class="string">&quot;&amp;&quot;</span>, <span class="string">&quot;%26&quot;</span>)</span><br></pre></td></tr></table></figure>
-
+<pre><code>URI::encode(url).sub(&quot;&amp;&quot;, &quot;%26&quot;)
+</code></pre>
 <p>encode后，将第一个&amp;, 也就是<code>&amp;s</code>转变为”%26s”, 再传递给RestClient。</p>
 <p>这里你可能想要问，为什么不直接传递”%26s”？</p>
 <p>问得好！如果直接将”%26s”传递给keyword，经过URI::encode之后，keyword接收到的就会是：“%2526s”， why？Cause it will encode “%” to “%25”。</p>
@@ -811,7 +814,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

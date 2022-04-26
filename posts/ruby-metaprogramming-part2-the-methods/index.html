@@ -404,55 +404,159 @@
 <p>整章看下来，最大的感触就是重构后的代码真的是清爽啊。dynamic methods和ghost methods简直就是化繁为简的利器。</p>
 <p>先来看段代码。</p>
 <h4 id="一段需要重构的代码"><a href="#一段需要重构的代码" class="headerlink" title="一段需要重构的代码"></a>一段需要重构的代码</h4><p>引用书中的例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    <span class="variable">@id</span> = computer_id</span><br><span class="line">    <span class="variable">@data_source</span> = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">mouse</span></span></span><br><span class="line">    info = <span class="variable">@data_source</span>.get_mouse_info(<span class="variable">@id</span>)</span><br><span class="line">    price = <span class="variable">@data_source</span>.get_mouse_price(<span class="variable">@id</span>)</span><br><span class="line">    result = <span class="string">&quot;Mouse: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;<span class="subst">#&#123;result&#125;</span>&quot;</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cpu</span></span></span><br><span class="line">    info = <span class="variable">@data_source</span>.get_cpu_info(<span class="variable">@id</span>)</span><br><span class="line">    price = <span class="variable">@data_source</span>.get_cpu_price(<span class="variable">@id</span>)</span><br><span class="line">    result = <span class="string">&quot;Cpu: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;<span class="subst">#&#123;result&#125;</span>&quot;</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">keyboard</span></span></span><br><span class="line">    info = <span class="variable">@data_source</span>.get_keyboard_info(<span class="variable">@id</span>)</span><br><span class="line">    price = <span class="variable">@data_source</span>.get_keyboard_price(<span class="variable">@id</span>)</span><br><span class="line">    result = <span class="string">&quot;Keyboard: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;<span class="subst">#&#123;result&#125;</span>&quot;</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Computer
 
+  def initialize(computer_id, data_source)
+    @id = computer_id
+    @data_source = data_source # data_source是一个对象
+  end
+
+  def mouse
+    info = @data_source.get_mouse_info(@id)
+    price = @data_source.get_mouse_price(@id)
+    result = &quot;Mouse: #&#123;info&#125;($#&#123;price&#125;)&quot;
+    return &quot;#&#123;result&#125;&quot; if price &gt;= 100
+    result
+  end
+
+  def cpu
+    info = @data_source.get_cpu_info(@id)
+    price = @data_source.get_cpu_price(@id)
+    result = &quot;Cpu: #&#123;info&#125;($#&#123;price&#125;)&quot;
+    return &quot;#&#123;result&#125;&quot; if price &gt;= 100
+    result
+  end
+
+  def keyboard
+    info = @data_source.get_keyboard_info(@id)
+    price = @data_source.get_keyboard_price(@id)
+    result = &quot;Keyboard: #&#123;info&#125;($#&#123;price&#125;)&quot;
+    return &quot;#&#123;result&#125;&quot; if price &gt;= 100
+    result
+  end
+
+end
+</code></pre>
 <p>这段代码中，class Computer有三个method，且每个method的代码有很多共通的部分。如何解决这种代码繁复的问题？</p>
 <p>解决方法就在dynamic methods和ghost methods。</p>
 <h4 id="动态方法dynamic-methods"><a href="#动态方法dynamic-methods" class="headerlink" title="动态方法dynamic methods"></a>动态方法dynamic methods</h4><p>先来看看用动态方法如何重构上诉代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    <span class="variable">@id</span> = computer_id</span><br><span class="line">    <span class="variable">@data_source</span> = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">    <span class="variable">@data_source</span>.methods.grep(<span class="regexp">/^get_(.*)_info$/</span>)</span><br><span class="line">    &#123;Computer.define_component <span class="variable">$1</span>&#125;</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  def <span class="keyword">self</span>.define_component(name)</span><br><span class="line">    define_method(name) <span class="keyword">do</span></span><br><span class="line">      info = <span class="variable">@data_source</span>.send <span class="string">&quot;get_<span class="subst">#&#123;name&#125;</span>_info&quot;</span>, <span class="variable">@id</span></span><br><span class="line">      price = <span class="variable">@data_source</span>.send <span class="string">&quot;get_<span class="subst">#&#123;name&#125;</span>_price&quot;</span>, <span class="variable">@id</span></span><br><span class="line">      result = <span class="string">&quot;<span class="subst">#&#123;name.capitalize&#125;</span>: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)&quot;</span></span><br><span class="line">      <span class="keyword">return</span> <span class="string">&quot;<span class="subst">#&#123;result&#125;</span>&quot;</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">      result</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Computer
 
+  def initialize(computer_id, data_source)
+    @id = computer_id
+    @data_source = data_source # data_source是一个对象
+    @data_source.methods.grep(/^get_(.*)_info$/)
+    &#123;Computer.define_component $1&#125;
+  end
+
+  def self.define_component(name)
+    define_method(name) do
+      info = @data_source.send &quot;get_#&#123;name&#125;_info&quot;, @id
+      price = @data_source.send &quot;get_#&#123;name&#125;_price&quot;, @id
+      result = &quot;#&#123;name.capitalize&#125;: #&#123;info&#125;($#&#123;price&#125;)&quot;
+      return &quot;#&#123;result&#125;&quot; if price &gt;= 100
+      result
+    end
+  end
+
+end
+</code></pre>
 <p>这里使用了内省，即调用methods得到@data_source中所有匹配<code>/^get_(.*)_info$/</code>的methods，使用$1来保存，然后调用类方法define_component。而在类方法define_component中，则使用了动态方法，其中，define_method是定义动态方法，而send则是动态派发。</p>
 <p>方法无非就是定义加调用，动态方法跟普通方法并没有什么大的区别。</p>
 <ul>
 <li><p>定义动态方法</p>
 <p>用define_method来定义动态方法。看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  define_method <span class="symbol">:my_method</span> <span class="keyword">do</span> <span class="params">|x, y|</span></span><br><span class="line">    x + x * y</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = MyClass.new</span><br><span class="line">obj.send(<span class="symbol">:my_method</span>,<span class="number">1</span>,<span class="number">2</span>) <span class="comment"># =&gt; 3</span></span><br><span class="line">obj.my_method(<span class="number">1</span>,<span class="number">2</span>) <span class="comment"># =&gt; 3</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class MyClass
+  define_method :my_method do |x, y|
+    x + x * y
+  end
+end
 
+obj = MyClass.new
+obj.send(:my_method,1,2) # =&gt; 3
+obj.my_method(1,2) # =&gt; 3
+</code></pre>
 <p>方法的定义由常规的def关键字变成了define_method关键字, 其他并没有什么变化。方法名作为参数，外加一个代码块block。我的理解是，它的灵活性与send其实很一致，就在于方法名是参数，可以动态定义方法。</p>
 </li>
 <li><p>调用动态方法</p>
 <p>调用一个方法实际上是给对象发送一条信息。</p>
 <p>send是Object的一个实例方法，第一个参数是方法的名字，由于方法名最好是不可修改的，所以通常是以符号的形式传递，剩下的，则是需要传递给方法的参数，可含代码块。</p>
 <p>看个例子：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">my_method</span><span class="params">(x,y)</span></span></span><br><span class="line">    x + <span class="keyword">yield</span>(x,y)</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">obj = MyClass.new</span><br><span class="line">obj.send(<span class="symbol">:my_method</span>,<span class="number">1</span>,<span class="number">2</span>)&#123;<span class="params">|x, y|</span> x * y&#125; <span class="comment"># =&gt; 3</span></span><br><span class="line">obj.my_method(<span class="number">1</span>,<span class="number">2</span>) &#123;<span class="params">|x, y|</span> x * y&#125; <span class="comment"># =&gt; 3</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class MyClass
+  def my_method(x,y)
+    x + yield(x,y)
+  end
+end
 
+obj = MyClass.new
+obj.send(:my_method,1,2)&#123;|x, y| x * y&#125; # =&gt; 3
+obj.my_method(1,2) &#123;|x, y| x * y&#125; # =&gt; 3
+</code></pre>
 <p>使用send调用my_method， 和使用.my_method的调用是一样的。</p>
 <p>那么使用send的意义在哪里？因为方法名成了参数，所以在代码运行中，可以决定调用哪个方法，上面重构后的代码便是如此，根据name的值，来决定需要调用哪个method。</p>
 </li>
 </ul>
 <h4 id="幽灵方法-ghost-methods"><a href="#幽灵方法-ghost-methods" class="headerlink" title="幽灵方法 ghost methods"></a>幽灵方法 ghost methods</h4><p>见到了大名鼎鼎的method_missing了。</p>
 <p>先看用幽灵方法重构Computer类的结果：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span> &lt; BasicObject</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">initialize</span><span class="params">(computer_id, data_source)</span></span></span><br><span class="line">    <span class="variable">@id</span> = computer_id</span><br><span class="line">    <span class="variable">@data_source</span> = data_source <span class="comment"># data_source是一个对象</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    <span class="keyword">super</span> <span class="keyword">if</span> !<span class="variable">@data_source</span>.respond_to?(<span class="string">&quot;get_<span class="subst">#&#123;name&#125;</span>_info&quot;</span>)</span><br><span class="line">    info = <span class="variable">@data_source</span>.send <span class="string">&quot;get_<span class="subst">#&#123;name&#125;</span>_info&quot;</span>, <span class="variable">@id</span></span><br><span class="line">    price = <span class="variable">@data_source</span>.send <span class="string">&quot;get_<span class="subst">#&#123;name&#125;</span>_price&quot;</span>, <span class="variable">@id</span></span><br><span class="line">    result = <span class="string">&quot;<span class="subst">#&#123;name.capitalize&#125;</span>: <span class="subst">#&#123;info&#125;</span>($<span class="subst">#&#123;price&#125;</span>)&quot;</span></span><br><span class="line">    <span class="keyword">return</span> <span class="string">&quot;<span class="subst">#&#123;result&#125;</span>&quot;</span> <span class="keyword">if</span> price &gt;= <span class="number">100</span></span><br><span class="line">    result</span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class Computer &lt; BasicObject
 
+  def initialize(computer_id, data_source)
+    @id = computer_id
+    @data_source = data_source # data_source是一个对象
+  end
+
+  def method_missing(name, *args)
+    super if !@data_source.respond_to?(&quot;get_#&#123;name&#125;_info&quot;)
+    info = @data_source.send &quot;get_#&#123;name&#125;_info&quot;, @id
+    price = @data_source.send &quot;get_#&#123;name&#125;_price&quot;, @id
+    result = &quot;#&#123;name.capitalize&#125;: #&#123;info&#125;($#&#123;price&#125;)&quot;
+    return &quot;#&#123;result&#125;&quot; if price &gt;= 100
+    result
+  end
+
+end
+</code></pre>
 <p>这里，注意到<strong>Computer继承自BasicObject</strong>，而不是默认的Object，这是为了避开method_missing的一个陷阱，而选择了BasicObject这个白板类（blank slates）【白板类：拥有极少方法的类】，这块留在陷阱部分说。</p>
 <p>可以看到method_missing中send的身影，故它也使用了动态派发。</p>
 <p>method_missing是BasicObject的一个私有实例方法。通过重定义method_missing来完成对方法调用的拦截，但是值得一提的是，它们不会出现在object#methods的列表中，故有幽灵方法之称。</p>
 <p>书中举了<a target="_blank" rel="noopener" href="https://github.com/huboard/ghee">Ghee</a>的例子，我去看了它的method_missing定义, 在lib/ghee的resource_proxy.rb中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="comment">## lib/ghee/resource_proxy.rb</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(message, *args, &amp;block)</span></span></span><br><span class="line">  subject.send(message, *args, &amp;block)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">## lib/ghee/resource_proxy.rb
+def method_missing(message, *args, &amp;block)
+  subject.send(message, *args, &amp;block)
+end
+</code></pre>
 <p>这里连续调用了两次method_missing，先是将message转发给Ghee::ResourceProxy#method_missing方法，然后再从这里转给subject，而这个subject是一个Hassher::Mash对象，它又转给了Hassher::Mash#method_missing方法进行处理。这种捕获幽灵方法，并将它们转发给另一个对象，又称之为幽灵代理，即像Ghee::ResourceProxy这样的对象，就是幽灵代理。</p>
 <h4 id="幽灵方法的两个陷阱"><a href="#幽灵方法的两个陷阱" class="headerlink" title="幽灵方法的两个陷阱"></a>幽灵方法的两个陷阱</h4><ul>
 <li><p>在method_missing中调用了未定义的method，导致method_missing被不断回调，直到调用堆栈溢出</p>
 <p>看段代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    <span class="number">10</span>.times <span class="keyword">do</span></span><br><span class="line">      number = rand(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    puts <span class="string">&quot;<span class="subst">#&#123;number&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class C
+  def method_missing(name, *args)
+    10.times do
+      number = rand(10)
+    end
+    puts &quot;#&#123;number&#125;&quot;
+  end
+end
+</code></pre>
 <p>【这是一段没啥用的代码，仅仅用来作为例子】</p>
 <p>这里其实涉及到作用域scope的问题，number定义在代码块中，等到代码块结束，执行puts “#{number}”时，ruby会把<strong>number当成是一个在self上省略了括号的方法调用</strong>，<strong>即self.number,</strong> 正常情况下，会出现nomethoderror，因为没有定义number这个method的，但是由于重写了method_missing，所以它会继续调用这个重写后的method_missing，导致出现死循环。</p>
 <p>如何解？改number的作用域即可。</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">C</span></span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">method_missing</span><span class="params">(name, *args)</span></span></span><br><span class="line">    number = <span class="number">0</span></span><br><span class="line">    <span class="number">10</span>.times <span class="keyword">do</span></span><br><span class="line">      number = rand(<span class="number">10</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    puts <span class="string">&quot;<span class="subst">#&#123;number&#125;</span>&quot;</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">class C
+  def method_missing(name, *args)
+    number = 0
+    10.times do
+      number = rand(10)
+    end
+    puts &quot;#&#123;number&#125;&quot;
+  end
+end
+</code></pre>
+</li>
 <li><p>幽灵方法与真实方法重名，导致幽灵方法被忽略。</p>
 <p>书中举了一个display的例子，我觉得挺好理解的，附上：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">my_computer = Computer.new(<span class="number">12</span>, DS.new)</span><br><span class="line">my_computer.display <span class="comment"># =&gt; nil</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">my_computer = Computer.new(12, DS.new)
+my_computer.display # =&gt; nil
+</code></pre>
 <p>这里，my_computer调用了display方法，其本意是要看显示器method，但是Object自带了一个display方法，Computer继承Object，所以也有一个display方法，导致调用的时候，忽略了幽灵方法，这里也可以看得出来，在调用方法时，必然是先搜遍了祖先链，然后再调用幽灵方法。</p>
 <p>怎么破？两种方式。</p>
 <ul>
@@ -462,8 +566,16 @@
 <li><p>删除方法display</p>
 <p>用两种删除方法的途径：undef_method【删除所有包括继承来的方法】， remove_method【删除接受者自己的方法】</p>
 <p>看段代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Computer</span></span></span><br><span class="line">  .....</span><br><span class="line">  def <span class="keyword">self</span>.hide(name)</span><br><span class="line">    <span class="keyword">if</span> instance_methods.<span class="keyword">include</span>?(name)</span><br><span class="line">      undef_method name</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line">  hide(<span class="string">&#x27;display&#x27;</span>)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">class Computer
+  .....
+  def self.hide(name)
+    if instance_methods.include?(name)
+      undef_method name
+    end
+  end
+  hide(&#39;display&#39;)
+end
+</code></pre>
 <p>这样就会删除掉继承自Object#display方法。个人觉得删除方法容易出问题，用白板会好一些</p>
 <h4 id="使用原则"><a href="#使用原则" class="headerlink" title="使用原则"></a>使用原则</h4></li>
 </ul>
@@ -780,7 +892,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

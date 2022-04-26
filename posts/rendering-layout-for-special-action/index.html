@@ -379,7 +379,7 @@
           
             <span class="post-letters-count">
               &nbsp; | &nbsp;
-              <span>203 words</span>
+              <span>205 words</span>
             </span>
           
 
@@ -400,21 +400,35 @@
 <span id="more"></span> 
 
 <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>默认情况下，controller 中action的layout都是<code>application.html.erb</code>，也可以统一更换，在controller中，添加：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">layout <span class="string">&#x27;my_layout&#x27;</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">layout &#39;my_layout&#39;
+</code></pre>
 <p>现在假定，针对action new，需要使用layout：my_layout， 其他的actions都采用application, 如何实现？</p>
 <h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>我曾一厢情愿地以为应该可以这样， 在controller中添加如下语句👇：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">layout <span class="string">&#x27;my_layout&#x27;</span>, <span class="symbol">:only</span> =&gt; <span class="symbol">:new</span></span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">layout &#39;my_layout&#39;, :only =&gt; :new
+</code></pre>
 <p>显然，一厢情愿的结果常常都面临着悲剧。</p>
 <p>正确的脱坑方式是这样的👇：</p>
 <p>在controller中定义一个private method， 然后在该method中进行设置：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">layout <span class="symbol">:my_layout</span></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line"> private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_layout</span></span></span><br><span class="line">	params[<span class="symbol">:action</span>] == <span class="string">&#x27;new&#x27;</span> ? <span class="string">&#x27;my_layout&#x27;</span> : <span class="string">&#x27;application&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout :my_layout
+.....
 
+ private
+
+def my_layout
+    params[:action] == &#39;new&#39; ? &#39;my_layout&#39; : &#39;application&#39;
+end
+</code></pre>
 <p>如果是指定的多个action都是my_layout呢？</p>
 <p>这么设置：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">layout <span class="symbol">:my_layout</span></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line"> private</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">my_layout</span></span></span><br><span class="line">	<span class="string">%w[action1 action2 action3……]</span>.<span class="keyword">include</span>?params[<span class="symbol">:action</span>] ? <span class="string">&#x27;my_layout&#x27;</span> : <span class="string">&#x27;application&#x27;</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">layout :my_layout
+.....
 
+ private
+
+def my_layout
+    %w[action1 action2 action3……].include?params[:action] ? &#39;my_layout&#39; : &#39;application&#39;
+end
+</code></pre>
 <p>Ok。</p>
 <h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/9903261/rendering-layout-for-specific-actions">Rendering Layout for specific actions</a></p>
 
@@ -725,7 +739,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>

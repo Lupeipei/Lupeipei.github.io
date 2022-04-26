@@ -419,49 +419,153 @@
 <p>咱分两步走：</p>
 <h5 id="Step1、制作收藏功能"><a href="#Step1、制作收藏功能" class="headerlink" title="Step1、制作收藏功能"></a>Step1、制作收藏功能</h5><ul>
 <li><p>新建一个favorite model，终端运行：</p>
-<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">rails g <span class="keyword">model</span> favorite user_id:<span class="keyword">integer</span> event_id:<span class="keyword">integer</span></span><br><span class="line">rake db:migrate</span><br></pre></td></tr></table></figure></li>
+<pre><code>rails g model favorite user_id:integer event_id:integer
+rake db:migrate
+</code></pre>
+</li>
 <li><p>建立favorite与user，event的关系</p>
 <ul>
 <li><p>在app/models/favorite.rb中，加入：</p>
-<figure class="highlight crmsh"><table><tr><td class="code"><pre><span class="line">belongs_to :<span class="keyword">user</span></span><br><span class="line"><span class="title">belongs_to</span> :event</span><br></pre></td></tr></table></figure></li>
+<pre><code>  belongs_to :user
+  belongs_to :event
+</code></pre>
+</li>
 <li><p>在<code>app/models/event.rb</code>中，加入：</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:favorites</span></span><br><span class="line">has_many <span class="symbol">:fans</span>, <span class="symbol">through:</span> <span class="symbol">:favorites</span>, <span class="symbol">source:</span> <span class="symbol">:user</span></span><br></pre></td></tr></table></figure></li>
+<pre><code>has_many :favorites
+has_many :fans, through: :favorites, source: :user
+</code></pre>
+</li>
 <li><p>在<code>app/models/user.rb</code>中，加入：</p>
-<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line">has_many <span class="symbol">:favorites</span></span><br><span class="line">has_many <span class="symbol">:favorite_events</span>, <span class="symbol">through:</span> <span class="symbol">:favorites</span>, <span class="symbol">source:</span> <span class="symbol">:event</span></span><br></pre></td></tr></table></figure></li>
+<pre><code>has_many :favorites
+has_many :favorite_events, through: :favorites, source: :event
+</code></pre>
+</li>
 <li><p>在<code>app/models/user.rb</code>中，加入是否已收藏活动的判断，及收藏与取消收藏的method：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">is_favorite_of?</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events.<span class="keyword">include</span>?(event)</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">favorite!</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events &lt;&lt; event</span><br><span class="line"><span class="keyword">end</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">unfavorite!</span><span class="params">(event)</span></span></span><br><span class="line">  favorite_events.delete(event)</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">  def is_favorite_of?(event)
+    favorite_events.include?(event)
+  end
+
+  def favorite!(event)
+    favorite_events &lt;&lt; event
+  end
+
+  def unfavorite!(event)
+    favorite_events.delete(event)
+  end
+</code></pre>
+</li>
 </ul>
 </li>
 <li><p>修改<code>config/routes.rb</code>中events 部分：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">resources <span class="symbol">:events</span> <span class="keyword">do</span></span><br><span class="line">  put <span class="symbol">:favorite</span>, <span class="symbol">on:</span> <span class="symbol">:member</span></span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">  resources :events do
+    put :favorite, on: :member
+  end
+</code></pre>
+</li>
 <li><p>在需要添加收藏的页面，比如event的show或者index，加上收藏及取消收藏，代码以index页面为例：</p>
 <p>【这里，建议你安装<code>font-awesome-rails</code>这个gem，如果没有，也没关系，用button代替即可】</p>
 <p>装了<code>font-awesome-rails</code>，可以这么来：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="variable">@events</span>.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;unfavorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i <span class="class"><span class="keyword">class</span>=&quot;<span class="title">fa</span> <span class="title">fa</span>-<span class="title">star</span>&quot;&gt; 已收藏 &lt;/<span class="title">i</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;favorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i <span class="class"><span class="keyword">class</span>=&quot;<span class="title">fa</span> <span class="title">fa</span>-<span class="title">star</span>-<span class="title">o</span>&quot;&gt; 收藏&lt;/<span class="title">i</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
-
+<pre><code class="Ruby">&lt;% @events.each do |event| %&gt;
+.......
+&lt;% if current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;
+    &lt;%= link_to favorite_event_path(event,type: &quot;unfavorite&quot;), method: :put do %&gt;
+    &lt;i class=&quot;fa fa-star&quot;&gt; 已收藏 &lt;/i&gt;
+    &lt;% end %&gt;
+&lt;% else %&gt;
+    &lt;%= link_to favorite_event_path(event,type: &quot;favorite&quot;), method: :put do %&gt;
+    &lt;i class=&quot;fa fa-star-o&quot;&gt; 收藏&lt;/i&gt;
+    &lt;% end %&gt;
+&lt;% end %&gt;
+.......
+</code></pre>
 <p>没有装，咱可以这么来：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="variable">@events</span>.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">&#x27;已收藏&#x27;</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;unfavorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>&quot;) %&gt;</span></span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to(<span class="string">&#x27;收藏&#x27;</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;favorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>&quot;) %&gt;</span></span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">.......</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">&lt;% @events.each do |event| %&gt;
+.......
+&lt;% if current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;
+    &lt;%= link_to(&#39;已收藏&#39;,favorite_event_path(event,type: &quot;unfavorite&quot;), method: :put, class: &quot;btn btn-default&quot;) %&gt;
+&lt;% else %&gt;
+    &lt;%= link_to(&#39;收藏&#39;,favorite_event_path(event,type: &quot;favorite&quot;), method: :put, class: &quot;btn btn-success&quot;) %&gt;
+&lt;% end %&gt;
+.......
+</code></pre>
+</li>
 <li><p>编辑<code>app/controller/events_controller.rb</code>，加上favorite方法，同时在before_action中加上favorite</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">before_action <span class="symbol">:authenticate_user!</span>, <span class="symbol">only:</span> [<span class="symbol">:favorite</span>, .....]</span><br><span class="line"></span><br><span class="line">.....</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">favorite</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">&quot;favorite&quot;</span></span><br><span class="line">      current_user.favorite!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">&quot;unfavorite&quot;</span></span><br><span class="line">      current_user.unfavorite!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">    redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">before_action :authenticate_user!, only: [:favorite, .....]
 
+.....
+
+  def favorite
+    @event = Event.find(params[:id])
+    type = params[:type]
+    if type == &quot;favorite&quot;
+      current_user.favorite!(@event)
+    else type == &quot;unfavorite&quot;
+      current_user.unfavorite!(@event)
+    end
+    redirect_to :back
+  end
+
+  ......
+</code></pre>
 <p>到这里，功能基本OK了，下面我们请上Ajax.</p>
 </li>
 </ul>
 <h5 id="Step2、Ajax优化"><a href="#Step2、Ajax优化" class="headerlink" title="Step2、Ajax优化"></a>Step2、Ajax优化</h5><p>目标：实现快速收藏，同时显示收藏人数</p>
 <ul>
 <li><p>编辑<code>app/views/events/index.html.erb</code>,把原来用作收藏的html部分删除，放入partial中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="variable">@events</span>.each <span class="keyword">do</span> <span class="params">|event|</span> %&gt;</span><br><span class="line">.......</span><br><span class="line">-  &lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;</span><br><span class="line">-     &lt;%= link_to(<span class="string">&#x27;已收藏&#x27;</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;unfavorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">default</span>&quot;) %&gt;</span></span><br><span class="line">-  &lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">-     &lt;%= link_to(<span class="string">&#x27;收藏&#x27;</span>,favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;favorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="class"><span class="keyword">class</span>: &quot;<span class="title">btn</span> <span class="title">btn</span>-<span class="title">success</span>&quot;) %&gt;</span></span><br><span class="line">- &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line"></span><br><span class="line">+    &lt;div id=<span class="string">&quot;favorite-&lt;%= event.id %&gt;&quot;</span>&gt;</span><br><span class="line">+     &lt;%= render <span class="symbol">:partial</span> =&gt; <span class="string">&quot;favorite&quot;</span>, <span class="symbol">:locals</span> =&gt; &#123;<span class="symbol">:event</span> =&gt; event &#125;%&gt;</span><br><span class="line">+   &lt;<span class="regexp">/div&gt;</span></span><br><span class="line"><span class="regexp"></span></span><br><span class="line"><span class="regexp">.......</span></span><br></pre></td></tr></table></figure></li>
-<li><p>新建<code>app/views/events/_favorite.html.erb</code>， 添加如下代码到<code>_favorite.html.erb</code>中：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">&lt;% <span class="keyword">if</span> current_user &amp;&amp; current_user.is_favorite_of?(event) %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;unfavorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i <span class="class"><span class="keyword">class</span>=&quot;<span class="title">fa</span> <span class="title">fa</span>-<span class="title">star</span>&quot;&gt; 已收藏 (&lt;span <span class="title">id</span>=&quot;<span class="title">favorite</span>-<span class="title">counts</span>-&lt;%= <span class="title">event</span>.<span class="title">id</span> %&gt;&quot;&gt;&lt;%= <span class="title">event</span>.<span class="title">favorites</span>.<span class="title">count</span>%&gt;&lt;/<span class="title">span</span>&gt;)&lt;/<span class="title">i</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">else</span> %&gt;</span><br><span class="line">    &lt;%= link_to favorite_event_path(event,<span class="symbol">type:</span> <span class="string">&quot;favorite&quot;</span>), <span class="symbol">method:</span> <span class="symbol">:put</span>, <span class="symbol">:remote</span> =&gt; <span class="literal">true</span> <span class="keyword">do</span> %&gt;</span><br><span class="line">    &lt;i <span class="class"><span class="keyword">class</span>=&quot;<span class="title">fa</span> <span class="title">fa</span>-<span class="title">star</span>-<span class="title">o</span>&quot;&gt; 收藏 (&lt;span <span class="title">id</span>=&quot;<span class="title">favorite</span>-<span class="title">counts</span>-&lt;%= <span class="title">event</span>.<span class="title">id</span> %&gt;&quot;&gt;&lt;%= <span class="title">event</span>.<span class="title">favorites</span>.<span class="title">count</span>%&gt;&lt;/<span class="title">span</span>&gt;)&lt;/<span class="title">i</span>&gt;</span></span><br><span class="line">    &lt;% <span class="keyword">end</span> %&gt;</span><br><span class="line">&lt;% <span class="keyword">end</span> %&gt;</span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">&lt;% @events.each do |event| %&gt;
+.......
+-  &lt;% if current_user &amp;&amp; current_user.is_favorite_of?(event)%&gt;
+-     &lt;%= link_to(&#39;已收藏&#39;,favorite_event_path(event,type: &quot;unfavorite&quot;), method: :put, class: &quot;btn btn-default&quot;) %&gt;
+-  &lt;% else %&gt;
+-     &lt;%= link_to(&#39;收藏&#39;,favorite_event_path(event,type: &quot;favorite&quot;), method: :put, class: &quot;btn btn-success&quot;) %&gt;
+- &lt;% end %&gt;
 
++    &lt;div id=&quot;favorite-&lt;%= event.id %&gt;&quot;&gt;
++     &lt;%= render :partial =&gt; &quot;favorite&quot;, :locals =&gt; &#123;:event =&gt; event &#125;%&gt;
++   &lt;/div&gt;
+
+.......
+</code></pre>
+</li>
+<li><p>新建<code>app/views/events/_favorite.html.erb</code>， 添加如下代码到<code>_favorite.html.erb</code>中：</p>
+<pre><code class="Ruby">&lt;% if current_user &amp;&amp; current_user.is_favorite_of?(event) %&gt;
+    &lt;%= link_to favorite_event_path(event,type: &quot;unfavorite&quot;), method: :put, :remote =&gt; true do %&gt;
+    &lt;i class=&quot;fa fa-star&quot;&gt; 已收藏 (&lt;span id=&quot;favorite-counts-&lt;%= event.id %&gt;&quot;&gt;&lt;%= event.favorites.count%&gt;&lt;/span&gt;)&lt;/i&gt;
+    &lt;% end %&gt;
+&lt;% else %&gt;
+    &lt;%= link_to favorite_event_path(event,type: &quot;favorite&quot;), method: :put, :remote =&gt; true do %&gt;
+    &lt;i class=&quot;fa fa-star-o&quot;&gt; 收藏 (&lt;span id=&quot;favorite-counts-&lt;%= event.id %&gt;&quot;&gt;&lt;%= event.favorites.count%&gt;&lt;/span&gt;)&lt;/i&gt;
+    &lt;% end %&gt;
+&lt;% end %&gt;
+</code></pre>
 <p>【这里默认已安装了<code>font-awesome-rails</code>这个gem】</p>
 </li>
 <li><p>编辑<code>app/controllers/events_controller.rb</code>, 去掉favorite中的redirect_to:</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line">.....</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">favorite</span></span></span><br><span class="line">    <span class="variable">@event</span> = Event.find(params[<span class="symbol">:id</span>])</span><br><span class="line">    type = params[<span class="symbol">:type</span>]</span><br><span class="line">    <span class="keyword">if</span> type == <span class="string">&quot;favorite&quot;</span></span><br><span class="line">      current_user.favorite!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">else</span> type == <span class="string">&quot;unfavorite&quot;</span></span><br><span class="line">      current_user.unfavorite!(<span class="variable">@event</span>)</span><br><span class="line">    <span class="keyword">end</span></span><br><span class="line">  - redirect_to <span class="symbol">:back</span></span><br><span class="line">  <span class="keyword">end</span></span><br><span class="line"></span><br><span class="line">  ......</span><br></pre></td></tr></table></figure></li>
+<pre><code class="Ruby">.....
+
+  def favorite
+    @event = Event.find(params[:id])
+    type = params[:type]
+    if type == &quot;favorite&quot;
+      current_user.favorite!(@event)
+    else type == &quot;unfavorite&quot;
+      current_user.unfavorite!(@event)
+    end
+  - redirect_to :back
+  end
+
+  ......
+</code></pre>
+</li>
 </ul>
 <ul>
 <li><p>新建<code>app/views/events/favorite.js.erb</code>，添加如下代码到<code>favorite.js.erb</code>中：</p>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line">str = <span class="string">&quot;&lt;%=j render :partial =&gt; &quot;</span>favorite<span class="string">&quot;, :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;&quot;</span>;</span><br><span class="line">$(<span class="string">&quot;#favorite-&lt;%= @event.id %&gt;&quot;</span>).html(str);</span><br><span class="line">$(<span class="string">&quot;#favorite-counts-&lt;%= @event.id %&gt;&quot;</span>).html(<span class="string">&quot;&lt;%= @event.favorites.count %&gt;&quot;</span>);</span><br></pre></td></tr></table></figure></li>
+<pre><code class="JavaScript">str = &quot;&lt;%=j render :partial =&gt; &quot;favorite&quot;, :locals =&gt; &#123;:event =&gt; @event &#125; %&gt;&quot;;
+$(&quot;#favorite-&lt;%= @event.id %&gt;&quot;).html(str);
+$(&quot;#favorite-counts-&lt;%= @event.id %&gt;&quot;).html(&quot;&lt;%= @event.favorites.count %&gt;&quot;);
+</code></pre>
+</li>
 </ul>
 <p>啦啦啦，大功告成！！</p>
 <p>参考文章：<a target="_blank" rel="noopener" href="https://forum.qzy.camp/t/topic/1432">如何做出收藏工作的功能？</a></p>
@@ -474,8 +578,17 @@
 <p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images/006tKfTcly1fjw73e80pgj30mv05pt9u.jpg"></p>
 <p>Google后，会发现一堆相关的，包括在<code>config/initializers/devise</code>设置<code>config.http_authenticatable_on_xhr = false</code>， 修改<code>routes.rb</code>的，设置CSRF token的……试了好些个，没能解决。比较好笑的是，最后找到的解决办法，有些过于简单，哈哈。<br>附上:</p>
 <p>在<code>app/controllers/events_controller.rb</code>中，添加如下代码：</p>
-<figure class="highlight ruby"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EventsController</span> &lt; ApplicationController</span></span><br><span class="line">  before_action <span class="symbol">:check_user</span>, <span class="symbol">only:</span> [<span class="symbol">:favorite</span>, <span class="symbol">:like</span>]</span><br><span class="line"></span><br><span class="line">  ......</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">check_user</span></span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">if</span> user_signed_in?</span><br><span class="line">  redirect_to new_user_session_path, <span class="symbol">error:</span> <span class="string">&#x27;请先登录&#x27;</span></span><br><span class="line"> <span class="keyword">end</span></span><br><span class="line">......</span><br><span class="line"><span class="keyword">end</span></span><br></pre></td></tr></table></figure>
+<pre><code class="Ruby">class EventsController &lt; ApplicationController
+  before_action :check_user, only: [:favorite, :like]
 
+  ......
+  def check_user
+  return if user_signed_in?
+  redirect_to new_user_session_path, error: &#39;请先登录&#39;
+ end
+......
+end
+</code></pre>
 <p>现在点击收藏或点赞，会跳转到登录页面，OK!</p>
 <p>参考：<a target="_blank" rel="noopener" href="https://stackoverflow.com/questions/45168122/rails-4-401-unauthorized-error-handling">rails 4- 401 Unauthorized error handling</a></p>
 
@@ -786,7 +899,7 @@
   &nbsp; | &nbsp;
   <span class="post-count">
     <i class="fa fa-pencil" aria-hidden="true"></i>
-    384.2k
+    385.6k
   </span>
 
 </div>
