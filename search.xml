@@ -37077,4 +37077,89 @@ echo $x
         <tag>Reading</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Conditionals</title>
+    <url>/posts/vimscript-learning-on-if-conditionals/</url>
+    <content><![CDATA[<p>这一节我们来看看 Vim中的 conditionals.</p>
+<p>Vim 中的条件式只有 <code>if</code>, 没有 <code>unless</code> (Ruby 有 <code>unless</code>).</p>
+<span id="more"></span> 
+
+<p>先看个简单的例子:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="number">1</span></span><br><span class="line">:  echom <span class="string">&quot;ONE&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure>
+
+<p>输出: “ONE”, 符合预期.</p>
+<p>这里如果我们不想在command 模式下输入这么多行, 可以用 <code>|</code> (管道pipe) 来连接每一行:</p>
+<figure class="highlight coq"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="number">1</span> | <span class="type">echom</span> <span class="string">&quot;ONE&quot;</span> | <span class="type">endif</span></span><br></pre></td></tr></table></figure>
+
+<p>从这个简单的例子, 我们可以看出对于 非 0 的数字 1, Vim 认为是  truthy.</p>
+<p>反之:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> 0</span><br><span class="line">:  echom <span class="string">&quot;ZERO&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure>
+
+<p>此时什么都不输出. 表达式为 0 时,为 falsy.</p>
+<p>再看个字符串的例子:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="string">&quot;kitty&quot;</span></span><br><span class="line">:    echom <span class="string">&quot;cute!&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure>
+
+<p>此时仍然是什么也没有输出, 所以  Vim 是默认将字符串处理成 falsy?</p>
+<p>换个例子:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="string">&quot;01kitty&quot;</span></span><br><span class="line">:    echom <span class="string">&quot;cute!&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure>
+
+<p>此时输出: “cute!”. what? (此处适合配个黑人问号脸….)</p>
+<p>为了弄懂怎么回事,  我们把 “kitty” 和 “01kitty” 拎出来跑跑:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:echom</span> <span class="string">&quot;kitty&quot;</span> + 0</span><br><span class="line"><span class="symbol">:echo</span> <span class="string">&quot;01kitty&quot;</span> + 0</span><br><span class="line"><span class="symbol">:echo</span> <span class="string">&quot;kitty01&quot;</span> + 0</span><br></pre></td></tr></table></figure>
+
+<p>输出:</p>
+<figure class="highlight"><table><tr><td class="code"><pre><span class="line">0</span><br><span class="line">1</span><br><span class="line">0</span><br></pre></td></tr></table></figure>
+
+<p>从输出的结果可以看出,  Vim 把字符串转化成整数时, 如果字符串是以数字开头的,会转化成开头的数字, 否则就是0.</p>
+<p>所以上面两个 kitty 例子的运行结果, 也就合理了. “kitty” =&gt; 0 =&gt; falsy, “01kitty” =&gt; 1 =&gt; truthy. 破案.</p>
+<p>我们再来看看比较表达式:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="number">10</span> &gt; <span class="number">1</span></span><br><span class="line">:    echom <span class="string">&quot;10 is bigger than 1&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure>
+
+<p>输出: “10 is bigger than 1”,  这结果没啥特别的, 很正常.</p>
+<p>再来看个字符串的对比:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;dog&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is dog&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+
+<p>输出: “cat is cat”. 嗯, 没毛病.</p>
+<p>来看看大小写的情况:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;CAT&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is CAT&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+
+<p>输出: “cat is cat”. 看来 Vim 是 case sensitive ?</p>
+<p>NO.</p>
+<p>我们先来看看 setting 是不是 case sensitive 的.</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> ignorecase?</span><br></pre></td></tr></table></figure>
+
+<p>输出: noignorecase, 说明option ignorecase 的值是noignorecase, 不忽略大小写, 也就是case sensitive.</p>
+<p>我们修改下:</p>
+<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> ignorecase</span><br><span class="line">:<span class="builtin-name">set</span> ignorecase?</span><br></pre></td></tr></table></figure>
+
+<p>此时我们将配置修改为了 ignorecase, case insensitive.</p>
+<p>(还记得option 的配置吗? 当option 是二元值时, 使用 <code>set &#123;option&#125;</code>, <code>set no&#123;option&#125;</code> 来enable/disable option)</p>
+<p>我们再来跑上面的例子:</p>
+<figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;CAT&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is CAT&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+
+<p>输出: “cat is CAT”.</p>
+<p>上面的例子教会了我们什么呢? 作者说我们应该永远也不要相信  <code>==</code> , 至少它不应该出现在你的Plugin 中(永远预设用户的配置多变).</p>
+<p>嗯, 那咱得换个比较运算符.</p>
+<p>估计你也猜到了, Vim 早已准备好了对应的操作符.</p>
+<p>来认识下 <code>==?</code>(忽略大小写) &amp;&amp; <code>==#</code>(不忽略大小写)</p>
+<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> noignorecase</span><br><span class="line">:if <span class="comment">&quot;cat&quot;</span> <span class="comment">==?</span> <span class="comment">&quot;CAT&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is CAT&quot;</span></span><br><span class="line">:elseif <span class="comment">&quot;cat&quot;</span> <span class="comment">==?</span> <span class="comment">&quot;cat&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is cat&quot;</span></span><br><span class="line">:endif</span><br></pre></td></tr></table></figure>
+
+<p>输出: “cat is CAT”</p>
+<p>虽然我们设置了 noignorecase, 不忽略大小写, 但是if 中 使用了 <code>==?</code> , 表示比较时, 忽略大小写, 所以第一个表达式的结果为  true, 输出 “cat is CAT”.</p>
+<p>同样:</p>
+<figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> ignorecase</span><br><span class="line">:if <span class="comment">&quot;cat&quot;</span> <span class="comment">==#</span> <span class="comment">&quot;CAT&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is CAT&quot;</span></span><br><span class="line">:elseif <span class="comment">&quot;cat&quot;</span> <span class="comment">==#</span> <span class="comment">&quot;cat&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is cat&quot;</span></span><br><span class="line">:endif</span><br></pre></td></tr></table></figure>
+
+<p>这时输出: “cat is cat”.</p>
+<p>对于比较运算符, 可以查看官方文档了解更多:</p>
+<figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:h</span> expr4</span><br></pre></td></tr></table></figure>
+
+<p>好,  If 这块差不多了, 是不是超简单? 收工收工. 下一节聊 function~.</p>
+]]></content>
+      <categories>
+        <category>VimScript 学习笔记</category>
+      </categories>
+      <tags>
+        <tag>Vim</tag>
+      </tags>
+  </entry>
 </search>

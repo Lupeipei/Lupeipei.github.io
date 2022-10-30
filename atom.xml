@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2022-10-18T06:59:59.827Z</updated>
+  <updated>2022-10-30T14:21:04.758Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,29 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Conditionals</title>
+    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-if-conditionals/"/>
+    <id>http://lupeipei.github.io/posts/vimscript-learning-on-if-conditionals/</id>
+    <published>2022-10-30T14:14:03.000Z</published>
+    <updated>2022-10-30T14:21:04.758Z</updated>
+    
+    <content type="html"><![CDATA[<p>这一节我们来看看 Vim中的 conditionals.</p><p>Vim 中的条件式只有 <code>if</code>, 没有 <code>unless</code> (Ruby 有 <code>unless</code>).</p><span id="more"></span> <p>先看个简单的例子:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="number">1</span></span><br><span class="line">:  echom <span class="string">&quot;ONE&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure><p>输出: “ONE”, 符合预期.</p><p>这里如果我们不想在command 模式下输入这么多行, 可以用 <code>|</code> (管道pipe) 来连接每一行:</p><figure class="highlight coq"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="number">1</span> | <span class="type">echom</span> <span class="string">&quot;ONE&quot;</span> | <span class="type">endif</span></span><br></pre></td></tr></table></figure><p>从这个简单的例子, 我们可以看出对于 非 0 的数字 1, Vim 认为是  truthy.</p><p>反之:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> 0</span><br><span class="line">:  echom <span class="string">&quot;ZERO&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure><p>此时什么都不输出. 表达式为 0 时,为 falsy.</p><p>再看个字符串的例子:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="string">&quot;kitty&quot;</span></span><br><span class="line">:    echom <span class="string">&quot;cute!&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure><p>此时仍然是什么也没有输出, 所以  Vim 是默认将字符串处理成 falsy?</p><p>换个例子:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="string">&quot;01kitty&quot;</span></span><br><span class="line">:    echom <span class="string">&quot;cute!&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure><p>此时输出: “cute!”. what? (此处适合配个黑人问号脸….)</p><p>为了弄懂怎么回事,  我们把 “kitty” 和 “01kitty” 拎出来跑跑:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:echom</span> <span class="string">&quot;kitty&quot;</span> + 0</span><br><span class="line"><span class="symbol">:echo</span> <span class="string">&quot;01kitty&quot;</span> + 0</span><br><span class="line"><span class="symbol">:echo</span> <span class="string">&quot;kitty01&quot;</span> + 0</span><br></pre></td></tr></table></figure><p>输出:</p><figure class="highlight"><table><tr><td class="code"><pre><span class="line">0</span><br><span class="line">1</span><br><span class="line">0</span><br></pre></td></tr></table></figure><p>从输出的结果可以看出,  Vim 把字符串转化成整数时, 如果字符串是以数字开头的,会转化成开头的数字, 否则就是0.</p><p>所以上面两个 kitty 例子的运行结果, 也就合理了. “kitty” =&gt; 0 =&gt; falsy, “01kitty” =&gt; 1 =&gt; truthy. 破案.</p><p>我们再来看看比较表达式:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:if</span> <span class="number">10</span> &gt; <span class="number">1</span></span><br><span class="line">:    echom <span class="string">&quot;10 is bigger than 1&quot;</span></span><br><span class="line"><span class="symbol">:endif</span></span><br></pre></td></tr></table></figure><p>输出: “10 is bigger than 1”,  这结果没啥特别的, 很正常.</p><p>再来看个字符串的对比:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;dog&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is dog&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure><p>输出: “cat is cat”. 嗯, 没毛病.</p><p>来看看大小写的情况:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;CAT&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is CAT&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure><p>输出: “cat is cat”. 看来 Vim 是 case sensitive ?</p><p>NO.</p><p>我们先来看看 setting 是不是 case sensitive 的.</p><figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> ignorecase?</span><br></pre></td></tr></table></figure><p>输出: noignorecase, 说明option ignorecase 的值是noignorecase, 不忽略大小写, 也就是case sensitive.</p><p>我们修改下:</p><figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">:<span class="builtin-name">set</span> ignorecase</span><br><span class="line">:<span class="builtin-name">set</span> ignorecase?</span><br></pre></td></tr></table></figure><p>此时我们将配置修改为了 ignorecase, case insensitive.</p><p>(还记得option 的配置吗? 当option 是二元值时, 使用 <code>set &#123;option&#125;</code>, <code>set no&#123;option&#125;</code> 来enable/disable option)</p><p>我们再来跑上面的例子:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">if</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;CAT&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is CAT&quot;</span></span><br><span class="line">:<span class="keyword">elseif</span> <span class="string">&quot;cat&quot;</span> == <span class="string">&quot;cat&quot;</span></span><br><span class="line">:    <span class="keyword">echom</span> <span class="string">&quot;cat is cat&quot;</span></span><br><span class="line">:<span class="keyword">endif</span></span><br></pre></td></tr></table></figure><p>输出: “cat is CAT”.</p><p>上面的例子教会了我们什么呢? 作者说我们应该永远也不要相信  <code>==</code> , 至少它不应该出现在你的Plugin 中(永远预设用户的配置多变).</p><p>嗯, 那咱得换个比较运算符.</p><p>估计你也猜到了, Vim 早已准备好了对应的操作符.</p><p>来认识下 <code>==?</code>(忽略大小写) &amp;&amp; <code>==#</code>(不忽略大小写)</p><figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> noignorecase</span><br><span class="line">:if <span class="comment">&quot;cat&quot;</span> <span class="comment">==?</span> <span class="comment">&quot;CAT&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is CAT&quot;</span></span><br><span class="line">:elseif <span class="comment">&quot;cat&quot;</span> <span class="comment">==?</span> <span class="comment">&quot;cat&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is cat&quot;</span></span><br><span class="line">:endif</span><br></pre></td></tr></table></figure><p>输出: “cat is CAT”</p><p>虽然我们设置了 noignorecase, 不忽略大小写, 但是if 中 使用了 <code>==?</code> , 表示比较时, 忽略大小写, 所以第一个表达式的结果为  true, 输出 “cat is CAT”.</p><p>同样:</p><figure class="highlight gams"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">set</span> ignorecase</span><br><span class="line">:if <span class="comment">&quot;cat&quot;</span> <span class="comment">==#</span> <span class="comment">&quot;CAT&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is CAT&quot;</span></span><br><span class="line">:elseif <span class="comment">&quot;cat&quot;</span> <span class="comment">==#</span> <span class="comment">&quot;cat&quot;</span></span><br><span class="line">:    echom <span class="comment">&quot;cat is cat&quot;</span></span><br><span class="line">:endif</span><br></pre></td></tr></table></figure><p>这时输出: “cat is cat”.</p><p>对于比较运算符, 可以查看官方文档了解更多:</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:h</span> expr4</span><br></pre></td></tr></table></figure><p>好,  If 这块差不多了, 是不是超简单? 收工收工. 下一节聊 function~.</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;这一节我们来看看 Vim中的 conditionals.&lt;/p&gt;
+&lt;p&gt;Vim 中的条件式只有 &lt;code&gt;if&lt;/code&gt;, 没有 &lt;code&gt;unless&lt;/code&gt; (Ruby 有 &lt;code&gt;unless&lt;/code&gt;).&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
+    
+    
+      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
+    
+  </entry>
   
   <entry>
     <title>读《托斯卡纳艳阳下》</title>
@@ -472,33 +495,6 @@
         &lt;p&gt;这一章结合前面所学的, 实现了两个功能: edit and source your vimrc.&lt;/p&gt;
 &lt;p&gt;当你编辑文件时, 如果想要修改 &lt;code&gt;.vimrc&lt;/code&gt; 文件, 并使刚刚修改的配置生效, 有什么快捷的方式?&lt;/p&gt;
 &lt;p&gt;作者给了如下解决方法.
-      
-    
-    </summary>
-    
-      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
-    
-    
-      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Leaders</title>
-    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-leaders/"/>
-    <id>http://lupeipei.github.io/posts/vimscript-learning-on-leaders/</id>
-    <published>2021-12-21T13:10:12.000Z</published>
-    <updated>2021-12-22T01:50:33.186Z</updated>
-    
-    <content type="html"><![CDATA[<p>来到了常见的 Leader.</p><p>初学时, 我简单地把 Leader 理解成一个 namespace, 好比 tmux 的 <code>Ctrl+b</code>. 现在看, 也没有偏差太多.</p><p>你可以把 Leader 看成是 Vim 内置的 prefix key.</p><p>Leader 的值存在 mapleader 变量中, 如果 mapleader 未初始化或者值为空, 则默认为 反斜杠 <code>\</code> .</p><p>这里注意: mapleader 是一个 variable, 不是一个 option, 使用 <code>:set mapleader?</code> 会报错的.</p><p>相应的, 如果想要修改 Leader 键, 可以通过给 mapleader 赋值来实现.</p><p>编辑<code>.vimrc</code>, 添加如下代码:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> mapleader=<span class="string">&quot;-&quot;</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Leader&gt;</span>d dd</span><br></pre></td></tr></table></figure><p>保存退出, source 后, 打开文件, 在 Normal 模式下, 按 <code>-d</code>, 等同于执行 <code>dd</code>. 即删除当前行. 此时 <code>&lt;Leader&gt;</code> 已变成了<code>-</code> 了, 如果按<code>\d</code> , 会发现无效.</p><p>mapleader 还有一个小兄弟, 叫 maplocalleader,  在 Vim中用特殊的字符串 <code>&lt;LocalLeader&gt;</code> 来表示.</p><p>同样, 可以通过赋值 maplocalleader 来设置   <code>&lt;LocalLeader&gt;</code>  :</p><figure class="highlight nix"><table><tr><td class="code"><pre><span class="line">:<span class="keyword">let</span> <span class="attr">maplocalleader</span> = <span class="string">&quot;\\&quot;</span></span><br></pre></td></tr></table></figure><p>那  <code>&lt;LocalLeader&gt;</code>  是用来干嘛的呢?</p><p>作者在书中提到  <code>&lt;LocalLeader&gt;</code>  用来作为特定文件类型中的前置键.</p><blockquote><p>This is meant to be a prefix for mappings that only take effect for certain types of files, like Python files or HTML files.</p></blockquote><p>这个同官方文档中给出的, 稍稍有些区别.</p><p>Vim 官方文档提到的是 <code>&lt;LocalLeader&gt;</code>  用于只针对当前 buffer 有效的mappings.</p><blockquote><p><code>&lt;LocalLeader&gt;</code>  is to be used for mappings which are local to a buffer.  Example:<br>:map <buffer> <code>&lt;LocalLeader&gt;</code>A  oanother line<Esc></p></blockquote><p>但是文档中也提到了:</p><blockquote><p>In a global plugin <code>&lt;Leader&gt;</code> should be used and in a filetype plugin <code>&lt;LocalLeader&gt;</code>.</p></blockquote><p>全局插件使用 <code>&lt;Leader&gt;</code>  , 特定文件类型的插件, 使用 <code>&lt;LocalLeader&gt;</code>  .[有关Plugin, 后面会单独再介绍]</p><p>当然, 平日里我基本用不到<code>&lt;LocalLeader&gt;</code> , 这里就不折腾了.</p><p>可以查看官方文档了解更多.</p><figure class="highlight elixir"><table><tr><td class="code"><pre><span class="line"><span class="symbol">:h</span> mapleader</span><br><span class="line"><span class="symbol">:h</span> maplocalleader</span><br></pre></td></tr></table></figure>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;来到了常见的 Leader.&lt;/p&gt;
-&lt;p&gt;初学时, 我简单地把 Leader 理解成一个 namespace, 好比 tmux 的 &lt;code&gt;Ctrl+b&lt;/code&gt;. 现在看, 也没有偏差太多.&lt;/p&gt;
-&lt;p&gt;你可以把 Leader 看成是 Vim 内置的 pref
       
     
     </summary>
