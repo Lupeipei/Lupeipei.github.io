@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2022-10-30T14:21:04.758Z</updated>
+  <updated>2022-12-16T13:48:45.126Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>update json data in postgreSQL</title>
+    <link href="http://lupeipei.github.io/posts/update-json-data-in-postgreSQL/"/>
+    <id>http://lupeipei.github.io/posts/update-json-data-in-postgreSQL/</id>
+    <published>2022-12-16T13:43:24.000Z</published>
+    <updated>2022-12-16T13:48:45.126Z</updated>
+    
+    <content type="html"><![CDATA[<p>工作中遇到的一个问题, 需要更新数据表里面的一个JSON字段, 最后的解决方法有点小巧妙, 整个求解的过程也蛮有意思, 记录下.</p><span id="more"></span> <h4 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h4><p>假定现有一张表 orders, orders 中有 一个 double 类型的字段 amount 和 一个 JSON 类型的 meta, 现在需要更新orders中的amount字段(amount = amount * 2) , 同时将更新前的 amount 旧值存在 meta 中.</p><p>假定更新前 orders 表的数据如下:</p><table><thead><tr><th><strong>id</strong></th><th><strong>amount</strong></th><th><strong>meta</strong></th></tr></thead><tbody><tr><td>1</td><td>10</td><td>{“type”=&gt; “market_order”, “user_id”=&gt; “9”}</td></tr></tbody></table><p>预期更新后的数据:</p><table><thead><tr><th><strong>id</strong></th><th><strong>amount</strong></th><th><strong>meta</strong></th></tr></thead><tbody><tr><td>1</td><td>20</td><td>{ “type”=&gt; “market_order”, “user_id”=&gt;  “9”, “changed_attributes”: { “amount” =&gt; “10”} }</td></tr></tbody></table><p>postgresql version: 14.4</p><h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>初看并不复杂, 通常情况下, 给JSON字段插入新的Key-value 这么来:</p><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">UPDATE orders</span><br><span class="line"><span class="keyword">SET</span> </span><br><span class="line">amount <span class="operator">=</span> amount <span class="operator">*</span> <span class="number">2</span></span><br><span class="line">meta <span class="operator">=</span> meta <span class="operator">||</span> <span class="string">&#x27;&#123;&quot;changed_attributes&quot;:&#123;&quot;amount&quot;:&quot;10&quot;&#125;&#125;&#x27;</span>;</span><br></pre></td></tr></table></figure><p>但是这里 amount 的旧值不是常量, 需要改成 amount 字段的值. 如果直接把10换成amount 执行, 最后存在 meta 中的就是amount 这个字符串, 而不是 amount 的值10.</p><p>那该怎么办?</p><p>当时Google了半天也没有找到答案, 后面索性厚着脸皮请教了Data Team 的同事, 同事给到的解决方法有些意外, 巧用 || 字符串拼接符号即可.</p><p>把 10 换成 amount, 用 || 拼接起来.</p><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">meta <span class="operator">=</span> meta <span class="operator">||</span> <span class="string">&#x27;&#123;&quot;changed_attributes&quot;:&#123;&quot;amount&quot;:&quot;&#x27;</span><span class="operator">||</span>amount<span class="operator">||</span><span class="string">&#x27;&quot;&#125;&#125;&#x27;</span></span><br></pre></td></tr></table></figure><p>拆解下看得更清楚:</p><figure class="highlight 1c"><table><tr><td class="code"><pre><span class="line">&#123;<span class="string">&quot;changed_attributes&quot;</span>:&#123;<span class="string">&quot;amount&quot;</span>:<span class="string">&quot; || </span></span><br><span class="line">amount <span class="string">||</span></span><br><span class="line"><span class="string">&quot;&#125;&#125;</span></span><br></pre></td></tr></table></figure><p>但是运行的时候,会报错: the input string ended unexpectedly. 因为符号’的原因,  程序只解析 <code>&#123;&quot;changed_attributes&quot;:&#123;&quot;amount&quot;: &quot;</code> 剩下的就不会解析. 我们可以用类型转换符包起来.</p><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">meta <span class="operator">=</span> meta <span class="operator">||</span> (<span class="string">&#x27;&#123;&quot;changed_attributes&quot;:&#123;&quot;amount&quot;:&quot;&#x27;</span><span class="operator">||</span>amount<span class="operator">||</span><span class="string">&#x27;&quot;&#125;&#125;&#x27;</span>)::jsonb</span><br></pre></td></tr></table></figure><p>最后的脚本:</p><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">UPDATE orders</span><br><span class="line"><span class="keyword">SET</span> </span><br><span class="line">amount <span class="operator">=</span> amount <span class="operator">*</span> <span class="number">2</span></span><br><span class="line">meta <span class="operator">=</span> meta <span class="operator">||</span> (<span class="string">&#x27;&#123;&quot;changed_attributes&quot;:&#123;&quot;amount&quot;:&quot;&#x27;</span><span class="operator">||</span>amount<span class="operator">||</span><span class="string">&#x27;&quot;&#125;&#125;&#x27;</span>)::jsonb;</span><br></pre></td></tr></table></figure><p>再次执行, OK!</p><p>[原来答案并不复杂, 把问题复杂化反而是给自己挖坑, 换个思路看问题, 其实可以很简单: P]</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://www.databasestar.com/postgresql-json/">JSON in PostgreSQL: The Ultimate Guide</a></p><p>a nice teammate from Data Team [感谢大佬指点!] </p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;工作中遇到的一个问题, 需要更新数据表里面的一个JSON字段, 最后的解决方法有点小巧妙, 整个求解的过程也蛮有意思, 记录下.&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
+    
+    
+      <category term="postgreSQL" scheme="http://lupeipei.github.io/tags/postgreSQL/"/>
+    
+  </entry>
   
   <entry>
     <title>Conditionals</title>
@@ -468,33 +490,6 @@
 &lt;p&gt;先来看个例子.&lt;/p&gt;
 &lt;p&gt;在命令行模式下, 输入:&lt;/p&gt;
 &lt;figure class=&quot;hig
-      
-    
-    </summary>
-    
-      <category term="VimScript 学习笔记" scheme="http://lupeipei.github.io/categories/VimScript-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"/>
-    
-    
-      <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Editing Your Vimrc</title>
-    <link href="http://lupeipei.github.io/posts/vimscript-learning-on-edit-your-vimrc/"/>
-    <id>http://lupeipei.github.io/posts/vimscript-learning-on-edit-your-vimrc/</id>
-    <published>2021-12-22T12:46:36.000Z</published>
-    <updated>2022-10-19T23:49:38.502Z</updated>
-    
-    <content type="html"><![CDATA[<p>这一章结合前面所学的, 实现了两个功能: edit and source your vimrc.</p><p>当你编辑文件时, 如果想要修改 <code>.vimrc</code> 文件, 并使刚刚修改的配置生效, 有什么快捷的方式?</p><p>作者给了如下解决方法.</p><p>编辑<code>.vimrc</code>, 添加如下代码:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Leader&gt;</span>ev :<span class="keyword">vsplit</span> $MYVIMRC<span class="symbol">&lt;CR&gt;</span></span><br><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Leader&gt;</span><span class="keyword">sv</span> :<span class="keyword">source</span> $MYVIMRC<span class="symbol">&lt;CR&gt;</span></span><br></pre></td></tr></table></figure><p>其中, MYVIMRC 是Vim 提供的环境变量, 指的是 <code>.vimrc</code> 文件的位置, 可通过<code>:echo $MYVIMRC</code> 查看 MYVIMRC 的值.</p><p>这里提供了两个 mappings, 按<code>&lt;Leader&gt;ev</code> , 会打开一个新的split, 编辑  <code>.vimrc</code>  文件. 按<code>&lt;Leader&gt;sv</code> , source   <code>.vimrc</code>文件 .</p><p>不得不说, 真的超方便.</p><p>有了范例, 我也倒腾了一个编辑 <code>.tmux.conf</code> 的mapping.</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Leader&gt;</span>et :<span class="keyword">vsplit</span> $HOME/.tmux.<span class="keyword">conf</span><span class="symbol">&lt;CR&gt;</span></span><br></pre></td></tr></table></figure><p>按<code>&lt;Leader&gt;et</code> , 编辑  <code>.tmux.conf</code>  文件.</p><p>同样也可以来个source:</p><figure class="highlight vim"><table><tr><td class="code"><pre><span class="line"><span class="keyword">nnoremap</span> <span class="symbol">&lt;Leader&gt;</span><span class="keyword">st</span> :!tmux <span class="keyword">source</span>-<span class="keyword">file</span> $HOME/.tmux.<span class="keyword">conf</span><span class="symbol">&lt;CR&gt;</span></span><br></pre></td></tr></table></figure><p> 但是通常需要 source  <code>.tmux.conf</code> 的场合, 也多是在 tmux 中, 直接快捷键 <code>Crtl-b + r</code> 就可以了.所以  source <code>.tmux.conf</code> 的这个 mapping 也可以不配置.</p><p>OK,  本章结束, 你也来配置个玩一玩吧^_^</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;这一章结合前面所学的, 实现了两个功能: edit and source your vimrc.&lt;/p&gt;
-&lt;p&gt;当你编辑文件时, 如果想要修改 &lt;code&gt;.vimrc&lt;/code&gt; 文件, 并使刚刚修改的配置生效, 有什么快捷的方式?&lt;/p&gt;
-&lt;p&gt;作者给了如下解决方法.
       
     
     </summary>
