@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://lupeipei.github.io/"/>
-  <updated>2023-02-28T06:44:01.984Z</updated>
+  <updated>2023-03-11T12:39:51.548Z</updated>
   <id>http://lupeipei.github.io/</id>
   
   <author>
@@ -15,6 +15,28 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>记录第一次装机</title>
+    <link href="http://lupeipei.github.io/posts/my-first-time-assembling-a-desktop-pc/"/>
+    <id>http://lupeipei.github.io/posts/my-first-time-assembling-a-desktop-pc/</id>
+    <published>2023-03-11T12:30:50.000Z</published>
+    <updated>2023-03-11T12:39:51.548Z</updated>
+    
+    <content type="html"><![CDATA[<p>终于把Win11装好了. 来打个卡记录下.</p><span id="more"></span> <p>去年心血来潮, 想要体验下装机, 试试3D打印, 然后随口跟 Ran 提了下, 再然后, 就莫名其妙入坑了……..</p><p>纯小白, 从买零件到装机, 埋线, 再到安装Win11, 历时小半年…..</p><p>呃, 花了这么久的时间, 是因为装机后, 一直没装系统, 就像 Ran 调侃的, 你的金属大师都吃灰了好几个月了吧?</p><p>呃, 惭愧 [捂脸]</p><p>把装系统的事速度安排上.</p><p>好了, 不多唠了, 简单记录下装机和装系统的过程中的一些问题.</p><h4 id="装机"><a href="#装机" class="headerlink" title="装机"></a>装机</h4><p>先来晒下零件:</p><table><thead><tr><th>零件</th><th>产品</th></tr></thead><tbody><tr><td><strong>CPU</strong></td><td>AMD R5 5600X</td></tr><tr><td><strong>主板</strong></td><td>华硕 TUF B550M-Plus WIFI II</td></tr><tr><td><strong>内存</strong></td><td>威刚 D45 DDR4 16Gx2</td></tr><tr><td><strong>电源</strong></td><td>NZXT C750</td></tr><tr><td><strong>散热</strong></td><td>3 x 利民 TL-C12-W 12cm white + 利民 AXP90-X47 white</td></tr><tr><td><strong>机箱</strong></td><td>JOSNSBO D30</td></tr><tr><td><strong>SSD</strong></td><td>TiPro 7000 1T  + TiPlus 5000 1T</td></tr><tr><td><strong>显卡</strong></td><td>影驰 RTX 3060Ti G6X 金属大师</td></tr></tbody></table><p>基本都是Ran的推荐, 很满意, 谢谢Ran!!!</p><p>PS. 有一个既懂装机又爱操心显卡吃灰的同事, 真的很幸运! : P</p><p>这里稍稍提下, 如果机箱选了D30, 同时计划后续要安装机械硬盘, 购买显卡时, 需要考虑下长度. 不然有可能显卡买回来后安顿好, 发现硬盘已经塞不进机箱了…</p><p>所有零件买好后, 装机也很简单, 如果你跟我一样, 都是小白, 可以参考 B站 up主硬件茶谈出的保姆级教程[这个也是Ran推荐的 ^_^].</p><p>PPS. D30 机箱真的好好看啊!!</p><h4 id="装机-1"><a href="#装机-1" class="headerlink" title="装机"></a>装机</h4><h5 id="使用Mac做一个Win11的-USB启动盘"><a href="#使用Mac做一个Win11的-USB启动盘" class="headerlink" title="使用Mac做一个Win11的 USB启动盘"></a>使用Mac做一个Win11的 USB启动盘</h5><p>这里以Win11为例. 准备好U盘, 去<a href="https://www.microsoft.com/en-us/software-download/windows11">官网</a>下载 ISO 文件. </p><p>参考这篇<a href="https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/">Build a Bootable ISO From Your Mac’s Terminal</a>, 5 步完成.</p><ol><li><p>终端输入  <code>diskutil list</code> , 找到插入的那个USB (带有 external disk), 假定是 <code>/dev/disk2</code></p></li><li><p>终端输入 <code>diskutil eraseDisk MS-DOS &quot;WIN11&quot; GPT /dev/disk2</code>, 格式化USB</p></li><li><p>终端输入  <code>hdiutil mount ~/Downloads/Win11_22H2_Chinese_Simplified_x64v1.iso</code>,  挂载Win11 的IOS, 这里 <code>Win11_22H2_Chinese_Simplified_x64v1.iso</code> 就是下载的ISO文件名.</p></li><li><p>终端输入<code>rsync -vha --exclude=sources/install.wim /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/* /Volumes/WIN11</code> , 这步把安装的镜像文件 Copy 到你的USB中, 除了 <code>install.wim</code> 文件(下一步会处理), 其他都Copy 过去. 其中<code>/Volumes/CCCOMA_X64FRE_ZH-CN_DV9/*</code>  是第3步生成的disk image 文件地址.</p></li><li><p>下载 <code>wimlib</code>, 把第4步漏掉的 wim文件分成两份 Copy 过去. [中文简体的 WIN11_22H2 里面的install.wim 大概是4.5G, 可以通过命令行查看文件大小: <code>du -sh /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/sources/install.wim</code> ]</p><p>终端输入:</p><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">brew install wimlib</span><br></pre></td></tr></table></figure><p>安装完成后, 通过wimlib, 将WIM文件拆分成两个小于4G的文件Copy 到USB:</p><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wimlib-imagex split /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/sources/install.wim /Volumes/WIN11/sources/install.swm 3800</span><br></pre></td></tr></table></figure></li></ol><p>OK, 搞定! 可以装Win11啦~ </p><h5 id="有关WIN11安装过程中跳过联网"><a href="#有关WIN11安装过程中跳过联网" class="headerlink" title="有关WIN11安装过程中跳过联网"></a>有关WIN11安装过程中跳过联网</h5><p>在安装系统的过程中, 会有一步, 要求连接网络. 参考 <a href="https://www.53xt.com/jiaocheng/7998.html">win11怎么跳过联网</a>, 可以使用命令行跳过.</p><p>具体步骤:</p><blockquote><ul><li><p>按 Shift + F10 , 弹出 命令提示符 cmd 窗口, 输入 <code>OOBEBYPASSNRO</code>  回车.</p></li><li><p>随后电脑会重启, 然后再次回到这个界面时, 会多出 [我没有Internet连接] 的选项, 选择即可.</p></li></ul></blockquote><p>最后, 晒下我的D30~</p><p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images1.jpeg"></p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p>Ran</p><p><a href="https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/">Build a Bootable ISO From Your Mac’s Terminal</a></p><p><a href="https://www.53xt.com/jiaocheng/7998.html">win11怎么跳过联网</a></p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;终于把Win11装好了. 来打个卡记录下.&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="Life" scheme="http://lupeipei.github.io/categories/Life/"/>
+    
+    
+      <category term="Life" scheme="http://lupeipei.github.io/tags/Life/"/>
+    
+  </entry>
   
   <entry>
     <title>读《美丽新世界》</title>
@@ -468,28 +490,6 @@
     
     
       <category term="Vim" scheme="http://lupeipei.github.io/tags/Vim/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>hexo 主题魔改记录</title>
-    <link href="http://lupeipei.github.io/posts/custom-hexo-next-theme/"/>
-    <id>http://lupeipei.github.io/posts/custom-hexo-next-theme/</id>
-    <published>2021-12-28T13:32:58.000Z</published>
-    <updated>2021-12-28T13:39:12.493Z</updated>
-    
-    <content type="html"><![CDATA[<p>自己折腾了下 Hexo 的 next 主题. 给 post 添加了字段 type. 为了避免下次崩了的时候, 我会对着自己写的代码一脸懵逼, 简单记录下……</p><span id="more"></span><p>本文基于 hexo-theme-next version 5.</p><h4 id="首页分页"><a href="#首页分页" class="headerlink" title="首页分页"></a>首页分页</h4><p>预期效果: 在首页不显示 post 中 type 为 book 的文章</p><p>思路: 修改首页的分页, 过滤掉 type 为 book 的文章.</p><p>具体实现:</p><p>参考 <a href="https://github.com/hexojs/hexo-generator-index">hexo-generator-index</a> ,  在 next 的 scripts 下, 添加文件 customIndexPagination.js, 内容如下:</p><figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> pagination = <span class="built_in">require</span>(<span class="string">&#x27;hexo-pagination&#x27;</span>);</span><br><span class="line"></span><br><span class="line">hexo.extend.generator.register(<span class="string">&#x27;customIndexPagination&#x27;</span>, <span class="function"><span class="keyword">function</span>(<span class="params">locals</span>)</span>&#123;</span><br><span class="line">  locals.posts.forEach(<span class="function"><span class="keyword">function</span>(<span class="params">post</span>) </span>&#123;</span><br><span class="line">    <span class="comment">//  set post default type as post, 设置默认值</span></span><br><span class="line">    <span class="keyword">if</span> (post.type == <span class="literal">undefined</span>) &#123;</span><br><span class="line">      post.type = <span class="string">&quot;post&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> config = <span class="built_in">this</span>.config;</span><br><span class="line">  <span class="keyword">const</span> posts = locals.posts.sort(config.index_generator.order_by);</span><br><span class="line">  <span class="comment">// filter posts with type == &quot;post&quot;, 过滤</span></span><br><span class="line">  <span class="keyword">const</span> postsWithoutbook = posts.find(&#123; <span class="string">&quot;type&quot;</span>: <span class="string">&quot;post&quot;</span> &#125;)</span><br><span class="line"></span><br><span class="line">  posts.data.sort(<span class="function">(<span class="params">a, b</span>) =&gt;</span> (b.sticky || <span class="number">0</span>) - (a.sticky || <span class="number">0</span>));</span><br><span class="line"></span><br><span class="line">  <span class="keyword">const</span> paginationDir = config.pagination_dir || <span class="string">&#x27;page&#x27;</span>;</span><br><span class="line">  <span class="keyword">const</span> path = config.index_generator.path || <span class="string">&#x27;&#x27;</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> pagination(path, postsWithoutbook, &#123;</span><br><span class="line">    <span class="attr">perPage</span>: config.index_generator.per_page,</span><br><span class="line">    <span class="attr">layout</span>: [<span class="string">&#x27;index&#x27;</span>, <span class="string">&#x27;archive&#x27;</span>],</span><br><span class="line">    <span class="attr">format</span>: paginationDir + <span class="string">&#x27;/%d/&#x27;</span>,</span><br><span class="line">    <span class="attr">data</span>: &#123;</span><br><span class="line">      <span class="attr">__index</span>: <span class="literal">true</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure><h4 id="分类排序"><a href="#分类排序" class="headerlink" title="分类排序"></a>分类排序</h4><p>预期效果: 同一个 category 中, 所有 type 为 book 的 post 按照指定字段排序后再分页.这里按照 ranked 字段来排序 posts.</p><p>思路: 找到 page下对应的category, 按照 ranked 字段排序后, 调用 slice 实现分页.</p><p>具体实现:</p><p>next version 5 的模板用的是swig 语法, <a href="https://github.com/paularmstrong/swig">swig</a>已经多年不维护, 这个用起来还是折腾的.很多ES6语法不支持. 等后续有时间再折腾, 目前凑合用用swig….</p><p>修改 layout/category.swig, 在 Section部分, 添加如下代码:</p><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;section id=&quot;posts&quot; class=&quot;posts-collapse&quot;&gt;</span><br><span class="line">  &lt;div class=&quot;collection-title&quot;&gt;</span><br><span class="line">    &lt;h2 &gt;&#123;&#123; page.category &#125;&#125;&lt;/h2&gt;</span><br><span class="line">  &lt;/div&gt;</span><br><span class="line">...........</span><br><span class="line"></span><br><span class="line">  &#123;% set current = page.current %&#125;</span><br><span class="line">  &#123;% set pre = current - 1 %&#125;</span><br><span class="line">  &#123;% set perPage = config.per_page %&#125;</span><br><span class="line">  &#123;% set category = site.categories.findOne(&#123; &quot;name&quot;: page.category &#125;) %&#125;</span><br><span class="line">  &#123;% set posts = category.posts.sort(&#x27;ranked&#x27;) %&#125;</span><br><span class="line">  &#123;% set bookPost = posts.find(&#123; type: &#x27;book&#x27; &#125;) %&#125;</span><br><span class="line">  &#123;% set hasBookPost = bookPost.length &gt; 0 %&#125;</span><br><span class="line">  &#123;% if hasBookPost %&#125;</span><br><span class="line">    &#123;% set posts = posts.slice(perPage * pre, perPage * current) %&#125;</span><br><span class="line">  &#123;% else %&#125;</span><br><span class="line">    &#123;% set posts = page.posts %&#125;</span><br><span class="line">  &#123;% endif %&#125;</span><br><span class="line"></span><br><span class="line">  &#123;% for post in posts %&#125;</span><br><span class="line">    &#123;&#123; post_template.render(post) &#125;&#125;</span><br><span class="line">  &#123;% endfor %&#125;</span><br><span class="line"></span><br><span class="line">  ..........</span><br></pre></td></tr></table></figure><p>逻辑很简单, 主要调用 slice 来得到当前分页中的posts.</p><p>其中 site.categories 调用了findOne来查找当前页面的category, 参考的是 <a href="https://hexojs.github.io/warehouse/index.html">warehouse</a>.</p><p>OK.</p><h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p><a href="https://github.com/hexojs/hexo-pagination">hexo-pagination</a></p><p><a href="https://github.com/hexojs/hexo-generator-index">hexo-generator-index</a></p><p><a href="https://hexojs.github.io/warehouse/index.html">warehouse</a></p>]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;自己折腾了下 Hexo 的 next 主题. 给 post 添加了字段 type. 为了避免下次崩了的时候, 我会对着自己写的代码一脸懵逼, 简单记录下……&lt;/p&gt;
-    
-    </summary>
-    
-      <category term="CS" scheme="http://lupeipei.github.io/categories/CS/"/>
-    
-    
-      <category term="Hexo" scheme="http://lupeipei.github.io/tags/Hexo/"/>
     
   </entry>
   

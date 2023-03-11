@@ -37289,4 +37289,104 @@ echo $x
         <tag>Reading</tag>
       </tags>
   </entry>
+  <entry>
+    <title>记录第一次装机</title>
+    <url>/posts/my-first-time-assembling-a-desktop-pc/</url>
+    <content><![CDATA[<p>终于把Win11装好了. 来打个卡记录下.</p>
+<span id="more"></span> 
+
+<p>去年心血来潮, 想要体验下装机, 试试3D打印, 然后随口跟 Ran 提了下, 再然后, 就莫名其妙入坑了……..</p>
+<p>纯小白, 从买零件到装机, 埋线, 再到安装Win11, 历时小半年…..</p>
+<p>呃, 花了这么久的时间, 是因为装机后, 一直没装系统, 就像 Ran 调侃的, 你的金属大师都吃灰了好几个月了吧?</p>
+<p>呃, 惭愧 [捂脸]</p>
+<p>把装系统的事速度安排上.</p>
+<p>好了, 不多唠了, 简单记录下装机和装系统的过程中的一些问题.</p>
+<h4 id="装机"><a href="#装机" class="headerlink" title="装机"></a>装机</h4><p>先来晒下零件:</p>
+<table>
+<thead>
+<tr>
+<th>零件</th>
+<th>产品</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CPU</strong></td>
+<td>AMD R5 5600X</td>
+</tr>
+<tr>
+<td><strong>主板</strong></td>
+<td>华硕 TUF B550M-Plus WIFI II</td>
+</tr>
+<tr>
+<td><strong>内存</strong></td>
+<td>威刚 D45 DDR4 16Gx2</td>
+</tr>
+<tr>
+<td><strong>电源</strong></td>
+<td>NZXT C750</td>
+</tr>
+<tr>
+<td><strong>散热</strong></td>
+<td>3 x 利民 TL-C12-W 12cm white + 利民 AXP90-X47 white</td>
+</tr>
+<tr>
+<td><strong>机箱</strong></td>
+<td>JOSNSBO D30</td>
+</tr>
+<tr>
+<td><strong>SSD</strong></td>
+<td>TiPro 7000 1T  + TiPlus 5000 1T</td>
+</tr>
+<tr>
+<td><strong>显卡</strong></td>
+<td>影驰 RTX 3060Ti G6X 金属大师</td>
+</tr>
+</tbody></table>
+<p>基本都是Ran的推荐, 很满意, 谢谢Ran!!!</p>
+<p>PS. 有一个既懂装机又爱操心显卡吃灰的同事, 真的很幸运! : P</p>
+<p>这里稍稍提下, 如果机箱选了D30, 同时计划后续要安装机械硬盘, 购买显卡时, 需要考虑下长度. 不然有可能显卡买回来后安顿好, 发现硬盘已经塞不进机箱了…</p>
+<p>所有零件买好后, 装机也很简单, 如果你跟我一样, 都是小白, 可以参考 B站 up主硬件茶谈出的保姆级教程[这个也是Ran推荐的 ^_^].</p>
+<p>PPS. D30 机箱真的好好看啊!!</p>
+<h4 id="装机-1"><a href="#装机-1" class="headerlink" title="装机"></a>装机</h4><h5 id="使用Mac做一个Win11的-USB启动盘"><a href="#使用Mac做一个Win11的-USB启动盘" class="headerlink" title="使用Mac做一个Win11的 USB启动盘"></a>使用Mac做一个Win11的 USB启动盘</h5><p>这里以Win11为例. 准备好U盘, 去<a href="https://www.microsoft.com/en-us/software-download/windows11">官网</a>下载 ISO 文件. </p>
+<p>参考这篇<a href="https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/">Build a Bootable ISO From Your Mac’s Terminal</a>, 5 步完成.</p>
+<ol>
+<li><p>终端输入  <code>diskutil list</code> , 找到插入的那个USB (带有 external disk), 假定是 <code>/dev/disk2</code></p>
+</li>
+<li><p>终端输入 <code>diskutil eraseDisk MS-DOS &quot;WIN11&quot; GPT /dev/disk2</code>, 格式化USB</p>
+</li>
+<li><p>终端输入  <code>hdiutil mount ~/Downloads/Win11_22H2_Chinese_Simplified_x64v1.iso</code>,  挂载Win11 的IOS, 这里 <code>Win11_22H2_Chinese_Simplified_x64v1.iso</code> 就是下载的ISO文件名.</p>
+</li>
+<li><p>终端输入<code>rsync -vha --exclude=sources/install.wim /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/* /Volumes/WIN11</code> , 这步把安装的镜像文件 Copy 到你的USB中, 除了 <code>install.wim</code> 文件(下一步会处理), 其他都Copy 过去. 其中<code>/Volumes/CCCOMA_X64FRE_ZH-CN_DV9/*</code>  是第3步生成的disk image 文件地址.</p>
+</li>
+<li><p>下载 <code>wimlib</code>, 把第4步漏掉的 wim文件分成两份 Copy 过去. [中文简体的 WIN11_22H2 里面的install.wim 大概是4.5G, 可以通过命令行查看文件大小: <code>du -sh /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/sources/install.wim</code> ]</p>
+<p>终端输入:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">brew install wimlib</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后, 通过wimlib, 将WIM文件拆分成两个小于4G的文件Copy 到USB:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wimlib-imagex split /Volumes/CCCOMA_X64FRE_ZH-CN_DV9/sources/install.wim /Volumes/WIN11/sources/install.swm 3800</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>OK, 搞定! 可以装Win11啦~ </p>
+<h5 id="有关WIN11安装过程中跳过联网"><a href="#有关WIN11安装过程中跳过联网" class="headerlink" title="有关WIN11安装过程中跳过联网"></a>有关WIN11安装过程中跳过联网</h5><p>在安装系统的过程中, 会有一步, 要求连接网络. 参考 <a href="https://www.53xt.com/jiaocheng/7998.html">win11怎么跳过联网</a>, 可以使用命令行跳过.</p>
+<p>具体步骤:</p>
+<blockquote>
+<ul>
+<li><p>按 Shift + F10 , 弹出 命令提示符 cmd 窗口, 输入 <code>OOBEBYPASSNRO</code>  回车.</p>
+</li>
+<li><p>随后电脑会重启, 然后再次回到这个界面时, 会多出 [我没有Internet连接] 的选项, 选择即可.</p>
+</li>
+</ul>
+</blockquote>
+<p>最后, 晒下我的D30~</p>
+<p><img src="https://raw.githubusercontent.com/Lupeipei/blogImages/master/images1.jpeg"></p>
+<h4 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h4><p>Ran</p>
+<p><a href="https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/">Build a Bootable ISO From Your Mac’s Terminal</a></p>
+<p><a href="https://www.53xt.com/jiaocheng/7998.html">win11怎么跳过联网</a></p>
+]]></content>
+      <categories>
+        <category>Life</category>
+      </categories>
+      <tags>
+        <tag>Life</tag>
+      </tags>
+  </entry>
 </search>
